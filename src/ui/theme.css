@@ -1,0 +1,1134 @@
+/* ============================================================
+   Wadi Degla Operations Academy — Design System v2
+   Redesigned from first principles for long-session readability.
+   Governed by an 8px spacing scale + strict type ramp: every screen
+   aligns to the same grid, nothing is positioned by feel.
+   ============================================================ */
+
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/ibm-plex-sans-arabic/400.css';
+@import '@fontsource/ibm-plex-sans-arabic/500.css';
+@import '@fontsource/ibm-plex-sans-arabic/600.css';
+@import '@fontsource/ibm-plex-sans-arabic/700.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ONE MATERIAL.
+   Every neutral below is the SAME colour as #34312F — hue 24°, saturation 5% —
+   with only its lightness moved. Nothing here was picked; it was derived. That
+   is the difference between a palette that feels sculpted and one that feels
+   collected.
+
+   #121212 is gone. It was a NEUTRAL near-black sitting under a WARM brown
+   surface, and the temperature mismatch is the kind of thing nobody can name
+   but everybody feels. Its replacement, #141212, is the same brown at 7.5%
+   lightness.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── The material ────────────────────────────────────────────────────────
+     void → the room · s0 → THE surface, the brand colour exactly · s1 → above */
+  --void: #161310;
+  --s-2:  #1D1916;
+  --s-1:  #24201E;
+  --s0:   #34312F;
+  --s1:   #3F3B39;
+
+  /* 🔴 OVERLAYS ARE THE SAME MATERIAL, TRANSLUCENT — never a second black.
+     The sticky header, the mobile tab bar and the arena surface each carried
+     its own cool near-black (blue leading the channels) floating
+     over a warm brown room. It is the exact temperature break the palette
+     comment above spends a paragraph killing in the neutral near-black that
+     used to sit under this surface, and it survived only
+     because it was written as a literal inside three unrelated rules instead
+     of a token. These are --void's own channels at the alphas already in use,
+     so the bars now read as the room seen through frosted glass rather than a
+     panel from another product. */
+  --overlay:        rgba(22,19,16,.85);   /* sticky screen header */
+  --overlay-strong: rgba(22,19,16,.92);   /* mobile tab bar — sits over content */
+  --overlay-arena:  rgba(22,19,16,.88);   /* exam/boss chrome */
+  --overlay-well:   rgba(22,19,16,.80);   /* inset answer surfaces in the arena */
+
+  /* Hairlines are the same material at higher lightness, not white at low
+     alpha: white over brown reads cold and turns every edge slightly grey. */
+  --line:   #2B2724;
+  --line-2: #3A3633;
+  --line-3: #46423F;
+
+  /* ── Gold ────────────────────────────────────────────────────────────────
+     The only accent in the system. Three steps, no more: a fourth gold is a
+     gold nobody can tell apart from its neighbour. */
+  --g0: #FEDEA0;   /* Gold 100 — highlight. Focus rings, gradient tips. Never a fill. */
+  --g1: #CCAB6C;   /* Gold 400 — labels, links, quiet emphasis. */
+  --g2: #B38922;   /* Gold 500 — the primary. Buttons, active state, the one thing you must see. */
+  --g3: #7C5F17;   /* Gold 600 — a true darker tone of 500, for edges and pressed states. */
+  --g2-rgb: 179,137,34;
+
+  /* Text ON gold. The one place a near-black is correct — it is the gold's own
+     hue at 8% lightness, so it belongs to the button it sits on. */
+  --on-gold: #241B05;   /* dark ink on champagne — 10.29 contrast */
+
+  /* ── Text ────────────────────────────────────────────────────────────────
+     Four steps, each a real job. tx3 is the floor: anything quieter fails AA
+     on this surface, and a label nobody can read is decoration. */
+  --tx0: #FFFFFF;
+  --tx1: #CFCFCF;
+  --tx2: #A39D96;
+  /* 🔴 RAISED FOR AA ON THE SURFACE IT IS ACTUALLY USED ON. #8A847D measured
+     4.37:1 over --s-1 — under the floor — while passing only on the bare void,
+     which is not where components put it. #948E86 clears 4.5 on the void
+     (5.70), --s-2 (5.38) and --s-1 (4.98), and stays a clear step below --tx2
+     (5.70 vs 6.89) so the three-tier hierarchy survives. --s0 is still out of
+     bounds for it; the one component that did that now uses --tx2. */
+  --tx3: #948E86;
+
+  /* ── Status ──────────────────────────────────────────────────────────────
+     Desaturated on purpose. A saturated colour next to #B38922 wins, and then
+     the brand is whatever the last alert happened to be. Never the only
+     signal — always with an icon or a word. */
+  --ready: #6FA37A;    --ready-bg: rgba(111,163,122,.12);  --ready-line: rgba(111,163,122,.28);
+  --attn:  #C2703A;    --attn-bg:  rgba(194,112,58,.12);   --attn-line:  rgba(194,112,58,.28);
+  --risk:  #B5675E;    --risk-bg:  rgba(181,103,94,.12);   --risk-line:  rgba(181,103,94,.28);
+  --info:  #7E8A96;    --info-bg:  rgba(126,138,150,.12);  --info-line:  rgba(126,138,150,.28);
+  --escalate: #8A847D; --escalate-line: rgba(138,132,125,.3);
+
+  /* ── Radius ──────────────────────────────────────────────────────────────
+     One family, no sharp corners anywhere. 24 is the card — the platform's
+     signature. Controls sit just inside it so they look nested, never bolted on. */
+  --r-sm:  12px;   /* badges, chips */
+  --r-md:  18px;   /* inputs, small panels */
+  --r-lg:  24px;   /* THE card */
+  --r-xl:  32px;   /* hero surfaces */
+  --r-full: 999px; /* capsules, avatars */
+
+  /* ── Space · 8px grid ────────────────────────────────────────────────────
+     8 is the grid. sp-1 (4px) is the only half-step and exists for optical
+     work — icon-to-text, badge insets — where 8 is visibly too much. Every
+     layout gap is 8 or more. This is Apple's 8pt/4pt rule, not a compromise:
+     a pure-8 system forces every tight pair to choose between cramped and loose. */
+  --sp-1: 4px;    --sp-2: 8px;    --sp-3: 16px;   --sp-4: 24px;
+  --sp-5: 32px;   --sp-6: 40px;   --sp-7: 56px;   --sp-8: 80px;
+  --sp-9: 120px;  --sp-10: 160px;
+
+  /* 🔴 Root-cause fix — `.measure { max-width: var(--measure) }` has been
+     referenced across 10 files (exam prompts, empty-state copy, lesson body
+     text) since early in this project, but `--measure` was never DEFINED
+     anywhere. An undefined custom property resolves to its initial value —
+     `none` for max-width — so the constraint has been silently doing nothing
+     this whole time; paragraphs stretched to whatever container they sat in
+     (up to 720px) instead of a comfortable reading width. `60ch` is the
+     typographic standard (60–75 characters/line) and scales WITH font-size
+     automatically, unlike a fixed px value — it stays correct if .t-body or
+     .t-sm's size ever changes. Mobile was never visibly affected (viewport
+     width already self-constrains under ~390px); desktop/tablet paragraphs
+     were the real, previously-invisible defect this closes. */
+  --measure: 60ch;
+
+  /* The shell's own column — the same 1080 as WIDTH.journey in designSystem.ts,
+     named here because CSS cannot import it. */
+  --w-shell: 1080px;
+
+  /* ── Elevation ───────────────────────────────────────────────────────────
+     Almost invisible, by design. A shadow you can see is a shadow doing the
+     work that spacing should be doing. Three steps: in the page · liftable ·
+     temporarily above everything. */
+  --e-flat: none;
+  --e-raised: 0 1px 2px rgba(0,0,0,.18), 0 8px 24px -16px rgba(0,0,0,.45);
+  --e-floating: 0 1px 0 rgba(254,222,160,.06) inset, 0 24px 64px -32px rgba(0,0,0,.7);
+
+  /* ── Motion ──────────────────────────────────────────────────────────────
+     150–220ms, ease-out. Ease-out because the eye should catch the START of a
+     move and never wait for its end. One curve everywhere — two curves is two
+     products. */
+  --t-fast: 150ms;
+  --t-base: 180ms;
+  --t-slow: 220ms;
+  --ease: cubic-bezier(.22,.61,.36,1);
+
+  --font-body:'Inter','IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+}
+
+
+* { box-sizing:border-box; }
+html { -webkit-text-size-adjust:100%; }
+body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--font-body);
+  font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+
+.t-display { font-size:clamp(2.1rem,5vw,3rem); font-weight:700; line-height:1.15; color:var(--tx0); }
+.t-h1 { font-size:clamp(1.7rem,4vw,2.25rem); font-weight:700; line-height:1.22; color:var(--tx0); }
+.t-h2 { font-size:1.5rem; font-weight:700; line-height:1.25; color:var(--tx0); }
+.t-h3 { font-size:1.2rem; font-weight:600; line-height:1.35; color:var(--tx0); }
+.t-lead { font-size:1.1rem; font-weight:400; line-height:1.75; color:var(--tx1); }
+.t-body { font-size:1rem; font-weight:400; line-height:1.8; color:var(--tx1); }
+.t-sm { font-size:0.9rem; font-weight:400; line-height:1.65; color:var(--tx2); }
+.t-num { font-family:var(--font-mono); font-weight:500; font-variant-numeric:tabular-nums; }
+
+/* 🔴 `.t-title` WAS A CLASS THAT DID NOT EXIST. Eight components used it for a
+   person's or a unit's name; most passed an inline colour and looked fine, and
+   the ones that did not fell through to the user-agent default — BLACK text on
+   a warm-black card, measured 1.3:1. Not «low contrast»: invisible. It is a
+   real role (the name line inside a row or card), so it gets a real rule —
+   colour only, because every existing call site already sits at the size its
+   context gives it and this is an accessibility fix, not a redesign. */
+.t-title { color: var(--tx0); }
+/* 🔴 --tx3 is the floor on the VOID, not on a card: measured 4.37:1 over
+   --s-1 and 3.49:1 over --s0, so every unit code, day range and counter sitting
+   inside a card was under the AA floor. Metadata should read quiet; it was
+   reading faint, which is what «cheap» looks like at a glance. --tx2 is 6.01:1
+   on the same surface and still recedes behind body text. */
+.t-label { font-size:0.78rem; font-weight:600; color:var(--tx2); }
+/* 🔴 THE EYEBROW IS A LABEL, SO IT TAKES THE LABEL GOLD, NOT THE PRIMARY ONE.
+   The palette above assigns --g2 exactly one job — "the one thing you must
+   see" — and --g1 the labels. Every section eyebrow on every screen was
+   painted --g2, so the roadmap showed ten elements in primary gold and the
+   Open button was one of them: when everything is the accent, nothing is.
+   --g1 keeps the eyebrow unmistakably gold (saturation is what reads as gold
+   in this brand) while handing the primary tone back to actions and to «you
+   are here». It also measures better on the surface it sits on: 8.47 against
+   the void where --g2 measured 5.74. */
+.t-eyebrow { font-size:0.78rem; font-weight:600; color:var(--g1); }
+
+/* Capsule — base layout only, so a media query can still reach it. */
+.capsule { display:inline-flex; align-items:center; }
+
+/* Journey station rail + card — sized here so the narrow-phone rules below can
+   reach them. At 320 the rail (52) plus the detailed card's padding (40 each
+   side) left 108px for text inside a 256px column, and the grid overflowed by
+   39px. The smallest phone gets a narrower rail and the compact card padding;
+   nothing changes from 361px up. */
+.shell-header-row { padding: var(--sp-3) var(--sp-5); gap: var(--sp-4); }
+.snake-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 52px; }
+.snake-card { padding: var(--sp-4) var(--sp-5); }
+.snake-card--detail { padding: var(--sp-6); }
+
+@media (max-width: 360px) {
+  .snake-rail { width: 40px; }
+  .snake-orb { width: 38px; height: 38px; }
+  .snake-orb--milestone { width: 40px; height: 40px; }  /* never wider than its rail */
+  /* The identity row is four controls wide; at 320 the outer padding is the
+     only thing that has to give. */
+  .shell-header-row { padding-inline: var(--sp-3); gap: var(--sp-2); }
+  .snake-card--detail { padding: var(--sp-4); }
+  .snake-node { gap: var(--sp-2) !important; }
+}
+
+/* Manager roster — open on desktop, folded on a phone. The `open` attribute is
+   set in the markup and removed by the phone rule below, so JS never owns it. */
+/* An Arabic island inside an English document: isolated so its direction
+   cannot reorder the text around it, and free to size itself like any block. */
+.ar-content { unicode-bidi: isolate; }
+
+/* Skip link — off-screen until it has focus, then a real target at the top of
+   the viewport. `top` and `inset-inline-start` are logical-safe in both
+   directions because the link is centred. */
+.skip-link {
+  position: fixed; top: -100px; inset-inline-start: 50%; transform: translateX(-50%);
+  z-index: 100; padding: var(--sp-3) var(--sp-5); border-radius: var(--r-sm);
+  background: var(--g2); color: var(--void); font-weight: 700; text-decoration: none;
+  transition: top .18s var(--ease);
+}
+.skip-link:focus-visible { top: var(--sp-3); outline: 2px solid var(--g0); outline-offset: 2px; }
+
+/* 🔴 ARROWS ARE DIRECTIONAL, SO THE DIRECTION FLIPS THEM — not the author.
+   Eighteen icons carried `transform: scaleX(-1)` inline to point the Arabic
+   way; in an LTR document every one of them pointed backwards. The class flips
+   in RTL only, so «continue» points where the reader is going in both modes. */
+.icon-dir { transition: transform .2s var(--ease); }
+[dir="rtl"] .icon-dir { transform: scaleX(-1); }
+
+/* The language switch lives in exactly ONE place per viewport: the header on
+   desktop, the profile menu on a phone. Two copies at once would be two
+   controls for one setting. */
+.menu-lang { display: none; }
+@media (max-width: 640px) {
+  /* `.pill.lang-pill`, not `.lang-pill`: the general `.pill` rule sits LATER in
+     this file, and at equal specificity the last rule wins — which is how this
+     hide silently did nothing on the first attempt. */
+  .pill.lang-pill { display: none; }
+  .menu-lang { display: flex; }
+}
+
+.roster { margin-top: var(--sp-7); }
+.roster-summary { display: flex; align-items: center; gap: var(--sp-3); cursor: pointer;
+  list-style: none; min-height: 44px; }
+.roster-summary::-webkit-details-marker { display: none; }
+.roster-count { color: var(--tx2); border: 1px solid var(--line-2); border-radius: var(--r-full);
+  padding: var(--sp-1) var(--sp-3); }
+.roster-summary::after { content: ''; width: 8px; height: 8px; border-inline-start: 2px solid var(--tx3);
+  border-block-end: 2px solid var(--tx3); transform: rotate(-45deg); transition: transform .2s var(--ease); }
+.roster[open] .roster-summary::after { transform: rotate(135deg); }
+.roster-summary:focus-visible { outline: 2px solid var(--g2); outline-offset: 4px; border-radius: var(--r-sm); }
+
+.tier-gap { margin-top: var(--sp-8); }
+@media (max-width: 640px) { .tier-gap { margin-top: var(--sp-6); } }
+
+/* Screen header — sticky by default; the `position` lives here and NOT inline,
+   because the phone rules below have to be able to beat it. */
+.screen-header { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px); }
+
+@media (max-width: 640px) {
+  /* A tab route already has a bar and a bottom nav. This one stops being
+     furniture: no sticky, no border, no back button — just its label, scrolling
+     away with the page and giving 76px back to the content. */
+  /* The back arrow points at a screen the tab bar reaches in one tap, and the
+     label names the tab already lit underneath it. Both go; every screen states
+     itself in its own <h1> right below — «الأساس — إنت شغّال فين»، «المهارات
+     اللي بتبنيها» — so the page still announces what it is, to the eye and to a
+     screen reader. */
+  .screen-header--tab { position: static; background: transparent !important;
+    border-bottom: 0 !important; backdrop-filter: none; }
+  .screen-header--tab .back-btn,
+  .screen-header--tab .screen-header-label { display: none; }
+  /* Nothing left but padding → the whole bar goes. */
+  .screen-header--bare { display: none; }
+}
+
+/* Empty-state icons are one size, set here and nowhere else. */
+.empty-state-icon { display:inline-flex; }
+.empty-state-icon svg { width:22px; height:22px; }
+.measure { max-width:var(--measure); }
+
+/* 🔴 THE BROWSER WAS SETTING THE RHYTHM. Headings and paragraphs that did not
+   carry an explicit margin fell back to the user-agent's `1em` / `.67em`
+   defaults, which are FONT-SIZE-derived and therefore off an 8px grid by
+   construction: measured 14.4px under a .t-sm, 16.08px above a .t-h2,
+   17.6px under a .t-lead, 32.16px under .t-display. Four spacing values no
+   one chose, changing with every font-size, in a system whose own contract
+   says every layout gap is 8 or more. The type classes now own their block
+   margins in tokens; any component that already sets its own margin inline
+   still wins, so nothing deliberately spaced moves. */
+   🔴 SCOPED TO REAL HEADINGS AND PARAGRAPHS — element + class, deliberately.
+   Written as bare classes, these margins also hit every <span> carrying a type
+   class, and a span that becomes a FLEX ITEM is blockified: its block margins
+   suddenly apply. That is exactly what happened to the station number on the
+   Learning Journey — a `.t-sm` span inside a 44px flex-centred orb picked up
+   16px of bottom margin and sat 3px from the top of its own circle. A span was
+   never at risk from the user-agent defaults this rule exists to replace, so
+   it has no business receiving the replacement either. */
+:is(h1, h2, h3, h4).t-display,
+:is(h1, h2, h3, h4).t-h1,
+:is(h1, h2, h3, h4).t-h2,
+:is(h1, h2, h3, h4).t-h3 { margin-block: 0 var(--sp-2); }
+p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+:focus-visible { outline:2px solid var(--g2); outline-offset:3px; border-radius:6px; }
+::selection { background:rgba(var(--g2-rgb),.28); color:var(--tx0); }
+
+/* ============================================================
+   Component classes — the interaction layer (Phase 3).
+   Interactive components live here because pseudo-states (:hover,
+   :active, :focus-visible) cannot exist inline. Static layout stays
+   in components. Arabic never receives letter-spacing.
+   ============================================================ */
+
+/* -- Button -- */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2);
+  padding:11px 20px; border-radius:var(--r-sm); font-size:0.92rem; font-weight:600;
+  font-family:var(--font-body); cursor:pointer; min-height:44px;
+  transition:background .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease), transform .15s var(--ease); }
+.btn:disabled { opacity:.4; cursor:default; }
+.btn:active:not(:disabled) { transform:scale(.97); }
+/* 🔴 The primary button now matches the Sign In button exactly — same
+   capsule, same three-stop gold gradient, same gold halo. They were two
+   different buttons doing the same job: the sign-in screen felt like a
+   more premium product than the app behind it, which is the opposite of
+   what a first screen should promise. One primary action, one look. */
+.btn-primary {
+  border: 0;
+  border-radius: var(--r-full);
+  color: #241B05;
+  background: linear-gradient(100deg, var(--g2) 0%, var(--g1) 52%, var(--g0) 100%);
+  /* 🔴 A CONTACT SHADOW, NOT A GLOW. At .7 over 28px the button emitted light:
+     a halo the eye reads as a game reward, and the elevation rule three
+     blocks up ("a shadow you can SEE is a shadow doing the work spacing
+     should be doing") applies to a coloured shadow exactly as it does to a
+     black one. Tightened and quieted so the button still lifts off the page
+     and stops broadcasting. The gradient — which is what actually makes it
+     read as gold — is untouched. */
+  box-shadow: 0 6px 18px -12px rgba(var(--g2-rgb), .45);
+}
+.btn-primary:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 8px 22px -12px rgba(var(--g2-rgb), .6); }
+.btn-primary:active:not(:disabled) { transform: translateY(1px); }
+.btn-ghost { background:transparent; color:var(--tx1); border:1px solid var(--line-2); }
+.btn-ghost:hover:not(:disabled) { border-color:var(--line-3); color:var(--tx0); background:var(--s0); }
+
+/* -- Answer option -- */
+.option { display:flex; align-items:center; gap:var(--sp-3); width:100%; text-align:right;
+  padding:var(--sp-4) var(--sp-5); border-radius:var(--r-md); min-height:52px;
+  font-family:var(--font-body); font-size:0.95rem; color:var(--tx0);
+  background:var(--s-1); border:1px solid var(--line-2);
+  transition:background .15s var(--ease), border-color .15s var(--ease); }
+.option-idle { cursor:pointer; }
+.option-idle:hover { border-color:var(--line-3); background:var(--s0); }
+.option-arena { background:var(--overlay-well); }
+.option-correct { background:var(--ready-bg); border-color:var(--ready); }
+.option-wrong { background:var(--risk-bg); border-color:var(--risk); }
+
+/* -- Form field -- */
+.field { background:var(--s-2); border:1px solid var(--line-2); border-radius:var(--r-sm);
+  color:var(--tx0); font-family:var(--font-body); font-size:0.9rem;
+  padding:10px 12px; min-height:44px; transition:border-color .15s var(--ease); }
+.field:hover { border-color:var(--line-3); }
+
+/* -- Nav pill / icon button / back button (all ≥44px) -- */
+.pill { display:inline-flex; align-items:center; gap:6px; background:none;
+  border:1px solid var(--line-2); border-radius:var(--r-full); color:var(--tx2);
+  font-size:0.8rem; font-family:var(--font-body); padding:10px 16px; min-height:44px;
+  cursor:pointer; transition:border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
+.pill:hover { border-color:var(--line-3); color:var(--tx0); background:var(--s0); }
+.icon-btn { display:inline-flex; align-items:center; gap:6px; background:none;
+  border:1px solid var(--line-2); border-radius:var(--r-sm); color:var(--tx2);
+  font-size:0.78rem; font-family:var(--font-body); padding:10px 14px; min-height:44px;
+  cursor:pointer; transition:border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
+.icon-btn:hover { border-color:var(--line-3); color:var(--tx0); background:var(--s0); }
+.back-btn { display:flex; align-items:center; justify-content:center; background:none; border:none;
+  color:var(--tx2); cursor:pointer; min-height:44px; min-width:44px; border-radius:var(--r-sm);
+  transition:color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
+.back-btn:hover { color:var(--tx0); background:var(--s0); }
+
+/*
+ * 🔴 Product-experience review — press feedback was missing on the FOUR most
+ * frequently tapped element families in the app: nav pills, quiz/commitment
+ * choices, the back button, and every clickable row (roster rows, unit
+ * cards). They all had `:hover`, which is invisible on a touchscreen — the
+ * majority of real usage here. `.btn` already had `scale(.97)` on `:active`;
+ * this brings the other four in line with that existing, proven pattern
+ * rather than inventing a new one. `:not(:disabled)` matches `.btn`'s guard
+ * so a disabled pill/row never LOOKS pressable. `translateY` on `.row-hover`
+ * instead of `scale` — rows are wide and full-bleed, so a horizontal-safe
+ * 1px nudge reads as "pressed" without the row visually resizing against its
+ * neighbours. Respects prefers-reduced-motion via the existing global rule.
+ */
+.pill:active:not(:disabled), .icon-btn:active:not(:disabled), .back-btn:active:not(:disabled) { transform:scale(.97); }
+
+/* -- Hoverable rows (path nodes, admin rows) -- */
+.row-hover { transition:border-color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
+.row-hover:hover { border-color:var(--line-3); }
+.row-hover:active { transform:translateY(1px); }
+
+/* -- Enterprise data row (admin) -- */
+.admin-row { display:grid; grid-template-columns:minmax(170px,1.3fr) 160px minmax(160px,1fr) auto;
+  gap:var(--sp-3); align-items:center; }
+@media (max-width: 780px) { .admin-row { grid-template-columns:1fr; } }
+
+/* -- Dialog & toast -- */
+.dialog-scrim { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
+  display:flex; align-items:center; justify-content:center; z-index:60; padding:var(--sp-5); }
+.dialog { background:var(--s-1); border:1px solid var(--line-2); border-radius:var(--r-lg);
+  padding:var(--sp-6); max-width:420px; width:100%; box-shadow:var(--shadow-lift); }
+.toast { position:fixed; bottom:var(--sp-6); right:50%; transform:translateX(50%);
+  background:var(--s0); border:1px solid var(--line-2); border-radius:var(--r-full);
+  padding:10px 20px; color:var(--tx0); font-size:0.85rem; z-index:70;
+  box-shadow:var(--shadow-lift); display:flex; align-items:center; gap:8px; }
+
+/* -- Skeleton (future platforms: trainer/manager loading) -- */
+.skeleton { background:linear-gradient(90deg, var(--s-1) 25%, var(--s0) 50%, var(--s-1) 75%);
+  background-size:200% 100%; animation:sk 1.4s ease infinite; border-radius:var(--r-sm); }
+@keyframes sk { from { background-position:200% 0; } to { background-position:-200% 0; } }
+
+/* Login: input with a leading icon (padding for the icon slot) + focus polish. */
+.field-icon { padding-inline-start: 38px; }
+.field::placeholder { color: var(--tx3); }
+.field:focus-visible { outline: 2px solid var(--g2); outline-offset: 1px; border-color: var(--g2); }
+.spin { animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+/* ── SIGN-IN SURFACE ────────────────────────────────────────────────────────
+   The app's palette is a cool near-black; the sign-in asks for the warmer
+   gold-lit surface of a club, not a console. These tokens are SCOPED to the
+   sign-in so the identity stays one system — the same gold family the whole
+   academy already uses, just lit differently for the one screen that has to
+   say «premium club» before a single word is read.
+   Global tokens are untouched: nothing else in the app shifts.            */
+/* The --sg-* tokens are now ALIASES of the root, not a second palette.
+   They existed so the door could be warm without disturbing the app; the app
+   is warm now. Kept as aliases so the sign-in markup is untouched, and so it
+   is impossible for the door and the room to drift apart again — change the
+   root and both move. */
+.signin {
+  --sg-bg: var(--void);
+  --sg-surface: var(--s0);
+  --sg-gold: var(--g2);
+  --sg-gold-soft: var(--g1);
+  --sg-gold-light: var(--g0);
+  --sg-glass: rgba(52, 49, 47, .55);
+  --sg-glass-line: rgba(254, 222, 160, .14);
+  --sg-tx: var(--tx0);
+  --sg-tx-dim: var(--tx2);
+
+  background: var(--sg-bg);
+}
+
+/* Ambient light. Inspired by the reference's floating spheres, rebuilt as
+   what they actually are here: club lighting behind glass — soft, warm, and
+   slow enough that it never competes with the form. */
+.signin-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(58px);
+  opacity: .5;
+  pointer-events: none;
+  will-change: transform;
+  animation: sg-drift 26s ease-in-out infinite alternate;
+}
+@keyframes sg-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(2.2rem, -1.6rem, 0) scale(1.06); }
+}
+
+/* Glassmorphism, with a real fallback: without backdrop-filter support the
+   card must still be readable, so the base colour is opaque enough to carry
+   the text on its own. */
+.signin-card {
+  background: var(--sg-glass);
+  border: 1px solid var(--sg-glass-line);
+  box-shadow:
+    0 1px 0 rgba(254, 222, 160, .07) inset,
+    0 32px 64px -28px rgba(0, 0, 0, .8);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .signin-card { backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15); }
+}
+
+.signin-field {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(254, 222, 160, .2);
+  border-radius: 0;
+  color: var(--sg-tx);
+  font: inherit;
+  font-size: .95rem;
+  padding: 12px 2px;
+  min-height: 46px;
+  transition: border-color .22s ease;
+}
+.signin-field::placeholder { color: #6F6B64; }
+.signin-field:hover { border-bottom-color: rgba(254, 222, 160, .38); }
+.signin-field:focus {
+  outline: none;
+  border-bottom-color: var(--sg-gold-light);
+}
+/* Keyboard users get a visible ring — the underline alone is not enough. */
+.signin-field:focus-visible { box-shadow: 0 2px 0 var(--sg-gold-light); }
+
+.signin-eye {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;               /* comfortable touch target, no layout shift */
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  color: var(--sg-tx-dim);
+  transition: color var(--t-fast) var(--ease);
+}
+.signin-eye:hover { color: var(--sg-gold-light); }
+.signin-eye:focus-visible { outline: 2px solid var(--sg-gold-light); outline-offset: 2px; color: var(--sg-gold-light); }
+
+.signin-btn {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  font-size: .95rem;
+  letter-spacing: .04em;
+  color: #241B05;
+  background: linear-gradient(100deg, var(--sg-gold) 0%, var(--sg-gold-soft) 52%, var(--sg-gold-light) 100%);
+  /* Same contact shadow as .btn-primary — the door and the room cannot own
+     two different ideas of what a gold button does to the light. */
+  box-shadow: 0 6px 18px -12px rgba(179, 137, 34, .45);
+  transition: transform .18s ease, box-shadow .22s ease, filter .22s ease;
+}
+.signin-btn:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 8px 22px -12px rgba(179, 137, 34, .6); }
+.signin-btn:active:not(:disabled) { transform: translateY(1px); }
+.signin-btn:focus-visible { outline: 2px solid var(--sg-gold-light); outline-offset: 3px; }
+.signin-btn:disabled { opacity: .6; cursor: default; }
+
+.signin-link {
+  background: none; border: 0; padding: 6px 2px; cursor: pointer;
+  color: var(--sg-gold-soft); font: inherit; font-size: .82rem;
+  border-radius: 6px; transition: color .18s ease;
+}
+.signin-link:hover { color: var(--sg-gold-light); }
+.signin-link:focus-visible { outline: 2px solid var(--sg-gold-light); outline-offset: 2px; }
+
+/* Respect the setting. Ambient motion is the first thing to go. */
+@media (prefers-reduced-motion: reduce) {
+  .signin-orb { animation: none; }
+  .signin-btn { transition: none; }
+}
+
+/* ── Premium Snake Journey (Phase 5.6) ─────────────────────────────────────
+   The roadmap reads as a route. The node is integrated INTO each card's header,
+   so node + card are one milestone. Cards alternate sides, joined by a soft
+   drawn connector. Tokens only — black + gold identity, calm motion, no glow. */
+.snake-path { position: relative; }
+/* 🔴 Route + ledger. Mobile-first: ONE column, and the ledger comes AFTER the
+   route in source order — on a phone the route is the whole point, and a
+   summary panel above it would push the trainee's actual next step below the
+   fold. From 900px up (where the 620px card was leaving ~48% of the viewport
+   abandoned) a second column appears and the ledger sticks to the top of the
+   scroll, so the sense of "how far am I" stays visible while the route scrolls
+   past it. `align-items: start` keeps the sticky behaviour working — a
+   stretched grid item cannot stick. */
+.journey-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-6); align-items: start; }
+.journey-ledger { min-width: 0; }
+
+@media (min-width: 900px) {
+  .journey-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: var(--sp-7); }
+  .journey-ledger { position: sticky; top: var(--sp-8); }
+}
+
+.snake-node { width: 100%; }
+/* 🔴 The journey is ONE vertical rail every station sits on — not two
+   alternating columns joined by a curve. Alternating sides left half of every
+   desktop row dead, and the curve ended in empty space instead of reaching the
+   next node, which reads as a rendering fault rather than a route. A single
+   spine with the orb ON it, and travelled track coloured gold while the road
+   ahead stays grey, is what makes progress legible at a glance: the trainee
+   sees how far they have come, not just a list of modules. */
+.snake-card { width: 100%; }
+
+/* the node sits on the rail; a subtle lift on hover keeps it feeling alive */
+.snake-orb { width: 44px; height: 44px; transition: transform .28s var(--ease), box-shadow .28s var(--ease); }
+.snake-orb--milestone { width: 52px; height: 52px; }
+
+/* 🔴 THE STATION NUMBER. It was `.t-num .t-sm`, and `.t-sm` carries
+   `color: var(--tx2)` — which overrode the colour the orb sets on itself, so
+   on the CURRENT station the numeral rendered muted grey on gold: measured
+   1.2:1, a number you can see the shape of and not read. It also came in at
+   14.4px/500 inside a 44px disc, which is why it read as faint rather than as
+   the landmark it is. Colour is inherited from the orb (near-black on gold =
+   5.28:1, --tx3 on the void ahead = 5.0:1), and the numeral is sized to the
+   disc it sits in. */
+.snake-orb-num {
+  font-size: 1.05rem; font-weight: 700; line-height: 1;
+  color: inherit; font-variant-numeric: tabular-nums;
+}
+.snake-card:hover .snake-orb { transform: scale(1.04); }
+
+/* current node — a soft pulse that guides the eye. No neon, no glow. */
+@keyframes snake-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--g2) 40%, transparent); }
+  50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--g2) 0%, transparent); }
+}
+.snake-pulse { animation: snake-pulse 2.6s var(--ease) infinite; }
+
+/*
+ * Shell header — mobile (< 640px). Gives the wrap a shape instead of leaving
+ * seven flex children to break in DOM order wherever they happen to run out
+ * of room. Priority: identity + bell stay on row one (what a returning user
+ * scans for first); navigation becomes its own full-width row two, in its
+ * natural reading order, instead of splitting mid-item; the brand keeps only
+ * its mark once the wordmark has a whole nav row competing under it; the time
+ * greeting drops since the name alone is the identity that matters, and two
+ * text lines next to a 48px avatar cost more width than they earn back.
+ * env(safe-area-inset-*) keeps the sticky bar off a notch/home-indicator —
+ * the platform had zero safe-area handling anywhere before this.
+ */
+/* Nav pills carry the same weight as the metadata beside them in the header.
+   Scoped to .shell-nav on purpose: `.pill` is used in 12 other places (admin
+   filters, trainer chips) that are NOT header navigation and must not shift. */
+.shell-nav .pill { font-weight: 600; }
+/* Base display lives here, not inline — an inline `display: flex` made the
+   mobile `display: none` unreachable (third time this trap cost a fix). */
+.shell-nav { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .shell-header { padding-top: env(safe-area-inset-top); }
+  .shell-header-row { flex-wrap: wrap; padding-inline: var(--sp-4); }
+  .shell-brand-name { display: none; }
+  .shell-nav { flex-basis: 100%; order: 3; justify-content: flex-start; overflow-x: auto; }
+  .shell-greeting-time { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { .snake-pulse { animation: none; } }
+
+/* ─── FILE JOURNEY MAP ──────────────────────────────────────────────────
+   An editorial ownership map, not eleven equal cards. The dominant variable
+   is WHO OWNS the stage (that is what causes real operational errors), so
+   gold marks "this is yours" and nothing else — no rainbow of department
+   colours. Sequence rides inside ownership via oversized numerals that are
+   read before any title.
+
+   Mobile is RECOMPOSED, not shrunk: the numeral moves above the text instead
+   of beside it, so stage titles never wrap into a narrow column beside a
+   large number. */
+.fj { margin: var(--sp-6) 0; }
+
+.fj-head { display: flex; align-items: center; gap: var(--sp-5); margin-bottom: var(--sp-6); }
+.fj-count {
+  font-size: 4rem; line-height: 1; font-weight: 700; color: var(--g2);
+  letter-spacing: -.04em; flex-shrink: 0;
+}
+.fj-lede { margin: var(--sp-2) 0 0; color: var(--tx2); font-size: .9rem; line-height: 1.7; }
+.fj-lede strong { color: var(--tx0); font-weight: 600; }
+
+.fj-list { list-style: none; margin: 0; padding: 0; }
+
+/* the rail: one continuous line the whole journey hangs from */
+.fj-stage { position: relative; padding-inline-start: var(--sp-6); padding-bottom: var(--sp-5); }
+.fj-stage::before {
+  content: ''; position: absolute; inset-inline-start: 7px; top: 0; bottom: 0;
+  width: 2px; background: var(--line-2);
+}
+.fj-stage:last-child::before { bottom: auto; height: var(--sp-3); }
+.fj-stage::after {
+  content: ''; position: absolute; inset-inline-start: 0; top: 6px;
+  width: 16px; height: 16px; border-radius: var(--r-full);
+  background: var(--void); border: 2px solid var(--line-2);
+}
+/* the trainee's own stages — the single most useful thing to see instantly */
+.fj-stage--mine::after { border-color: var(--g2); background: var(--g2); }
+
+.fj-handoff {
+  margin: 0 0 var(--sp-3); font-size: .68rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--tx3);
+}
+.fj-handoff span { color: var(--g1); }
+
+.fj-row { display: flex; align-items: baseline; gap: var(--sp-4); }
+.fj-num {
+  font-size: 2rem; line-height: 1; font-weight: 700; color: var(--line-3);
+  letter-spacing: -.03em; flex-shrink: 0; min-width: 2.2ch;
+}
+.fj-stage--mine .fj-num { color: var(--g2); }
+.fj-body { min-width: 0; }
+.fj-owner {
+  display: block; font-size: .68rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--tx3); margin-bottom: 2px;
+}
+.fj-stage--mine .fj-owner { color: var(--g1); }
+.fj-title { margin: 0 0 var(--sp-2); font-size: 1.05rem; font-weight: 600; color: var(--tx0); line-height: 1.4; }
+.fj-detail { margin: 0; font-size: .85rem; color: var(--tx2); line-height: 1.75; max-width: 52ch; }
+
+@media (max-width: 620px) {
+  /* Recomposed, not scaled: number above the text, so a long Arabic stage
+     title never wraps word-per-line inside a squeezed column. */
+  .fj-count { font-size: 3rem; }
+  .fj-row { flex-direction: column; gap: var(--sp-1); align-items: stretch; }
+  .fj-num { font-size: 1.5rem; }
+  .fj-detail { font-size: .82rem; }
+}
+
+/* ─── DECLARATION MATRIX ────────────────────────────────────────────────
+   A decision tool, not a reference list. Each row carries BOTH sides of the
+   decision (use / do-not-use) because the two errors cost the same. The
+   signature exception and the ongoing obligations get their own marked lines
+   so they can never be skimmed past as ordinary detail. */
+.dm { margin: var(--sp-6) 0; }
+.dm-head { display: flex; align-items: center; gap: var(--sp-5); margin-bottom: var(--sp-6); }
+.dm-count { font-size: 4rem; line-height: 1; font-weight: 700; color: var(--g2); letter-spacing: -.04em; flex-shrink: 0; }
+.dm-lede { margin: var(--sp-2) 0 0; color: var(--tx2); font-size: .9rem; line-height: 1.7; }
+.dm-lede strong { color: var(--tx0); font-weight: 600; }
+
+.dm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
+.dm-row {
+  display: flex; gap: var(--sp-4); padding: var(--sp-4) var(--sp-5);
+  background: var(--s-1); border: 1px solid var(--line); border-radius: var(--r-lg);
+}
+.dm-n { font-size: 1.5rem; line-height: 1.2; font-weight: 700; color: var(--line-3); flex-shrink: 0; min-width: 2.2ch; }
+.dm-body { min-width: 0; flex: 1; }
+.dm-name { margin: 0 0 var(--sp-3); font-size: 1rem; font-weight: 600; color: var(--tx0); }
+
+.dm-use, .dm-dont, .dm-meta, .dm-exception, .dm-future {
+  margin: 0 0 var(--sp-2); font-size: .85rem; line-height: 1.7; color: var(--tx2);
+}
+.dm-tag {
+  display: inline-block; margin-inline-end: var(--sp-2); padding: 2px var(--sp-2);
+  border-radius: var(--r-sm); font-size: .68rem; letter-spacing: .06em;
+  font-weight: 600; white-space: nowrap;
+}
+.dm-tag--yes { background: rgba(var(--g2-rgb), .14); color: var(--g1); }
+.dm-tag--no  { background: var(--s0); color: var(--tx3); }
+.dm-tag--x   { background: rgba(var(--g2-rgb), .2); color: var(--g1); }
+.dm-tag--f   { background: var(--s0); color: var(--g1); }
+
+.dm-meta { color: var(--tx3); font-size: .8rem; }
+.dm-lbl {
+  display: inline-block; margin-inline-end: var(--sp-2); margin-inline-start: var(--sp-3);
+  font-size: .68rem; letter-spacing: .1em; color: var(--tx3);
+}
+.dm-meta .dm-lbl:first-child { margin-inline-start: 0; }
+/* the exception must never read as an ordinary line */
+.dm-exception { color: var(--tx1); border-inline-start: 2px solid var(--g2); padding-inline-start: var(--sp-3); }
+.dm-future { color: var(--tx1); }
+
+@media (max-width: 620px) {
+  .dm-count { font-size: 3rem; }
+  .dm-row { flex-direction: column; gap: var(--sp-2); padding: var(--sp-4); }
+  .dm-n { font-size: 1.2rem; }
+  .dm-lbl { display: block; margin-inline-start: 0; margin-top: var(--sp-2); }
+}
+
+/* ─── PROFILE: STATE > EVIDENCE ─────────────────────────────────────────
+   The profile used to open with eight stat cards of identical weight, which
+   is a dashboard, not an identity. Hierarchy here comes from SIZE, SPACE and
+   RESTRAINT only — no gradient, no glass, no shadow tricks. The phase numeral
+   is the single hero; the stats below are deliberately smaller and quieter so
+   they read as evidence supporting a claim, never as competing claims. */
+.pf-state { margin-bottom: var(--sp-2); }
+.pf-state-row { display: flex; align-items: center; gap: var(--sp-5); margin-top: var(--sp-4); }
+.pf-phase {
+  font-size: 4.5rem; line-height: .9; font-weight: 700; color: var(--g2);
+  letter-spacing: -.05em; flex-shrink: 0;
+}
+.pf-state-body { min-width: 0; }
+.pf-state-title { margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--tx0); line-height: 1.3; }
+.pf-state-sub { margin: var(--sp-2) 0 0; font-size: .88rem; color: var(--tx2); line-height: 1.7; }
+.pf-dot { color: var(--tx3); margin: 0 var(--sp-2); }
+
+/* the only forward-looking line on the page — gold rule, never a button */
+.pf-next {
+  margin: var(--sp-5) 0 0; padding-inline-start: var(--sp-4);
+  border-inline-start: 2px solid var(--g2);
+  font-size: 1rem; color: var(--tx0); line-height: 1.6;
+}
+.pf-next-lbl {
+  display: block; font-size: .68rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--g1); margin-bottom: 4px;
+}
+
+/* evidence — smaller than the state, and it stays that way at every width */
+.pf-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-3); margin-top: var(--sp-3); }
+
+@media (max-width: 720px) { .pf-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) {
+  /* Recomposed, not scaled: the numeral sits above the title so a long Arabic
+     phase name never wraps into a narrow column beside a 4.5rem figure. */
+  .pf-state-row { flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+  .pf-phase { font-size: 3.2rem; }
+  .pf-state-title { font-size: 1.25rem; }
+}
+
+/* "أنت هنا" — the current station named in words, so position on the rail is
+   never carried by the accent colour alone. */
+.snake-here {
+  display: inline-flex; align-items: center;
+  padding: var(--sp-1) var(--sp-2); border-radius: var(--r-full);
+  background: var(--g2); color: var(--on-gold);
+  font-size: .68rem; font-weight: 700; letter-spacing: .06em;
+}
+
+/* ─── AGE ELIGIBILITY TIMELINE ──────────────────────────────────────────
+   A lookup, not artwork: the trainee arrives with one number and leaves with
+   one document. The age is the entry point, so it carries the visual weight;
+   the document is the answer; the note is the exception that trips people up.
+   Desktop lays the bands side by side so the progression is one glance;
+   mobile stacks them, keeping the identical age→document→note hierarchy
+   rather than shrinking an unreadable horizontal rail. Tokens only. */
+.aet { margin: var(--sp-5) 0; }
+.aet-lede { margin: var(--sp-2) 0 var(--sp-5); font-size: .88rem; color: var(--tx2); line-height: 1.7; }
+.aet-lede strong { color: var(--g1); font-weight: 600; }
+
+.aet-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); }
+.aet-band {
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--s-1); border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  border-inline-start: 3px solid var(--g3);
+}
+/* the terminal band is a STOP, not another step — stated in the border too,
+   never by colour alone (the text says «الفصل إجباري»). */
+.aet-band--end { border-inline-start-color: var(--risk); }
+
+.aet-age {
+  display: block; font-size: 1.15rem; font-weight: 700;
+  color: var(--g1); letter-spacing: -.01em; margin-bottom: var(--sp-2);
+  white-space: nowrap;   /* «أقل من 16» must never wrap into two lines */
+}
+.aet-band--end .aet-age { color: var(--risk); }
+.aet-doc { display: block; font-size: .95rem; color: var(--tx0); line-height: 1.55; }
+.aet-note { display: block; margin-top: var(--sp-2); font-size: .82rem; color: var(--tx2); line-height: 1.7; }
+
+@media (min-width: 760px) {
+  /* stretch (not start) so the four bands share one baseline — uneven
+     heights made the last band look like a different kind of element. */
+  .aet-list { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ─── RENEWAL PENALTY TIERS ─────────────────────────────────────────────
+   A decision path, not a price list. The gate («خلصت السنة؟») is what the
+   lesson's own quiz shows trainees get wrong, so the three stages are stacked
+   in the order the question is actually asked, and the penalty VALUE carries
+   the visual weight because that is what the trainee is looking for. Tokens
+   only — the free-window stage is marked by its own text («بلا غرامة») as
+   well as its border, never by colour alone. */
+.rpt { margin: var(--sp-5) 0; }
+.rpt-lede { margin: var(--sp-2) 0 var(--sp-5); font-size: .88rem; color: var(--tx2); line-height: 1.7; }
+.rpt-lede strong { color: var(--g1); font-weight: 600; }
+
+.rpt-stage {
+  padding: var(--sp-4) var(--sp-5); margin-bottom: var(--sp-3);
+  background: var(--s-1); border: 1px solid var(--line);
+  border-radius: var(--r-md); border-inline-start: 3px solid var(--g3);
+}
+.rpt-stage--free { border-inline-start-color: var(--ready); }
+
+.rpt-cond { display: block; font-size: .8rem; color: var(--tx3); line-height: 1.6; }
+.rpt-val {
+  display: block; margin: var(--sp-2) 0; font-size: 1.6rem;
+  font-weight: 700; color: var(--g1); letter-spacing: -.02em;
+}
+.rpt-stage--free .rpt-val { font-size: 1.15rem; color: var(--ready); }
+.rpt-act { display: block; font-size: .85rem; color: var(--tx1); line-height: 1.7; }
+.rpt-act strong { color: var(--tx0); font-weight: 600; }
+
+.rpt-tiers { list-style: none; margin: var(--sp-3) 0; padding: 0; display: grid; gap: var(--sp-2); }
+.rpt-tier {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--sp-3); padding: var(--sp-2) var(--sp-3);
+  background: var(--s-2); border-radius: var(--r-sm);
+}
+.rpt-tier-y { font-size: .85rem; color: var(--tx2); }
+.rpt-tier-p { font-size: 1.15rem; font-weight: 700; color: var(--g1); }
+
+@media (min-width: 620px) {
+  .rpt-tiers { grid-template-columns: repeat(4, 1fr); }
+  .rpt-tier { flex-direction: column; align-items: flex-start; gap: 2px; }
+}
+
+/* ─── CHECK BEFORE ACT ──────────────────────────────────────────────────
+   A sequence, then a fork. The numbered steps are the order of QUESTIONS —
+   the thing the lesson says trainees get wrong — and the fork is the only
+   place a decision is made. The "broken" branch is marked by its own word
+   («مكسور») and its outcome text, not by colour alone. Tokens only. */
+.cba { margin: var(--sp-5) 0; }
+.cba-lede { margin: var(--sp-2) 0 var(--sp-5); font-size: .88rem; color: var(--tx2); line-height: 1.7; }
+.cba-lede strong, .cba-eg strong { color: var(--g1); font-weight: 600; }
+
+.cba-steps { list-style: none; margin: 0 0 var(--sp-4); padding: 0; display: grid; gap: var(--sp-2); }
+.cba-step {
+  display: grid; grid-template-columns: auto 1fr; gap: var(--sp-2) var(--sp-3);
+  align-items: baseline; padding: var(--sp-3) var(--sp-4);
+  background: var(--s-1); border: 1px solid var(--line);
+  border-radius: var(--r-md); border-inline-start: 3px solid var(--g3);
+}
+.cba-n { grid-row: span 2; font-size: 1.25rem; font-weight: 700; color: var(--g1); }
+.cba-label { font-size: .95rem; font-weight: 600; color: var(--tx0); }
+.cba-q { grid-column: 2; font-size: .85rem; color: var(--tx2); line-height: 1.6; }
+
+.cba-fork { display: grid; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.cba-branch {
+  padding: var(--sp-4); background: var(--s-2);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  border-inline-start: 3px solid var(--ready);
+}
+.cba-branch--broken { border-inline-start-color: var(--risk); }
+.cba-verdict { display: block; font-size: 1.05rem; font-weight: 700; color: var(--ready); margin-bottom: var(--sp-2); }
+.cba-branch--broken .cba-verdict { color: var(--risk); }
+.cba-out { display: block; font-size: .88rem; color: var(--tx1); line-height: 1.7; }
+.cba-out strong { color: var(--tx0); font-weight: 600; }
+
+.cba-eg { margin: 0; font-size: .85rem; color: var(--tx2); line-height: 1.75; }
+
+@media (min-width: 700px) {
+  .cba-steps { grid-template-columns: repeat(3, 1fr); }
+  .cba-fork { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Base header — moved out of an inline style so the sidebar media query can
+   actually override `position`. Inline styles win over stylesheets, which is
+   why the rail first rendered as a 264px-wide sticky block instead of a
+   full-height fixed one. */
+.shell-header {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--overlay); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+/* ─── SIDEBAR SHELL (≥1100px) ───────────────────────────────────────────
+   The same header element becomes a vertical rail. No JSX restructure — the
+   flex row turns into a column and the page grid shifts to make room.
+
+   🔴 It sits at the INLINE START (right in RTL, left in LTR), not a hard
+   "left". The platform is RTL and the eye enters from the right; a hard-left
+   rail would put navigation where an Arabic reader's eye exits. The logical
+   property also means the rail follows automatically if the product language
+   ever flips the document direction.
+
+   Below 1100px the horizontal header returns untouched: a fixed rail on a
+   tablet or phone spends width the content needs, and the existing mobile
+   header rules already solve that case. */
+/* Moved out of an inline style: `margin: 0 auto` beat the media query and the
+   page never shifted when the rail collapsed — the same inline-wins trap the
+   header hit earlier. */
+.shell-content { max-width: var(--w-shell); margin: 0 auto; }
+
+@media (min-width: 1100px) {
+  /* 🔴 Rail moved to the physical LEFT (`left: 0`, not inline-start) at the
+     user's explicit request, and the page is pushed by `margin-left`. The
+     document stays dir="rtl" — only the rail's side is pinned. */
+  .shell-header {
+    position: fixed; top: 0; bottom: 0; left: 0;
+    width: var(--rail-w, 264px); border-bottom: 0;
+    border-inline-end: 0; border-right: 1px solid var(--line);
+    /* 🔴 `overflow-y: auto` clipped the profile popover — it opened INSIDE a
+       264px rail and got cut off. The rail's own content never overflows
+       (mark, identity, three links, two controls), so visible is safe and the
+       popover can escape the rail the way Apple's and Anthropic's sidebars
+       let theirs sit beside the column rather than under the trigger. */
+    overflow: visible; z-index: 20;
+    transition: width .22s var(--ease);
+  }
+  .shell-header-row {
+    flex-direction: column; align-items: stretch;
+    max-width: none; height: 100%;
+    padding: var(--sp-5) var(--sp-4);
+    gap: var(--sp-4);
+  }
+
+  /* ORDER: brand → identity → nav → actions. Identity sits directly under the
+     brand because "who am I" belongs with the mark, not orphaned at the far
+     bottom where it read as a footer. */
+  .shell-identity { order: 1; margin-top: 0; padding-bottom: var(--sp-4); border-bottom: 1px solid var(--line); }
+  .shell-nav      { order: 2; flex-direction: column; align-items: stretch; gap: var(--sp-1); }
+  .shell-actions  { order: 3; margin-top: auto; padding-top: var(--sp-4); border-top: 1px solid var(--line); }
+  .shell-spacer   { display: none; }
+
+  .shell-nav .pill {
+    width: 100%; justify-content: flex-start;
+    border-color: transparent; border-radius: var(--r-md);
+    padding-inline: var(--sp-3); gap: var(--sp-3);
+  }
+  .shell-nav .pill[aria-current="page"],
+  .shell-nav .pill:hover { border-color: var(--line-2); background: var(--s-1); }
+
+  /* 🔴 The rail is PADDING on the root, not a margin on the content. With a
+     margin the 1080px column stayed pinned beside the rail, so every pixel the
+     rail gave back on collapse became dead space on the far side — measured at
+     1920px: 576px of gap open, 764px collapsed, i.e. collapsing made it worse.
+     As padding, the content column re-centres inside whatever space is left. */
+  .shell-root { padding-left: var(--rail-w, 264px); transition: padding-left .22s var(--ease); }
+  .shell-root[data-collapsed="true"] { --rail-w: 76px; }
+
+  /* COLLAPSED — icons only. Width is a variable so the rail and the page
+     shift together from one source. */
+  .shell-header[data-collapsed="true"] { --rail-w: 76px; }
+  /* Collapsed = icons only. `font-size: 0` on the pill hides its text node —
+     which has no element of its own — while the icon keeps its own size. */
+  [data-collapsed="true"] .shell-brand-name,
+  [data-collapsed="true"] .shell-idtext { display: none; }
+  [data-collapsed="true"] .shell-nav .pill { font-size: 0; gap: 0; }
+  [data-collapsed="true"] .shell-nav .pill svg { width: 20px; height: 20px; }
+  [data-collapsed="true"] .shell-identity { display: flex; justify-content: center; }
+  [data-collapsed="true"] .shell-header-row { padding-inline: var(--sp-2); align-items: center; }
+  [data-collapsed="true"] .shell-nav .pill { justify-content: center; padding-inline: 0; }
+  [data-collapsed="true"] .shell-actions { flex-direction: column; gap: var(--sp-2); align-items: center; }
+  /* the switch keeps a short readable marker instead of collapsing to an
+     empty capsule — an unlabelled control is worse than a small one. */
+  [data-collapsed="true"] .shell-actions .pill { min-width: 44px; width: 44px; padding: 0; font-size: .7rem; }
+
+  .rail-toggle {
+    order: 0; align-self: flex-end;
+    width: 44px; height: 44px; min-height: 44px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: none; border: 1px solid var(--line); border-radius: var(--r-sm);
+    color: var(--tx3); cursor: pointer;
+    transition: color .15s var(--ease), border-color .15s var(--ease);
+  }
+  .rail-toggle:hover { color: var(--tx0); border-color: var(--line-3); }
+
+  /* Same fix as the profile popover: the bell lives at the BOTTOM of the rail
+     (`.shell-actions` has margin-top:auto), so opening below it pushed the
+     panel off the viewport — measured at y=836 of an 844px screen. Anchor it
+     beside the rail instead, near the bottom where its trigger is. */
+  .ac-panel { position: fixed !important;
+    inset-inline-end: auto !important; inset-inline-start: auto !important;
+    right: auto !important;
+    left: calc(var(--rail-w, 264px) + var(--sp-2)) !important;
+    top: auto !important; bottom: var(--sp-5) !important; }
+
+  /* Popover sits BESIDE the rail, not under the trigger. `fixed` against the
+     viewport — an absolute `100%` resolves against the small trigger wrapper,
+     which left the menu still inside the 264px column and clipped. Offset by
+     the rail width so it follows the collapse. */
+  /* In RTL, inset-inline-end IS left — declaring both made the last one win
+     and pinned the menu to x=4. Use physical sides only, right first. */
+  .pm-menu { position: fixed !important;
+    inset-inline-end: auto !important; inset-inline-start: auto !important;
+    right: auto !important;
+    left: calc(var(--rail-w, 264px) + var(--sp-2)) !important;
+    top: var(--sp-8) !important; }
+  [data-collapsed="true"] .rail-toggle { align-self: center; }
+}
+/* the toggle is a desktop-rail affordance only */
+.rail-toggle { display: none; }
+@media (min-width: 1100px) { .rail-toggle { display: inline-flex; } }
+
+
+/* ─── MOBILE: THIN HEADER + BOTTOM TAB BAR ──────────────────────────────
+   Measured before this change: the stacked header consumed 225px of an
+   844px screen — 27% gone before any content. Navigation moves to a bottom
+   bar (where the thumb already rests), and the header keeps only identity
+   and the two controls, on ONE row.
+
+   Restraint over decoration: no blur stack, no floating pill, no shadow —
+   a hairline top border and the same surface token the rest of the app uses. */
+.tabbar { display: none; }
+
+@media (max-width: 1099px) {
+  .tabbar {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+    position: fixed; inset-inline: 0; bottom: 0; z-index: 30;
+    background: var(--overlay-strong); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tabbar-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--sp-1); min-height: 56px; padding: var(--sp-2) 0;
+    background: none; border: 0; cursor: pointer;
+    color: var(--tx3); font-family: var(--font-body); font-size: .68rem; font-weight: 600;
+    transition: color .15s var(--ease);
+  }
+  .tabbar-item--on { color: var(--g1); }
+  .tabbar-item:active:not(:disabled) { transform: scale(.96); }
+
+  /* the header sheds navigation and collapses to a single row */
+  .shell-nav { display: none; }
+  .shell-header-row { flex-wrap: nowrap; padding: var(--sp-3) var(--sp-4); gap: var(--sp-3); }
+  .shell-spacer { display: block; flex: 1; }
+  /* Identity collapses to the avatar alone: at 390px the name wrapped
+     mid-word («Ahmed / ohamed»), and a broken name reads as a defect. The
+     avatar still opens the full profile, so nothing is lost. */
+  .shell-idtext { display: none; }
+  /* content clears the bar so the last card is never trapped behind it */
+  .shell-content { padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--sp-5)); }
+}
+
+/* ─── MOBILE HERO — compact, same order ─────────────────────────────────
+   Measured at 390px: hero spanned 475px (ring 154px + a 56px top pad + a
+   forced wrap). `min-width: 18ch` on the text column pushed the ring onto
+   its own line, doubling the block. Mobile keeps the ring BESIDE the text
+   and shrinks it; the order Phase → Title → Remaining → Progress is
+   untouched, as is every token. Desktop rules are not in this query. */
+@media (max-width: 640px) {
+  .jr-hero { --ring: 88px; flex-wrap: nowrap !important;
+    gap: var(--sp-4) !important; padding: var(--sp-5) 0 var(--sp-4) !important; }
+  .jr-hero-text { min-width: 0 !important; }
+  .jr-hero .t-h1 { font-size: 1.35rem; margin: 4px 0 var(--sp-2) !important; }
+  .jr-hero .dayring span.t-num { font-size: 1.75rem !important; }
+  /* The approval capsule overlapped the shrunken ring and covered «من 60 يوم».
+     The same percentage already appears in the line below, so hiding it on
+     mobile loses nothing — the accessible label stays in that line. */
+  .jr-hero .dayring > *:last-child { display: none; }
+}
+@media (max-width: 380px) { .jr-hero { --ring: 76px; } }

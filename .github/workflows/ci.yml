@@ -1,0 +1,25 @@
+# CI quality gate — every push/PR must pass typecheck + tests + build before merge.
+# This is the automated enforcement of the gate we ran manually every version.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Tests
+        run: npx vitest run
+      - name: Production build
+        run: npm run build
