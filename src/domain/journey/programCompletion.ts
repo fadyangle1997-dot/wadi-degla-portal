@@ -8,7 +8,7 @@
  * platform uses — no new state, no duplicated rule.
  */
 import type { TrainingState } from '../../app/training/trainingStore';
-import { reviewOf } from '../../app/training/trainingStore';
+import { reviewOf } from '../training/selectors';
 import { MODULES } from '../../content/registry';
 
 /** Every module trainer-approved → the whole program is complete. */

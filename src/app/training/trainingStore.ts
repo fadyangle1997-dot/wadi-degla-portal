@@ -4,6 +4,7 @@
  * documented pseudo-identity until real auth binds progress to users (Phase 7).
  */
 import { useSyncExternalStore } from 'react';
+import { reviewOf, assignedLessonsOf, finalDecisionOf } from '../../domain/training/selectors';
 import { identityStore } from '../identity/identityStore';
 import type { Scores, EvaluationDecision } from '../../domain/evaluation';
 import {
@@ -125,16 +126,14 @@ export const trainingStore = {
 export const useTraining = (): TrainingState =>
   useSyncExternalStore(trainingStore.subscribe, trainingStore.get);
 
-/* ---------- pure reads ---------- */
-export const reviewOf = (t: TrainingState, employeeId: string, moduleId: string): ModuleReview =>
-  t.reviews[employeeId]?.[moduleId] ?? { status: 'none' };
-
-export const assignedLessonsOf = (t: TrainingState, employeeId: string): readonly string[] =>
-  t.assignedLessons[employeeId] ?? [];
-
-/** The manager's final readiness decision for a trainee, if one exists. */
-export const finalDecisionOf = (t: TrainingState, employeeId: string): FinalDecision | null =>
-  t.finalDecisions[employeeId] ?? null;
+/* ---------- pure reads ----------
+   🔴 These now LIVE in `domain/training/selectors.ts` and are re-exported here.
+   Four domain modules imported them from this file as values, which dragged
+   React and localStorage — this module's own dependencies — into any Node
+   process that imported the domain. The server has to run the same pure
+   functions as the client, so the functions cannot live behind a store.
+   Every existing import path still works. */
+export { reviewOf, assignedLessonsOf, finalDecisionOf };
 
 export { EMPTY_TRAINING };
 export type { TrainingState, ModuleReview, FinalDecision };

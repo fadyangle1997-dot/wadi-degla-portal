@@ -12,7 +12,7 @@
  * Single source of truth: every number here traces back to a training event.
  */
 import type { TrainingState, FinalDecision } from '../../app/training/trainingStore';
-import { finalDecisionOf } from '../../app/training/trainingStore';
+import { finalDecisionOf } from '../training/selectors';
 import {
   ALL_DIMENSIONS, EVALUATION_DIMENSIONS, readinessScore, DECISION_LABEL,
   type EvaluationDimension, type Scores, type EvaluationDecision,

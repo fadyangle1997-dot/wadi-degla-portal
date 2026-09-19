@@ -10,11 +10,11 @@
  */
 import type { Progress } from '../../app/backend';
 import type { TrainingState } from '../../app/training/trainingStore';
-import { reviewOf } from '../../app/training/trainingStore';
+import { reviewOf } from '../training/selectors';
 import { MODULES } from '../../content/registry';
 import {
   isModuleUnlocked, isModuleComplete, isLessonDone, examPassed,
-} from '../../app/progress';
+} from '../progress/selectors';
 import type { Module } from '../types/content';
 
 export type NextActionKind =

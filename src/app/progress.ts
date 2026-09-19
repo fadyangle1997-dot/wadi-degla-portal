@@ -9,6 +9,7 @@ import { MODULES, moduleById } from '../content/registry';
 import { TRAINING_POLICY } from '../domain/policy';
 import { canAttemptExam, type ExamAttempt, type AttemptDecision } from '../domain/exam/attempts';
 import { trainingStore, reviewOf, currentTraineeId, type TrainingState } from './training/trainingStore';
+import { isModuleUnlocked as pureIsModuleUnlocked } from '../domain/progress/selectors';
 import { LocalStorageBackend, type Progress, type ProgressBackend, type ProgressEvent } from './backend';
 
 export type { Progress } from './backend';
@@ -86,42 +87,21 @@ export const currentCommitment = (
   };
 };
 
-export const isLessonDone = (p: Progress, lessonId: string) => !!p.lessons[lessonId];
+/* ---------- pure reads ----------
+   🔴 These live in `domain/progress/selectors.ts` (Phase 1, R1) because
+   `domain/journey/nextAction.ts` needs them and must not drag React and
+   localStorage — this module's own dependencies — into a Node process.
+   `isModuleUnlocked` keeps its convenient store-backed defaults HERE, where a
+   store exists; the domain version takes both arguments explicitly. */
+import { isLessonDone, moduleLessonsDone, examPassed, isModuleComplete } from '../domain/progress/selectors';
+export { isLessonDone, moduleLessonsDone, examPassed, isModuleComplete };
 
-export const moduleLessonsDone = (p: Progress, moduleId: string) => {
-  const m = moduleById(moduleId);
-  return m ? m.lessons.filter(l => isLessonDone(p, l.id)).length : 0;
-};
-
-export const examPassed = (p: Progress, moduleId: string) =>
-  (p.exams[moduleId] ?? 0) >= TRAINING_POLICY.passThreshold;
-
-export const isModuleComplete = (p: Progress, moduleId: string) => {
-  const m = moduleById(moduleId);
-  if (!m) return false;
-  return m.lessons.every(l => isLessonDone(p, l.id)) && examPassed(p, moduleId);
-};
-
-/**
- * Phase 4: with 'per-unit' gating, passing the exam is NOT enough — the
- * prerequisite unit must also carry the trainer's practical approval.
- * Learning without practical approval never unlocks the next stage.
- */
 export const isModuleUnlocked = (
   p: Progress,
   moduleId: string,
   t: TrainingState = trainingStore.get(),
   traineeId: string = currentTraineeId(),
-) => {
-  const m = moduleById(moduleId);
-  if (!m) return false;
-  return m.unlock.requiresUnits.every(req => {
-    const knowledge = isModuleComplete(p, req) && (p.exams[req] ?? 0) >= m.unlock.minExamScore;
-    if (!knowledge) return false;
-    if (TRAINING_POLICY.evaluationGating !== 'per-unit') return true;
-    return reviewOf(t, traineeId, req).status === 'ready';
-  });
-};
+) => pureIsModuleUnlocked(p, moduleId, t, traineeId);
 
 /**
  * LEARNING progress — how much the trainee has DONE: lessons completed plus
