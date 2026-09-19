@@ -19,7 +19,7 @@ import { describe, it, expect } from 'vitest';
 
 describe('src/domain runs in plain Node', () => {
   it('has no DOM in this environment (the test is only meaningful without one)', () => {
-    expect(typeof globalThis.window).toBe('undefined');
+    expect(typeof (globalThis as { window?: unknown }).window).toBe('undefined');
     expect(typeof (globalThis as { localStorage?: unknown }).localStorage).toBe('undefined');
   });
 

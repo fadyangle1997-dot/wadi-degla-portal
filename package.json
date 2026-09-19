@@ -1,31 +1,39 @@
 {
   "name": "wadi-degla-operations-academy",
   "private": true,
-  "version": "7.26.0",
+  "version": "7.27.0",
   "type": "module",
   "description": "Wadi Degla Operations Academy — enterprise training platform. Content-as-data, isolated business-rules engine, feature-based architecture.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "server:dev": "tsx watch server/index.ts",
+    "server:start": "tsx server/index.ts",
+    "server:migrate": "tsx -e \"import('./server/db/client').then(async m => { const sql = await m.connect(); const { migrate } = await import('./server/db/migrate'); console.log(await migrate(sql)); await sql.end(); })\"",
+    "test:server": "vitest run server"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/ibm-plex-sans-arabic": "^5.2.9",
     "@fontsource/inter": "^5.2.8",
+    "fastify": "^5.12.5",
     "lucide-react": "^0.383.0",
     "motion": "^11.0.0",
+    "pino": "^10.3.1",
+    "postgres": "^3.4.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@playwright/test": "^1.61.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.6.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
@@ -33,7 +41,7 @@
     "jsdom": "^29.1.1",
     "playwright": "^1.62.1",
     "ts-prune": "^0.10.3",
-    "tsx": "^4.23.0",
+    "tsx": "^4.23.13",
     "typescript": "^5.5.3",
     "vite": "^5.3.4",
     "vitest": "^2.0.0"
