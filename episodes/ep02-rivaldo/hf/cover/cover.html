@@ -1,0 +1,47 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../fonts/fonts.css"><link rel="stylesheet" href="../tokens.css">
+<style>
+html,body{margin:0;background:var(--black900)}
+#c{position:relative;overflow:hidden;background:var(--black900)}
+.ph{position:absolute;inset:0;background-size:cover;background-position:50% 22%}
+.fade{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(11,10,8,0) 0%,rgba(11,10,8,.88) 32%,var(--black900) 60%)}
+.vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,rgba(0,0,0,0) 45%,rgba(0,0,0,.6) 100%)}
+.txt{position:absolute;left:60px;right:60px;text-align:center}
+.lab{font-family:var(--fHero);font-weight:600;letter-spacing:14px;color:var(--textSecondary);text-transform:uppercase}
+.sur{font-family:var(--fHero);font-weight:900;font-stretch:62.5%;line-height:.86;padding:0 .04em}
+.rule{display:flex;justify-content:center;margin:22px 0 26px}.rule i{display:block;width:210px;height:3px}
+.ar{direction:rtl;font-family:var(--fArStatement);font-weight:800;line-height:1.5;white-space:nowrap;display:inline-block}.line{display:block}
+.ar1{color:var(--white100)}
+</style></head><body><div id="c">
+<div class="ph" style="background-image:url(../assets/photos/p1.jpg)"></div><div class="vig"></div><div class="fade" id="fd"></div>
+<div class="txt" id="t">
+ <div class="lab" id="lab">Episode 2 · Ballon d’Or 1999</div>
+ <div class="sur gold" id="sur">RIVALDO</div>
+ <div class="rule"><i style="background:var(--fcbBlue)"></i><i style="background:var(--fcbGarnet)"></i></div>
+ <div class="line"><span class="ar ar1" id="a1">أفضل لاعب في العالم…</span></div>
+ <div class="line"><span class="ar gold" id="a2">قعد على الدكة!</span></div>
+</div></div>
+<script>
+const p=new URLSearchParams(location.search); const W=+p.get('w'), H=+p.get('h'), k=W/1080;
+const c=document.getElementById('c'); c.style.width=W+'px'; c.style.height=H+'px';
+const wide=W>H;
+const t=document.getElementById('t');
+if(wide){ document.querySelector('.ph').style.cssText+='left:0;right:auto;width:58%;';
+  document.getElementById('fd').style.cssText='position:absolute;top:0;bottom:0;left:30%;right:0;background:linear-gradient(90deg,rgba(11,10,8,0) 0%,rgba(11,10,8,.9) 30%,var(--black900) 55%)';
+  t.style.cssText='position:absolute;left:auto;right:70px;width:820px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;text-align:center';
+  [['lab',26],['sur',250],['a1',78],['a2',96]].forEach(([id,s])=>document.getElementById(id).style.fontSize=s+'px');
+} else {
+  document.getElementById('fd').style.height=(H*0.66)+'px';
+  t.style.bottom=(H>1500? 300*k : 70*k)+'px';
+  [['lab',24],['sur',290],['a1',80],['a2',100]].forEach(([id,s])=>document.getElementById(id).style.fontSize=(s*k)+'px');
+}
+
+// fit to width (DS §4: canvas width − 110 px, measured on the ink box), never wrap
+window.__fit=false;
+document.fonts.ready.then(()=>{
+const maxW = wide ? 760 : W - 110;
+for (const id of ['sur','a1','a2']) { const el=document.getElementById(id); let f=parseFloat(getComputedStyle(el).fontSize);
+  el.style.display='inline-block'; el.style.alignSelf='center';
+  while (el.getBoundingClientRect().width > maxW && f > 10) { f*=0.97; el.style.fontSize=f+'px'; } }
+window.__fit=true; });
+</script></body></html>
