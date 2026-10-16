@@ -4,7 +4,8 @@
 Everything is synthesised here; no third-party music or samples (copyright-safe for Facebook).
 Bed: drone pad low-passed ~900 Hz; D minor through the struggle, D major at the Ballon d'Or and the goal;
 a low pulse ostinato (108 / 116 bpm) for the momentum sections; silence before every impact.
-Outputs: assets/bed.wav, assets/sfx.wav (48 kHz stereo). mix.sh ducks + masters to -14 LUFS / -1.5 dBTP.
+Outputs: assets/sfx.wav (48 kHz stereo) and assets/bed_drone.wav (the v1 drone bed, superseded by score.py).
+EP2_NO_MONTAGE=1 → assets/sfx_nomontage.wav without the montage SFX. mix.py ducks + masters.
 """
 import json, os, numpy as np, soundfile as sf
 from scipy.signal import butter, sosfilt
@@ -191,7 +192,7 @@ put(sfx, ls(118), shimmer(2.5), -10); put(sfx, ls(120) + 0.3, hit(70, 45, 0.7, 0
 put(sfx, ls(131), hit(60, 36, 1.6, 0.3), -14); put(sfx, ls(131) + 0.1, shimmer(3.0), -8)       # title
 put(sfx, ls(137), hit(70, 45, 0.7, 0.2), -16)                                                   # RONALDINHO
 put(sfx, BODY_END + 0.3, shimmer(3.5), -9)
-if os.path.exists(f'{HERE}/assets/montage_goals.mp4'):        # archive montage (s19)
+if os.environ.get('EP2_NO_MONTAGE') != '1' and os.path.exists(f'{HERE}/assets/montage_goals.mp4'):        # archive montage (s19)
     m0 = ls(79) - 0.2
     for dt in (0.0, 0.7, 1.4, 2.1): put(sfx, m0 + dt - 0.015, whoosh(0.3, 500, 7000), -21)
     put(sfx, m0 + 2.6, kick(), -15); put(sfx, m0 + 4.25, crowd(2.2, False), -15)                                                      # end card
@@ -199,7 +200,8 @@ if os.path.exists(f'{HERE}/assets/montage_goals.mp4'):        # archive montage 
 # ------------------------------------------------------------------ write (bed low-passed ~900 Hz overall, DS §7)
 for ch in range(2): bed[:, ch] = lowp(bed[:, ch], 1400)
 fo = int(1.2 * SR); bed[-fo:] *= np.linspace(1, 0, fo)[:, None]; sfx[-fo:] *= np.linspace(1, 0, fo)[:, None]
-for name, buf in (('bed', bed), ('sfx', sfx)):
+SUF = '_nomontage' if os.environ.get('EP2_NO_MONTAGE') == '1' else ''
+for name, buf in (('bed_drone', bed), ('sfx' + SUF, sfx)):
     pk = np.max(np.abs(buf)); buf = buf / pk * 0.5 if pk > 0.5 else buf
     sf.write(f'{HERE}/assets/{name}.wav', buf.astype(np.float32), SR, subtype='FLOAT')
     print(name, f'{TOTAL}s peak {20*np.log10(np.max(np.abs(buf))+1e-9):.1f} dBFS')
