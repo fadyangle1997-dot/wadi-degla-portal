@@ -1,0 +1,67 @@
+/* Barcelona Army Egypt: Design System v9 tokens (exact values; scenes reference these only) */
+
+:root {
+  /* primitives */
+  --ink:#060504; --black900:#0B0A08; --black800:#121110; --char700:#1B1916; --char600:#26231F; --char500:#3A362F;
+  --stone400:#6F685E; --stone300:#9D958A; --stone200:#CAC3B7;
+  --white100:#F4EFE6; --white200:#EAE3D6; --paper300:#DCD0B8; --paper400:#BFAE8C;
+  --gold900:#3E311B; --gold700:#86693A; --gold600:#A98A55; --gold500:#C8A86E; --gold400:#D8BF8D; --gold300:#E7D6AE; --gold100:#F6EDD7;
+  --fcbBlue:#004D98; --fcbBlueDeep:#08203F; --fcbGarnet:#A50044; --fcbGarnetDeep:#3E0A1D;
+  --stampInk:#A3302A; --stampInkLight:#B83A30; --stampInkBlack:#24211D;
+  /* data colours (real objects only) */
+  --brGreen:#009C3B; --brYellow:#FEDF00; --brBlue:#002776;
+  /* semantic */
+  --bgBase:var(--black900); --bgDeep:var(--ink); --bgSurface:var(--black800); --bgRaised:var(--char700); --hairline:var(--char500);
+  --textPrimary:var(--white100); --textSecondary:var(--stone200); --textMuted:var(--stone300); --textDim:var(--stone400);
+  --accent:var(--gold500); --accentLight:var(--gold300); --accentDeep:var(--gold700); --accentSoft:var(--gold600); --light:var(--gold100);
+  /* component */
+  --panelBg:var(--black800); --panelAlt:var(--char700); --panelDeep:var(--ink); --panelEdge:var(--gold500); --panelEdgeMuted:var(--char500);
+  --flapTile:var(--ink);
+  /* type families */
+  --fHero:'Archivo'; --fSerif:'Instrument Serif'; --fMono:'DM Mono'; --fArStatement:'Noto Kufi Arabic'; --fArInfo:'IBM Plex Sans Arabic'; --fArQuote:'Amiri';
+}
+
+html, body { margin:0; background:var(--bgBase); }
+.canvas { position:relative; width:1080px; height:1350px; overflow:hidden; background:var(--bgBase); color:var(--textPrimary); }
+
+/* gold three-stop metal for type (DS 2.4) */
+.gold { background:linear-gradient(180deg, var(--gold300) 0%, var(--gold500) 50%, var(--gold700) 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+.hero { font-family:var(--fHero); font-weight:900; font-stretch:62.5%; line-height:.86; letter-spacing:0; }
+.label { font-family:var(--fHero); font-weight:600; font-stretch:100%; text-transform:uppercase; }
+.mono { font-family:var(--fMono); font-weight:500; letter-spacing:3px; }
+.serif-i { font-family:var(--fSerif); font-style:italic; }
+
+/* chapter marker (DS 5.3, 4:5 offsets) */
+.chapter { position:absolute; left:46px; top:44px; }
+.chapter .num { font-family:var(--fSerif); font-size:52px; line-height:1; color:var(--gold500); }
+.chapter .name { font-family:var(--fHero); font-weight:600; font-size:19px; letter-spacing:6px; color:rgba(244,239,230,.9); margin-left:14px; vertical-align:8px; }
+.chapter .rule { height:1.5px; background:var(--gold500); width:100%; margin-top:10px; }
+.chapter .ticks { display:flex; gap:5px; margin-top:8px; }
+.chapter .ticks i { width:9px; height:2px; background:rgba(244,239,230,.18); }
+.chapter .ticks i.past { background:rgba(200,168,110,.45); }
+.chapter .ticks i.now { background:var(--gold500); }
+
+/* morph plate (DS 5.1) */
+.plate { position:absolute; background:var(--panelBg); border:1.5px solid rgba(200,168,110,.75); border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,.7); box-sizing:border-box; }
+.plate .tick { position:absolute; width:16px; height:16px; border-color:var(--gold300); border-style:solid; border-width:0; }
+.plate .tl { left:12px; top:12px; border-left-width:2px; border-top-width:2px; }
+.plate .tr { right:12px; top:12px; border-right-width:2px; border-top-width:2px; }
+.plate .bl { left:12px; bottom:12px; border-left-width:2px; border-bottom-width:2px; }
+.plate .br { right:12px; bottom:12px; border-right-width:2px; border-bottom-width:2px; }
+.plate .acc { position:absolute; left:-1.5px; top:18%; height:64%; width:10px; }
+.plate .acc::before, .plate .acc::after { content:''; position:absolute; top:0; bottom:0; width:4px; }
+.plate .acc::before { left:0; background:var(--fcbBlue); }
+.plate .acc::after { left:6px; background:var(--fcbGarnet); }
+
+/* split-flap (DS 5.2) */
+.flap { width:124px; height:168px; border-radius:6px; background:var(--flapTile); display:flex; align-items:center; justify-content:center; position:relative; box-shadow:inset 0 0 0 1px rgba(58,54,47,.8); }
+.flap::after { content:''; position:absolute; left:0; right:0; top:50%; height:2px; background:var(--black900); }
+.flap span { font-family:var(--fHero); font-weight:900; font-stretch:62.5%; font-size:156px; line-height:1; }
+
+/* burned-in Arabic subtitles (DS 8, 4:5 band y 1060–1210) */
+.subs { position:absolute; left:60px; right:60px; top:1060px; height:150px; display:flex; align-items:center; justify-content:center; }
+.subs div { direction:rtl; font-family:var(--fArInfo); font-weight:700; font-size:46px; line-height:1.45; color:var(--white100); text-align:center; background:rgba(0,0,0,.55); padding:6px 22px 10px; border-radius:8px; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+
+/* film grain + vignette overlays */
+.vignette { position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 45%, rgba(0,0,0,.75) 100%); }

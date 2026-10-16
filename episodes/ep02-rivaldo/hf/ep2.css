@@ -1,0 +1,73 @@
+/* Episode 2 layout (4:5, DS §12). Tokens come from tokens.css; no raw colours except data colours. */
+#root { position:relative; width:1080px; height:1350px; overflow:hidden; background:var(--bgBase); color:var(--textPrimary); }
+.scene { position:absolute; left:0; top:0; width:1080px; height:1350px; overflow:hidden; }
+.fill { position:absolute; inset:0; }
+.center-col { position:absolute; left:60px; right:60px; text-align:center; }
+
+/* photos */
+.photo { position:absolute; overflow:hidden; }
+.cam { position:absolute; inset:0; transform-origin:50% 45%; }
+.grade { position:absolute; inset:0; mix-blend-mode:soft-light; pointer-events:none; }
+.vig { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 42%, rgba(0,0,0,.78) 100%); pointer-events:none; }
+.ph-card { position:absolute; inset:0; background:linear-gradient(160deg, var(--char600), var(--black800) 60%, var(--ink)); }
+.ph-frame { position:absolute; inset:48px; border:1.5px solid rgba(200,168,110,.35); border-radius:6px; }
+.ph-text { position:absolute; left:80px; right:80px; top:44%; text-align:center; }
+.ph-no { font-size:26px; color:var(--gold500); }
+.ph-label { font-size:40px; letter-spacing:8px; color:var(--white100); margin-top:14px; line-height:1.2; }
+.ph-meta { font-size:22px; color:var(--textSecondary); margin-top:12px; }
+
+.yr { position:absolute; left:0; right:0; font-size:260px; line-height:1; }
+.plate-mini { position:absolute; padding:22px 30px; background:rgba(18,17,16,.82); border:1.5px solid rgba(200,168,110,.6); border-radius:10px; z-index:20; }
+.club { position:absolute; left:60px; display:flex; align-items:baseline; gap:18px; padding:8px 18px; background:rgba(6,5,4,.72); border-left:3px solid var(--gold500); }
+.club .label { font-size:40px; letter-spacing:8px; color:var(--white100); }
+.club .mono { font-size:22px; color:var(--textSecondary); }
+
+/* plates */
+.trow, .srow { position:absolute; left:70px; right:70px; display:flex; align-items:flex-end; justify-content:space-between; }
+.trow .label { font-size:44px; letter-spacing:12px; color:var(--textSecondary); margin-bottom:30px; }
+.trow .hero { font-size:170px; }
+.srow .who .n { font-size:34px; letter-spacing:9px; color:var(--textSecondary); }
+.srow .who .c { font-size:22px; color:var(--textDim); margin-top:10px; }
+.srow .who.win .n { color:var(--gold300); }
+.srow .num { display:flex; align-items:flex-end; }
+.srow .pts { font-size:20px; letter-spacing:8px; color:var(--textMuted); margin-left:14px; margin-bottom:28px; }
+.hair { position:absolute; left:70px; right:70px; height:1.5px; background:var(--hairline); }
+.stake { position:absolute; left:90px; right:90px; display:flex; align-items:baseline; gap:24px; }
+.stake .label { font-size:56px; letter-spacing:10px; width:220px; }
+.stake .mono { font-size:28px; color:var(--textSecondary); }
+.code { position:absolute; top:150px; font-size:120px; transform:translateX(-50%); }
+.sboard { position:absolute; left:0; right:0; top:130px; display:flex; align-items:center; justify-content:center; gap:34px; }
+.dash { font-family:var(--fHero); font-weight:900; font-stretch:62.5%; font-size:90px; color:var(--textMuted); }
+.flap span { left:0; right:0; text-align:center; }
+
+/* tactics board (DS 2.3: centre char600 → edge ink, chalk white) */
+.board { position:absolute; left:240px; top:300px; width:600px; height:760px; border-radius:10px; background:radial-gradient(ellipse at 50% 50%, var(--char600), var(--ink)); box-shadow:0 20px 60px rgba(0,0,0,.7); }
+.pitch { position:absolute; inset:40px; border:2px solid rgba(244,239,230,.75); }
+.pitch .half { position:absolute; left:0; right:0; top:50%; height:0; border-top:2px solid rgba(244,239,230,.75); }
+.pitch .circle { position:absolute; left:50%; top:50%; width:150px; height:150px; margin:-75px 0 0 -75px; border:2px solid rgba(244,239,230,.75); border-radius:50%; }
+.pitch .box { position:absolute; left:130px; right:130px; height:110px; border:2px solid rgba(244,239,230,.75); }
+.pitch .box.top { top:-2px; border-top:none; } .pitch .box.bot { bottom:-2px; border-bottom:none; }
+.pdot { position:absolute; width:34px; height:34px; border-radius:50%; background:var(--white100); }
+.gold-dot { background:var(--gold300); }
+.chalk-label { position:absolute; font-family:var(--fHero); font-weight:600; font-size:24px; letter-spacing:6px; color:var(--white100); white-space:nowrap; }
+.arrow { position:absolute; left:150px; top:262px; width:250px; height:4px; background:var(--gold500); transform-origin:0 50%; transform:rotate(-10deg); }
+.arrow::after { content:''; position:absolute; right:-4px; top:-9px; border-left:20px solid var(--gold500); border-top:11px solid transparent; border-bottom:11px solid transparent; }
+
+/* misc devices */
+.stripes { position:absolute; inset:0; background:repeating-linear-gradient(90deg,var(--fcbBlueDeep) 0,var(--fcbBlue) 40px,var(--fcbBlue) 95px,var(--fcbBlueDeep) 135px,var(--fcbGarnetDeep) 135px,var(--fcbGarnet) 175px,var(--fcbGarnet) 230px,var(--fcbGarnetDeep) 270px); }
+.fadeV { position:absolute; inset:0; background:linear-gradient(180deg,rgba(11,10,8,.2) 0%,rgba(11,10,8,.85) 70%,var(--black900) 100%); }
+.lowfade { position:absolute; left:0; right:0; bottom:0; height:700px; background:linear-gradient(180deg,rgba(6,5,4,0),rgba(6,5,4,.92)); z-index:10; }
+.brbar { position:absolute; left:0; right:0; top:0; display:flex; flex-direction:column; opacity:.85; }
+.brbar i { display:block; height:4px; }
+.splitrule { display:flex; justify-content:center; margin-top:26px; }
+.splitrule i { display:block; width:230px; height:3px; }
+.burn { position:absolute; inset:-200px; background:radial-gradient(ellipse at 50% 50%, var(--gold100) 0%, var(--gold300) 22%, rgba(62,49,27,.55) 55%, rgba(62,49,27,0) 75%); mix-blend-mode:screen; pointer-events:none; }
+
+/* Arabic statement / title (DS §4: Noto Kufi ExtraBold, optical ×0.86) */
+.ar-statement { direction:rtl; font-family:var(--fArStatement); font-weight:800; font-size:206px; line-height:1.5; color:var(--white100); }
+.ar-title { direction:rtl; font-family:var(--fArStatement); font-weight:800; font-size:96px; line-height:1.5; color:var(--white100); margin-top:6px; }
+
+/* subtitles (DS §8; 4:5 band y 1060–1210) */
+.subs { position:absolute; left:60px; right:60px; top:1060px; height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
+.subs .sl { display:block; direction:rtl; text-align:center; }
+.subs .sl span { display:inline-block; direction:rtl; font-family:var(--fArInfo); font-weight:700; font-size:46px; line-height:1.4; color:var(--white100); background:rgba(0,0,0,.55); padding:2px 20px 8px; border-radius:8px; }
