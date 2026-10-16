@@ -190,7 +190,11 @@ put(sfx, ls(109), flapclick(), -10)
 put(sfx, ls(118), shimmer(2.5), -10); put(sfx, ls(120) + 0.3, hit(70, 45, 0.7, 0.2), -18)
 put(sfx, ls(131), hit(60, 36, 1.6, 0.3), -14); put(sfx, ls(131) + 0.1, shimmer(3.0), -8)       # title
 put(sfx, ls(137), hit(70, 45, 0.7, 0.2), -16)                                                   # RONALDINHO
-put(sfx, BODY_END + 0.3, shimmer(3.5), -9)                                                      # end card
+put(sfx, BODY_END + 0.3, shimmer(3.5), -9)
+if os.path.exists(f'{HERE}/assets/montage_goals.mp4'):        # archive montage (s19)
+    m0 = ls(79) - 0.2
+    for dt in (0.0, 0.7, 1.4, 2.1): put(sfx, m0 + dt - 0.015, whoosh(0.3, 500, 7000), -21)
+    put(sfx, m0 + 2.6, kick(), -15); put(sfx, m0 + 4.25, crowd(2.2, False), -15)                                                      # end card
 
 # ------------------------------------------------------------------ write (bed low-passed ~900 Hz overall, DS §7)
 for ch in range(2): bed[:, ch] = lowp(bed[:, ch], 1400)

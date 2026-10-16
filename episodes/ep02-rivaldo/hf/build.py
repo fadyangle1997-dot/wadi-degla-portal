@@ -370,6 +370,13 @@ rise('#s19-m', ls(81) - 0.1); punch('#s19-d', ls(81), 1.15, 0.3)
 js.append(f'tl.fromTo("#s19-pl",{{opacity:0,scaleY:0.2}},{{opacity:1,scaleY:1,duration:0.62,ease:"cubic.out"}},{ls(83):.3f});')
 rise('#s19-w', ls(86)); rise('#s19-dr', ls(87))
 xin('s19', t0); c(); z += 1
+# archive montage answering «لكن لو عايز تعرف ريفالدو كان لاعب عامل إزاي…» (broadcast footage, muted, burned-in caption removed)
+MONT = 'assets/montage_goals.mp4'
+if os.path.exists(f'{HERE}/{MONT}'):
+    ms = round(ls(79) - 0.2, 3); md = 4.6
+    body.append(f'<video id="s19-mont" class="clip" src="{MONT}" data-start="{ms:.3f}" data-duration="{md}" data-track-index="4" muted playsinline '
+                f'style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:{z-1};opacity:0"></video>')
+    js.append(f'tl.fromTo("#s19-mont",{{opacity:0}},{{opacity:1,duration:0.2}},{ms:.3f}); tl.to("#s19-mont",{{opacity:0,duration:0.55,ease:"power1.in"}},{ms+md-0.6:.3f});')
 
 # s20 scoreboard: 1-0, 1-1, 2-1, 2-2, out
 t0, t1 = span(88, 101); c = open_scene('s20', t0, t1, z)
