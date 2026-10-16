@@ -40,8 +40,9 @@ PHOTO_DIR = f'{HERE}/assets/photos'
 # slot -> (source file slot, object-position / zoom origin, zoom). Several slots can frame one photo;
 # crops also keep source watermarks (rivaldo10.com, planetfootball) out of frame.
 FRAMING = {
-    '1': ('1', '50% 25%', 1.0), '23': ('23', '50% 35%', 1.0),
-    '2': ('18', '22% 25%', 1.75), '18': ('18', '35% 30%', 1.12),
+    '1': ('1', '50% 25%', 1.0), '1b': ('1b', '50% 35%', 1.0), '23': ('23', '50% 18%', 1.0),
+    '2': ('2', '50% 25%', 1.0), '18': ('18', '35% 30%', 1.12), '5': ('5', '50% 30%', 1.0), '10a': ('5', '50% 26%', 1.25),
+    '4': ('4', '50% 40%', 1.0), '12': ('12', '50% 25%', 1.0), '13': ('13', '50% 30%', 1.0), '10d': ('10d', '50% 25%', 1.0), '24': ('24', '50% 30%', 1.0),
 '21f': ('21f', '50% 40%', 1.0), '21': ('21', '50% 40%', 1.0),
     '19a': ('19e', '41% 50%', 1.0), '19b': ('20', '68% 50%', 1.0),
     '19c': ('19e', '72% 42%', 1.9), '19d': ('19e', '45% 4%', 1.8), '19e': ('19e', '41% 50%', 1.0),
@@ -86,6 +87,20 @@ def photo(sid, slot, label, meta, act, move='dolly_in', t0=0, t1=1, z=1, box='in
     }
     a, b = moves.get(move, moves['dolly_in'])
     js.append(f'tl.fromTo("#{i}-cam",{json.dumps(a)},{{...{json.dumps(b)},duration:{d:.3f},ease:"none"}},{t0:.3f});')
+    return i
+
+def polaroid(sid, slot, caption, act, t0, t1, z=5, left=230, top=330, w=620, h=800, rot=-3):
+    """DS §2.3 polaroid: white100 frame, paper300 tape, ink caption; slides in like a print, then a slow push."""
+    f = photo_file(slot)
+    if not f: return None
+    _, _, _, _, sat, sep, gcol, galpha, _ = ACT[act]
+    _, fpos, fz = FRAMING.get(slot, (slot, '50% 50%', 1.0))
+    i = nid(f'{sid}-pol')
+    body.append(f'<div id="{i}" style="position:absolute;left:{left}px;top:{top}px;width:{w}px;height:{h}px;z-index:{z};transform:rotate({rot}deg)">'
+                f'<div class="pol-frame"><div class="pol-img"><img src="{f}" style="width:100%;height:100%;object-fit:cover;object-position:{fpos};filter:saturate({sat}) sepia({sep})"></div>'
+                f'<div class="pol-cap mono">{html.escape(caption)}</div></div><div class="pol-tape"></div></div>')
+    js.append(f'tl.fromTo("#{i}",{{x:-1100,rotation:{rot-6}}},{{x:0,rotation:{rot},duration:0.55,ease:"quint.out"}},{t0:.3f});')
+    js.append(f'tl.to("#{i}",{{scale:1.05,duration:{max(0.5,t1-t0-0.6):.2f},ease:"none"}},{t0+0.55:.3f});')
     return i
 
 def fade(sel, t, d=0.3, to=1, frm=None):
@@ -193,7 +208,7 @@ xin('s05', t0); c(); z += 1
 
 # s06 the father
 t0, t1 = span(19, 23); c = open_scene('s06', t0, t1, z)
-photo('s06', '8', 'ROMILDO · HIS FATHER', 'BEFORE 1989', 'I', 'dolly_in', t0, t1)
+photo('s06', '8', 'ROMILDO · HIS FATHER', 'BEFORE 1989', 'I', 'dolly_in', t0, t1, optional=True) or photo('s06', '4', 'HOME', '', 'II', 'dolly_in', t0, t1)
 xin('s06', t0); c(); z += 1
 
 # s07 1989 on black, silence
@@ -214,7 +229,9 @@ t0, t1 = span(33, 37); c = open_scene('s09', t0, t1, z)
 clubs = [('10a', 'SANTA CRUZ', '1989–92'), ('10b', 'MOGI MIRIM', '1992–93'), ('10c', 'CORINTHIANS', '1993–94'), ('10d', 'PALMEIRAS', '1994–96')]
 for k, (slot, nm, yrs) in enumerate(clubs):
     tt = ls(33 + k)
-    p = photo('s09', slot, nm, yrs, 'II', 'dolly_in', tt, tt + 2.5, z=2 + k)
+    p = photo('s09', slot, nm, yrs, 'II', 'dolly_in', tt, tt + 2.5, z=2 + k, optional=True)
+    if not p:
+        p = nid('s09-card'); body.append(f'<div id="{p}" class="photo" style="inset:0;z-index:{2+k};background:var(--bgDeep)"></div>')
     js.append(f'tl.fromTo("#{p}",{{x:1080,opacity:1}},{{x:0,duration:0.42,ease:"quint.out"}},{tt-0.12:.3f});')
     body.append(f'<div id="s09-n{k}" class="club" style="top:{150+k*70}px;opacity:0;z-index:20"><span class="label">{nm}</span><span class="mono">{yrs}</span></div>')
     rise(f'#s09-n{k}', tt, 0.28, 10)
@@ -222,7 +239,7 @@ xin('s09', t0); c(); z += 1
 
 # s10 Deportivo
 t0, t1 = span(38, 41); c = open_scene('s10', t0, t1, z)
-photo('s10', '11', 'DEPORTIVO LA CORUÑA', '1996–97', 'II', 'zoom_out', t0, t1)
+if not polaroid('s10', '11', 'LA CORUÑA · 1996–97', 'II', ls(38) + 0.1, t1, top=330, h=680, left=250, w=580): photo('s10', '11', 'DEPORTIVO LA CORUÑA', '1996–97', 'II', 'zoom_out', t0, t1)
 body.append('<div class="center-col" style="top:150px;z-index:20"><div id="s10-y" class="serif-i gold" style="font-size:170px;opacity:0">1996</div>'
             '<div id="s10-m" class="mono" style="font-size:24px;color:var(--textSecondary);opacity:0">LA CORUÑA · ONE SEASON</div></div>')
 punch('#s10-y', ls(38) + 0.2, 1.2); rise('#s10-m', ls(40))
@@ -241,7 +258,7 @@ xin('s11', t0); c(); z += 1
 
 # s12 two Ligas + one Copa: morph plate over celebration
 t0, t1 = span(47, 51); c = open_scene('s12', t0, t1, z)
-photo('s12', '14', 'LIGA CELEBRATION', '1998 OR 1999', 'III', 'dolly_out', t0, t1)
+if not photo('s12', '14', 'LIGA CELEBRATION', '1998 OR 1999', 'III', 'dolly_out', t0, t1, optional=True): body.append('<div class="stripes" style="opacity:0.2"></div><div class="fadeV"></div>')
 body.append('<div id="s12-pl" class="plate" style="left:110px;top:430px;width:860px;height:420px;opacity:0;z-index:20">'
             '<div class="tick tl"></div><div class="tick tr"></div><div class="tick bl"></div><div class="tick br"></div><div class="acc"></div>'
             '<div id="s12-r1" class="trow" style="top:50px;opacity:0"><span class="label">LA LIGA</span><span class="hero gold">×2</span></div>'
@@ -304,13 +321,13 @@ t0, t1 = span(62 if HAS17 else 63, 64); c = open_scene('s16', t0, t1, z)
 if HAS17: photo('s16', '17', 'FIFA WORLD PLAYER 1999', 'PRESENTED JANUARY 2000', 'IV', 'static', t0, ls(63))
 if photo_file('5'):
     l = photo('s16', '5', 'YOUNG RIVALDO', 'c.1990', 'I', 'dolly_in', ls(63), t1, z=3, box='left:0;top:0;width:540px;height:1350px')
-    r = photo('s16', '23', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63), t1, z=3, box='left:540px;top:0;width:540px;height:1350px')
+    r = photo('s16', '1b', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63), t1, z=3, box='left:540px;top:0;width:540px;height:1350px')
     js.append(f'tl.fromTo("#{l}",{{x:-540}},{{x:0,duration:0.45,ease:"quint.out"}},{ls(63)-0.1:.3f});')
     js.append(f'tl.fromTo("#{r}",{{x:540}},{{x:0,duration:0.45,ease:"quint.out"}},{ls(64)-0.15:.3f});')
     body.append('<div id="s16-split" style="position:absolute;left:539px;top:0;width:2px;height:1350px;background:var(--gold500);opacity:0;z-index:9"></div>')
     fade('#s16-split', ls(64), 0.3)
 else:
-    r = photo('s16', '23', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63) - 0.25, t1, z=3)
+    r = photo('s16', '1b', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63) - 0.25, t1, z=3)
 xin('s16', t0); c(); z += 1
 
 # s17 «صح؟» … «لأ.» dip to black
@@ -427,10 +444,12 @@ xin('s23', t0); c(); z += 1
 
 # s24 Van Gaal returns; Rivaldo leaves
 t0, t1 = span(122, 124); c = open_scene('s24', t0, t1, z)
-photo('s24', '22', 'VAN GAAL RETURNS', 'BARCELONA · 2002', 'V', 'pan_left', t0, ls(124))
+vg2 = photo('s24', '22', 'VAN GAAL RETURNS', 'BARCELONA · 2002', 'V', 'pan_left', t0, ls(124), optional=True) or photo('s24', '2', 'VAN GAAL', '', 'V', 'dolly_in', t0, ls(124))
 lv = photo('s24', '23', 'RIVALDO · BARÇA', '1997–2002', 'EP', 'dolly_out', ls(124), t1, z=3)
 fade(f'#{lv}', ls(124) - 0.2, 0.3, 1, 0)
-js.append(f'tl.to("#{lv}",{{opacity:0.25,duration:1.0}},{ls(124)+0.6:.3f});')
+js.append(f'tl.to("#{vg2}",{{opacity:0,duration:0.3}},{ls(124)-0.2:.3f});')
+body.append('<div id="s24-dark" style="position:absolute;inset:0;background:var(--ink);opacity:0;z-index:6"></div>')
+js.append(f'tl.to("#s24-dark",{{opacity:0.72,duration:1.2,ease:"power1.in"}},{ls(124)+0.5:.3f});')
 xin('s24', t0); c(); z += 1
 
 # s25 recap montage
@@ -455,9 +474,13 @@ xin('s26', t0); c(); z += 1
 # s27 next episode: Ronaldinho
 t0, t1 = span(133, 137); c = open_scene('s27', t0, t1, z)
 has24 = photo('s27', '24', 'RONALDINHO', 'PRESENTED AT BARÇA · 2003', 'EP', 'zoom_in', t0, t1, optional=True)
+if has24:  # silhouette until the name is spoken, then the reveal (the shirt already carries his name)
+    body.append('<div id="s27-dark" style="position:absolute;inset:0;background:var(--ink);opacity:0.86;z-index:6"></div><div class="scrim" style="top:60px;height:260px;z-index:19"></div>')
+    js.append(f'tl.to("#s27-dark",{{opacity:0.08,duration:0.35,ease:"cubic.out"}},{ls(137)-0.05:.3f});')
 body.append(f'<div class="center-col" style="top:{150 if has24 else 560}px;z-index:20"><div id="s27-k" class="label" style="font-size:30px;letter-spacing:14px;color:var(--textSecondary);opacity:0">NEXT · EPISODE 3</div></div>'
             f'<div class="center-col" style="top:{800 if has24 else 630}px;z-index:20"><div id="s27-n" class="hero gold" style="font-size:190px;opacity:0">RONALDINHO</div></div>')
-rise('#s27-k', ls(133)); punch('#s27-n', ls(137), 1.25)
+rise('#s27-k', ls(133))
+if not has24: punch('#s27-n', ls(137), 1.25)
 xin('s27', t0); c(); z += 1
 
 # s28 end card (DS 5.9)

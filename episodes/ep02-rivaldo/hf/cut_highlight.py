@@ -16,17 +16,17 @@ segs = [(0.0, mid(3)), (mid(53), mid(121)), (mid(129), dur)]  # hook · Ballon d
 for a, b in zip(segs, segs[1:]):
     assert b[0] - a[1] > 0
 print('segments', [(round(a, 2), round(b, 2)) for a, b in segs])
-fc, v, a = [], [], []
-for k, (s0, s1) in enumerate(segs):
-    fc.append(f'[0:v]trim={s0:.3f}:{s1:.3f},setpts=PTS-STARTPTS[v{k}]')
-    fc.append(f'[0:a]atrim={s0:.3f}:{s1:.3f},asetpts=PTS-STARTPTS[a{k}]')
+inputs, fc = [], []
+for k, (s0, s1) in enumerate(segs):            # one input per segment (input seeking): no frame buffering
+    inputs += ['-ss', f'{s0:.3f}', '-to', f'{s1:.3f}', '-i', src]
+    fc.append(f'[{k}:v]setpts=PTS-STARTPTS[v{k}]'); fc.append(f'[{k}:a]asetpts=PTS-STARTPTS[a{k}]')
 cur_v, cur_a, t = 'v0', 'a0', segs[0][1] - segs[0][0]
 for k in range(1, len(segs)):
     fc.append(f'[{cur_v}][v{k}]xfade=transition=fadeblack:duration={X}:offset={t - X:.3f}[vx{k}]')
     fc.append(f'[{cur_a}][a{k}]acrossfade=d={X}:c1=qsin:c2=qsin[ax{k}]')
     cur_v, cur_a = f'vx{k}', f'ax{k}'
     t = t - X + (segs[k][1] - segs[k][0])
-subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', src, '-filter_complex', ';'.join(fc), '-map', f'[{cur_v}]', '-map', f'[{cur_a}]',
+subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', *inputs, '-filter_complex', ';'.join(fc), '-map', f'[{cur_v}]', '-map', f'[{cur_a}]',
                 '-c:v', 'libx264', '-crf', '16', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
                 '-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-movflags', '+faststart', out], check=True)
 print('wrote', out, round(t, 2), 's')
