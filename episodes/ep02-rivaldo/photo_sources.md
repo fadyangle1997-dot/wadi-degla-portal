@@ -45,3 +45,25 @@
 - اقرا الـ caption في صفحة Getty: لازم يكون فيه التاريخ والماتش.
 - **قميص برشلونة:** شركة Kappa موسم 1997-98، وبعدها Nike من 1998. ومفيش راعي على القميص قبل 2006.
 - صورة رونالدو لازم تكون في برشلونة 1996-97 أو في الإنتر من 1997، مش صورة البرازيل.
+
+## اللي وصل (7 صور، وكلهم اتحطوا في مكانهم)
+p1 الكورة الذهبية (بيبوسها) · p23 الكورة الذهبية (بيضحك) · p19e المقصية (ومنها كمان كادر الصدر وكادر الرجل في الهوا) · p20 قالع القميص بعد الجول · p21 كاس العالم · p21f علم البرازيل · p18 فان خال وريفالدو (Kappa 1997-98)
+
+## الصور الناقصة: لينكات Pinterest
+| الاسم | الصورة | Pinterest | ملاحظة |
+|---|---|---|---|
+| p5 | ريفالدو صغير في البداية (سانتا كروز / موجي ميريم) | [بحث](https://www.pinterest.com/search/pins/?q=rivaldo%20santa%20cruz%201991) | **الأهم:** بيرجّع شاشة الطفل والكورة الذهبية جنب بعض، والملخص |
+| p3 | ريفالدو على الدكة 1999-2000 | [بحث](https://www.pinterest.com/search/pins/?q=rivaldo%20bench%20barcelona%20van%20gaal%202000) | بيكمّل الهوك ومشهد «استبعد» |
+| p11 | ديبورتيفو لاكورونيا 1996-97 | [بحث](https://www.pinterest.com/search/pins/?q=rivaldo%20deportivo%20coruña%201996) |  |
+| p13 | تقديم ريفالدو في برشلونة، أغسطس 1997 | [بحث](https://www.pinterest.com/search/pins/?q=rivaldo%20presentacion%20barcelona%201997) |  |
+| p12 | رونالدو في برشلونة 1996-97 | [بحث](https://www.pinterest.com/search/pins/?q=ronaldo%20nazario%20barcelona%201996) |  |
+| p14 | احتفال بالدوري 1998 أو 1999 | [بحث](https://www.pinterest.com/search/pins/?q=barcelona%20liga%201999%20rivaldo%20figo%20celebration) |  |
+| p10a–d | سانتا كروز / موجي ميريم / كورينثيانز / بالميراس | [بحث](https://www.pinterest.com/search/pins/?q=rivaldo%20palmeiras%201995) | ولو مش لاقي، أسماء الأندية مكتوبة على الشاشة ومكفّية |
+| p4 | الحي في باوليستا / ريسيفي | [بحث](https://www.pinterest.com/search/pins/?q=paulista%20pernambuco%20favela) | وفيه صور حرة على [Commons](https://commons.wikimedia.org/w/index.php?search=Paulista+Pernambuco) |
+| p15 | بيكهام بالثلاثية 1999 | [بحث](https://www.pinterest.com/search/pins/?q=beckham%20treble%201999%20manchester%20united) | اختياري: المشهد شغال كتابة |
+| p17 | جايزة الفيفا، بروكسل يناير 2000 | [بحث](https://www.pinterest.com/search/pins/?q=rivaldo%20fifa%20world%20player%202000) | اختياري: المشهد شغال على الصورة اللي بتتحمض |
+| p22 | فان خال راجع لبرشلونة 2002 | [بحث](https://www.pinterest.com/search/pins/?q=van%20gaal%20barcelona%202002) |  |
+| p24 | رونالدينيو في تقديمه 2003 | [بحث](https://www.pinterest.com/search/pins/?q=ronaldinho%20presentation%20barcelona%202003) | اختياري: المشهد شغال كتابة |
+| p8 | الأب روميلدو | [بحث](https://www.pinterest.com/search/pins/?q=rivaldo%20pai%20romildo) | غالبًا مش موجودة، والمشهد شغال من غيرها |
+
+> Pinterest بيعيد نشر صور ليها حقوق. قبل ما تختار صورة، افتح المصدر الأصلي، واتأكد من السنة من القميص والـ caption. ونزّل أكبر حجم متاح.
