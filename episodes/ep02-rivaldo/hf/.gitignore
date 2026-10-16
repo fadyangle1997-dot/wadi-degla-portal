@@ -3,3 +3,5 @@ node_modules/
 snapshots/
 renders/
 .hyperframes/
+assets/photos/
+assets/darkroom_*.mp4

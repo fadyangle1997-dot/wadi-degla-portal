@@ -37,10 +37,21 @@ NUMBERED = [a for a in ACTS if a[1]]
 
 # ---------------------------------------------------------------- photos
 PHOTO_DIR = f'{HERE}/assets/photos'
+# slot -> (source file slot, object-position / zoom origin, zoom). Several slots can frame one photo;
+# crops also keep source watermarks (rivaldo10.com, planetfootball) out of frame.
+FRAMING = {
+    '1': ('1', '50% 25%', 1.0), '23': ('23', '50% 35%', 1.0),
+    '2': ('18', '22% 25%', 1.75), '18': ('18', '35% 30%', 1.12),
+'21f': ('21f', '50% 40%', 1.0), '21': ('21', '50% 40%', 1.0),
+    '19a': ('19e', '41% 50%', 1.0), '19b': ('20', '68% 50%', 1.0),
+    '19c': ('19e', '72% 42%', 1.9), '19d': ('19e', '45% 4%', 1.8), '19e': ('19e', '41% 50%', 1.0),
+    '20': ('20', '68% 50%', 1.0),
+}
 def photo_file(slot):
+    src = FRAMING.get(slot, (slot,))[0]
     for ext in ('jpg', 'jpeg', 'png', 'webp'):
-        p = f'{PHOTO_DIR}/p{slot}.{ext}'
-        if os.path.exists(p): return f'assets/photos/p{slot}.{ext}'
+        p = f'{PHOTO_DIR}/p{src}.{ext}'
+        if os.path.exists(p): return f'assets/photos/p{src}.{ext}'
     return None
 
 body, js, css = [], [], []
@@ -48,13 +59,16 @@ uid = [0]
 def nid(prefix):
     uid[0] += 1; return f'{prefix}{uid[0]}'
 
-def photo(sid, slot, label, meta, act, move='dolly_in', t0=0, t1=1, z=1, box='inset:0', pos='50% 50%', extra_cls=''):
+def photo(sid, slot, label, meta, act, move='dolly_in', t0=0, t1=1, z=1, box='inset:0', pos='50% 50%', extra_cls='', optional=False):
     """A graded photo (or labelled placeholder) with a motivated camera move between t0 and t1 (global)."""
     _, _, _, _, sat, sep, gcol, galpha, _ = ACT[act]
-    i = nid(f'{sid}-ph')
     f = photo_file(slot)
+    if optional and not f: return None
+    i = nid(f'{sid}-ph')
     if f:
-        inner = f'<img id="{i}-img" src="{f}" style="width:100%;height:100%;object-fit:cover;object-position:{pos};filter:saturate({sat}) sepia({sep}) contrast(1.04)">'
+        _, fpos, fz = FRAMING.get(slot, (slot, pos, 1.0))
+        inner = (f'<img id="{i}-img" src="{f}" style="width:100%;height:100%;object-fit:cover;object-position:{fpos};'
+                 f'transform:scale({fz});transform-origin:{fpos};filter:saturate({sat}) sepia({sep}) contrast(1.04)">')
     else:
         inner = (f'<div class="ph-card" style="filter:saturate({sat}) sepia({sep})"><div class="ph-frame"></div>'
                  f'<div class="ph-text"><div class="mono ph-no">PHOTO #{html.escape(slot)}</div>'
@@ -114,8 +128,9 @@ b = photo('s01', '1', 'RIVALDO · BALLON D’OR', 'DECEMBER 1999', 'I', 'dolly_i
 fade(f'#{b}', ls(1) + 0.4, 1.2, 1, 0)
 v = photo('s01', '2', 'LOUIS VAN GAAL', 'TOUCHLINE · 1999–2000', 'I', 'dolly_in', ls(2), ls(3), z=3)
 fade(f'#{v}', ls(2) - 0.1, 0.25, 1, 0)
-bn = photo('s01', '3', 'RIVALDO ON THE BENCH', '1999–2000', 'I', 'zoom_in', ls(3), t1, z=4)
-fade(f'#{bn}', ls(3) - 0.1, 0.25, 1, 0)
+bn = photo('s01', '3', 'RIVALDO ON THE BENCH', '1999–2000', 'I', 'zoom_in', ls(3), t1, z=4, optional=True)
+if bn: fade(f'#{bn}', ls(3) - 0.1, 0.25, 1, 0)
+else: js.append(f'tl.to("#{v}-cam",{{scale:1.16,duration:{t1-ls(3):.2f},ease:"none"}},{ls(3):.3f});')
 c(); z += 1
 
 # s02 rewind 1999 → 1980s
@@ -149,7 +164,7 @@ xin('s03', t0); c(); z += 1
 
 # s04 name reveal
 t0, t1 = span(14, 15); c = open_scene('s04', t0, t1, z)
-photo('s04', '6', 'RIVALDO · PORTRAIT', 'CLOSE-UP', 'I', 'static', t0, t1)
+photo('s04', '6', 'RIVALDO · PORTRAIT', 'CLOSE-UP', 'I', 'static', t0, t1, optional=True)
 name = 'RIVALDO'
 body.append('<div class="center-col" style="top:700px;z-index:20"><div class="hero" style="font-size:250px;display:flex;justify-content:center">' +
             ''.join(f'<span id="s04-c{k}" class="gold" style="display:inline-block;opacity:0">{ch}</span>' for k, ch in enumerate(name)) +
@@ -247,14 +262,17 @@ xin('s13', t0); c(); z += 1
 
 # s14 Beckham, the treble
 t0, t1 = span(56, 57); c = open_scene('s14', t0, t1, z)
-photo('s14', '15', 'DAVID BECKHAM', 'MANCHESTER UNITED · 1998–99', 'IV', 'zoom_in', t0, t1)
-body.append('<div class="center-col" style="top:150px;z-index:20"><div id="s14-m" class="mono" style="font-size:26px;color:var(--textSecondary);opacity:0">MANCHESTER UNITED · 1998–99</div>'
-            '<div id="s14-t" class="label" style="font-size:64px;letter-spacing:18px;color:var(--white100);opacity:0;margin-top:10px">THE TREBLE</div></div>')
+has15 = photo('s14', '15', 'DAVID BECKHAM', 'MANCHESTER UNITED · 1998–99', 'IV', 'zoom_in', t0, t1, optional=True)
+body.append(f'<div class="center-col" style="top:{150 if has15 else 470}px;z-index:20"><div id="s14-m" class="mono" style="font-size:26px;color:var(--textSecondary);opacity:0">MANCHESTER UNITED · 1998–99</div>'
+            + ('' if has15 else '<div id="s14-n" class="hero" style="font-size:150px;color:var(--white100);opacity:0;margin-top:14px">DAVID BECKHAM</div>') +
+            '<div id="s14-t" class="label" style="font-size:64px;letter-spacing:18px;color:var(--gold300);opacity:0;margin-top:18px">THE TREBLE</div></div>')
 rise('#s14-m', ls(56) + 0.4); punch('#s14-t', ls(57) + 0.6, 1.2)
+if not has15: punch('#s14-n', ls(56) + 0.1, 1.15, 0.3)
 xin('s14', t0); c(); z += 1
 
 # s15 GOLD CLIMAX: 154 / 219, then darkroom reveal of #1 (slowest move)
-t0, t1 = span(58, 61); c = open_scene('s15', t0, t1, z, 'var(--bgDeep)')
+HAS17 = photo_file('17') is not None
+t0, t1 = span(58, 61 if HAS17 else 62); c = open_scene('s15', t0, t1, z, 'var(--bgDeep)')
 body.append('<div id="s15-wrap" style="position:absolute;inset:0">'
             '<div class="center-col" style="top:150px"><div class="mono" style="font-size:24px;color:var(--textSecondary)">FRANCE FOOTBALL · 1999</div>'
             '<div class="serif-i gold" style="font-size:150px;line-height:1.05;padding:0 .1em">Ballon d’Or</div></div>'
@@ -272,17 +290,27 @@ for k, (li, val) in enumerate([(59, 154), (60, 219)], 1):
 dk = photo('s15', '1', 'RIVALDO · BALLON D’OR', 'DARKROOM REVEAL (HIGHLIGHTS FIRST)', 'IV', 'dolly_out', ls(61), t1, z=30)
 js.append(f'tl.fromTo("#{dk}",{{opacity:0}},{{opacity:1,duration:2.0,ease:"power2.in"}},{ls(61)+0.2:.3f});')
 js.append(f'tl.to("#s15-wrap",{{opacity:0,scale:0.96,duration:1.6,ease:"power1.inOut"}},{ls(61)+0.4:.3f});')
-xin('s15', t0); c(); z += 1
+xin('s15', t0); c()
+DARK = 'assets/darkroom_p1.mp4'
+if os.path.exists(f'{HERE}/{DARK}'):
+    js.append(f'tl.set("#{dk}",{{opacity:0}},{ls(61)+0.15:.3f});')
+    dstart = ls(61) + 0.2
+    body.append(f'<video id="s15-dark" class="clip" src="{DARK}" data-start="{dstart:.3f}" data-duration="{t1-dstart:.3f}" data-track-index="3" '
+                f'muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:{z}"></video>')
+z += 1
 
 # s16 FIFA award, then child ↔ trophy split frame
-t0, t1 = span(62, 64); c = open_scene('s16', t0, t1, z)
-photo('s16', '17', 'FIFA WORLD PLAYER 1999', 'PRESENTED JANUARY 2000', 'IV', 'static', t0, ls(63))
-l = photo('s16', '5', 'YOUNG RIVALDO', 'c.1990', 'I', 'dolly_in', ls(63), t1, z=3, box='left:0;top:0;width:540px;height:1350px')
-r = photo('s16', '1', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63), t1, z=3, box='left:540px;top:0;width:540px;height:1350px')
-js.append(f'tl.fromTo("#{l}",{{x:-540}},{{x:0,duration:0.45,ease:"quint.out"}},{ls(63)-0.1:.3f});')
-js.append(f'tl.fromTo("#{r}",{{x:540}},{{x:0,duration:0.45,ease:"quint.out"}},{ls(64)-0.15:.3f});')
-body.append('<div id="s16-split" style="position:absolute;left:539px;top:0;width:2px;height:1350px;background:var(--gold500);opacity:0;z-index:9"></div>')
-fade('#s16-split', ls(64), 0.3)
+t0, t1 = span(62 if HAS17 else 63, 64); c = open_scene('s16', t0, t1, z)
+if HAS17: photo('s16', '17', 'FIFA WORLD PLAYER 1999', 'PRESENTED JANUARY 2000', 'IV', 'static', t0, ls(63))
+if photo_file('5'):
+    l = photo('s16', '5', 'YOUNG RIVALDO', 'c.1990', 'I', 'dolly_in', ls(63), t1, z=3, box='left:0;top:0;width:540px;height:1350px')
+    r = photo('s16', '23', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63), t1, z=3, box='left:540px;top:0;width:540px;height:1350px')
+    js.append(f'tl.fromTo("#{l}",{{x:-540}},{{x:0,duration:0.45,ease:"quint.out"}},{ls(63)-0.1:.3f});')
+    js.append(f'tl.fromTo("#{r}",{{x:540}},{{x:0,duration:0.45,ease:"quint.out"}},{ls(64)-0.15:.3f});')
+    body.append('<div id="s16-split" style="position:absolute;left:539px;top:0;width:2px;height:1350px;background:var(--gold500);opacity:0;z-index:9"></div>')
+    fade('#s16-split', ls(64), 0.3)
+else:
+    r = photo('s16', '23', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63) - 0.25, t1, z=3)
 xin('s16', t0); c(); z += 1
 
 # s17 «صح؟» … «لأ.» dip to black
@@ -307,8 +335,8 @@ rise('#s18-lw', ls(70) + 1.6)
 js.append(f'tl.fromTo("#s18-arrow",{{opacity:0,scaleX:0}},{{opacity:1,scaleX:1,duration:0.6,ease:"cubic.out"}},{ls(71)+1.6:.3f});')
 js.append(f'tl.fromTo("#s18-dot2",{{opacity:0,scale:2}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(1.9)"}},{ls(72):.3f});')
 rise('#s18-no10', ls(72) + 0.2)
-bn = photo('s18', '3', 'RIVALDO ON THE BENCH', '1999–2000', 'V', 'zoom_in', ls(76), t1, z=8)
-js.append(f'tl.fromTo("#{bn}",{{opacity:0}},{{opacity:1,duration:0.3}},{ls(76)-0.1:.3f});')
+bn = photo('s18', '3', 'RIVALDO ON THE BENCH', '1999–2000', 'V', 'zoom_in', ls(76), t1, z=8, optional=True)
+if bn: js.append(f'tl.fromTo("#{bn}",{{opacity:0}},{{opacity:1,duration:0.3}},{ls(76)-0.1:.3f});')
 xin('s18', t0); c(); z += 1
 
 # s19 17 June 2001 + the stakes
@@ -392,7 +420,7 @@ xin('s22', t0); c(); z += 1
 t0, t1 = span(116, 121); c = open_scene('s23', t0, t1, z)
 photo('s23', '21', 'RIVALDO · Nº 10 · WORLD CUP', 'YOKOHAMA · 30 JUNE 2002', 'VII', 'dolly_in', t0, t1)
 body.append('<div class="brbar" style="z-index:25"><i style="background:var(--brGreen)"></i><i style="background:var(--brYellow)"></i><i style="background:var(--brBlue)"></i></div>'
-            '<div class="center-col" style="top:150px;z-index:20"><div id="s23-m" class="mono" style="font-size:24px;color:var(--textSecondary);opacity:0">YOKOHAMA · 30 JUNE 2002 · FINAL</div>'
+            '<div class="scrim" style="top:760px;height:330px;z-index:19"></div><div class="center-col" style="top:830px;z-index:20"><div id="s23-m" class="mono" style="font-size:24px;color:var(--textSecondary);opacity:0">YOKOHAMA · 30 JUNE 2002 · FINAL</div>'
             '<div id="s23-s" class="hero" style="font-size:150px;color:var(--white100);opacity:0">BRA 2–0 GER</div></div>')
 rise('#s23-m', ls(118)); punch('#s23-s', ls(120) + 0.3, 1.2)
 xin('s23', t0); c(); z += 1
@@ -407,16 +435,18 @@ xin('s24', t0); c(); z += 1
 
 # s25 recap montage
 t0, t1 = span(125, 129); c = open_scene('s25', t0, t1, z)
-for k, (slot, lab, act) in enumerate([('5', 'YOUNG RIVALDO', 'I'), ('1', 'BALLON D’OR', 'IV'), ('19e', 'THE OVERHEAD KICK', 'VI'), ('21', 'WORLD CUP 2002', 'VII')]):
-    tt = ls(125 + k) if k < 3 else ls(129)
-    pp = photo('s25', slot, lab, '', act, 'dolly_in', tt, tt + 4, z=2 + k)
+items = [('5', 'YOUNG RIVALDO', 'I', 125), ('1', 'BALLON D’OR', 'IV', 127), ('19e', 'THE OVERHEAD KICK', 'VI', 128), ('21f', 'WORLD CUP 2002', 'VII', 129)]
+items = [x for x in items if photo_file(x[0])] or items
+for k, (slot, lab, act, li) in enumerate(items):
+    tt = t0 if k == 0 else ls(li)
+    pp = photo('s25', slot, lab, '', act, 'dolly_in', tt, (ls(items[k+1][3]) if k + 1 < len(items) else t1) + 0.4, z=2 + k)
     if k: fade(f'#{pp}', tt - 0.15, 0.3, 1, 0)
 xin('s25', t0); c(); z += 1
 
 # s26 title
 t0, t1 = span(130, 132); c = open_scene('s26', t0, t1, z)
 photo('s26', '23', 'RIVALDO · BARÇA', '1997–2002', 'EP', 'static', t0, t1)
-body.append('<div class="lowfade"></div><div class="center-col" style="top:600px;z-index:20"><div id="s26-n" class="hero gold" style="font-size:240px">RIVALDO</div>'
+body.append('<div class="lowfade"></div><div class="scrim" style="top:560px;height:500px;z-index:19"></div><div class="center-col" style="top:600px;z-index:20"><div id="s26-n" class="hero gold" style="font-size:240px">RIVALDO</div>'
             '<div id="s26-ar" class="ar-title" style="opacity:0">ريفالدو</div></div>')
 js.append(f'tl.fromTo("#s26-n",{{opacity:0,y:30}},{{opacity:1,y:0,duration:0.5,ease:"cubic.out"}},{ls(131):.3f});')
 rise('#s26-ar', ls(131) + 0.4)
@@ -424,9 +454,9 @@ xin('s26', t0); c(); z += 1
 
 # s27 next episode: Ronaldinho
 t0, t1 = span(133, 137); c = open_scene('s27', t0, t1, z)
-photo('s27', '24', 'RONALDINHO', 'PRESENTED AT BARÇA · 2003', 'EP', 'zoom_in', t0, t1)
-body.append('<div class="center-col" style="top:150px;z-index:20"><div id="s27-k" class="label" style="font-size:30px;letter-spacing:14px;color:var(--textSecondary);opacity:0">NEXT · EPISODE 3</div></div>'
-            '<div class="center-col" style="top:800px;z-index:20"><div id="s27-n" class="hero gold" style="font-size:190px;opacity:0">RONALDINHO</div></div>')
+has24 = photo('s27', '24', 'RONALDINHO', 'PRESENTED AT BARÇA · 2003', 'EP', 'zoom_in', t0, t1, optional=True)
+body.append(f'<div class="center-col" style="top:{150 if has24 else 560}px;z-index:20"><div id="s27-k" class="label" style="font-size:30px;letter-spacing:14px;color:var(--textSecondary);opacity:0">NEXT · EPISODE 3</div></div>'
+            f'<div class="center-col" style="top:{800 if has24 else 630}px;z-index:20"><div id="s27-n" class="hero gold" style="font-size:190px;opacity:0">RONALDINHO</div></div>')
 rise('#s27-k', ls(133)); punch('#s27-n', ls(137), 1.25)
 xin('s27', t0); c(); z += 1
 
