@@ -24,21 +24,23 @@ Findings:
 2. [SUGGESTION] VO pacing is uniform (max natural pause 0.67 s). 8 pauses were inserted (+6.2 s). Optional: regenerate «لأ.», «مقصية.», «جول.» in ElevenLabs with more intensity; I splice them in.
 3. [INVESTIGATION] The page badge PNG is missing (DS §5.4, §5.9).
 
-## 10/10 scorecard
+## 10/10 scorecard: final (episode 2 rendered)
 
-Each criterion is scored 0–10. The video can't get a final grade until it's rendered, so this is a readiness score.
+Scored 0–10 on the finished master (`hf/renders/rivaldo_final.mp4`). Checks: lint/validate/inspect at 0 errors,
+OM slideshow risk 0.0, variation 0.0, the DS §10 technical checks, and stills at every key beat.
 
-| # | Criterion | Now | What 10/10 needs |
-|---|---|---|---|
-| 1 | Hook: frame 0 + first 3 s + 30-second rule | 9 | A sharp original Ballon d'Or photo for frame 0 |
-| 2 | Story arc (but/therefore, callback ending) | 9 | Done; the ending calls back to the hook |
-| 3 | Fact accuracy (DS §9, ≥ 2 sources) | 8 | Resolve F10 (the date); F18 (minute 87) follows the club's official source |
-| 4 | VO performance and pacing | 7 | Optional re-reads of 3 lines; pauses already inserted |
-| 5 | Visual plan (OM slideshow risk / variation) | 9 | Re-check at the edit stage |
-| 6 | Photos: era-correct, original scans | **0** | The photos (`shot_list.md`) |
-| 7 | Motion + design-system fidelity | 7 | Animated scenes; style frames A/B approved |
-| 8 | Sound: bed, SFX, silence before impact, −14 LUFS | **0** | Built after the edit lock |
-| 9 | Subtitles (DS §8) | 9 | Burn-in test on a phone |
-| 10 | Technical QA (DS §10, OM compose review) | **0** | After the render |
+| # | Criterion | Score | Evidence | What would make it 10 |
+|---|---|---|---|---|
+| 1 | Hook: frame 0, first 3 s, 30-second rule | 9 | Frame 0 is the real Ballon d'Or photo with the hook subtitle and sound from the first frame; the hook paradox lands by 9 s | A tighter first line (≤ 2 s) |
+| 2 | Story arc (but/therefore, callback ending) | 9 | Poverty → loss → rise → crown → bench → one night → World Cup → leaves; recap and next-episode tease | — |
+| 3 | Fact accuracy (DS §9, ≥ 2 sources) | 9 | F1–F24 sourced; the screen shows "December 1999" | Settle «21 ديسمبر» (sources say 20 or 21) |
+| 4 | VO performance and pacing | 8 | Tone chain (warmth, presence, de-ess, density, light room), emphasis rides, stadium throw on «جول» | Re-read the climax lines in ElevenLabs v3 (`audio/VO_regen_tips_AR.md`) |
+| 5 | Visual plan / variety | 9 | 28 scenes, every one a photo or deliberate typography; archive montage on «عامل إزاي» | — |
+| 6 | Photos: era-correct, high quality | 8 | Era-checked (the FIFA 2000 gala and VINI JR shirt photos were rejected) | Bench 2000 (p3), father (p8), Van Gaal 2002 (p22); higher-res scans of 3–4 images |
+| 7 | Motion + design-system fidelity | 8 | Morph plates, split-flap counters, darkroom reveal, film burns, act-gated colour | Motion blur on fast moves (HyperFrames has none) |
+| 8 | Sound: score, SFX, silence before impact, loudness | 8 | Original score (strings, choir, piano, taiko) following the act arc; true silence before 1989, «لأ» and the freeze; 3-band ducking; −14.1 LUFS, −2.9 dBTP | Real-instrument or licensed music (Facebook Sound Collection); a listening pass by a human |
+| 9 | Subtitles (DS §8) | 9 | 118 cues, ≤ 34 characters per line, compound phrases kept on one line, inside the 4:5 safe band | Phone burn-in check by the page team |
+| 10 | Technical QA (DS §10) | 9.5 | 1080×1350, 30 fps, 9480 frames, A/V offset 0 ms at 4 points, TP ≤ −2.5 even after AAC | — |
 
-**Pre-production (1–5, 9): 8.5 / 10.** Production (6, 7, 8, 10) is blocked mainly on the photos.
+**Episode 2: 8.7 / 10.** The three steps to 10 are, in order: re-read the 7 climax lines with emotion, get the missing
+photos (p3/p8/p22), and choose licensed real-instrument music if the page wants a bigger sound.
