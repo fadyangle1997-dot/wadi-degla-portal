@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "project": "rivaldo-ep2",
+  "decisions": [
+    {"category": "pipeline_selection", "subject": "Pipeline", "choice": "hybrid",
+     "options_considered": [{"option": "hybrid", "reason": "archival stills + VO anchor, designed support graphics"},
+                            {"option": "cinematic", "rejected_because": "its review requires real motion clips for motion beats; this series avoids broadcast footage for copyright"},
+                            {"option": "documentary-montage", "rejected_because": "stock-footage retrieval (Pexels/Archive.org) cannot supply era-correct Rivaldo photos"}],
+     "confidence": 0.8, "user_visible": true},
+    {"category": "render_runtime_selection", "subject": "Composition runtime", "choice": "hyperframes",
+     "options_considered": [{"option": "hyperframes", "reason": "DS v9 tokens and style frames are HTML/CSS; GSAP suits kinetic type, counters, split-flap"},
+                            {"option": "remotion", "rejected_because": "would require porting the DS to React; its caption-burn advantage is not needed (sentence-level subtitles)"},
+                            {"option": "ffmpeg", "rejected_because": "no layout/typography engine for the DS components"}],
+     "confidence": 0.75, "user_visible": true, "approved_by_user": true},
+    {"category": "composition_mode", "subject": "Authoring mode", "choice": "atelier",
+     "options_considered": [{"option": "atelier", "reason": "the series has its own design system; stock scene types would look generic"},
+                            {"option": "templated", "rejected_because": "OpenMontage stock text_card/stat_card would break DS v9 fidelity"}],
+     "confidence": 0.9, "user_visible": true},
+    {"category": "music_selection", "subject": "Music bed", "choice": "original synthesised drone + pulse (sound.py)",
+     "options_considered": [{"option": "synthesised", "reason": "DS §7: no copyrighted music; Facebook claim-safe"},
+                            {"option": "pixabay_music", "rejected_because": "third-party tracks; network blocked; DS prefers original"}],
+     "confidence": 0.85, "user_visible": true},
+    {"category": "voice_selection", "subject": "Narration", "choice": "user-supplied ElevenLabs VO (vo_raw.mp3) + 8 inserted dramatic pauses",
+     "options_considered": [{"option": "user VO", "reason": "provided by the user"}, {"option": "re-generate key lines", "rejected_because": "optional; awaiting user"}],
+     "confidence": 0.7, "user_visible": true}
+  ]
+}
