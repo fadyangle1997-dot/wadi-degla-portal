@@ -24,23 +24,34 @@ Findings:
 2. [SUGGESTION] VO pacing is uniform (max natural pause 0.67 s). 8 pauses were inserted (+6.2 s). Optional: regenerate «لأ.», «مقصية.», «جول.» in ElevenLabs with more intensity; I splice them in.
 3. [INVESTIGATION] The page badge PNG is missing (DS §5.4, §5.9).
 
-## 10/10 scorecard: final (episode 2 rendered)
+## 10/10 scorecard: v4 (archive footage)
 
-Scored 0–10 on the finished master (`hf/renders/rivaldo_final.mp4`). Checks: lint/validate/inspect at 0 errors,
-OM slideshow risk 0.0, variation 0.0, the DS §10 technical checks, and stills at every key beat.
+**Re-scored after the user's review.** The v3 grade of 8.7 overrated the picture. The OM slideshow scorer read the
+plan's declared fields, but the cut held only 4.6 s of moving footage in 5:16 (1.5 %), and the bicycle kick was a
+still. Measured against football-story pages on Facebook, v3's picture was a 5/10 and the episode about a 7.
 
-| # | Criterion | Score | Evidence | What would make it 10 |
-|---|---|---|---|---|
-| 1 | Hook: frame 0, first 3 s, 30-second rule | 9 | Frame 0 is the real Ballon d'Or photo with the hook subtitle and sound from the first frame; the hook paradox lands by 9 s | A tighter first line (≤ 2 s) |
-| 2 | Story arc (but/therefore, callback ending) | 9 | Poverty → loss → rise → crown → bench → one night → World Cup → leaves; recap and next-episode tease | — |
-| 3 | Fact accuracy (DS §9, ≥ 2 sources) | 9 | F1–F24 sourced; the screen shows "December 1999" | Settle «21 ديسمبر» (sources say 20 or 21) |
-| 4 | VO performance and pacing | 8 | Tone chain (warmth, presence, de-ess, density, light room), emphasis rides, stadium throw on «جول» | Re-read the climax lines in ElevenLabs v3 (`audio/VO_regen_tips_AR.md`) |
-| 5 | Visual plan / variety | 9 | 28 scenes, every one a photo or deliberate typography; archive montage on «عامل إزاي» | — |
-| 6 | Photos: era-correct, high quality | 8 | Era-checked (the FIFA 2000 gala and VINI JR shirt photos were rejected) | Bench 2000 (p3), father (p8), Van Gaal 2002 (p22); higher-res scans of 3–4 images |
-| 7 | Motion + design-system fidelity | 8 | Morph plates, split-flap counters, darkroom reveal, film burns, act-gated colour | Motion blur on fast moves (HyperFrames has none) |
-| 8 | Sound: score, SFX, silence before impact, loudness | 8 | Original score (strings, choir, piano, taiko) following the act arc; true silence before 1989, «لأ» and the freeze; 3-band ducking; −14.1 LUFS, −2.9 dBTP | Real-instrument or licensed music (Facebook Sound Collection); a listening pass by a human |
-| 9 | Subtitles (DS §8) | 9 | 118 cues, ≤ 34 characters per line, compound phrases kept on one line, inside the 4:5 safe band | Phone burn-in check by the page team |
-| 10 | Technical QA (DS §10) | 9.5 | 1080×1350, 30 fps, 9480 frames, A/V offset 0 ms at 4 points, TP ≤ −2.5 even after AAC | — |
+v4 changes:
+- Real footage now runs about 71 s of 5:24 (22 %): 13 inserts, all cut, speed-ramped, reframed to 4:5 and act-graded by `hf/footage.py`.
+- Two VO-free showcase gaps (+5 s and +3 s) were opened by `audio/apply_gaps.py`.
+- Verified match footage:
+  - the 2-1 and the bicycle kick v Valencia, 17 June 2001;
+  - identified by Camp Nou boards of the 2000-01 season, Valencia's away kit, Pellegrino (#2) and Cañizares in goal.
+- Act I runs on an early-1990s TV Globo report on the teenage Rivaldo. It is labelled «ARCHIVE · TV GLOBO» on screen.
 
-**Episode 2: 8.7 / 10.** The three steps to 10 are, in order: re-read the 7 climax lines with emotion, get the missing
-photos (p3/p8/p22), and choose licensed real-instrument music if the page wants a bigger sound.
+| # | Criterion | v3 | v4 | Evidence | What would make it 10 |
+|---|---|---|---|---|---|
+| 1 | Hook: frame 0 and the first 3 s | 9 | 9.5 | Motion from frame 0 («RIVALDO» on his back, then the Ballon d'Or on the pitch); a dribble freezes and drains to grey on «لقى نفسه على الدكة» | — |
+| 2 | Story arc | 9 | 9 | Unchanged | — |
+| 3 | Fact accuracy | 9 | 9 | Specific events use verified footage; Barça showcase clips are undated B-roll with no captions | Settle «21 ديسمبر» |
+| 4 | VO performance | 8 | 8 | Tone chain and rides; two sound-up gaps | ElevenLabs v3 re-reads (`audio/VO_regen_tips_AR.md`) |
+| 5 | Visual variety (as watched) | 5 | 8 | 22 % real footage; the hero moment is footage (speed ramp, freeze in the silence, goal on «جول») | Footage for the Brazilian clubs, Deportivo, the Van Gaal dispute and the 2002 final |
+| 6 | Image quality | 8 | 7.5 | The sources are 576 px social compilations, upscaled 1.9–2.8×; soft in places | Original broadcast / TV Globo masters |
+| 7 | Motion and DS fidelity | 8 | 8.5 | Speed ramps, optical-flow slow motion, freezes, the act grade on footage | Motion blur on graphic moves |
+| 8 | Sound | 8 | 8 | Crowd swells on every goal; silence on the opening freeze; −14 LUFS | Licensed real-instrument score; a human listening pass |
+| 9 | Subtitles | 9 | 9 | 118 cues, re-timed around the gaps | Phone burn-in check |
+| 10 | Technical QA | 9.5 | 9.5 | 0 lint/validate errors, WCAG AA; render QA in the delivery notes | — |
+
+**Episode 2 v4: 8.6 / 10** (v3 re-scored: about 7). In order, the steps to 10:
+1. Original-quality sources for the same shots.
+2. Re-read the climax lines with emotion.
+3. Footage for the four uncovered chapters.
