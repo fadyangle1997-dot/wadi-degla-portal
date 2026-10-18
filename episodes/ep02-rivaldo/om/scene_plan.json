@@ -1,0 +1,717 @@
+{
+ "version": "1.0",
+ "style_playbook": "BarcelonaArmyEgypt_DesignSystem_v9",
+ "scenes": [
+  {
+   "id": "s01",
+   "type": "broll",
+   "description": "Frame 0: Rivaldo holding the Ballon d'Or (#1), full colour; colour drains to B&W on «انهارت»; cut to Van Gaal on the touchline (#2), then Rivaldo on the bench (#3)",
+   "start_seconds": 0.0,
+   "end_seconds": 9.19,
+   "script_section_id": "act_cold",
+   "shot_language": {
+    "shot_size": "medium_close",
+    "camera_movement": "dolly_in",
+    "color_temperature": "warm",
+    "lighting_key": "rim_lit"
+   },
+   "shot_intent": "Hook: the trophy and the bench in one breath, so the paradox is the first thing seen",
+   "narrative_role": "build_tension",
+   "information_role": "The best player in Europe was benched the same day he was crowned",
+   "hero_moment": true,
+   "transition_in": "none (frame 0 strong)",
+   "overlay_notes": "no chapter marker; subtitles only",
+   "texture_keywords": [
+    "35mm film grain",
+    "rim light on gold metal",
+    "colour-to-B&W drain"
+   ]
+  },
+  {
+   "id": "s02",
+   "type": "transition",
+   "description": "Time rewinds: year counter spins 1999 → 1980s over the drained trophy photo, which recedes into darkness; reverse-whoosh",
+   "start_seconds": 10.18,
+   "end_seconds": 16.51,
+   "script_section_id": "act_I",
+   "shot_language": {
+    "shot_size": "wide",
+    "camera_movement": "dolly_out",
+    "color_temperature": "cool",
+    "lighting_key": "low_key"
+   },
+   "shot_intent": "Bridge from the hook to the origin story without a hard cut",
+   "narrative_role": "transition",
+   "information_role": "We are going back before Barcelona",
+   "hero_moment": false,
+   "transition_in": "film burn (act change)",
+   "overlay_notes": "DM Mono year counter, chapter marker I THE HUNGER fades in",
+   "texture_keywords": [
+    "archival dust",
+    "8.5% film grain",
+    "heavy vignette",
+    "near-monochrome print"
+   ]
+  },
+  {
+   "id": "s03",
+   "type": "broll",
+   "description": "Recife neighbourhood photo (#4), near B&W with heavy dust; slow pan; km counter 0→15 on «بيمشي مسافات طويلة»; cut to early-career portrait (#5)",
+   "start_seconds": 16.93,
+   "end_seconds": 31.51,
+   "script_section_id": "act_I",
+   "shot_language": {
+    "shot_size": "wide",
+    "camera_movement": "pan_left",
+    "color_temperature": "cool",
+    "lighting_key": "overcast_soft"
+   },
+   "shot_intent": "Make poverty concrete: place, distance, body",
+   "narrative_role": "establish_context",
+   "information_role": "He was malnourished and walked kilometres to train",
+   "hero_moment": false,
+   "transition_in": "slide",
+   "overlay_notes": "optional «15 كم» counter (one source)",
+   "texture_keywords": [
+    "archival dust",
+    "8.5% film grain",
+    "heavy vignette",
+    "near-monochrome print"
+   ]
+  },
+  {
+   "id": "s04",
+   "type": "broll",
+   "description": "Close portrait (#6); name reveal letter by letter in Archivo Black with 0.045 s stagger on «ريفالدو فيتور بوربا فيريرا»",
+   "start_seconds": 32.13,
+   "end_seconds": 35.5,
+   "script_section_id": "act_I",
+   "shot_language": {
+    "shot_size": "close_up",
+    "camera_movement": "static",
+    "color_temperature": "neutral",
+    "lighting_key": "low_key"
+   },
+   "shot_intent": "Name the subject only after the hook and the hardship",
+   "narrative_role": "introduce_subject",
+   "information_role": "His full name",
+   "hero_moment": false,
+   "transition_in": "cut",
+   "overlay_notes": "name punch-in",
+   "texture_keywords": [
+    "archival dust",
+    "8.5% film grain",
+    "heavy vignette",
+    "near-monochrome print"
+   ]
+  },
+  {
+   "id": "s05",
+   "type": "diagram",
+   "description": "D3 map of Brazil, stone400 map dots; gold dot lands on Recife; serif-italic «1972»",
+   "start_seconds": 36.05,
+   "end_seconds": 42.64,
+   "script_section_id": "act_I",
+   "shot_language": {
+    "shot_size": "establishing",
+    "camera_movement": "zoom_in",
+    "color_temperature": "neutral",
+    "lighting_key": "low_key"
+   },
+   "shot_intent": "Geography and year in one frame",
+   "narrative_role": "establish_context",
+   "information_role": "Born 1972 in Recife, north-east Brazil",
+   "hero_moment": false,
+   "transition_in": "plate morph",
+   "overlay_notes": "DM Mono coordinates 8.05°S 34.88°W",
+   "texture_keywords": [
+    "archival dust",
+    "8.5% film grain",
+    "heavy vignette",
+    "near-monochrome print"
+   ]
+  },
+  {
+   "id": "s06",
+   "type": "broll",
+   "description": "Father's photo (#8) or a silhouette frame if none; three soft beats on «بيشجعه / بيتابعه / بيحلم معاه»",
+   "start_seconds": 43.27,
+   "end_seconds": 52.12,
+   "script_section_id": "act_I",
+   "shot_language": {
+    "shot_size": "medium",
+    "camera_movement": "dolly_in",
+    "color_temperature": "warm",
+    "lighting_key": "tungsten_warm"
+   },
+   "shot_intent": "Give the father a face so his loss lands",
+   "narrative_role": "emotional_beat",
+   "information_role": "His father believed in him",
+   "hero_moment": false,
+   "transition_in": "dissolve",
+   "overlay_notes": "",
+   "texture_keywords": [
+    "archival dust",
+    "8.5% film grain",
+    "heavy vignette",
+    "near-monochrome print"
+   ]
+  },
+  {
+   "id": "s07",
+   "type": "text_card",
+   "description": "Black frame; «1989» in Instrument Serif, alone; the bed drops to silence (+0.6 s) before «والد ريفالدو مات»",
+   "start_seconds": 52.67,
+   "end_seconds": 63.51,
+   "script_section_id": "act_I",
+   "shot_language": {
+    "shot_size": "insert",
+    "camera_movement": "static",
+    "color_temperature": "cool",
+    "lighting_key": "low_key"
+   },
+   "shot_intent": "Silence before the impact; loss shown by absence",
+   "narrative_role": "build_tension",
+   "information_role": "His father died in 1989; he wanted to quit",
+   "hero_moment": false,
+   "transition_in": "dip to black",
+   "overlay_notes": "no photo on purpose",
+   "texture_keywords": [
+    "archival dust",
+    "8.5% film grain",
+    "heavy vignette",
+    "near-monochrome print"
+   ]
+  },
+  {
+   "id": "s08",
+   "type": "broll",
+   "description": "Early photo (#5) re-graded warmer; slow push",
+   "start_seconds": 64.06,
+   "end_seconds": 70.33,
+   "script_section_id": "act_I",
+   "shot_language": {
+    "shot_size": "medium_close",
+    "camera_movement": "dolly_in",
+    "color_temperature": "warm",
+    "lighting_key": "tungsten_warm"
+   },
+   "shot_intent": "The mother's refusal turns the story",
+   "narrative_role": "emotional_beat",
+   "information_role": "His mother told him to keep going",
+   "hero_moment": false,
+   "transition_in": "dissolve",
+   "overlay_notes": "",
+   "texture_keywords": [
+    "archival dust",
+    "8.5% film grain",
+    "heavy vignette",
+    "near-monochrome print"
+   ]
+  },
+  {
+   "id": "s09",
+   "type": "broll",
+   "description": "Four club photos (#10) slide in one per club name (Santa Cruz, Mogi Mirim, Corinthians, Palmeiras); type-only club names, no modern crests",
+   "start_seconds": 70.89,
+   "end_seconds": 78.4,
+   "script_section_id": "act_II",
+   "shot_language": {
+    "shot_size": "medium_wide",
+    "camera_movement": "tracking_left",
+    "color_temperature": "neutral",
+    "lighting_key": "natural"
+   },
+   "shot_intent": "Show the climb as a fast staircase",
+   "narrative_role": "evidence",
+   "information_role": "Four Brazilian clubs in a few years",
+   "hero_moment": false,
+   "transition_in": "film burn (act change)",
+   "overlay_notes": "chapter marker II THE RISE",
+   "texture_keywords": [
+    "warm sepia print",
+    "light grain",
+    "paper edge"
+   ]
+  },
+  {
+   "id": "s10",
+   "type": "broll",
+   "description": "Deportivo photo (#11); DM Mono «LA CORUÑA · 1996-97»",
+   "start_seconds": 79.0,
+   "end_seconds": 88.85,
+   "script_section_id": "act_II",
+   "shot_language": {
+    "shot_size": "medium",
+    "camera_movement": "zoom_out",
+    "color_temperature": "neutral",
+    "lighting_key": "natural"
+   },
+   "shot_intent": "Europe notices him",
+   "narrative_role": "evidence",
+   "information_role": "One season at Deportivo was enough",
+   "hero_moment": false,
+   "transition_in": "slide",
+   "overlay_notes": "",
+   "texture_keywords": [
+    "warm sepia print",
+    "light grain",
+    "paper edge"
+   ]
+  },
+  {
+   "id": "s11",
+   "type": "broll",
+   "description": "Ronaldo at Barça/Inter (#12) slides out; Rivaldo's presentation (#13) lands on «ريفالدو»; first blaugrana stripes",
+   "start_seconds": 89.44,
+   "end_seconds": 100.8,
+   "script_section_id": "act_III",
+   "shot_language": {
+    "shot_size": "medium",
+    "camera_movement": "pan_right",
+    "color_temperature": "neutral",
+    "lighting_key": "natural"
+   },
+   "shot_intent": "Replacement narrative: one Brazilian leaves, another arrives",
+   "narrative_role": "introduce_subject",
+   "information_role": "Barça bought him after losing Ronaldo",
+   "hero_moment": false,
+   "transition_in": "film burn (act change)",
+   "overlay_notes": "chapter marker III BARCELONA; Barça value 0.35→0.8",
+   "texture_keywords": [
+    "blaugrana stripes",
+    "clean print",
+    "soft vignette"
+   ]
+  },
+  {
+   "id": "s12",
+   "type": "animation",
+   "description": "Celebration photo (#14) with two trophy glyphs landing on «مرتين» and «مرة» inside a small morph plate",
+   "start_seconds": 101.39,
+   "end_seconds": 110.37,
+   "script_section_id": "act_III",
+   "shot_language": {
+    "shot_size": "wide",
+    "camera_movement": "dolly_out",
+    "color_temperature": "neutral",
+    "lighting_key": "natural"
+   },
+   "shot_intent": "Quantify the first two seasons",
+   "narrative_role": "evidence",
+   "information_role": "Two league titles and one Copa del Rey",
+   "hero_moment": false,
+   "transition_in": "plate morph",
+   "overlay_notes": "Barça accent on plate",
+   "texture_keywords": [
+    "blaugrana stripes",
+    "clean print",
+    "soft vignette"
+   ]
+  },
+  {
+   "id": "s13",
+   "type": "text_card",
+   "description": "Plate morphs to a date card: serif italic «December 1999» (date disputed, see F10), label BALLON D'OR",
+   "start_seconds": 110.91,
+   "end_seconds": 122.31,
+   "script_section_id": "act_IV",
+   "shot_language": {
+    "shot_size": "insert",
+    "camera_movement": "static",
+    "color_temperature": "warm",
+    "lighting_key": "low_key"
+   },
+   "shot_intent": "Set the clock for the coronation",
+   "narrative_role": "build_tension",
+   "information_role": "The Ballon d'Or announcement",
+   "hero_moment": false,
+   "transition_in": "film burn (act change)",
+   "overlay_notes": "chapter marker IV THE BALLON D'OR",
+   "texture_keywords": [
+    "champagne gold metal",
+    "darkroom developer tint",
+    "print emerging from black"
+   ]
+  },
+  {
+   "id": "s14",
+   "type": "broll",
+   "description": "Beckham in Man United kit (#15), cool grade; DM Mono «MANCHESTER UNITED · 1998-99 · TREBLE»",
+   "start_seconds": 122.91,
+   "end_seconds": 127.99,
+   "script_section_id": "act_IV",
+   "shot_language": {
+    "shot_size": "medium",
+    "camera_movement": "zoom_in",
+    "color_temperature": "cool",
+    "lighting_key": "natural"
+   },
+   "shot_intent": "Establish the rival so the number means something",
+   "narrative_role": "comparison",
+   "information_role": "Beckham had won the treble",
+   "hero_moment": false,
+   "transition_in": "slide",
+   "overlay_notes": "",
+   "texture_keywords": [
+    "champagne gold metal",
+    "darkroom developer tint",
+    "print emerging from black"
+   ]
+  },
+  {
+   "id": "s15",
+   "type": "animation",
+   "description": "GOLD CLIMAX: dark plate (frame A); silence +0.8 s; 154 counts up (white), 219 counts up (gold), one crisp integer per frame; plate dissolves into the darkroom reveal of #1, highlights first, one continuous pull-back",
+   "start_seconds": 128.48,
+   "end_seconds": 139.04,
+   "script_section_id": "act_IV",
+   "shot_language": {
+    "shot_size": "medium_close",
+    "camera_movement": "dolly_out",
+    "color_temperature": "warm",
+    "lighting_key": "golden_hour"
+   },
+   "shot_intent": "The slowest move in the film; the number, then the image",
+   "narrative_role": "deliver_payload",
+   "information_role": "Rivaldo 219 vs Beckham 154: Ballon d'Or",
+   "hero_moment": true,
+   "transition_in": "none (continuous)",
+   "overlay_notes": "bed modulates minor→major on «يفوز»",
+   "texture_keywords": [
+    "champagne gold metal",
+    "darkroom developer tint",
+    "print emerging from black"
+   ]
+  },
+  {
+   "id": "s16",
+   "type": "broll",
+   "description": "FIFA award photo (#17); then split frame: child photo (#5) ↔ trophy photo (#1)",
+   "start_seconds": 139.53,
+   "end_seconds": 150.36,
+   "script_section_id": "act_IV",
+   "shot_language": {
+    "shot_size": "medium",
+    "camera_movement": "static",
+    "color_temperature": "warm",
+    "lighting_key": "golden_hour"
+   },
+   "shot_intent": "Callback to the hook: the child who walked became the best",
+   "narrative_role": "resolution",
+   "information_role": "He also won FIFA World Player 1999",
+   "hero_moment": false,
+   "transition_in": "plate morph",
+   "overlay_notes": "gold pen ring around the face on #1",
+   "texture_keywords": [
+    "champagne gold metal",
+    "darkroom developer tint",
+    "print emerging from black"
+   ]
+  },
+  {
+   "id": "s17",
+   "type": "transition",
+   "description": "«صح؟» then a dip to black for 0.8 s, «لأ.» on black, sub-hit",
+   "start_seconds": 151.02,
+   "end_seconds": 155.48,
+   "script_section_id": "act_V",
+   "shot_language": {
+    "shot_size": "insert",
+    "camera_movement": "static",
+    "color_temperature": "cool",
+    "lighting_key": "silhouette"
+   },
+   "shot_intent": "Pattern interrupt; the gold drains",
+   "narrative_role": "build_tension",
+   "information_role": "The happiest moment was not happy",
+   "hero_moment": false,
+   "transition_in": "dip to black",
+   "overlay_notes": "chapter marker V THE BENCH",
+   "texture_keywords": [
+    "chalk on slate",
+    "cold desaturated print",
+    "stamp ink"
+   ]
+  },
+  {
+   "id": "s18",
+   "type": "diagram",
+   "description": "Tactics board (chalk, char600→ink): a dot on the left wing, an arrow to the No.10 zone on «العمق»; Van Gaal photo (#18) cold; bench photo (#3) on «استبعد»",
+   "start_seconds": 156.49,
+   "end_seconds": 183.19,
+   "script_section_id": "act_V",
+   "shot_language": {
+    "shot_size": "wide",
+    "camera_movement": "static",
+    "color_temperature": "cool",
+    "lighting_key": "low_key"
+   },
+   "shot_intent": "Explain the dispute visually, not with words on screen",
+   "narrative_role": "comparison",
+   "information_role": "Van Gaal wanted him on the left; he wanted the centre; he was dropped",
+   "hero_moment": false,
+   "transition_in": "slide",
+   "overlay_notes": "stamp-ink underline on «الشمال»",
+   "texture_keywords": [
+    "chalk on slate",
+    "cold desaturated print",
+    "stamp ink"
+   ]
+  },
+  {
+   "id": "s19",
+   "type": "text_card",
+   "description": "Date card «17 June 2001» over faint stripes (frame B layout); morph plate shows stakes: WIN = UCL / DRAW = VALENCIA",
+   "start_seconds": 183.71,
+   "end_seconds": 202.11,
+   "script_section_id": "act_VI",
+   "shot_language": {
+    "shot_size": "medium_wide",
+    "camera_movement": "dolly_in",
+    "color_temperature": "neutral",
+    "lighting_key": "natural"
+   },
+   "shot_intent": "Set the stakes before the match",
+   "narrative_role": "build_tension",
+   "information_role": "Barça must win the last game",
+   "hero_moment": false,
+   "transition_in": "film burn (act change)",
+   "overlay_notes": "chapter marker VI ONE NIGHT",
+   "texture_keywords": [
+    "stadium floodlight",
+    "motion blur",
+    "split-flap tiles",
+    "white flash"
+   ]
+  },
+  {
+   "id": "s20",
+   "type": "animation",
+   "description": "Split-flap scoreboard BAR–VAL flips on each spoken score (1-0, 1-1, 2-1, 2-2), match stills (#19) behind at 30 %; «خارج» = plate turns stampInk",
+   "start_seconds": 202.6,
+   "end_seconds": 224.56,
+   "script_section_id": "act_VI",
+   "shot_language": {
+    "shot_size": "medium",
+    "camera_movement": "static",
+    "color_temperature": "neutral",
+    "lighting_key": "natural"
+   },
+   "shot_intent": "Let the score carry the tension, one flip per word",
+   "narrative_role": "build_tension",
+   "information_role": "Rivaldo scores twice; Valencia equalise twice",
+   "hero_moment": false,
+   "transition_in": "plate morph",
+   "overlay_notes": "gold digits for Barça only",
+   "texture_keywords": [
+    "stadium floodlight",
+    "motion blur",
+    "split-flap tiles",
+    "white flash"
+   ]
+  },
+  {
+   "id": "s21",
+   "type": "broll",
+   "description": "ACTION PEAK: minute clock 87; stills of the chest control, ball in the air, the overhead kick; freeze + silence (+0.9 s) before «مقصية»; white flash 0.55 + shake on «جول»; crowd swell (+1.5 s); flap to 3-2",
+   "start_seconds": 224.98,
+   "end_seconds": 242.71,
+   "script_section_id": "act_VI",
+   "shot_language": {
+    "shot_size": "close_up",
+    "camera_movement": "whip_pan",
+    "color_temperature": "warm",
+    "lighting_key": "rim_lit"
+   },
+   "shot_intent": "The fastest cutting in the film, then a held freeze",
+   "narrative_role": "deliver_payload",
+   "information_role": "The 87th-minute bicycle kick: 3-2, hat-trick, Champions League",
+   "hero_moment": true,
+   "transition_in": "cut",
+   "overlay_notes": "9-subframe motion blur on the whip",
+   "texture_keywords": [
+    "stadium floodlight",
+    "motion blur",
+    "split-flap tiles",
+    "white flash"
+   ]
+  },
+  {
+   "id": "s22",
+   "type": "broll",
+   "description": "Camp Nou celebration (#20) wide, slow pull-back",
+   "start_seconds": 243.06,
+   "end_seconds": 251.09,
+   "script_section_id": "act_VI",
+   "shot_language": {
+    "shot_size": "extreme_wide",
+    "camera_movement": "crane_up",
+    "color_temperature": "warm",
+    "lighting_key": "volumetric"
+   },
+   "shot_intent": "Release after the peak",
+   "narrative_role": "resolution",
+   "information_role": "One of the most famous goals in club history",
+   "hero_moment": false,
+   "transition_in": "dissolve",
+   "overlay_notes": "",
+   "texture_keywords": [
+    "stadium floodlight",
+    "motion blur",
+    "split-flap tiles",
+    "white flash"
+   ]
+  },
+  {
+   "id": "s23",
+   "type": "broll",
+   "description": "Yokohama final (#21), Rivaldo in yellow No. 10 holding the trophy; Brazil 3-band bar at the top edge",
+   "start_seconds": 251.62,
+   "end_seconds": 266.15,
+   "script_section_id": "act_VII",
+   "shot_language": {
+    "shot_size": "medium",
+    "camera_movement": "dolly_in",
+    "color_temperature": "warm",
+    "lighting_key": "natural"
+   },
+   "shot_intent": "The last chapter is with Brazil, not Barça",
+   "narrative_role": "deliver_payload",
+   "information_role": "World Cup winner 2002, Brazil 2-0 Germany",
+   "hero_moment": false,
+   "transition_in": "film burn (act change)",
+   "overlay_notes": "chapter marker VII YOKOHAMA ’02; Barça value 0",
+   "texture_keywords": [
+    "Brazil tricolour bar",
+    "saturated print",
+    "confetti-free restraint"
+   ]
+  },
+  {
+   "id": "s24",
+   "type": "broll",
+   "description": "Van Gaal's 2002 return photo (#22), cold; Rivaldo (#23) darkens as he leaves the frame",
+   "start_seconds": 266.72,
+   "end_seconds": 273.31,
+   "script_section_id": "act_EP",
+   "shot_language": {
+    "shot_size": "medium",
+    "camera_movement": "pan_left",
+    "color_temperature": "cool",
+    "lighting_key": "low_key"
+   },
+   "shot_intent": "The story closes on the same conflict it opened with",
+   "narrative_role": "resolution",
+   "information_role": "Van Gaal came back, Rivaldo left",
+   "hero_moment": false,
+   "transition_in": "slide",
+   "overlay_notes": "chapter marker —",
+   "texture_keywords": [
+    "warming grade",
+    "feathered photo edge",
+    "gold sheen"
+   ]
+  },
+  {
+   "id": "s25",
+   "type": "broll",
+   "description": "Recap montage, one photo per clause: child (#5) → Ballon d'Or (#1) → overhead kick (#19) → World Cup (#21), warming grade",
+   "start_seconds": 273.98,
+   "end_seconds": 292.14,
+   "script_section_id": "act_EP",
+   "shot_language": {
+    "shot_size": "medium_close",
+    "camera_movement": "dolly_in",
+    "color_temperature": "warm",
+    "lighting_key": "golden_hour"
+   },
+   "shot_intent": "Full-arc callback before the title",
+   "narrative_role": "resolution",
+   "information_role": "From poverty to the Ballon d'Or and the World Cup",
+   "hero_moment": false,
+   "transition_in": "cut",
+   "overlay_notes": "",
+   "texture_keywords": [
+    "warming grade",
+    "feathered photo edge",
+    "gold sheen"
+   ]
+  },
+  {
+   "id": "s26",
+   "type": "broll",
+   "description": "Best Barça portrait (#23); pause +0.7 s; name title in gold metal",
+   "start_seconds": 292.83,
+   "end_seconds": 299.95,
+   "script_section_id": "act_EP",
+   "shot_language": {
+    "shot_size": "close_up",
+    "camera_movement": "static",
+    "color_temperature": "warm",
+    "lighting_key": "rim_lit"
+   },
+   "shot_intent": "Name the legend as the final image",
+   "narrative_role": "resolution",
+   "information_role": "His story",
+   "hero_moment": false,
+   "transition_in": "dissolve",
+   "overlay_notes": "title in Archivo Black + Noto Kufi",
+   "texture_keywords": [
+    "warming grade",
+    "feathered photo edge",
+    "gold sheen"
+   ]
+  },
+  {
+   "id": "s27",
+   "type": "broll",
+   "description": "Teaser: Ronaldinho at his 2003 presentation (#24); «الحلقة 3» card",
+   "start_seconds": 300.51,
+   "end_seconds": 310.97,
+   "script_section_id": "act_EP",
+   "shot_language": {
+    "shot_size": "medium",
+    "camera_movement": "zoom_in",
+    "color_temperature": "warm",
+    "lighting_key": "high_key"
+   },
+   "shot_intent": "Open the next curiosity gap",
+   "narrative_role": "call_to_action",
+   "information_role": "Next episode: Ronaldinho",
+   "hero_moment": false,
+   "transition_in": "slide",
+   "overlay_notes": "",
+   "texture_keywords": [
+    "warming grade",
+    "feathered photo edge",
+    "gold sheen"
+   ]
+  },
+  {
+   "id": "s28",
+   "type": "text_card",
+   "description": "End card: page badge 190 px, VIVA BARÇA in gold (clip reveal + one sheen), blue/garnet split rule, BARCELONA ARMY EGYPT",
+   "start_seconds": 310.97,
+   "end_seconds": 314.97,
+   "script_section_id": "act_EP",
+   "shot_language": {
+    "shot_size": "insert",
+    "camera_movement": "static",
+    "lighting_key": "low_key",
+    "color_temperature": "warm"
+   },
+   "shot_intent": "Series signature",
+   "narrative_role": "call_to_action",
+   "information_role": "Barcelona Army Egypt sign-off",
+   "hero_moment": false,
+   "transition_in": "dip to black",
+   "overlay_notes": "DS §5.9",
+   "texture_keywords": [
+    "warming grade",
+    "feathered photo edge",
+    "gold sheen"
+   ]
+  }
+ ]
+}

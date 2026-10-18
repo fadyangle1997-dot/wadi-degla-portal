@@ -1,0 +1,13 @@
+*.wav
+node_modules/
+snapshots/
+renders/
+.hyperframes/
+assets/photos/
+assets/darkroom_*.mp4
+assets/montage_*.mp4
+cover/*.png
+cover/*.jpg
+assets/footage/
+fonts/OmarArabic-*.otf
+__pycache__/
