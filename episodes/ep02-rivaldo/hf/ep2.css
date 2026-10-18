@@ -63,9 +63,9 @@
 .splitrule i { display:block; width:230px; height:3px; }
 .burn { position:absolute; inset:-200px; background:radial-gradient(ellipse at 50% 50%, var(--gold100) 0%, var(--gold300) 22%, rgba(62,49,27,.55) 55%, rgba(62,49,27,0) 75%); mix-blend-mode:screen; pointer-events:none; }
 
-/* Arabic statement / title (DS §4: Noto Kufi ExtraBold, optical ×0.86) */
-.ar-statement { direction:rtl; font-family:var(--fArStatement); font-weight:800; font-size:206px; line-height:1.5; color:var(--white100); }
-.ar-title { direction:rtl; font-family:var(--fArStatement); font-weight:800; font-size:96px; line-height:1.5; color:var(--white100); margin-top:6px; }
+/* Arabic statement / title: Omar Arabic display (the page's font) for big words; Noto Kufi as fallback */
+.ar-statement { direction:rtl; font-family:'Omar Arabic', var(--fArStatement); font-weight:400; font-synthesis:none; font-size:320px; line-height:1.3; color:var(--white100); }
+.ar-title { direction:rtl; font-family:'Omar Arabic', var(--fArStatement); font-weight:400; font-synthesis:none; font-size:124px; line-height:1.35; color:var(--white100); margin-top:6px; }
 
 /* subtitles (DS §8; 4:5 band y 1060–1210) */
 .subs { position:absolute; left:60px; right:60px; top:1060px; height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
