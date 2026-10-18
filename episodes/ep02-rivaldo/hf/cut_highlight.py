@@ -26,6 +26,7 @@ for k in range(1, len(segs)):
     fc.append(f'[{cur_a}][a{k}]acrossfade=d={X}:c1=qsin:c2=qsin[ax{k}]')
     cur_v, cur_a = f'vx{k}', f'ax{k}'
     t = t - X + (segs[k][1] - segs[k][0])
+fc.append(f'[{cur_a}]alimiter=limit=0.70:attack=2:release=60:level=disabled[alim]'); cur_a = 'alim'   # the crossfades can sum over the master's peak
 subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', *inputs, '-filter_complex', ';'.join(fc), '-map', f'[{cur_v}]', '-map', f'[{cur_a}]',
                 '-c:v', 'libx264', '-crf', '16', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
                 '-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-movflags', '+faststart', out], check=True)
