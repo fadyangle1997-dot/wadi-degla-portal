@@ -10,3 +10,4 @@ cover/*.png
 cover/*.jpg
 assets/footage/
 fonts/OmarArabic-*.otf
+__pycache__/
