@@ -46,7 +46,7 @@ PHOTO_DIR = f'{HERE}/assets/photos'
 FRAMING = {
     '1': ('1', '50% 25%', 1.0), '1b': ('1b', '50% 35%', 1.0), '23': ('23', '50% 18%', 1.0),
     '2': ('2', '50% 25%', 1.0), '18': ('18', '35% 30%', 1.12), '5': ('5', '50% 30%', 1.0), '10a': ('5', '50% 26%', 1.25),
-    '4': ('4', '50% 40%', 1.0), '12': ('12', '50% 25%', 1.0), '13': ('13', '50% 30%', 1.0), '10d': ('10d', '50% 25%', 1.0), '24': ('24', '50% 30%', 1.0),
+    '4': ('4', '50% 40%', 1.0), '12': ('12', '50% 25%', 1.0), '12i': ('12i', '32% 30%', 1.0), '13': ('13', '50% 30%', 1.0), '10d': ('10d', '50% 25%', 1.0), '24': ('24', '50% 30%', 1.0),
 '21f': ('21f', '50% 40%', 1.0), '21': ('21', '50% 40%', 1.0),
     '19a': ('19e', '41% 50%', 1.0), '19b': ('20', '68% 50%', 1.0),
     '19c': ('19e', '72% 42%', 1.9), '19d': ('19e', '45% 4%', 1.8), '19e': ('19e', '41% 50%', 1.0),
@@ -264,11 +264,17 @@ xin('s10', t0); c(); z += 2
 # s11 Ronaldo leaves, Rivaldo arrives
 t0, t1 = span(42, 46); c = open_scene('s11', t0, t1, z)
 r = photo('s11', '12', 'RONALDO', 'BARCELONA → INTER · 1997', 'III', 'pan_right', t0, ls(46))
-js.append(f'tl.to("#{r}",{{x:-1080,duration:0.5,ease:"cubic.in"}},{ls(44)+0.3:.3f});')
+# «اللي انتقل لإنتر ميلان»: Ronaldo holding the Inter Nº10 shirt whips in; on «نجم برازيلي جديد» Rivaldo pushes it out
+ri = photo('s11', '12i', 'RONALDO JOINS INTER', 'MILAN · SUMMER 1997', 'III', 'dolly_in', ls(44) - 0.15, ls(45) + 0.8, z=2, optional=True)
+swap = ls(45) + 0.25 if ri else ls(44) + 0.3
+if ri:
+    js.append(f'tl.fromTo("#{ri}",{{x:1080}},{{x:0,duration:0.4,ease:"quint.out"}},{ls(44)-0.15:.3f});')
+    js.append(f'tl.to("#{ri}",{{x:-1080,duration:0.5,ease:"cubic.in"}},{swap:.3f});')
+js.append(f'tl.to("#{r}",{{x:-1080,duration:0.5,ease:"cubic.in"}},{(ls(44) + 0.1) if ri else swap:.3f});')
 rv = photo('s11', '13', 'RIVALDO PRESENTED AT BARÇA', 'SUMMER 1997', 'III', 'dolly_in', ls(45), t1, z=3)
-js.append(f'tl.fromTo("#{rv}",{{x:1080}},{{x:0,duration:0.45,ease:"quint.out"}},{ls(44)+0.4:.3f});')
+js.append(f'tl.fromTo("#{rv}",{{x:1080}},{{x:0,duration:0.45,ease:"quint.out"}},{swap+0.1:.3f});')
 body.append('<div id="s11-str" class="stripes" style="opacity:0;z-index:2"></div>')
-js.append(f'tl.to("#s11-str",{{opacity:0.10,duration:0.6}},{ls(44)+0.6:.3f});')
+js.append(f'tl.to("#s11-str",{{opacity:0.10,duration:0.6}},{swap+0.3:.3f});')
 js.append(f'tl.to("#s11-str",{{opacity:0.26,duration:0.5}},{ls(46)+0.6:.3f});')
 xin('s11', t0); c(); z += 2
 
