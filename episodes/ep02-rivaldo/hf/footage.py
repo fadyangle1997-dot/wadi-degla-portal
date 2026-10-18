@@ -19,7 +19,8 @@ from PIL import Image, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__)); EP = os.path.dirname(HERE)
 OUT = f'{HERE}/assets/footage'; SRC = {'c1': f'{OUT}/src/clip1.mp4', 'c2': f'{OUT}/src/clip2.mp4', 'c3': f'{OUT}/src/clip3.mp4',
-                                       'c4': f'{OUT}/src/clip4.mp4'}   # c4: 'through the years' slideshow, 9:16, burned-in years (framed out)
+                                       'c4': f'{OUT}/src/clip4.mp4',
+                                       'c5': f'{OUT}/src/clip5.mp4'}   # c5: Barça–Valencia 17·6·2001 broadcast (60 fps); title box at the top is framed out   # c4: 'through the years' slideshow, 9:16, burned-in years (framed out)
 L = json.load(open(f'{EP}/audio/line_timings_edit.json', encoding='utf-8'))['lines']
 ls = lambda i: L[i]['start']; le = lambda i: L[i]['end']
 W, H, FPS = 1080, 1350, 30
@@ -66,6 +67,22 @@ def build_spec():
     S['bra_celeb'] = dict(act='VII', host='s23', mode='over', start=c0, end=c1_, fin=0.15, fout=0.0,
         pieces=[P('c3', 16.36, 17.15, dur=c1_ - c0, zoom=[(0, 1.3), (c1_ - c0, 1.37)], cx=0.6, cy=0.5,          # framed right of the page logo
                   tmap=[(0, 16.36), (1.6, 17.15), (c1_ - c0, 17.15)])], events=[('applause', 0.1)])            # «وريفالدو يبقى بطل عالم»
+    # the Valencia night, 17 June 2001 (broadcast, c5)
+    K0 = ls(104) - 0.14                                     # the bicycle-kick insert starts here
+    fk0 = (ls(90) + 0.55) - (1.55 + 0.50)                   # strike lands on the SFX kick inside «ضربة حرة مباشرة»
+    S['val_skill'] = dict(act='VI', host='s20', mode='over', start=ls(88) - 0.15, end=fk0, fin=0.2, fout=0.0,
+        pieces=[P('c5', 4.75, 7.95, dur=fk0 - (ls(88) - 0.15), zoom=[(0, 1.0), (4.3, 1.05)], cx=0.5)], events=[])  # the dribble
+    S['val_fk'] = dict(act='VI', host='s20', mode='over', start=fk0, end=ls(91) - 0.05, fin=0.0, fout=0.12,
+        pieces=[P('c5', 18.05, 19.60, cx=0.42), P('c5', 20.10, None, cx=0.55)], events=[])                         # 1-0, free kick
+    S['val_down'] = dict(act='VI', host='s20', mode='over', start=ls(97) - 0.1, end=ls(98) - 0.1, fin=0.12, fout=0.12,
+        pieces=[P('c5', 90.30, 91.60, dur=ls(98) - ls(97), cx=0.5)], events=[])                                   # «فالنسيا يتعادل من جديد»
+    S['val_tense'] = dict(act='VI', host='s20', mode='over', start=ls(99) - 0.1, end=le(99) + 0.15, fin=0.12, fout=0.15,
+        pieces=[P('c5', 111.72, 112.60, dur=le(99) + 0.25 - ls(99), cx=0.5)], events=[])                         # «والوقت بيخلص»
+    # (c5 121.6–126.9 is the 2-1 from the live wide camera, not De Boer's ball: the kick's build-up stays a still)
+    S['val_bench'] = dict(act='VI', host='s22', mode='over', start=ls(112) - 0.1, end=le(112) + 0.2, fin=0.15, fout=0.0,
+        pieces=[P('c5', 139.45, 140.30, cx=0.5), P('c5', 127.20, None, cx=0.5)], events=[('applause', 0.05)])     # «الكامب نو انفجر»
+    S['val_shirt'] = dict(act='VI', host='s22', mode='over', start=le(112) + 0.2, end=ls(115) - 0.05, fin=0.0, fout=0.15,
+        pieces=[P('c5', 129.00, 129.85, cx=0.5), P('c5', 140.55, 141.95, cx=0.5), P('c5', 142.95, None, cx=0.5)], events=[('goal', 0.3)])          # shirt off, the hugs
     a0, a1 = span(47, 51)
     # Act I: the TV Globo report on the young Rivaldo (early 1990s), framed right of the page logo (Z = 1.25, cx ≥ 0.61)
     YZ, YX = 1.25, 0.63
@@ -135,6 +152,7 @@ def lin(v, t):
 
 def active_box(src, a, b):
     if src == 'c1': return (0, 0, 576, 768)
+    if src == 'c5': return (0, 320, 576, 408)            # picture below the burned-in «Rivaldo vs València» title
     r = subprocess.run(['ffmpeg', '-hide_banner', '-ss', f'{a:.3f}', '-to', f'{max(b, a + 0.1):.3f}', '-i', SRC[src],
                         '-vf', 'cropdetect=limit=24:round=2:reset=1', '-f', 'null', '-'], capture_output=True, text=True).stderr
     crops = [l.split('crop=')[1].strip() for l in r.splitlines() if 'crop=' in l]
@@ -144,7 +162,7 @@ def active_box(src, a, b):
 def decode(src, a, b, box, fps_i):
     x, y, w, h = box
     vf = ('delogo=x=198:y=370:w=182:h=28,' if src == 'c1' else '') + f'crop={w}:{h}:{x}:{y},hqdn3d=1.5:1.5:3:3'
-    if fps_i != 30: vf += f',minterpolate=fps={fps_i}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1'
+    vf += f',minterpolate=fps={fps_i}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1' if fps_i != 30 else ',fps=30'
     raw = subprocess.run(['ffmpeg', '-loglevel', 'error', '-ss', f'{a:.3f}', '-to', f'{b + 0.05:.3f}', '-i', SRC[src], '-vf', vf,
                           '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], capture_output=True, check=True).stdout
     return np.frombuffer(raw, np.uint8).reshape(-1, h, w, 3)

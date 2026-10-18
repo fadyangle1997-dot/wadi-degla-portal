@@ -623,8 +623,17 @@ if os.path.exists(f'{HERE}/{BADGE}'):
             if out and a <= out[-1][1] + 0.5: out[-1] = (out[-1][0], max(out[-1][1], b))
             else: out.append((a, b))
         return out
-    for el, op, ws in (('#badge', 0.85, hides), ('#wm', 0.13, wm_hides)):
+    def minus(ws, cuts):   # windows with the 'over' footage inserts cut out (footage covers the plates there)
+        out = []
         for a, b in merged(ws):
+            segs = [(a, b)]
+            for c0, c1 in cuts:
+                segs = [p for x, y in segs for p in ((x, min(y, c0)), (max(x, c1), y)) if p[1] - p[0] > 0.6]
+            out += segs
+        return out
+    over = [(f['start'] + 0.2, f['start'] + f['dur'] - 0.2) for f in FOOT.values() if f['mode'] == 'over']
+    for el, op, ws in (('#badge', 0.85, merged(hides)), ('#wm', 0.13, minus(wm_hides, over))):
+        for a, b in ws:
             js.append(f'tl.to("{el}",{{opacity:0,duration:0.3}},{a + 0.1:.3f}); tl.to("{el}",{{opacity:{op},duration:0.4}},{b - 0.1:.3f});')
 
 # ======================================================================= grain overlay (deterministic jitter)

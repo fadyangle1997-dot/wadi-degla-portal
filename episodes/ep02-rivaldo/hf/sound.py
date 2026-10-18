@@ -195,7 +195,7 @@ put(sfx, BODY_END + 0.3, shimmer(3.5), -9)
 MAN = f'{HERE}/assets/footage/manifest.json'
 FOOT = json.load(open(MAN)) if os.path.exists(MAN) and os.environ.get('EP2_NO_MONTAGE') != '1' else {}
 if FOOT:                                                     # archive footage inserts (footage.py): cuts, goals, the freeze
-    LEVEL = {'open_a': -21, 'open_b': -17, 'showA': -16, 'montB': -15, 'replay': -20, 'recap_kick': -22, 'bra_goal': -17}
+    LEVEL = {'open_a': -21, 'open_b': -17, 'showA': -16, 'montB': -15, 'replay': -20, 'recap_kick': -22, 'bra_goal': -17, 'val_shirt': -19}
     freezes = [t for f in FOOT.values() for k, t in f['events'] if k == 'freeze']
     for name, f in FOOT.items():
         for k, t in f['events']:

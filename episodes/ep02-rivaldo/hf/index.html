@@ -58,8 +58,14 @@
 <div id="cr-young_quit" class="clip mono" data-start="59.400" data-duration="4.367" data-track-index="14" style="position:absolute;right:34px;top:306px;z-index:890;font-size:19px;letter-spacing:3px;color:var(--textSecondary);opacity:0">ARCHIVE · TV GLOBO</div>
 <video id="ft-showA" class="clip" src="assets/footage/showA.mp4" data-start="101.140" data-duration="14.833" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:31;opacity:0"></video>
 <video id="ft-montB" class="clip" src="assets/footage/montB.mp4" data-start="188.510" data-duration="8.333" data-track-index="13" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:47;opacity:0"></video>
+<video id="ft-val_skill" class="clip" src="assets/footage/val_skill.mp4" data-start="210.450" data-duration="4.233" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:49;opacity:0"></video>
+<video id="ft-val_fk" class="clip" src="assets/footage/val_fk.mp4" data-start="214.680" data-duration="3.033" data-track-index="13" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:49;opacity:1"></video>
 <video id="ft-goal2" class="clip" src="assets/footage/goal2.mp4" data-start="220.700" data-duration="3.133" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:49;opacity:0"></video>
+<video id="ft-val_down" class="clip" src="assets/footage/val_down.mp4" data-start="224.990" data-duration="1.967" data-track-index="13" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:49;opacity:0"></video>
+<video id="ft-val_tense" class="clip" src="assets/footage/val_tense.mp4" data-start="228.070" data-duration="1.333" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:49;opacity:0"></video>
 <video id="ft-kick" class="clip" src="assets/footage/kick.mp4" data-start="237.050" data-duration="14.067" data-track-index="13" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:49;opacity:0"></video>
+<video id="ft-val_bench" class="clip" src="assets/footage/val_bench.mp4" data-start="250.960" data-duration="1.833" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:53;opacity:0"></video>
+<video id="ft-val_shirt" class="clip" src="assets/footage/val_shirt.mp4" data-start="252.790" data-duration="3.633" data-track-index="13" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:53;opacity:1"></video>
 <video id="ft-replay" class="clip" src="assets/footage/replay.mp4" data-start="256.450" data-duration="2.600" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:53;opacity:0"></video>
 <video id="ft-bra_goal" class="clip" src="assets/footage/bra_goal.mp4" data-start="260.950" data-duration="3.700" data-track-index="13" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:53;opacity:0"></video>
 <video id="ft-bra_celeb" class="clip" src="assets/footage/bra_celeb.mp4" data-start="272.220" data-duration="2.567" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:55;opacity:0"></video>
@@ -420,9 +426,17 @@ tl.fromTo("#cr-young_quit",{opacity:0},{opacity:0.85,duration:0.3},59.500); tl.t
 tl.fromTo("#ft-showA",{opacity:0},{opacity:1,duration:0.25},101.140);
 tl.fromTo("#ft-montB",{opacity:0},{opacity:1,duration:0.2},188.510);
 tl.to("#ft-montB",{opacity:0,duration:0.55,ease:"power1.in"},196.293);
+tl.fromTo("#ft-val_skill",{opacity:0},{opacity:1,duration:0.2},210.450);
+tl.to("#ft-val_fk",{opacity:0,duration:0.12,ease:"power1.in"},217.593);
 tl.fromTo("#ft-goal2",{opacity:0},{opacity:1,duration:0.12},220.700);
 tl.to("#ft-goal2",{opacity:0,duration:0.2,ease:"power1.in"},223.633);
+tl.fromTo("#ft-val_down",{opacity:0},{opacity:1,duration:0.12},224.990);
+tl.to("#ft-val_down",{opacity:0,duration:0.12,ease:"power1.in"},226.837);
+tl.fromTo("#ft-val_tense",{opacity:0},{opacity:1,duration:0.12},228.070);
+tl.to("#ft-val_tense",{opacity:0,duration:0.15,ease:"power1.in"},229.253);
 tl.fromTo("#ft-kick",{opacity:0},{opacity:1,duration:0.12},237.050);
+tl.fromTo("#ft-val_bench",{opacity:0},{opacity:1,duration:0.15},250.960);
+tl.to("#ft-val_shirt",{opacity:0,duration:0.15,ease:"power1.in"},256.273);
 tl.fromTo("#ft-replay",{opacity:0},{opacity:1,duration:0.15},256.450);
 tl.to("#ft-replay",{opacity:0,duration:0.25,ease:"power1.in"},258.800);
 tl.fromTo("#ft-bra_goal",{opacity:0},{opacity:1,duration:0.2},260.950);
@@ -462,12 +476,15 @@ tl.fromTo("#burn7",{opacity:0,x:-500},{opacity:0.85,x:0,duration:0.35,ease:"powe
 tl.to("#badge",{opacity:0,duration:0.3},141.830); tl.to("#badge",{opacity:0.85,duration:0.4},150.720);
 tl.to("#badge",{opacity:0,duration:0.3},155.870); tl.to("#badge",{opacity:0.85,duration:0.4},188.660);
 tl.to("#badge",{opacity:0,duration:0.3},300.680); tl.to("#badge",{opacity:0.85,duration:0.4},308.460);
-tl.to("#wm",{opacity:0,duration:0.3},10.030); tl.to("#wm",{opacity:0.13,duration:0.4},16.880);
-tl.to("#wm",{opacity:0,duration:0.3},52.520); tl.to("#wm",{opacity:0.13,duration:0.4},64.010);
+tl.to("#wm",{opacity:0,duration:0.3},10.133); tl.to("#wm",{opacity:0.13,duration:0.4},16.880);
+tl.to("#wm",{opacity:0,duration:0.3},52.520); tl.to("#wm",{opacity:0.13,duration:0.4},59.500);
 tl.to("#wm",{opacity:0,duration:0.3},109.940); tl.to("#wm",{opacity:0.13,duration:0.4},150.720);
-tl.to("#wm",{opacity:0,duration:0.3},155.870); tl.to("#wm",{opacity:0.13,duration:0.4},188.660);
-tl.to("#wm",{opacity:0,duration:0.3},202.000); tl.to("#wm",{opacity:0.13,duration:0.4},220.600);
-tl.to("#wm",{opacity:0,duration:0.3},223.933); tl.to("#wm",{opacity:0.13,duration:0.4},232.930);
+tl.to("#wm",{opacity:0,duration:0.3},155.870); tl.to("#wm",{opacity:0.13,duration:0.4},188.610);
+tl.to("#wm",{opacity:0,duration:0.3},202.000); tl.to("#wm",{opacity:0.13,duration:0.4},210.550);
+tl.to("#wm",{opacity:0,duration:0.3},217.613); tl.to("#wm",{opacity:0.13,duration:0.4},220.600);
+tl.to("#wm",{opacity:0,duration:0.3},223.933); tl.to("#wm",{opacity:0.13,duration:0.4},225.090);
+tl.to("#wm",{opacity:0,duration:0.3},226.857); tl.to("#wm",{opacity:0.13,duration:0.4},228.170);
+tl.to("#wm",{opacity:0,duration:0.3},229.303); tl.to("#wm",{opacity:0.13,duration:0.4},232.930);
 tl.to("#wm",{opacity:0,duration:0.3},300.680); tl.to("#wm",{opacity:0.13,duration:0.4},308.460);
 tl.to("#grain",{keyframes:[{x:-91,y:31,duration:0.0667,ease:"steps(1)"},{x:-78,y:139,duration:0.0667,ease:"steps(1)"},{x:104,y:-20,duration:0.0667,ease:"steps(1)"},{x:139,y:-50,duration:0.0667,ease:"steps(1)"},{x:-63,y:-45,duration:0.0667,ease:"steps(1)"},{x:-126,y:57,duration:0.0667,ease:"steps(1)"},{x:52,y:-103,duration:0.0667,ease:"steps(1)"},{x:-123,y:-75,duration:0.0667,ease:"steps(1)"},{x:-7,y:-119,duration:0.0667,ease:"steps(1)"},{x:-60,y:37,duration:0.0667,ease:"steps(1)"},{x:113,y:117,duration:0.0667,ease:"steps(1)"},{x:-77,y:-131,duration:0.0667,ease:"steps(1)"}],repeat:403},0);
 window.__timelines["rivaldo"] = tl;
