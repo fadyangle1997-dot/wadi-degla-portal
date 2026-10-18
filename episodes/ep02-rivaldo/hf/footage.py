@@ -30,7 +30,7 @@ def span(a, b):          # same scene windows as build.py
 HEX = {'gold500': '#C8A86E', 'gold700': '#86693A', 'stone300': '#9D958A', 'stone200': '#CAC3B7', 'white200': '#EAE3D6'}
 ACT = {  # act: (saturate, sepia, grade colour, grade alpha)  — build.py ACTS
     'cold': (0.85, 0.14, 'gold500', 0.09), 'I': (0.10, 0.06, 'stone300', 0.10), 'III': (0.55, 0.06, 'white200', 0.05),
-    'VI': (0.95, 0.04, 'white200', 0.04), 'EP': (0.85, 0.10, 'gold500', 0.09)}
+    'VI': (0.95, 0.04, 'white200', 0.04), 'VII': (0.70, 0.08, 'stone200', 0.06), 'EP': (0.85, 0.10, 'gold500', 0.09)}
 LIFT = 0.30
 
 def P(src, a, b=None, dur=None, cx=0.5, cy=0.5, zoom=1.0, tmap=None, sat=None, box=None):
@@ -58,6 +58,14 @@ def build_spec():
         pieces=[P('c3', 14.05, 15.20, dur=ls(29) - 0.3 - (ls(27) - 0.1), zoom=[(0, 1.3), (4.4, 1.4)], cx=0.66,
                   tmap=[(0, 14.05), (2.9, 15.2), (ls(29) - 0.3 - (ls(27) - 0.1), 15.2)],
                   sat=[(0, 0.3), (2.0, 0.05)])], events=[])                                                   # «قرر يسيب الكورة»: alone at home
+    # Act VII, World Cup 2002 (fifaworldcup.com / Avaya / NTT / Yahoo boards): a Rivaldo goal, then him and Ronaldo celebrating
+    b0 = le(117) - 3.7          # ends with «صيف 2002.»: «في نهائي كأس العالم» lands on the final's own photo, not this match
+    S['bra_goal'] = dict(act='VII', host='s23', mode='under', start=b0, end=b0 + 3.7, fin=0.2, fout=0.0,
+        pieces=[P('c1', 7.10, 10.80, cx=0.5)], events=[('goal', 3.35)])                                       # a 2002 World Cup goal
+    c0, c1_ = ls(121) - 0.1, span(116, 121)[1]
+    S['bra_celeb'] = dict(act='VII', host='s23', mode='over', start=c0, end=c1_, fin=0.15, fout=0.0,
+        pieces=[P('c3', 16.36, 17.15, dur=c1_ - c0, zoom=[(0, 1.3), (c1_ - c0, 1.37)], cx=0.6, cy=0.5,          # framed right of the page logo
+                  tmap=[(0, 16.36), (1.6, 17.15), (c1_ - c0, 17.15)])], events=[('applause', 0.1)])            # «وريفالدو يبقى بطل عالم»
     a0, a1 = span(47, 51)
     # Act I: the TV Globo report on the young Rivaldo (early 1990s), framed right of the page logo (Z = 1.25, cx ≥ 0.61)
     YZ, YX = 1.25, 0.63

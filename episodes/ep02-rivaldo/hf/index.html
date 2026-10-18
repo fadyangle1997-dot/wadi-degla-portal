@@ -61,6 +61,8 @@
 <video id="ft-goal2" class="clip" src="assets/footage/goal2.mp4" data-start="220.700" data-duration="3.133" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:49;opacity:0"></video>
 <video id="ft-kick" class="clip" src="assets/footage/kick.mp4" data-start="237.050" data-duration="14.067" data-track-index="13" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:49;opacity:0"></video>
 <video id="ft-replay" class="clip" src="assets/footage/replay.mp4" data-start="256.450" data-duration="2.600" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:53;opacity:0"></video>
+<video id="ft-bra_goal" class="clip" src="assets/footage/bra_goal.mp4" data-start="260.950" data-duration="3.700" data-track-index="13" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:53;opacity:0"></video>
+<video id="ft-bra_celeb" class="clip" src="assets/footage/bra_celeb.mp4" data-start="272.220" data-duration="2.567" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:55;opacity:0"></video>
 <video id="ft-recap_bdo" class="clip" src="assets/footage/recap_bdo.mp4" data-start="287.840" data-duration="1.933" data-track-index="13" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:59;opacity:0"></video>
 <video id="ft-recap_kick" class="clip" src="assets/footage/recap_kick.mp4" data-start="290.260" data-duration="2.833" data-track-index="4" muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:59;opacity:0"></video>
 <div id="ch0" class="clip chapter" data-start="9.980" data-duration="60.710" data-track-index="5" style="z-index:900"><span class="num">I</span><span class="name">THE HUNGER</span><div class="rule" id="ch0-r"></div><div class="ticks"><i class="now"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div></div>
@@ -372,7 +374,9 @@ tl.fromTo("#s21",{opacity:0},{opacity:1,duration:0.3,ease:"power1.inOut"},232.73
 tl.fromTo("#s22-ph24-cam",{"scale": 1.14, "y": 40},{...{"scale": 1.02, "y": -10},duration:8.860,ease:"none"},250.810);
 tl.fromTo("#s22",{opacity:0},{opacity:1,duration:0.3,ease:"power1.inOut"},250.810);
 tl.fromTo("#s23-ph25-cam",{"scale": 1.0},{...{"scale": 1.08},duration:15.400,ease:"none"},259.370);
-tl.fromTo("#s23-m",{opacity:0,y:18},{opacity:1,y:0,duration:0.28,ease:"cubic.out"},264.960);
+tl.to("#s23-ph25",{opacity:0,duration:0.15},261.100); tl.set("#s23-fill",{opacity:0},261.250);
+tl.set("#s23-fill",{opacity:1},264.300); tl.to("#s23-ph25",{opacity:1,duration:0.35},264.300);
+tl.fromTo("#s23-m",{opacity:0,y:18},{opacity:1,y:0,duration:0.28,ease:"cubic.out"},268.270);
 tl.fromTo("#s23-s",{opacity:0,scale:1.2},{opacity:1,scale:1,duration:0.26,ease:"cubic.out"},270.730);
 tl.fromTo("#s23",{opacity:0},{opacity:1,duration:0.3,ease:"power1.inOut"},259.370);
 tl.fromTo("#s24-ph26-cam",{"scale": 1.0},{...{"scale": 1.08},duration:5.170,ease:"none"},274.470);
@@ -421,6 +425,8 @@ tl.to("#ft-goal2",{opacity:0,duration:0.2,ease:"power1.in"},223.633);
 tl.fromTo("#ft-kick",{opacity:0},{opacity:1,duration:0.12},237.050);
 tl.fromTo("#ft-replay",{opacity:0},{opacity:1,duration:0.15},256.450);
 tl.to("#ft-replay",{opacity:0,duration:0.25,ease:"power1.in"},258.800);
+tl.fromTo("#ft-bra_goal",{opacity:0},{opacity:1,duration:0.2},260.950);
+tl.fromTo("#ft-bra_celeb",{opacity:0},{opacity:1,duration:0.15},272.220);
 tl.fromTo("#ft-recap_bdo",{opacity:0},{opacity:1,duration:0.15},287.840);
 tl.to("#ft-recap_bdo",{opacity:0,duration:0.2,ease:"power1.in"},289.573);
 tl.fromTo("#ft-recap_kick",{opacity:0},{opacity:1,duration:0.15},290.260);

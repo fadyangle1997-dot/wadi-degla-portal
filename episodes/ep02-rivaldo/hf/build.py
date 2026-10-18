@@ -487,11 +487,16 @@ xin('s22', t0); c(); z += 2
 
 # s23 Yokohama 2002 (Brazil tricolour bar)
 t0, t1 = span(116, 121); c = open_scene('s23', t0, t1, z)
-photo('s23', '21', 'RIVALDO · Nº 10 · WORLD CUP', 'YOKOHAMA · 30 JUNE 2002', 'VII', 'dolly_in', t0, t1)
+p21 = photo('s23', '21', 'RIVALDO · Nº 10 · WORLD CUP', 'YOKOHAMA · 30 JUNE 2002', 'VII', 'dolly_in', t0, t1)
+BG = FOOT.get('bra_goal')
+if BG:   # a 2002 World Cup goal plays under the scene; the final's own label waits for «البرازيل ضد ألمانيا»
+    be = BG['start'] + BG['dur']
+    js.append(f'tl.to("#{p21}",{{opacity:0,duration:0.15}},{BG["start"]+0.15:.3f}); tl.set("#s23-fill",{{opacity:0}},{BG["start"]+0.3:.3f});')
+    js.append(f'tl.set("#s23-fill",{{opacity:1}},{be-0.35:.3f}); tl.to("#{p21}",{{opacity:1,duration:0.35}},{be-0.35:.3f});')
 body.append('<div class="brbar" style="z-index:25"><i style="background:var(--brGreen)"></i><i style="background:var(--brYellow)"></i><i style="background:var(--brBlue)"></i></div>'
             '<div class="scrim" style="top:760px;height:330px;z-index:19"></div><div class="center-col" style="top:830px;z-index:20"><div id="s23-m" class="mono" style="font-size:24px;color:var(--textSecondary);opacity:0">YOKOHAMA · 30 JUNE 2002 · FINAL</div>'
             '<div id="s23-s" class="hero" style="font-size:150px;color:var(--white100);opacity:0">BRA 2–0 GER</div></div>')
-rise('#s23-m', ls(118)); punch('#s23-s', ls(120) + 0.3, 1.2)
+rise('#s23-m', ls(119) - 0.2 if BG else ls(118)); punch('#s23-s', ls(120) + 0.3, 1.2)
 xin('s23', t0); c(); z += 2
 
 # s24 Van Gaal returns; Rivaldo leaves
