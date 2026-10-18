@@ -45,12 +45,14 @@ PHOTO_DIR = f'{HERE}/assets/photos'
 # crops also keep source watermarks (rivaldo10.com, planetfootball) out of frame.
 FRAMING = {
     '1': ('1', '50% 25%', 1.0), '1b': ('1b', '50% 35%', 1.0), '23': ('23', '50% 18%', 1.0),
-    '2': ('2', '50% 25%', 1.0), '18': ('18', '35% 30%', 1.12), '5': ('5', '50% 30%', 1.0), '10a': ('5', '50% 26%', 1.25),
+    '2': ('2', '50% 25%', 1.0), '18': ('18', '35% 30%', 1.12), '5': ('5', '50% 30%', 1.0), '10a': ('10a', '50% 30%', 1.0),
     '4': ('4', '50% 40%', 1.0), '12': ('12', '50% 25%', 1.0), '12i': ('12i', '32% 30%', 1.0), '13': ('13', '50% 30%', 1.0), '10d': ('10d', '50% 25%', 1.0), '24': ('24', '50% 30%', 1.0),
 '21f': ('21f', '50% 40%', 1.0), '21': ('21', '50% 40%', 1.0),
     '19a': ('19e', '41% 50%', 1.0), '19b': ('20', '68% 50%', 1.0),
     '19c': ('19e', '72% 42%', 1.9), '19d': ('19e', '45% 4%', 1.8), '19e': ('19e', '41% 50%', 1.0),
     '20': ('20', '68% 50%', 1.0),
+    '15': ('15', '50% 30%', 1.0), '8': ('8k', '50% 30%', 1.0), '10b': ('10b', '50% 20%', 1.0), '10c': ('10c', '50% 30%', 1.0),
+    '13bd': ('13bd', '50% 35%', 1.0), '15bg': ('15bg', '50% 32%', 1.0),
 }
 def photo_file(slot):
     src = FRAMING.get(slot, (slot,))[0]
@@ -159,8 +161,12 @@ c(); z += 2
 
 # s02 rewind 1999 → 1980s
 t0, t1 = span(4, 7); c = open_scene('s02', t0, t1, z, 'var(--bgDeep)')
-p = photo('s02', '1', 'RIVALDO · BALLON D’OR', 'DECEMBER 1999', 'I', 'dolly_out', t0, t1)
-js.append(f'tl.to("#{p}",{{opacity:0.0,scale:0.86,duration:{t1-t0-0.2:.2f},ease:"power2.in"}},{t0:.3f});')
+if 'rewind' in FOOT:   # his career runs backwards, 2001 → the boy in Recife, under the year counter
+    js.append(f'tl.set("#s02-fill",{{opacity:0}},{t0:.3f});')
+    body.append('<div class="scrim" style="top:380px;height:520px;z-index:5"></div>')
+else:
+    p = photo('s02', '1', 'RIVALDO · BALLON D’OR', 'DECEMBER 1999', 'I', 'dolly_out', t0, t1)
+    js.append(f'tl.to("#{p}",{{opacity:0.0,scale:0.86,duration:{t1-t0-0.2:.2f},ease:"power2.in"}},{t0:.3f});')
 years = ['1999', '1997', '1995', '1993', '1991', '1989', '1986', '1983', '1980']
 yt = ls(6)
 body.append('<div class="center-col" style="top:470px">' + ''.join(
@@ -179,8 +185,9 @@ p4 = photo('s03', '4', 'RECIFE · PAULISTA NEIGHBOURHOOD', 'PERNAMBUCO · 1980s'
 if 'young_walk' in FOOT:   # the young Rivaldo walking (TV Globo) plays under the km counter
     W_ = FOOT['young_walk']
     js.append(f'tl.to("#{p4}",{{opacity:0,duration:0.2}},{W_["start"]:.3f}); tl.set("#s03-fill",{{opacity:0}},{W_["start"]+0.2:.3f});')
-p5 = photo('s03', '5', 'YOUNG RIVALDO', 'SANTA CRUZ · c.1990', 'I', 'dolly_in', ls(12), t1, z=2)
-fade(f'#{p5}', ls(12) - 0.15, 0.4, 1, 0)
+if 'young_walk' not in FOOT:   # with the footage, the walk carries on through «مكانش معاه فلوس للمواصلات»
+    p5 = photo('s03', '5', 'YOUNG RIVALDO', 'SANTA CRUZ · c.1990', 'I', 'dolly_in', ls(12), t1, z=2)
+    fade(f'#{p5}', ls(12) - 0.15, 0.4, 1, 0)
 body.append('<div id="s03-km" class="plate-mini" style="left:60px;top:680px;opacity:0"><span id="s03-kmv" class="hero gold" style="font-size:150px">0</span>'
             '<span class="label" style="font-size:30px;letter-spacing:8px;color:var(--textSecondary);margin-left:16px">KM</span>'
             '<div class="mono" style="font-size:22px;color:var(--textSecondary);margin-top:6px">≈ EVERY DAY, ON FOOT · EL GRÁFICO 1999</div></div>')
@@ -297,6 +304,10 @@ xin('s12', t0); c(); z += 2
 
 # s13 date card, Ballon d'Or
 t0, t1 = span(52, 55); c = open_scene('s13', t0, t1, z, 'var(--bgDeep)')
+pbd = photo('s13', '13bd', 'RIVALDO · BALLON D’OR', 'FRANCE FOOTBALL · 1999', 'IV', 'dolly_in', t0, t1, optional=True)
+if pbd:
+    js.append(f'tl.set("#{pbd}",{{opacity:0.5}},{t0:.3f});')
+    body.append('<div class="scrim" style="top:330px;height:520px;z-index:5"></div>')
 body.append('<div class="center-col" style="top:420px"><div id="s13-l" class="mono" style="font-size:26px;color:var(--textSecondary);opacity:0">FRANCE FOOTBALL</div>'
             '<div id="s13-d" class="serif-i gold" style="font-size:150px;line-height:1.1;opacity:0;padding:0 .1em">December 1999</div>'
             '<div id="s13-b" class="label" style="font-size:40px;letter-spacing:16px;color:var(--white100);opacity:0;margin-top:20px">BALLON D’OR</div></div>')
@@ -316,6 +327,8 @@ xin('s14', t0); c(); z += 2
 # s15 GOLD CLIMAX: 154 / 219, then darkroom reveal of #1 (slowest move)
 HAS17 = photo_file('17') is not None
 t0, t1 = span(58, 61 if HAS17 else 62); c = open_scene('s15', t0, t1, z, 'var(--bgDeep)')
+pbg = photo('s15', '15bg', 'RIVALDO · BALLON D’OR', 'CAMP NOU · 1999', 'IV', 'dolly_in', t0, t1, z=0, optional=True)
+if pbg: js.append(f'tl.set("#{pbg}",{{opacity:0.3}},{t0:.3f});')
 body.append('<div id="s15-wrap" style="position:absolute;inset:0">'
             '<div class="center-col" style="top:150px"><div class="mono" style="font-size:24px;color:var(--textSecondary)">FRANCE FOOTBALL · 1999</div>'
             '<div class="serif-i gold" style="font-size:150px;line-height:1.05;padding:0 .1em">Ballon d’Or</div></div>'
@@ -535,15 +548,16 @@ js.append(f'tl.fromTo("#s28-v",{{opacity:0,y:40}},{{opacity:1,y:0,duration:0.6,e
 xin('s28', t0); c()
 
 # ======================================================================= archive footage inserts
-for name, f in FOOT.items():
+for k_, (name, f) in enumerate(sorted(FOOT.items(), key=lambda kv: kv[1]['start'])):
     hz = SCENE_Z[f['host']]; zz = hz + 1 if f['mode'] == 'over' else hz - 1
+    trk = 4 if k_ % 2 == 0 else 13   # alternate rows so cross-faded inserts never share a track
     st, du = f['start'], f['dur']
-    body.append(f'<video id="ft-{name}" class="clip" src="{f["src"]}" data-start="{st:.3f}" data-duration="{du:.3f}" data-track-index="4" muted playsinline '
+    body.append(f'<video id="ft-{name}" class="clip" src="{f["src"]}" data-start="{st:.3f}" data-duration="{du:.3f}" data-track-index="{trk}" muted playsinline '
                 f'style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:{zz};opacity:{0 if f["fin"] > 0 else 1}"></video>')
     if f['fin'] > 0: js.append(f'tl.fromTo("#ft-{name}",{{opacity:0}},{{opacity:1,duration:{f["fin"]}}},{st:.3f});')
     if f['fout'] > 0: js.append(f'tl.to("#ft-{name}",{{opacity:0,duration:{f["fout"]},ease:"power1.in"}},{st + du - f["fout"]:.3f});')
     if f.get('credit'):   # archive source credit, top right (the chapter marker holds top left)
-        body.append(f'<div id="cr-{name}" class="clip mono" data-start="{st:.3f}" data-duration="{du:.3f}" data-track-index="7" '
+        body.append(f'<div id="cr-{name}" class="clip mono" data-start="{st:.3f}" data-duration="{du:.3f}" data-track-index="{7 if trk == 4 else 14}" '
                     f'style="position:absolute;right:34px;top:306px;z-index:890;font-size:19px;letter-spacing:3px;color:var(--textSecondary);opacity:0">{html.escape(f["credit"])}</div>')
         js.append(f'tl.fromTo("#cr-{name}",{{opacity:0}},{{opacity:0.85,duration:0.3}},{st + 0.1:.3f}); tl.to("#cr-{name}",{{opacity:0,duration:0.2}},{st + du - 0.25:.3f});')
 

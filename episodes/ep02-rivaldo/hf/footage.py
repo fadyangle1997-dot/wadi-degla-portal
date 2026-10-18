@@ -18,7 +18,8 @@ from collections import Counter
 from PIL import Image, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__)); EP = os.path.dirname(HERE)
-OUT = f'{HERE}/assets/footage'; SRC = {'c1': f'{OUT}/src/clip1.mp4', 'c2': f'{OUT}/src/clip2.mp4', 'c3': f'{OUT}/src/clip3.mp4'}
+OUT = f'{HERE}/assets/footage'; SRC = {'c1': f'{OUT}/src/clip1.mp4', 'c2': f'{OUT}/src/clip2.mp4', 'c3': f'{OUT}/src/clip3.mp4',
+                                       'c4': f'{OUT}/src/clip4.mp4'}   # c4: 'through the years' slideshow, 9:16, burned-in years (framed out)
 L = json.load(open(f'{EP}/audio/line_timings_edit.json', encoding='utf-8'))['lines']
 ls = lambda i: L[i]['start']; le = lambda i: L[i]['end']
 W, H, FPS = 1080, 1350, 30
@@ -49,6 +50,14 @@ def build_spec():
         P('c2', 37.00, 39.30, dur=run, zoom=[(0, 1.0), (run, 1.03)]),                          # dribble through the box, round the keeper…
         P('c2', 39.30, 39.30, zoom=[(0, 1.03), (2.4, 1.13)], sat=[(0, 1.0), (0.15, 1.0), (1.1, 0.06)])],  # …freeze before the goal, drains to grey: «الدكة»
         events=[('goal', 1.5), ('freeze', run)])
+    r0, r1 = span(4, 7)
+    S['rewind'] = dict(act='I', host='s02', mode='under', start=r0, end=r1, fin=0.25, fout=0.0, pieces=[
+        P('c4', 0.30, 15.60, dur=r1 - r0, box=(0, 0, 576, 1024), zoom=1.125, cy=0.33,
+          tmap=[(0, 15.6), (r1 - r0, 0.3)], sat=[(0, 0.9), (r1 - r0, 0.08)])], events=[])               # 2001 → 1990, colour drains
+    S['young_quit'] = dict(act='I', host='s07', mode='over', start=ls(27) - 0.1, end=ls(29) - 0.3, fin=0.5, fout=0.6, credit='ARCHIVE · TV GLOBO',
+        pieces=[P('c3', 14.05, 15.20, dur=ls(29) - 0.3 - (ls(27) - 0.1), zoom=[(0, 1.3), (4.4, 1.4)], cx=0.66,
+                  tmap=[(0, 14.05), (2.9, 15.2), (ls(29) - 0.3 - (ls(27) - 0.1), 15.2)],
+                  sat=[(0, 0.3), (2.0, 0.05)])], events=[])                                                   # «قرر يسيب الكورة»: alone at home
     a0, a1 = span(47, 51)
     # Act I: the TV Globo report on the young Rivaldo (early 1990s), framed right of the page logo (Z = 1.25, cx ≥ 0.61)
     YZ, YX = 1.25, 0.63
@@ -57,8 +66,9 @@ def build_spec():
     S['young_teeth'] = dict(act='I', host='s03', mode='over', start=ls(9) - 0.1, end=le(10) + 0.25, fin=0.0, fout=0.25, credit='ARCHIVE · TV GLOBO',
         pieces=[P('c3', 14.05, 15.20, dur=ls(10) - ls(9), zoom=[(0, YZ), (2.4, 1.32)], cx=0.64),                       # at home: a thin teenager
                 P('c3', 1.00, 4.40, zoom=[(0, 1.55), (2.8, 1.62)], cx=0.56, cy=0.65)], events=[])                    # the teeth (extreme close-up)
-    S['young_walk'] = dict(act='I', host='s03', mode='under', start=ls(11) - 0.1, end=ls(12) + 0.3, fin=0.2, fout=0.0, credit='ARCHIVE · TV GLOBO',
-        pieces=[P('c3', 4.55, 7.70, zoom=[(0, YZ), (3.6, 1.3)], cx=0.62)], events=[])                                  # walking: under the km counter
+    w0, w1 = ls(11) - 0.1, span(8, 13)[1]
+    S['young_walk'] = dict(act='I', host='s03', mode='under', start=w0, end=w1, fin=0.2, fout=0.0, credit='ARCHIVE · TV GLOBO',
+        pieces=[P('c3', 4.55, 7.70, dur=w1 - w0, zoom=[(0, YZ), (w1 - w0, 1.34)], cx=0.62)], events=[])                # walking (slow motion), under the km counter
     n0, n1 = span(14, 15)
     S['young_name'] = dict(act='I', host='s04', mode='under', start=n0, end=n1, fin=0.3, fout=0.0, credit='ARCHIVE · TV GLOBO',
         pieces=[P('c3', 15.25, 16.30, dur=2.0, zoom=[(0, YZ), (2.0, 1.3)], cx=0.63),                                  # the Globo interview
@@ -176,7 +186,7 @@ def render(name, ins):
         dur = n / FPS
         speed = (p['b'] - p['a']) / dur if p['b'] > p['a'] else 0.0
         tm = p['tmap']
-        if tm: speeds = [(b2 - b1) / max(1e-9, t2 - t1) for (t1, b1), (t2, b2) in zip(tm, tm[1:]) if b2 > b1]; slow = min(speeds) < 0.8
+        if tm: speeds = [(b2 - b1) / max(1e-9, t2 - t1) for (t1, b1), (t2, b2) in zip(tm, tm[1:]) if b2 > b1]; slow = bool(speeds) and min(speeds) < 0.8
         else: slow = 0 < speed < 0.95
         fps_i = 120 if slow else 30
         box = p['box'] or active_box(p['src'], p['a'], max(p['b'], p['a'] + 0.2))
