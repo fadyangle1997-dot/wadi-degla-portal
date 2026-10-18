@@ -53,7 +53,7 @@ FRAMING = {
     '20': ('20', '68% 50%', 1.0),
     '15': ('15', '50% 30%', 1.0), '8': ('8k', '50% 30%', 1.0), '10b': ('10b', '50% 20%', 1.0), '10c': ('10c', '50% 30%', 1.0),
     '13bd': ('13bd', '50% 35%', 1.0), '15bg': ('15bg', '50% 32%', 1.0), '21x': ('21x', '44% 40%', 1.0),
-    '18v': ('18', '18% 16%', 1.85), '19v': ('19v', '50% 50%', 1.0), '19w': ('19w', '50% 50%', 1.0),
+    '18v': ('18', '18% 16%', 1.85), '18w': ('18w', '50% 40%', 1.0), '18p': ('18p', '50% 26%', 1.0), '18f': ('18f', '50% 24%', 1.0), '19v': ('19v', '50% 50%', 1.0), '19w': ('19w', '50% 50%', 1.0),
 }
 def photo_file(slot):
     src = FRAMING.get(slot, (slot,))[0]
@@ -383,7 +383,7 @@ xin('s17', t0); c(); z += 2
 
 # s18 tactics board: left wing → the centre; dropped
 t0, t1 = span(68, 78); c = open_scene('s18', t0, t1, z)
-vg = photo('s18', '18', 'RIVALDO & VAN GAAL', '1997–2000', 'V', 'dolly_in', t0, ls(70))
+vg = photo('s18', '18w' if photo_file('18w') else '18', 'RIVALDO & VAN GAAL', '1999–2000', 'V', 'dolly_in', t0, ls(70))   # arm round his shoulder: before the crisis
 body.append('<div id="s18-board" class="board" style="opacity:0;z-index:5">'
             '<div class="pitch"><div class="half"></div><div class="circle"></div><div class="box top"></div><div class="box bot"></div></div>'
             '<div id="s18-dot" class="pdot" style="left:120px;top:250px;opacity:0"></div>'
@@ -398,8 +398,16 @@ js.append(f'tl.fromTo("#s18-dot",{{opacity:0,scale:2}},{{opacity:1,scale:1,durat
 rise('#s18-lw', (bt + 0.45) if WING else ls(70) + 1.6)
 if WING:   # «الخلاف كبر…»: the board clears back to Rivaldo and Van Gaal; «فان خال رد بطريقته»: Van Gaal alone
     js.append(f'tl.to("#s18-board",{{opacity:0,duration:0.35}},{ls(73)-0.25:.3f});')
-    v2 = photo('s18', '18v', 'LOUIS VAN GAAL', '1999–2000', 'V', 'dolly_in', ls(75) - 0.15, t1, z=6)
-    js.append(f'tl.fromTo("#{v2}",{{opacity:0}},{{opacity:1,duration:0.25}},{ls(75)-0.15:.3f});')
+    if photo_file('18p'):   # «الخلاف كبر…»: Rivaldo points at Van Gaal; «رد بطريقته»: Van Gaal's hand on his face
+        vp = photo('s18', '18p', 'RIVALDO & VAN GAAL', 'TRAINING · 1999–2000', 'V', 'dolly_in', ls(73) - 0.25, ls(75), z=5)
+        js.append(f'tl.fromTo("#{vp}",{{opacity:0}},{{opacity:1,duration:0.3}},{ls(73)-0.25:.3f});')
+        vf = photo('s18', '18f', 'RIVALDO & VAN GAAL', 'TRAINING · 1999–2000', 'V', 'zoom_in', ls(75) - 0.15, ls(76) + 0.3, z=6)
+        js.append(f'tl.fromTo("#{vf}",{{opacity:0,x:80}},{{opacity:1,x:0,duration:0.25,ease:"cubic.out"}},{ls(75)-0.15:.3f});')
+        v2 = photo('s18', '18v', 'LOUIS VAN GAAL', '1999–2000', 'V', 'dolly_in', le(77), t1, z=7)   # «ومكانه مش مضمون»
+        js.append(f'tl.fromTo("#{v2}",{{opacity:0}},{{opacity:1,duration:0.3}},{le(77):.3f});')
+    else:
+        v2 = photo('s18', '18v', 'LOUIS VAN GAAL', '1999–2000', 'V', 'dolly_in', ls(75) - 0.15, t1, z=6)
+        js.append(f'tl.fromTo("#{v2}",{{opacity:0}},{{opacity:1,duration:0.25}},{ls(75)-0.15:.3f});')
 js.append(f'tl.fromTo("#s18-arrow",{{opacity:0,scaleX:0}},{{opacity:1,scaleX:1,duration:0.6,ease:"cubic.out"}},{ls(71)+1.6:.3f});')
 js.append(f'tl.fromTo("#s18-dot2",{{opacity:0,scale:2}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(1.9)"}},{ls(72):.3f});')
 rise('#s18-no10', ls(72) + 0.2)
