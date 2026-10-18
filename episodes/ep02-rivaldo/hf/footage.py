@@ -30,7 +30,7 @@ def span(a, b):          # same scene windows as build.py
 
 HEX = {'gold500': '#C8A86E', 'gold700': '#86693A', 'stone300': '#9D958A', 'stone200': '#CAC3B7', 'white200': '#EAE3D6'}
 ACT = {  # act: (saturate, sepia, grade colour, grade alpha)  — build.py ACTS
-    'cold': (0.85, 0.14, 'gold500', 0.09), 'I': (0.10, 0.06, 'stone300', 0.10), 'III': (0.55, 0.06, 'white200', 0.05),
+    'cold': (0.85, 0.14, 'gold500', 0.09), 'I': (0.10, 0.06, 'stone300', 0.10), 'II': (0.35, 0.14, 'gold700', 0.08), 'III': (0.55, 0.06, 'white200', 0.05),
     'V': (0.30, 0.06, 'stone300', 0.08), 'VI': (0.95, 0.04, 'white200', 0.04), 'VII': (0.70, 0.08, 'stone200', 0.06), 'EP': (0.85, 0.10, 'gold500', 0.09)}
 LIFT = 0.30
 
@@ -51,10 +51,10 @@ def build_spec():
         P('c2', 37.00, 39.30, dur=run, zoom=[(0, 1.0), (run, 1.03)]),                          # dribble through the box, round the keeper…
         P('c2', 39.30, 39.30, zoom=[(0, 1.03), (2.4, 1.13)], sat=[(0, 1.0), (0.15, 1.0), (1.1, 0.06)])],  # …freeze before the goal, drains to grey: «الدكة»
         events=[('goal', 1.5), ('freeze', run)])
-    r0, r1 = span(4, 7)
-    S['rewind'] = dict(act='I', host='s02', mode='under', start=r0, end=r1, fin=0.25, fout=0.0, pieces=[
-        P('c4', 0.30, 15.60, dur=r1 - r0, box=(0, 0, 576, 1024), zoom=1.125, cy=0.33,
-          tmap=[(0, 15.6), (r1 - r0, 0.3)], sat=[(0, 0.9), (r1 - r0, 0.08)])], events=[])               # 2001 → 1990, colour drains
+    r0, r1 = span(4, 7)[0], ls(6) + 0.85      # ends as the year counter passes 1993: the 1980s run on black
+    S['rewind'] = dict(act='I', host='s02', mode='under', start=r0, end=r1, fin=0.25, fout=0.5, pieces=[
+        P('c4', 7.00, 15.60, dur=r1 - r0, box=(0, 0, 576, 1024), zoom=1.125, cy=0.33,
+          tmap=[(0, 15.6), (r1 - r0, 7.0)], sat=[(0, 0.9), (r1 - r0, 0.08)])], events=[])               # 2001 → 1995, colour drains
     S['young_quit'] = dict(act='I', host='s07', mode='over', start=ls(27) - 0.1, end=ls(29) - 0.3, fin=0.5, fout=0.6, credit='ARCHIVE · TV GLOBO',
         pieces=[P('c3', 14.05, 15.20, dur=ls(29) - 0.3 - (ls(27) - 0.1), zoom=[(0, 1.3), (4.4, 1.4)], cx=0.66,
                   tmap=[(0, 14.05), (2.9, 15.2), (ls(29) - 0.3 - (ls(27) - 0.1), 15.2)],
@@ -80,6 +80,15 @@ def build_spec():
         pieces=[P('c5', 4.75, 7.95, dur=fk0 - (ls(88) - 0.15), zoom=[(0, 1.0), (4.3, 1.05)], cx=0.5)], events=[])  # the dribble
     S['val_fk'] = dict(act='VI', host='s20', mode='over', start=fk0, end=ls(91) - 0.05, fin=0.0, fout=0.12,
         pieces=[P('c5', 18.05, 19.60, cx=0.42), P('c5', 20.10, None, cx=0.55)], events=[])                         # 1-0, free kick
+    S['val_eq1'] = dict(act='VI', host='s20', mode='over', start=ls(92) - 0.05, end=le(92) + 0.15, fin=0.1, fout=0.12,
+        pieces=[P('c5', 44.00, 45.25, dur=le(92) + 0.2 - ls(92), cx=0.5)], events=[])                             # «فالنسيا يتعادل»: Valencia celebrate
+    S['val_cross'] = dict(act='VI', host='s21', mode='over', start=ls(103) - 0.08, end=K0, fin=0.15, fout=0.0,
+        pieces=[P('c5', 133.05, 134.25, dur=K0 - (ls(103) - 0.08), cx=0.5)], events=[])                          # the box waits for De Boer's ball
+    S['val_after'] = dict(act='VI', host='s21', mode='under', start=ls(109) + 0.25, end=span(102, 111)[1], fin=0.25, fout=0.0,
+        pieces=[P('c5', 131.15, 132.85, dur=span(102, 111)[1] - (ls(109) + 0.25), cx=0.5)], events=[])         # the bench runs on
+    S['leave'] = dict(act='EP', host='s24', mode='over', start=ls(124) - 0.15, end=span(122, 124)[1], fin=0.25, fout=0.3,
+        pieces=[P('c5', 147.85, 149.95, dur=span(122, 124)[1] - (ls(124) - 0.15), cx=0.27,
+                  sat=[(0, 0.7), (3.0, 0.25)])], events=[])                                                      # «قرر يرحل»: he walks away
     S['val_down'] = dict(act='VI', host='s20', mode='over', start=ls(97) - 0.1, end=ls(98) - 0.1, fin=0.12, fout=0.12,
         pieces=[P('c5', 90.30, 91.60, dur=ls(98) - ls(97), cx=0.5)], events=[])                                   # «فالنسيا يتعادل من جديد»
     S['val_tense'] = dict(act='VI', host='s20', mode='over', start=ls(99) - 0.1, end=le(99) + 0.15, fin=0.12, fout=0.15,
@@ -95,15 +104,15 @@ def build_spec():
     S['young_hood'] = dict(act='I', host='s03', mode='over', start=ls(8) - 0.1, end=ls(9) - 0.15, fin=0.3, fout=0.0, credit='ARCHIVE · TV GLOBO',
         pieces=[P('c3', 11.10, 12.12, zoom=YZ, cx=YX), P('c3', 12.20, 13.95, zoom=YZ, cx=0.64)], events=[])           # market · his street
     S['young_teeth'] = dict(act='I', host='s03', mode='over', start=ls(9) - 0.1, end=le(10) + 0.25, fin=0.0, fout=0.25, credit='ARCHIVE · TV GLOBO',
-        pieces=[P('c3', 14.05, 15.20, dur=ls(10) - ls(9), zoom=[(0, YZ), (2.4, 1.32)], cx=0.64),                       # at home: a thin teenager
-                P('c3', 1.00, 4.40, zoom=[(0, 1.55), (2.8, 1.62)], cx=0.56, cy=0.65)], events=[])                    # the teeth (extreme close-up)
+        pieces=[P('c3', 1.00, 4.40, dur=le(10) + 0.35 - ls(9), zoom=[(0, 1.55), (5.0, 1.64)], cx=0.56, cy=0.65)], events=[])  # the teeth (extreme close-up)
     w0, w1 = ls(11) - 0.1, span(8, 13)[1]
     S['young_walk'] = dict(act='I', host='s03', mode='under', start=w0, end=w1, fin=0.2, fout=0.0, credit='ARCHIVE · TV GLOBO',
         pieces=[P('c3', 4.55, 7.70, dur=w1 - w0, zoom=[(0, YZ), (w1 - w0, 1.34)], cx=0.62)], events=[])                # walking (slow motion), under the km counter
     n0, n1 = span(14, 15)
     S['young_name'] = dict(act='I', host='s04', mode='under', start=n0, end=n1, fin=0.3, fout=0.0, credit='ARCHIVE · TV GLOBO',
-        pieces=[P('c3', 15.25, 16.30, dur=2.0, zoom=[(0, YZ), (2.0, 1.3)], cx=0.63),                                  # the Globo interview
-                P('c3', 7.85, 10.55, zoom=[(0, 1.5), (2.5, 1.56)], cx=0.57, cy=0.62)], events=[])                    # close-up under the name
+        pieces=[P('c3', 7.85, 10.55, dur=n1 - n0, zoom=[(0, 1.5), (4.3, 1.58)], cx=0.57, cy=0.62)], events=[])        # close-up under the name
+    S['young_sc'] = dict(act='II', host='s09', mode='under', start=ls(33) - 0.12, end=ls(34) - 0.02, fin=0.0, fout=0.0, credit='ARCHIVE · TV GLOBO',
+        pieces=[P('c3', 15.25, 16.30, dur=ls(34) + 0.1 - ls(33), zoom=[(0, YZ), (1.6, 1.3)], cx=0.63)], events=[])    # Santa Cruz: the Globo interview
     # (the badge-kiss shot at 108 s was dropped: the page logo sits over his face in every usable framing)
     S['showA'] = dict(act='III', host='s12', mode='under', start=a0, end=a1, fin=0.25, fout=0.0, pieces=[
         P('c2', 17.40, 21.95),                                                                 # slalom and finish
@@ -133,12 +142,10 @@ def build_spec():
           cx=rel([(k0, 0.60), (ls(107), 0.55), (ls(108), 0.46), (k1, 0.5)]))], events=[])     # chest · air · overhead · goal
     r0, r1 = ls(115) - 0.02, le(115) - 0.05
     S['replay'] = dict(act='VI', host='s22', mode='over', start=r0, end=r1, fin=0.15, fout=0.25, pieces=[
-        P('c2', 58.10, 59.90, zoom=[(0, 1.04), (2.6, 1.0)], cx=0.5, box=(0, 318, 576, 480))], events=[('goal', (59.30 - 58.10) * (r1 - r0) / 1.8)])
-    S['recap_bdo'] = dict(act='EP', host='s25', mode='over', start=ls(127) + 0.05, end=le(127) - 0.05, fin=0.15, fout=0.2,
-                          pieces=[P('c2', 12.66, 14.58)], events=[])
-    q0 = ls(128) + 0.1
-    S['recap_kick'] = dict(act='EP', host='s25', mode='over', start=q0, end=q0 + 2.82, fin=0.15, fout=0.25,
-                           pieces=[P('c2', 57.10, 59.92, cx=0.52, box=(0, 318, 576, 480))], events=[('goal', 2.2)])
+        P('c5', 152.30, 154.90, dur=r1 - r0, zoom=[(0, 1.0), (2.6, 1.05)], cx=0.5)], events=[])               # «RIVALDO 10», the Camp Nou behind
+    q0, q1 = ls(128) + 0.05, ls(129) - 0.1
+    S['recap_night'] = dict(act='EP', host='s25', mode='over', start=q0, end=q1, fin=0.15, fout=0.25,
+                            pieces=[P('c5', 74.95, 77.70, dur=q1 - q0, cx=0.5)], events=[])                  # that night: the roar, the hug
     return S
 
 # ------------------------------------------------------------------ helpers

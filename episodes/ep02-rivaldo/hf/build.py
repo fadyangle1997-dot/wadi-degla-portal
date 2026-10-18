@@ -48,11 +48,12 @@ FRAMING = {
     '2': ('2', '50% 25%', 1.0), '18': ('18', '35% 30%', 1.12), '5': ('5', '50% 30%', 1.0), '10a': ('10a', '50% 30%', 1.0),
     '4': ('4', '50% 40%', 1.0), '12': ('12', '50% 25%', 1.0), '12i': ('12i', '32% 30%', 1.0), '13': ('13', '50% 30%', 1.0), '10d': ('10d', '50% 25%', 1.0), '24': ('24', '50% 30%', 1.0),
 '21f': ('21f', '50% 40%', 1.0), '21': ('21', '50% 40%', 1.0),
-    '19a': ('19e', '41% 50%', 1.0), '19b': ('20', '68% 50%', 1.0),
+    '19a': ('19v', '50% 45%', 1.0), '19b': ('19w', '50% 50%', 1.0),
     '19c': ('19e', '72% 42%', 1.9), '19d': ('19e', '45% 4%', 1.8), '19e': ('19e', '41% 50%', 1.0),
     '20': ('20', '68% 50%', 1.0),
     '15': ('15', '50% 30%', 1.0), '8': ('8k', '50% 30%', 1.0), '10b': ('10b', '50% 20%', 1.0), '10c': ('10c', '50% 30%', 1.0),
     '13bd': ('13bd', '50% 35%', 1.0), '15bg': ('15bg', '50% 32%', 1.0), '21x': ('21x', '44% 40%', 1.0),
+    '18v': ('18', '18% 16%', 1.85), '19v': ('19v', '50% 50%', 1.0), '19w': ('19w', '50% 50%', 1.0),
 }
 def photo_file(slot):
     src = FRAMING.get(slot, (slot,))[0]
@@ -145,10 +146,11 @@ def xin(sid, t0):
 z = 10
 # s01 cold open: trophy (colour → B&W on «انهارت»), Van Gaal, bench
 t0, t1 = span(0, 3); c = open_scene('s01', t0, t1, z)
-a = photo('s01', '1', 'RIVALDO · BALLON D’OR', 'DECEMBER 1999', 'cold', 'dolly_in', 0, ls(2))
+a = None if 'open_a' in FOOT else photo('s01', '1', 'RIVALDO · BALLON D’OR', 'DECEMBER 1999', 'cold', 'dolly_in', 0, ls(2))   # the trophy still is the climax photo
 if 'open_a' in FOOT:   # footage carries line 0 and line 2; the stills keep line 1 («علاقته بمدرب برشلونة انهارت»)
-    v = photo('s01', '2', 'LOUIS VAN GAAL', 'TOUCHLINE · 1999–2000', 'I', 'dolly_in', ls(1) + 0.45, ls(3), z=3)
-    fade(f'#{v}', ls(1) + 0.45, 0.25, 1, 0)
+    vs = FOOT['open_a']['start'] + FOOT['open_a']['dur'] - 0.25
+    v = photo('s01', '2', 'LOUIS VAN GAAL', 'TOUCHLINE · 1999–2000', 'I', 'dolly_in', vs, ls(3), z=3)
+    fade(f'#{v}', vs, 0.25, 1, 0)
 else:
     b = photo('s01', '1', 'RIVALDO · BALLON D’OR', 'DECEMBER 1999', 'I', 'dolly_in', 0, ls(2), z=2)
     fade(f'#{b}', ls(1) + 0.4, 1.2, 1, 0)
@@ -181,10 +183,11 @@ xin('s02', t0); c(); z += 2
 
 # s03 hunger: neighbourhood + km counter, early portrait
 t0, t1 = span(8, 13); c = open_scene('s03', t0, t1, z)
-p4 = photo('s03', '4', 'RECIFE · PAULISTA NEIGHBOURHOOD', 'PERNAMBUCO · 1980s', 'I', 'pan_left', t0, ls(12))
 if 'young_walk' in FOOT:   # the young Rivaldo walking (TV Globo) plays under the km counter
     W_ = FOOT['young_walk']
-    js.append(f'tl.to("#{p4}",{{opacity:0,duration:0.2}},{W_["start"]:.3f}); tl.set("#s03-fill",{{opacity:0}},{W_["start"]+0.2:.3f});')
+    js.append(f'tl.set("#s03-fill",{{opacity:0}},{W_["start"]+0.2:.3f});')
+else:
+    photo('s03', '4', 'RECIFE · PAULISTA NEIGHBOURHOOD', 'PERNAMBUCO · 1980s', 'I', 'pan_left', t0, ls(12))
 if 'young_walk' not in FOOT:   # with the footage, the walk carries on through «مكانش معاه فلوس للمواصلات»
     p5 = photo('s03', '5', 'YOUNG RIVALDO', 'SANTA CRUZ · c.1990', 'I', 'dolly_in', ls(12), t1, z=2)
     fade(f'#{p5}', ls(12) - 0.15, 0.4, 1, 0)
@@ -244,7 +247,7 @@ xin('s07', t0); c(); z += 2
 
 # s08 the mother says: keep going
 t0, t1 = span(29, 32); c = open_scene('s08', t0, t1, z)
-photo('s08', '5', 'YOUNG RIVALDO', 'SANTA CRUZ · c.1990', 'II', 'dolly_in', t0, t1)
+photo('s08', '4', 'RECIFE · PAULISTA', 'PERNAMBUCO', 'II', 'dolly_in', t0, t1)
 xin('s08', t0); c(); z += 2
 
 # s09 the four Brazilian clubs (type-only names, no modern crests)
@@ -252,6 +255,10 @@ t0, t1 = span(33, 37); c = open_scene('s09', t0, t1, z)
 clubs = [('10a', 'SANTA CRUZ', '1989–92'), ('10b', 'MOGI MIRIM', '1992–93'), ('10c', 'CORINTHIANS', '1993–94'), ('10d', 'PALMEIRAS', '1994–96')]
 for k, (slot, nm, yrs) in enumerate(clubs):
     tt = ls(33 + k)
+    if k == 0 and 'young_sc' in FOOT:   # Santa Cruz: the young player's TV Globo interview plays under the scene
+        js.append(f'tl.set("#s09-fill",{{opacity:0}},{t0:.3f});')
+        body.append(f'<div id="s09-n{k}" class="club" style="top:{150+k*70}px;opacity:0;z-index:20"><span class="label">{nm}</span><span class="mono">{yrs}</span></div>')
+        rise(f'#s09-n{k}', tt, 0.28, 10); continue
     p = photo('s09', slot, nm, yrs, 'II', 'dolly_in', tt, tt + 2.5, z=2 + k, optional=True)
     if not p:
         p = nid('s09-card'); body.append(f'<div id="{p}" class="photo" style="inset:0;z-index:{2+k};background:var(--bgDeep)"></div>')
@@ -327,8 +334,6 @@ xin('s14', t0); c(); z += 2
 # s15 GOLD CLIMAX: 154 / 219, then darkroom reveal of #1 (slowest move)
 HAS17 = photo_file('17') is not None
 t0, t1 = span(58, 61 if HAS17 else 62); c = open_scene('s15', t0, t1, z, 'var(--bgDeep)')
-pbg = photo('s15', '15bg', 'RIVALDO · BALLON D’OR', 'CAMP NOU · 1999', 'IV', 'dolly_in', t0, t1, z=0, optional=True)
-if pbg: js.append(f'tl.set("#{pbg}",{{opacity:0.3}},{t0:.3f});')
 body.append('<div id="s15-wrap" style="position:absolute;inset:0">'
             '<div class="center-col" style="top:150px"><div class="mono" style="font-size:24px;color:var(--textSecondary)">FRANCE FOOTBALL · 1999</div>'
             '<div class="serif-i gold" style="font-size:150px;line-height:1.05;padding:0 .1em">Ballon d’Or</div></div>'
@@ -358,15 +363,16 @@ z += 2
 # s16 FIFA award, then child ↔ trophy split frame
 t0, t1 = span(62 if HAS17 else 63, 64); c = open_scene('s16', t0, t1, z)
 if HAS17: photo('s16', '17', 'FIFA WORLD PLAYER 1999', 'PRESENTED JANUARY 2000', 'IV', 'static', t0, ls(63))
-if photo_file('5'):
-    l = photo('s16', '5', 'YOUNG RIVALDO', 'c.1990', 'I', 'dolly_in', ls(63), t1, z=3, box='left:0;top:0;width:540px;height:1350px')
-    r = photo('s16', '1b', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63), t1, z=3, box='left:540px;top:0;width:540px;height:1350px')
-    js.append(f'tl.fromTo("#{l}",{{x:-540}},{{x:0,duration:0.45,ease:"quint.out"}},{ls(63)-0.1:.3f});')
-    js.append(f'tl.fromTo("#{r}",{{x:540}},{{x:0,duration:0.45,ease:"quint.out"}},{ls(64)-0.15:.3f});')
-    body.append('<div id="s16-split" style="position:absolute;left:539px;top:0;width:2px;height:1350px;background:var(--gold500);opacity:0;z-index:9"></div>')
-    fade('#s16-split', ls(64), 0.3)
-else:
-    r = photo('s16', '1b', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63) - 0.25, t1, z=3)
+r = photo('s16', '1b', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63) - 0.25, t1, z=3)
+body.append('<div id="s16-km" class="plate-mini" style="left:60px;top:640px;opacity:0"><span class="hero gold" style="font-size:150px">13</span>'
+            '<span class="label" style="font-size:30px;letter-spacing:8px;color:var(--textSecondary);margin-left:16px">KM</span>'
+            '<div class="mono" style="font-size:22px;color:var(--textSecondary);margin-top:6px">ON FOOT, TO TRAINING</div></div>'
+            '<div id="s16-one" class="plate-mini" style="left:60px;top:640px;opacity:0"><span class="hero gold" style="font-size:150px">Nº1</span>'
+            '<span class="label" style="font-size:30px;letter-spacing:8px;color:var(--textSecondary);margin-left:16px">IN THE WORLD</span>'
+            '<div class="mono" style="font-size:22px;color:var(--textSecondary);margin-top:6px">BALLON D’OR · FIFA WORLD PLAYER · 1999</div></div>')
+rise('#s16-km', ls(63) + 0.2)
+js.append(f'tl.to("#s16-km",{{opacity:0,y:-14,duration:0.25}},{ls(64)-0.25:.3f});')
+punch('#s16-one', ls(64) + 0.05, 1.15, 0.3)
 xin('s16', t0); c(); z += 2
 
 # s17 «صح؟» … «لأ.» dip to black
@@ -392,7 +398,7 @@ js.append(f'tl.fromTo("#s18-dot",{{opacity:0,scale:2}},{{opacity:1,scale:1,durat
 rise('#s18-lw', (bt + 0.45) if WING else ls(70) + 1.6)
 if WING:   # «الخلاف كبر…»: the board clears back to Rivaldo and Van Gaal; «فان خال رد بطريقته»: Van Gaal alone
     js.append(f'tl.to("#s18-board",{{opacity:0,duration:0.35}},{ls(73)-0.25:.3f});')
-    v2 = photo('s18', '2', 'LOUIS VAN GAAL', 'TOUCHLINE · 1999–2000', 'V', 'dolly_in', ls(75) - 0.15, t1, z=6)
+    v2 = photo('s18', '18v', 'LOUIS VAN GAAL', '1999–2000', 'V', 'dolly_in', ls(75) - 0.15, t1, z=6)
     js.append(f'tl.fromTo("#{v2}",{{opacity:0}},{{opacity:1,duration:0.25}},{ls(75)-0.15:.3f});')
 js.append(f'tl.fromTo("#s18-arrow",{{opacity:0,scaleX:0}},{{opacity:1,scaleX:1,duration:0.6,ease:"cubic.out"}},{ls(71)+1.6:.3f});')
 js.append(f'tl.fromTo("#s18-dot2",{{opacity:0,scale:2}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(1.9)"}},{ls(72):.3f});')
@@ -452,11 +458,13 @@ xin('s20', t0); c(); z += 2
 # s21 ACTION PEAK: minute 87 → chest → air → bicycle kick (freeze, silence) → GOAL flash + shake → 3-2
 t0, t1 = span(102, 111); c = open_scene('s21', t0, t1, z, 'var(--bgDeep)')
 body.append('<div id="s21-shake" style="position:absolute;inset:0">')
-p_chest = photo('s21', '19c', 'DE BOER’S BALL · CHEST CONTROL', '17 JUNE 2001', 'VI', 'dolly_in', ls(103), ls(105), z=2)
+p_chest = None if 'val_cross' in FOOT else photo('s21', '19c', 'DE BOER’S BALL · CHEST CONTROL', '17 JUNE 2001', 'VI', 'dolly_in', ls(103), ls(105), z=2)
 KICK = FOOT.get('kick')
 if KICK:   # broadcast footage of the kick (speed-ramped, freeze in the silence) sits just below this scene
-    js.append(f'tl.fromTo("#{p_chest}",{{opacity:0,x:120}},{{opacity:1,x:0,duration:0.18,ease:"cubic.out"}},{ls(103)-0.08:.3f});')
-    js.append(f'tl.to("#{p_chest}",{{opacity:0,duration:0.12}},{KICK["start"]:.3f}); tl.set("#s21-fill",{{opacity:0}},{KICK["start"]+0.12:.3f});')
+    if p_chest:
+        js.append(f'tl.fromTo("#{p_chest}",{{opacity:0,x:120}},{{opacity:1,x:0,duration:0.18,ease:"cubic.out"}},{ls(103)-0.08:.3f});')
+        js.append(f'tl.to("#{p_chest}",{{opacity:0,duration:0.12}},{KICK["start"]:.3f});')
+    js.append(f'tl.set("#s21-fill",{{opacity:0}},{KICK["start"]+0.12:.3f});')
 else:
     p_air = photo('s21', '19d', 'THE BALL IN THE AIR', '17 JUNE 2001', 'VI', 'zoom_in', ls(105), ls(106), z=3)
     p_kick = photo('s21', '19e', 'THE OVERHEAD KICK', '17 JUNE 2001 · 87’', 'VI', 'zoom_in', ls(106), t1, z=4)
@@ -513,9 +521,17 @@ xin('s23', t0); c(); z += 2
 
 # s24 Van Gaal returns; Rivaldo leaves
 t0, t1 = span(122, 124); c = open_scene('s24', t0, t1, z)
-vg2 = photo('s24', '22', 'VAN GAAL RETURNS', 'BARCELONA · 2002', 'V', 'pan_left', t0, ls(124), optional=True) or photo('s24', '2', 'VAN GAAL', '', 'V', 'dolly_in', t0, ls(124))
-lv = photo('s24', '23', 'RIVALDO · BARÇA', '1997–2002', 'EP', 'dolly_out', ls(124), t1, z=3)
-fade(f'#{lv}', ls(124) - 0.2, 0.3, 1, 0)
+vg2 = photo('s24', '22', 'VAN GAAL RETURNS', 'BARCELONA · 2002', 'V', 'pan_left', t0, ls(124), optional=True)
+if not vg2:   # no 2002 photo yet: a type beat (the 1999–2000 photos are used earlier)
+    vg2 = 's24-type'
+    body.append('<div class="stripes" style="opacity:0.12"></div><div id="s24-type" class="center-col" style="top:440px">'
+                '<div id="s24-m" class="mono" style="font-size:24px;color:var(--textSecondary);opacity:0">BARCELONA · SUMMER 2002</div>'
+                '<div id="s24-n" class="hero" style="font-size:210px;color:var(--white100);opacity:0">VAN GAAL</div>'
+                '<div id="s24-b" class="serif-i gold" style="font-size:96px;opacity:0;padding:0 .1em">is back.</div></div>')
+    rise('#s24-m', ls(122) + 0.3); punch('#s24-n', ls(123) + 0.6, 1.2); rise('#s24-b', ls(123) + 1.3)
+if 'leave' not in FOOT:
+    lv = photo('s24', '23', 'RIVALDO · BARÇA', '1997–2002', 'EP', 'dolly_out', ls(124), t1, z=3)
+    fade(f'#{lv}', ls(124) - 0.2, 0.3, 1, 0)
 js.append(f'tl.to("#{vg2}",{{opacity:0,duration:0.3}},{ls(124)-0.2:.3f});')
 body.append('<div id="s24-dark" style="position:absolute;inset:0;background:var(--ink);opacity:0;z-index:6"></div>')
 js.append(f'tl.to("#s24-dark",{{opacity:0.72,duration:1.2,ease:"power1.in"}},{ls(124)+0.5:.3f});')
@@ -523,12 +539,17 @@ xin('s24', t0); c(); z += 2
 
 # s25 recap montage
 t0, t1 = span(125, 129); c = open_scene('s25', t0, t1, z)
-items = [('5', 'YOUNG RIVALDO', 'I', 125), ('1', 'BALLON D’OR', 'IV', 127), ('19e', 'THE OVERHEAD KICK', 'VI', 128), ('21f', 'WORLD CUP 2002', 'VII', 129)]
-items = [x for x in items if photo_file(x[0])] or items
-for k, (slot, lab, act, li) in enumerate(items):
-    tt = t0 if k == 0 else ls(li)
-    pp = photo('s25', slot, lab, '', act, 'dolly_in', tt, (ls(items[k+1][3]) if k + 1 < len(items) else t1) + 0.4, z=2 + k)
-    if k: fade(f'#{pp}', tt - 0.15, 0.3, 1, 0)
+body.append('<div class="stripes" style="opacity:0.10"></div><div class="center-col" style="top:420px">'
+            '<div id="s25-w1" class="ar-statement" style="opacity:0">الفقر</div></div>'
+            '<div class="center-col" style="top:420px"><div id="s25-w2" class="ar-statement gold" style="opacity:0">أبوه</div></div>')
+punch('#s25-w1', ls(125) + 0.25, 1.15, 0.3); js.append(f'tl.to("#s25-w1",{{opacity:0,duration:0.25}},{ls(126)-0.2:.3f});')
+punch('#s25-w2', ls(126) + 0.1, 1.15, 0.3); js.append(f'tl.to("#s25-w2",{{opacity:0,duration:0.25}},{ls(127)-0.2:.3f});')
+body.append('<div id="s25-bd" style="position:absolute;inset:0;z-index:4;opacity:0;background:radial-gradient(ellipse at 50% 42%, rgba(200,168,110,.32), rgba(6,5,4,0) 62%)">'
+            '<img id="s25-bdi" src="assets/photos/p13w.png" style="position:absolute;left:50%;top:150px;height:880px;transform:translateX(-50%);filter:saturate(.85) sepia(.1)"></div>')
+js.append(f'tl.fromTo("#s25-bd",{{opacity:0}},{{opacity:1,duration:0.25}},{ls(127)-0.15:.3f});')
+js.append(f'tl.fromTo("#s25-bdi",{{scale:1.0}},{{scale:1.06,duration:2.4,ease:"none"}},{ls(127)-0.15:.3f});')
+pwc = photo('s25', '21f', 'WORLD CUP 2002', '', 'VII', 'dolly_in', ls(129) - 0.15, t1 + 0.4, z=6)
+fade(f'#{pwc}', ls(129) - 0.15, 0.3, 1, 0)
 xin('s25', t0); c(); z += 2
 
 # s26 title
@@ -626,7 +647,7 @@ if os.path.exists(f'{HERE}/{BADGE}'):
              span(68, 78)]   # tactics board: the badge would sit on Rivaldo's face in the photo
     # the centre name sits on footage and photos (what gets ripped), never across the type plates
     g2 = FOOT.get('goal2')
-    wm_hides = hides + [span(4, 7), span(24, 28), span(52, 55), span(56, 57), span(58, 61 if HAS17 else 62), span(68, 78),
+    wm_hides = hides + [span(63, 64), span(4, 7), span(24, 28), span(52, 55), span(56, 57), span(58, 61 if HAS17 else 62), span(68, 78),
                         (ls(49) - 0.1, span(47, 51)[1]), (ls(83) - 0.1, g2['start'] if g2 else span(88, 101)[1])]
     if g2: wm_hides.append((g2['start'] + g2['dur'], span(88, 101)[1]))
     def merged(ws):
