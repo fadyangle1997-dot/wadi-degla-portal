@@ -52,7 +52,7 @@ FRAMING = {
     '19c': ('19e', '72% 42%', 1.9), '19d': ('19e', '45% 4%', 1.8), '19e': ('19e', '41% 50%', 1.0),
     '20': ('20', '68% 50%', 1.0),
     '15': ('15', '50% 30%', 1.0), '8': ('8k', '50% 30%', 1.0), '10b': ('10b', '50% 20%', 1.0), '10c': ('10c', '50% 30%', 1.0),
-    '13bd': ('13bd', '50% 35%', 1.0), '15bg': ('15bg', '50% 32%', 1.0),
+    '13bd': ('13bd', '50% 35%', 1.0), '15bg': ('15bg', '50% 32%', 1.0), '21x': ('21x', '44% 40%', 1.0),
 }
 def photo_file(slot):
     src = FRAMING.get(slot, (slot,))[0]
@@ -385,9 +385,15 @@ body.append('<div id="s18-board" class="board" style="opacity:0;z-index:5">'
             '<div id="s18-arrow" class="arrow" style="opacity:0"></div>'
             '<div id="s18-dot2" class="pdot gold-dot" style="left:395px;top:205px;opacity:0"></div>'
             '<div id="s18-no10" class="chalk-label" style="left:340px;top:150px;opacity:0;color:var(--gold300)">Nº 10</div></div>')
-fade('#s18-board', ls(70) - 0.3, 0.4)
-js.append(f'tl.fromTo("#s18-dot",{{opacity:0,scale:2}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(1.9)"}},{ls(70)+1.4:.3f});')
-rise('#s18-lw', ls(70) + 1.6)
+WING = 'vg_wing' in FOOT   # the wing run plays first; the board then explains it
+bt = ls(71) - 0.35 if WING else ls(70) - 0.3
+fade('#s18-board', bt, 0.4)
+js.append(f'tl.fromTo("#s18-dot",{{opacity:0,scale:2}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(1.9)"}},{(bt + 0.25) if WING else ls(70)+1.4:.3f});')
+rise('#s18-lw', (bt + 0.45) if WING else ls(70) + 1.6)
+if WING:   # «الخلاف كبر…»: the board clears back to Rivaldo and Van Gaal; «فان خال رد بطريقته»: Van Gaal alone
+    js.append(f'tl.to("#s18-board",{{opacity:0,duration:0.35}},{ls(73)-0.25:.3f});')
+    v2 = photo('s18', '2', 'LOUIS VAN GAAL', 'TOUCHLINE · 1999–2000', 'V', 'dolly_in', ls(75) - 0.15, t1, z=6)
+    js.append(f'tl.fromTo("#{v2}",{{opacity:0}},{{opacity:1,duration:0.25}},{ls(75)-0.15:.3f});')
 js.append(f'tl.fromTo("#s18-arrow",{{opacity:0,scaleX:0}},{{opacity:1,scaleX:1,duration:0.6,ease:"cubic.out"}},{ls(71)+1.6:.3f});')
 js.append(f'tl.fromTo("#s18-dot2",{{opacity:0,scale:2}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(1.9)"}},{ls(72):.3f});')
 rise('#s18-no10', ls(72) + 0.2)
@@ -492,7 +498,13 @@ BG = FOOT.get('bra_goal')
 if BG:   # a 2002 World Cup goal plays under the scene; the final's own label waits for «البرازيل ضد ألمانيا»
     be = BG['start'] + BG['dur']
     js.append(f'tl.to("#{p21}",{{opacity:0,duration:0.15}},{BG["start"]+0.15:.3f}); tl.set("#s23-fill",{{opacity:0}},{BG["start"]+0.3:.3f});')
-    js.append(f'tl.set("#s23-fill",{{opacity:1}},{be-0.35:.3f}); tl.to("#{p21}",{{opacity:1,duration:0.35}},{be-0.35:.3f});')
+    # Rivaldo celebrating at the 2002 World Cup (match not verified, so it stays before «في نهائي كأس العالم»)
+    cx_ = photo('s23', '21x', 'RIVALDO · WORLD CUP 2002', 'KOREA–JAPAN 2002', 'VII', 'zoom_in', be - 0.25, ls(118) + 0.2, z=3, optional=True)
+    back = (ls(118) - 0.1) if cx_ else (be - 0.35)
+    if cx_:
+        js.append(f'tl.fromTo("#{cx_}",{{opacity:0,scale:1.08}},{{opacity:1,scale:1,duration:0.25,ease:"cubic.out"}},{be-0.25:.3f});')
+        js.append(f'tl.to("#{cx_}",{{opacity:0,duration:0.3}},{ls(118)-0.1:.3f});')
+    js.append(f'tl.set("#s23-fill",{{opacity:1}},{back:.3f}); tl.set("#{p21}",{{opacity:1}},{back:.3f});')
 body.append('<div class="brbar" style="z-index:25"><i style="background:var(--brGreen)"></i><i style="background:var(--brYellow)"></i><i style="background:var(--brBlue)"></i></div>'
             '<div class="scrim" style="top:760px;height:330px;z-index:19"></div><div class="center-col" style="top:830px;z-index:20"><div id="s23-m" class="mono" style="font-size:24px;color:var(--textSecondary);opacity:0">YOKOHAMA · 30 JUNE 2002 · FINAL</div>'
             '<div id="s23-s" class="hero" style="font-size:150px;color:var(--white100);opacity:0">BRA 2–0 GER</div></div>')

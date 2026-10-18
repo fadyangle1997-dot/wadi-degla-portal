@@ -31,7 +31,7 @@ def span(a, b):          # same scene windows as build.py
 HEX = {'gold500': '#C8A86E', 'gold700': '#86693A', 'stone300': '#9D958A', 'stone200': '#CAC3B7', 'white200': '#EAE3D6'}
 ACT = {  # act: (saturate, sepia, grade colour, grade alpha)  — build.py ACTS
     'cold': (0.85, 0.14, 'gold500', 0.09), 'I': (0.10, 0.06, 'stone300', 0.10), 'III': (0.55, 0.06, 'white200', 0.05),
-    'VI': (0.95, 0.04, 'white200', 0.04), 'VII': (0.70, 0.08, 'stone200', 0.06), 'EP': (0.85, 0.10, 'gold500', 0.09)}
+    'V': (0.30, 0.06, 'stone300', 0.08), 'VI': (0.95, 0.04, 'white200', 0.04), 'VII': (0.70, 0.08, 'stone200', 0.06), 'EP': (0.85, 0.10, 'gold500', 0.09)}
 LIFT = 0.30
 
 def P(src, a, b=None, dur=None, cx=0.5, cy=0.5, zoom=1.0, tmap=None, sat=None, box=None):
@@ -60,13 +60,19 @@ def build_spec():
                   tmap=[(0, 14.05), (2.9, 15.2), (ls(29) - 0.3 - (ls(27) - 0.1), 15.2)],
                   sat=[(0, 0.3), (2.0, 0.05)])], events=[])                                                   # «قرر يسيب الكورة»: alone at home
     # Act VII, World Cup 2002 (fifaworldcup.com / Avaya / NTT / Yahoo boards): a Rivaldo goal, then him and Ronaldo celebrating
-    b0 = le(117) - 3.7          # ends with «صيف 2002.»: «في نهائي كأس العالم» lands on the final's own photo, not this match
+    b0 = span(116, 121)[0] + 0.3   # 2002 group/knockout goal, then the celebration photo on «صيف 2002.»; the final keeps its own photo
     S['bra_goal'] = dict(act='VII', host='s23', mode='under', start=b0, end=b0 + 3.7, fin=0.2, fout=0.0,
         pieces=[P('c1', 7.10, 10.80, cx=0.5)], events=[('goal', 3.35)])                                       # a 2002 World Cup goal
     c0, c1_ = ls(121) - 0.1, span(116, 121)[1]
     S['bra_celeb'] = dict(act='VII', host='s23', mode='over', start=c0, end=c1_, fin=0.15, fout=0.0,
         pieces=[P('c3', 16.36, 17.15, dur=c1_ - c0, zoom=[(0, 1.3), (c1_ - c0, 1.37)], cx=0.6, cy=0.5,          # framed right of the page logo
                   tmap=[(0, 16.36), (1.6, 17.15), (c1_ - c0, 17.15)])], events=[('applause', 0.1)])            # «وريفالدو يبقى بطل عالم»
+    # Act V, the Van Gaal dispute: B-roll from the c5 broadcast (no date or claim on screen)
+    S['vg_wing'] = dict(act='V', host='s18', mode='over', start=ls(70) - 0.15, end=ls(71) - 0.25, fin=0.2, fout=0.25,
+        pieces=[P('c5', 52.40, 54.95, cx=[(0, 0.45), (2.7, 0.55)])], events=[])                                # «يلعب على الجناح الشمال»
+    S['vg_sit'] = dict(act='V', host='s18', mode='over', start=ls(76) - 0.1, end=le(77) + 0.2, fin=0.3, fout=0.35,
+        pieces=[P('c5', 8.90, 9.95, dur=le(77) + 0.3 - ls(76), zoom=[(0, 1.0), (4.8, 1.08)], cx=0.55,
+                  sat=[(0, 0.6), (4.8, 0.3)])], events=[])                                                          # alone on the grass: «استبعد…»
     # the Valencia night, 17 June 2001 (broadcast, c5)
     K0 = ls(104) - 0.14                                     # the bicycle-kick insert starts here
     fk0 = (ls(90) + 0.55) - (1.55 + 0.50)                   # strike lands on the SFX kick inside «ضربة حرة مباشرة»
