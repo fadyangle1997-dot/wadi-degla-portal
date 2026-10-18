@@ -420,6 +420,7 @@ body.append('<div class="stripes" style="opacity:0.16"></div><div class="fadeV">
 rise('#s19-m', ls(81) - 0.1); punch('#s19-d', ls(81), 1.15, 0.3)
 js.append(f'tl.fromTo("#s19-pl",{{opacity:0,scaleY:0.2}},{{opacity:1,scaleY:1,duration:0.62,ease:"cubic.out"}},{ls(83):.3f});')
 rise('#s19-w', ls(86)); rise('#s19-dr', ls(87))
+if 'val_pre' in FOOT: js.append(f'tl.set("#s19-fill",{{opacity:0}},{FOOT["val_pre"]["start"]:.3f});')
 xin('s19', t0); c(); z += 2
 # archive montage answering «لكن لو عايز تعرف ريفالدو كان لاعب عامل إزاي…» (broadcast footage, muted, burned-in caption removed)
 MONT = 'assets/montage_goals.mp4'
@@ -431,7 +432,8 @@ if 'montB' not in FOOT and os.path.exists(f'{HERE}/{MONT}'):
 
 # s20 scoreboard: 1-0, 1-1, 2-1, 2-2, out
 t0, t1 = span(88, 101); c = open_scene('s20', t0, t1, z)
-for k, slot in enumerate(['19a', '19b']):
+if 'val_bg' in FOOT: js.append(f'tl.set("#s20-fill",{{opacity:0}},{t0:.3f});')
+for k, slot in enumerate([] if 'val_bg' in FOOT else ['19a', '19b']):
     pp = photo('s20', slot, 'BARÇA v VALENCIA', '17 JUNE 2001', 'VI', 'dolly_in', t0 if k == 0 else ls(93), t1 if k else ls(93), z=1 + k)
     js.append(f'tl.set("#{pp}",{{opacity:0.32}},{t0 if k == 0 else ls(93):.3f});')
     if k: fade(f'#{pp}', ls(93) - 0.2, 0.4, 0.32, 0)
@@ -464,7 +466,7 @@ if KICK:   # broadcast footage of the kick (speed-ramped, freeze in the silence)
     if p_chest:
         js.append(f'tl.fromTo("#{p_chest}",{{opacity:0,x:120}},{{opacity:1,x:0,duration:0.18,ease:"cubic.out"}},{ls(103)-0.08:.3f});')
         js.append(f'tl.to("#{p_chest}",{{opacity:0,duration:0.12}},{KICK["start"]:.3f});')
-    js.append(f'tl.set("#s21-fill",{{opacity:0}},{KICK["start"]+0.12:.3f});')
+    js.append(f'tl.set("#s21-fill",{{opacity:0}},{(t0 if "val_87" in FOOT else KICK["start"]+0.12):.3f});')
 else:
     p_air = photo('s21', '19d', 'THE BALL IN THE AIR', '17 JUNE 2001', 'VI', 'zoom_in', ls(105), ls(106), z=3)
     p_kick = photo('s21', '19e', 'THE OVERHEAD KICK', '17 JUNE 2001 · 87’', 'VI', 'zoom_in', ls(106), t1, z=4)
@@ -554,7 +556,12 @@ xin('s25', t0); c(); z += 2
 
 # s26 title
 t0, t1 = span(130, 132); c = open_scene('s26', t0, t1, z)
-photo('s26', '23', 'RIVALDO · BARÇA', '1997–2002', 'EP', 'static', t0, t1)
+if 'title_clip' in FOOT:
+    js.append(f'tl.set("#s26-fill",{{opacity:0}},{t0:.3f});')
+    p23 = photo('s26', '23', 'RIVALDO · BARÇA', '1997–2002', 'EP', 'dolly_in', ls(132) - 0.2, t1)
+    fade(f'#{p23}', ls(132) - 0.2, 0.3, 1, 0)
+else:
+    photo('s26', '23', 'RIVALDO · BARÇA', '1997–2002', 'EP', 'static', t0, t1)
 body.append('<div class="lowfade"></div><div class="scrim" style="top:560px;height:500px;z-index:19"></div><div class="center-col" style="top:600px;z-index:20"><div id="s26-n" class="hero gold" style="font-size:240px">RIVALDO</div>'
             '<div id="s26-ar" class="ar-title" style="opacity:0">ريفالدو</div></div>')
 js.append(f'tl.fromTo("#s26-n",{{opacity:0,y:30}},{{opacity:1,y:0,duration:0.5,ease:"cubic.out"}},{ls(131):.3f});')
@@ -591,8 +598,8 @@ for k_, (name, f) in enumerate(sorted(FOOT.items(), key=lambda kv: kv[1]['start'
     trk = 4 if k_ % 2 == 0 else 13   # alternate rows so cross-faded inserts never share a track
     st, du = f['start'], f['dur']
     body.append(f'<video id="ft-{name}" class="clip" src="{f["src"]}" data-start="{st:.3f}" data-duration="{du:.3f}" data-track-index="{trk}" muted playsinline '
-                f'style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:{zz};opacity:{0 if f["fin"] > 0 else 1}"></video>')
-    if f['fin'] > 0: js.append(f'tl.fromTo("#ft-{name}",{{opacity:0}},{{opacity:1,duration:{f["fin"]}}},{st:.3f});')
+                f'style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:{zz};opacity:{0 if f["fin"] > 0 else f.get("op", 1.0)}"></video>')
+    if f['fin'] > 0: js.append(f'tl.fromTo("#ft-{name}",{{opacity:0}},{{opacity:{f.get("op", 1.0)},duration:{f["fin"]}}},{st:.3f});')
     if f['fout'] > 0: js.append(f'tl.to("#ft-{name}",{{opacity:0,duration:{f["fout"]},ease:"power1.in"}},{st + du - f["fout"]:.3f});')
     if f.get('credit'):   # archive source credit, top right (the chapter marker holds top left)
         body.append(f'<div id="cr-{name}" class="clip mono" data-start="{st:.3f}" data-duration="{du:.3f}" data-track-index="{7 if trk == 4 else 14}" '

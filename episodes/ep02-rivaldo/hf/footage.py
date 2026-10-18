@@ -67,6 +67,20 @@ def build_spec():
     S['bra_celeb'] = dict(act='VII', host='s23', mode='over', start=c0, end=c1_, fin=0.15, fout=0.0,
         pieces=[P('c3', 16.36, 17.15, dur=c1_ - c0, zoom=[(0, 1.3), (c1_ - c0, 1.37)], cx=0.6, cy=0.5,          # framed right of the page logo
                   tmap=[(0, 16.36), (1.6, 17.15), (c1_ - c0, 17.15)])], events=[('applause', 0.1)])            # «وريفالدو يبقى بطل عالم»
+    # wide match pictures under the type plates of the Valencia night (dimmed via 'op'), so no plate sits on black
+    f0, f1 = ls(81) - 0.9, span(79, 87)[1]          # from the end of the montage (montB ends at ls(81) - 0.6)
+    S['val_pre'] = dict(act='VI', host='s19', mode='under', start=f0, end=f1, fin=0.3, fout=0.0, op=0.45,
+        pieces=[P('c5', 0.00, 4.30), P('c5', 29.00, 30.50), P('c5', 60.50, 62.40), P('c5', 85.00, 86.60),
+                P('c5', 93.50, 95.30), P('c5', 113.50, None)], events=[])                                       # «17 يونيو 2001… الحسبة بسيطة»
+    g0_, g1_ = span(88, 101)
+    S['val_bg'] = dict(act='VI', host='s20', mode='under', start=g0_, end=g1_, fin=0.3, fout=0.0, op=0.4,
+        pieces=[P('c5', 101.0, 104.6, dur=7.2), P('c5', 47.6, 52.3, dur=9.4), P('c5', 64.0, 67.0), P('c5', 116.6, None)], events=[])  # (c5 68–70 is the 2-1: kept out)  # under the scoreboard (half speed)
+    e0 = span(102, 111)[0]
+    S['val_87'] = dict(act='VI', host='s21', mode='under', start=e0, end=ls(103) - 0.08, fin=0.3, fout=0.0, op=0.45,
+        pieces=[P('c5', 17.00, 17.95, dur=ls(103) - 0.08 - e0)], events=[])                                       # «الدقيقة 87»
+    h0 = span(130, 132)[0]
+    S['title_clip'] = dict(act='EP', host='s26', mode='under', start=h0, end=ls(132) + 0.1, fin=0.3, fout=0.0,
+        pieces=[P('c3', 26.50, 27.36, dur=ls(132) + 0.1 - h0, zoom=1.25, cx=0.62)], events=[])                  # shirt over his head (framed right of the logo)
     # Act V, the Van Gaal dispute: B-roll from the c5 broadcast (no date or claim on screen)
     S['vg_wing'] = dict(act='V', host='s18', mode='over', start=ls(70) - 0.15, end=ls(71) - 0.25, fin=0.2, fout=0.25,
         pieces=[P('c5', 52.40, 54.95, cx=[(0, 0.45), (2.7, 0.55)])], events=[])                                # «يلعب على الجناح الشمال»
@@ -140,7 +154,7 @@ def build_spec():
         P('c2', 57.10, 59.92, dur=k1 - k0, tmap=rel(A), box=(0, 318, 576, 480),                              # the shot is letterboxed 6:5
           zoom=rel([(k0, 1.0), (le(106), 1.06), (ls(107) - 0.05, 1.10), (ls(107) + 0.03, 1.0), (ls(108) + 1.53, 1.0), (k1, 1.10)]),
           cx=rel([(k0, 0.60), (ls(107), 0.55), (ls(108), 0.46), (k1, 0.5)]))], events=[])     # chest · air · overhead · goal
-    r0, r1 = ls(115) - 0.02, le(115) - 0.05
+    r0, r1 = ls(115) - 0.02, span(112, 115)[1]
     S['replay'] = dict(act='VI', host='s22', mode='over', start=r0, end=r1, fin=0.15, fout=0.25, pieces=[
         P('c5', 152.30, 154.90, dur=r1 - r0, zoom=[(0, 1.0), (2.6, 1.05)], cx=0.5)], events=[])               # «RIVALDO 10», the Camp Nou behind
     q0, q1 = ls(128) + 0.05, ls(129) - 0.1
@@ -256,7 +270,7 @@ if __name__ == '__main__':
         if not manifest_only: render(name, ins)
         pieces, n_total = plan(ins)
         cuts = [['cut', round(ins['start'] + d / FPS, 3)] for p, n, d in pieces[1:] if p['b'] > p['a']]
-        man[name] = dict(src=f'assets/footage/{name}.mp4', start=round(ins['start'], 3), dur=round(n_total / FPS, 3), host=ins['host'], credit=ins.get('credit'),
+        man[name] = dict(src=f'assets/footage/{name}.mp4', start=round(ins['start'], 3), dur=round(n_total / FPS, 3), host=ins['host'], credit=ins.get('credit'), op=ins.get('op', 1.0),
                          mode=ins['mode'], fin=ins['fin'], fout=ins['fout'],
                          events=[[k, round(ins['start'] + t, 3)] for k, t in ins.get('events', [])] + cuts)
         json.dump(man, open(man_path, 'w'), indent=1)
