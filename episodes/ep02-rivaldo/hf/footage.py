@@ -9,14 +9,16 @@ saturation lifted +0.3 so the play keeps its colour.
 Timings come from ../audio/line_timings_edit.json, so the inserts follow any retime.
 Writes assets/footage/<name>.mp4 and assets/footage/manifest.json (read by build.py, sound.py, score.py).
 Sources (not in git): assets/footage/src/clip1.mp4 (fan edit, 3:4, burned caption → delogo),
-                      assets/footage/src/clip2.mp4 (compilation, 9:16 with letterboxed shots).
+                      assets/footage/src/clip2.mp4 (compilation, 9:16 with letterboxed shots),
+                      assets/footage/src/clip3.mp4 (1:1 compilation opening with an early-1990s TV Globo report on the
+                      young Rivaldo; a page logo sits top-left, so those shots are framed to its right).
 """
 import json, os, subprocess, sys, numpy as np
 from collections import Counter
 from PIL import Image, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__)); EP = os.path.dirname(HERE)
-OUT = f'{HERE}/assets/footage'; SRC = {'c1': f'{OUT}/src/clip1.mp4', 'c2': f'{OUT}/src/clip2.mp4'}
+OUT = f'{HERE}/assets/footage'; SRC = {'c1': f'{OUT}/src/clip1.mp4', 'c2': f'{OUT}/src/clip2.mp4', 'c3': f'{OUT}/src/clip3.mp4'}
 L = json.load(open(f'{EP}/audio/line_timings_edit.json', encoding='utf-8'))['lines']
 ls = lambda i: L[i]['start']; le = lambda i: L[i]['end']
 W, H, FPS = 1080, 1350, 30
@@ -30,10 +32,10 @@ ACT = {  # act: (saturate, sepia, grade colour, grade alpha)  — build.py ACTS
     'VI': (0.95, 0.04, 'white200', 0.04), 'EP': (0.85, 0.10, 'gold500', 0.09)}
 LIFT = 0.30
 
-def P(src, a, b=None, dur=None, cx=0.5, cy=0.5, zoom=1.0, tmap=None, sat=None):
+def P(src, a, b=None, dur=None, cx=0.5, cy=0.5, zoom=1.0, tmap=None, sat=None, box=None):
     """A piece. cx/cy/zoom: a number or [(τ, value), …] with τ in seconds from the piece start.
     tmap: [(τ, source_time), …] (speed ramps/freezes); sat: optional [(τ, saturation)] override."""
-    return dict(src=src, a=a, b=b, dur=dur, cx=cx, cy=cy, zoom=zoom, tmap=tmap, sat=sat)
+    return dict(src=src, a=a, b=b, dur=dur, cx=cx, cy=cy, zoom=zoom, tmap=tmap, sat=sat, box=box)
 
 def build_spec():
     S = {}
@@ -48,6 +50,20 @@ def build_spec():
         P('c2', 39.30, 39.30, zoom=[(0, 1.03), (2.4, 1.13)], sat=[(0, 1.0), (0.15, 1.0), (1.1, 0.06)])],  # …freeze before the goal, drains to grey: «الدكة»
         events=[('goal', 1.5), ('freeze', run)])
     a0, a1 = span(47, 51)
+    # Act I: the TV Globo report on the young Rivaldo (early 1990s), framed right of the page logo (Z = 1.25, cx ≥ 0.61)
+    YZ, YX = 1.25, 0.63
+    S['young_hood'] = dict(act='I', host='s03', mode='over', start=ls(8) - 0.1, end=ls(9) - 0.15, fin=0.3, fout=0.0, credit='ARCHIVE · TV GLOBO',
+        pieces=[P('c3', 11.10, 12.12, zoom=YZ, cx=YX), P('c3', 12.20, 13.95, zoom=YZ, cx=0.64)], events=[])           # market · his street
+    S['young_teeth'] = dict(act='I', host='s03', mode='over', start=ls(9) - 0.1, end=le(10) + 0.25, fin=0.0, fout=0.25, credit='ARCHIVE · TV GLOBO',
+        pieces=[P('c3', 14.05, 15.20, dur=ls(10) - ls(9), zoom=[(0, YZ), (2.4, 1.32)], cx=0.64),                       # at home: a thin teenager
+                P('c3', 1.00, 4.40, zoom=[(0, 1.55), (2.8, 1.62)], cx=0.56, cy=0.65)], events=[])                    # the teeth (extreme close-up)
+    S['young_walk'] = dict(act='I', host='s03', mode='under', start=ls(11) - 0.1, end=ls(12) + 0.3, fin=0.2, fout=0.0, credit='ARCHIVE · TV GLOBO',
+        pieces=[P('c3', 4.55, 7.70, zoom=[(0, YZ), (3.6, 1.3)], cx=0.62)], events=[])                                  # walking: under the km counter
+    n0, n1 = span(14, 15)
+    S['young_name'] = dict(act='I', host='s04', mode='under', start=n0, end=n1, fin=0.3, fout=0.0, credit='ARCHIVE · TV GLOBO',
+        pieces=[P('c3', 15.25, 16.30, dur=2.0, zoom=[(0, YZ), (2.0, 1.3)], cx=0.63),                                  # the Globo interview
+                P('c3', 7.85, 10.55, zoom=[(0, 1.5), (2.5, 1.56)], cx=0.57, cy=0.62)], events=[])                    # close-up under the name
+    # (the badge-kiss shot at 108 s was dropped: the page logo sits over his face in every usable framing)
     S['showA'] = dict(act='III', host='s12', mode='under', start=a0, end=a1, fin=0.25, fout=0.0, pieces=[
         P('c2', 17.40, 21.95),                                                                 # slalom and finish
         P('c2', 14.70, 17.30, cx=[(0, 0.42), (2.6, 0.6)]),                                     # from distance
@@ -68,20 +84,20 @@ def build_spec():
         P('c2', 53.92, 57.05, cx=[(0, 0.42), (2.2, 0.62), (3.13, 0.6)])], events=[])          # 17·6·2001: the 2-1 from distance
     k0, k1 = ls(104) - 0.14, span(102, 111)[1]
     A = [(k0, 57.10), (ls(106) - 0.16, 57.95), (le(106), 58.42), (ls(107) - 0.05, 58.45), (ls(107) + 0.18, 58.50), (ls(107) + 0.50, 58.62),
-         (ls(108) + 0.03, 59.30), (ls(108) + 1.53, 59.92), (k1, 59.92)]
+         (ls(108) + 0.03, 59.30), (ls(108) + 0.83, 59.92), (k1, 59.92)]   # aftermath near real speed, then hold (no smear)
     rel = lambda pts: [(round(t - k0, 3), v) for t, v in pts]
     S['kick'] = dict(act='VI', host='s21', mode='under', start=k0, end=k1, fin=0.12, fout=0.0, pieces=[
-        P('c2', 57.10, 59.92, dur=k1 - k0, tmap=rel(A),
+        P('c2', 57.10, 59.92, dur=k1 - k0, tmap=rel(A), box=(0, 318, 576, 480),                              # the shot is letterboxed 6:5
           zoom=rel([(k0, 1.0), (le(106), 1.06), (ls(107) - 0.05, 1.10), (ls(107) + 0.03, 1.0), (ls(108) + 1.53, 1.0), (k1, 1.10)]),
           cx=rel([(k0, 0.60), (ls(107), 0.55), (ls(108), 0.46), (k1, 0.5)]))], events=[])     # chest · air · overhead · goal
     r0, r1 = ls(115) - 0.02, le(115) - 0.05
     S['replay'] = dict(act='VI', host='s22', mode='over', start=r0, end=r1, fin=0.15, fout=0.25, pieces=[
-        P('c2', 58.10, 59.90, zoom=[(0, 1.04), (2.6, 1.0)], cx=0.5)], events=[('goal', (59.30 - 58.10) * (r1 - r0) / 1.8)])
+        P('c2', 58.10, 59.90, zoom=[(0, 1.04), (2.6, 1.0)], cx=0.5, box=(0, 318, 576, 480))], events=[('goal', (59.30 - 58.10) * (r1 - r0) / 1.8)])
     S['recap_bdo'] = dict(act='EP', host='s25', mode='over', start=ls(127) + 0.05, end=le(127) - 0.05, fin=0.15, fout=0.2,
                           pieces=[P('c2', 12.66, 14.58)], events=[])
     q0 = ls(128) + 0.1
     S['recap_kick'] = dict(act='EP', host='s25', mode='over', start=q0, end=q0 + 2.82, fin=0.15, fout=0.25,
-                           pieces=[P('c2', 57.10, 59.92, cx=0.52)], events=[('goal', 2.2)])
+                           pieces=[P('c2', 57.10, 59.92, cx=0.52, box=(0, 318, 576, 480))], events=[('goal', 2.2)])
     return S
 
 # ------------------------------------------------------------------ helpers
@@ -161,9 +177,9 @@ def render(name, ins):
         speed = (p['b'] - p['a']) / dur if p['b'] > p['a'] else 0.0
         tm = p['tmap']
         if tm: speeds = [(b2 - b1) / max(1e-9, t2 - t1) for (t1, b1), (t2, b2) in zip(tm, tm[1:]) if b2 > b1]; slow = min(speeds) < 0.8
-        else: slow = 0 < speed < 0.8
+        else: slow = 0 < speed < 0.95
         fps_i = 120 if slow else 30
-        box = active_box(p['src'], p['a'], max(p['b'], p['a'] + 0.2))
+        box = p['box'] or active_box(p['src'], p['a'], max(p['b'], p['a'] + 0.2))
         frames = decode(p['src'], p['a'], max(p['b'], p['a'] + 0.04), box, fps_i)
         bw, bh = box[2], box[3]
         cw0, ch0 = (bh * 0.8, bh) if bw / bh > 0.8 else (bw, bw / 0.8)
@@ -191,7 +207,7 @@ if __name__ == '__main__':
         if not manifest_only: render(name, ins)
         pieces, n_total = plan(ins)
         cuts = [['cut', round(ins['start'] + d / FPS, 3)] for p, n, d in pieces[1:] if p['b'] > p['a']]
-        man[name] = dict(src=f'assets/footage/{name}.mp4', start=round(ins['start'], 3), dur=round(n_total / FPS, 3), host=ins['host'],
+        man[name] = dict(src=f'assets/footage/{name}.mp4', start=round(ins['start'], 3), dur=round(n_total / FPS, 3), host=ins['host'], credit=ins.get('credit'),
                          mode=ins['mode'], fin=ins['fin'], fout=ins['fout'],
                          events=[[k, round(ins['start'] + t, 3)] for k, t in ins.get('events', [])] + cuts)
         json.dump(man, open(man_path, 'w'), indent=1)

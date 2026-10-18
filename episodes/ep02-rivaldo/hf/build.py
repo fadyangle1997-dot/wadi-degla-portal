@@ -175,7 +175,10 @@ xin('s02', t0); c(); z += 2
 
 # s03 hunger: neighbourhood + km counter, early portrait
 t0, t1 = span(8, 13); c = open_scene('s03', t0, t1, z)
-photo('s03', '4', 'RECIFE · PAULISTA NEIGHBOURHOOD', 'PERNAMBUCO · 1980s', 'I', 'pan_left', t0, ls(12))
+p4 = photo('s03', '4', 'RECIFE · PAULISTA NEIGHBOURHOOD', 'PERNAMBUCO · 1980s', 'I', 'pan_left', t0, ls(12))
+if 'young_walk' in FOOT:   # the young Rivaldo walking (TV Globo) plays under the km counter
+    W_ = FOOT['young_walk']
+    js.append(f'tl.to("#{p4}",{{opacity:0,duration:0.2}},{W_["start"]:.3f}); tl.set("#s03-fill",{{opacity:0}},{W_["start"]+0.2:.3f});')
 p5 = photo('s03', '5', 'YOUNG RIVALDO', 'SANTA CRUZ · c.1990', 'I', 'dolly_in', ls(12), t1, z=2)
 fade(f'#{p5}', ls(12) - 0.15, 0.4, 1, 0)
 body.append('<div id="s03-km" class="plate-mini" style="left:60px;top:680px;opacity:0"><span id="s03-kmv" class="hero gold" style="font-size:150px">0</span>'
@@ -188,7 +191,11 @@ xin('s03', t0); c(); z += 2
 
 # s04 name reveal
 t0, t1 = span(14, 15); c = open_scene('s04', t0, t1, z)
-photo('s04', '6', 'RIVALDO · PORTRAIT', 'CLOSE-UP', 'I', 'static', t0, t1, optional=True)
+if 'young_name' in FOOT:   # the teenager on TV Globo, under his full name
+    js.append(f'tl.set("#s04-fill",{{opacity:0}},{t0:.3f});')
+    body.append('<div class="scrim" style="top:560px;height:560px;z-index:10"></div>')
+else:
+    photo('s04', '6', 'RIVALDO · PORTRAIT', 'CLOSE-UP', 'I', 'static', t0, t1, optional=True)
 name = 'RIVALDO'
 body.append('<div class="center-col" style="top:700px;z-index:20"><div class="hero" style="font-size:250px;display:flex;justify-content:center">' +
             ''.join(f'<span id="s04-c{k}" class="gold" style="display:inline-block;opacity:0">{ch}</span>' for k, ch in enumerate(name)) +
@@ -529,6 +536,10 @@ for name, f in FOOT.items():
                 f'style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:{zz};opacity:{0 if f["fin"] > 0 else 1}"></video>')
     if f['fin'] > 0: js.append(f'tl.fromTo("#ft-{name}",{{opacity:0}},{{opacity:1,duration:{f["fin"]}}},{st:.3f});')
     if f['fout'] > 0: js.append(f'tl.to("#ft-{name}",{{opacity:0,duration:{f["fout"]},ease:"power1.in"}},{st + du - f["fout"]:.3f});')
+    if f.get('credit'):   # archive source credit, top right (the chapter marker holds top left)
+        body.append(f'<div id="cr-{name}" class="clip mono" data-start="{st:.3f}" data-duration="{du:.3f}" data-track-index="7" '
+                    f'style="position:absolute;right:56px;top:58px;z-index:890;font-size:19px;letter-spacing:3px;color:var(--textSecondary);opacity:0">{html.escape(f["credit"])}</div>')
+        js.append(f'tl.fromTo("#cr-{name}",{{opacity:0}},{{opacity:0.85,duration:0.3}},{st + 0.1:.3f}); tl.to("#cr-{name}",{{opacity:0,duration:0.2}},{st + du - 0.25:.3f});')
 
 # ======================================================================= chapter markers
 HIDE = [(span(102, 111)[0], span(102, 111)[1])]  # hide during the action peak
