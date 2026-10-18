@@ -538,7 +538,7 @@ for name, f in FOOT.items():
     if f['fout'] > 0: js.append(f'tl.to("#ft-{name}",{{opacity:0,duration:{f["fout"]},ease:"power1.in"}},{st + du - f["fout"]:.3f});')
     if f.get('credit'):   # archive source credit, top right (the chapter marker holds top left)
         body.append(f'<div id="cr-{name}" class="clip mono" data-start="{st:.3f}" data-duration="{du:.3f}" data-track-index="7" '
-                    f'style="position:absolute;right:56px;top:58px;z-index:890;font-size:19px;letter-spacing:3px;color:var(--textSecondary);opacity:0">{html.escape(f["credit"])}</div>')
+                    f'style="position:absolute;right:34px;top:306px;z-index:890;font-size:19px;letter-spacing:3px;color:var(--textSecondary);opacity:0">{html.escape(f["credit"])}</div>')
         js.append(f'tl.fromTo("#cr-{name}",{{opacity:0}},{{opacity:0.85,duration:0.3}},{st + 0.1:.3f}); tl.to("#cr-{name}",{{opacity:0,duration:0.2}},{st + du - 0.25:.3f});')
 
 # ======================================================================= chapter markers
@@ -573,6 +573,34 @@ for k, s in enumerate(SUBS):
     sid = f'sub{k}'
     lines = ''.join(f'<div class="sl"><span>{html.escape(x)}</span></div>' for x in s['lines'])
     body.append(f'<div id="{sid}" class="clip subs" data-start="{s["start"]:.3f}" data-duration="{s["end"]-s["start"]:.3f}" data-track-index="8" style="z-index:1000">{lines}</div>')
+
+# ======================================================================= page badge (DS §5.4) + centre name watermark
+BADGE = 'assets/badge.png'
+if os.path.exists(f'{HERE}/{BADGE}'):
+    bend = BODY_END - 0.3                                       # the end card carries its own badge
+    body.append(f'<img id="badge" class="clip" src="{BADGE}" data-start="0" data-duration="{bend:.3f}" data-track-index="11" '
+                f'style="position:absolute;right:34px;top:120px;height:170px;z-index:940;opacity:0.85">')
+    body.append(f'<div id="wm" class="clip label" data-start="0" data-duration="{bend:.3f}" data-track-index="12" '
+                f'style="position:absolute;left:0;right:0;top:640px;text-align:center;z-index:945;font-size:44px;letter-spacing:16px;'
+                f'color:var(--white100);opacity:0.13;pointer-events:none">BARCELONA ARMY EGYPT</div>')
+    # hidden on the clean typographic beats: the «لأ.» statement, the darkroom reveal, the title
+    s15_end = span(58, 61 if HAS17 else 62)[1]
+    hides = [span(65, 67), (dstart if os.path.exists(f'{HERE}/{DARK}') else ls(61), s15_end), span(130, 132),
+             span(68, 78)]   # tactics board: the badge would sit on Rivaldo's face in the photo
+    # the centre name sits on footage and photos (what gets ripped), never across the type plates
+    g2 = FOOT.get('goal2')
+    wm_hides = hides + [span(4, 7), span(24, 28), span(52, 55), span(56, 57), span(58, 61 if HAS17 else 62), span(68, 78),
+                        (ls(49) - 0.1, span(47, 51)[1]), (ls(83) - 0.1, g2['start'] if g2 else span(88, 101)[1])]
+    if g2: wm_hides.append((g2['start'] + g2['dur'], span(88, 101)[1]))
+    def merged(ws):
+        out = []
+        for a, b in sorted(ws):
+            if out and a <= out[-1][1] + 0.5: out[-1] = (out[-1][0], max(out[-1][1], b))
+            else: out.append((a, b))
+        return out
+    for el, op, ws in (('#badge', 0.85, hides), ('#wm', 0.13, wm_hides)):
+        for a, b in merged(ws):
+            js.append(f'tl.to("{el}",{{opacity:0,duration:0.3}},{a + 0.1:.3f}); tl.to("{el}",{{opacity:{op},duration:0.4}},{b - 0.1:.3f});')
 
 # ======================================================================= grain overlay (deterministic jitter)
 body.append(f'<div id="grain" class="clip" data-start="0" data-duration="{TOTAL}" data-track-index="9" style="z-index:980;position:absolute;inset:-200px;pointer-events:none;opacity:0.085;mix-blend-mode:overlay;background-image:url(assets/grain.png)"></div>')
