@@ -192,7 +192,20 @@ put(sfx, ls(118), shimmer(2.5), -10); put(sfx, ls(120) + 0.3, hit(70, 45, 0.7, 0
 put(sfx, ls(131), hit(60, 36, 1.6, 0.3), -14); put(sfx, ls(131) + 0.1, shimmer(3.0), -8)       # title
 put(sfx, ls(137), hit(70, 45, 0.7, 0.2), -16)                                                   # RONALDINHO
 put(sfx, BODY_END + 0.3, shimmer(3.5), -9)
-if os.environ.get('EP2_NO_MONTAGE') != '1' and os.path.exists(f'{HERE}/assets/montage_goals.mp4'):        # archive montage (s19)
+MAN = f'{HERE}/assets/footage/manifest.json'
+FOOT = json.load(open(MAN)) if os.path.exists(MAN) and os.environ.get('EP2_NO_MONTAGE') != '1' else {}
+if FOOT:                                                     # archive footage inserts (footage.py): cuts, goals, the freeze
+    LEVEL = {'open_a': -21, 'open_b': -17, 'showA': -16, 'montB': -15, 'replay': -20, 'recap_kick': -22}
+    freezes = [t for f in FOOT.values() for k, t in f['events'] if k == 'freeze']
+    for name, f in FOOT.items():
+        for k, t in f['events']:
+            if k == 'cut' and name in ('open_a', 'showA', 'montB'): put(sfx, t - 0.015, whoosh(0.3, 500, 7000), -23 if name == 'showA' else -21)
+            elif k == 'goal' and name in LEVEL: put(sfx, t, crowd(2.2, False), LEVEL[name])
+            elif k == 'applause': put(sfx, t, crowd(1.8, False), -22)
+    for t in freezes:                                         # the picture freezes on «الدكة»: the room goes dead, one hit
+        i = int(t * SR); nf = int(0.02 * SR); sfx[i:i + nf] *= np.linspace(1, 0, nf)[:, None]; sfx[i + nf:i + int(1.5 * SR)] = 0
+        put(sfx, t, hit(55, 30, 1.6, 0.4), -13)
+elif os.environ.get('EP2_NO_MONTAGE') != '1' and os.path.exists(f'{HERE}/assets/montage_goals.mp4'):        # single archive montage (s19)
     m0 = ls(79) - 0.2
     for dt in (0.0, 0.7, 1.4, 2.1): put(sfx, m0 + dt - 0.015, whoosh(0.3, 500, 7000), -21)
     put(sfx, m0 + 2.6, kick(), -15); put(sfx, m0 + 4.25, crowd(2.2, False), -15)                                                      # end card

@@ -172,10 +172,21 @@ for i, nt in enumerate(['Eb4', 'D4', 'A3', 'Eb4', 'D4']): piano(ls(70) + i * 3.3
 
 # archive montage (answering «عامل إزاي»): a burst of drums, then air before «ليلة واحدة»
 m0 = ls(79) - 0.2
+MAN = f'{HERE}/assets/footage/manifest.json'
+FOOT = json.load(open(MAN)) if os.path.exists(MAN) and not NO_MONT else {}
+md = FOOT['montB']['dur'] if 'montB' in FOOT else 3.6      # montage length (longer with the footage gap)
 if not NO_MONT:
-    for i in range(8): taiko(m0 + i * 0.5, -17 + (2 if i % 2 == 0 else 0))
-    cymbal(m0 + 3.0, -24, 1.4)
-strings(m0, m0 + 3.6, Dm, -22 if not NO_MONT else -25, a=0.2 if not NO_MONT else 0.8, r=0.6, cut=2200)
+    for i in range(int((md - 0.4) / 0.5) + 1): taiko(m0 + i * 0.5, -17 + (2 if i % 2 == 0 else 0))
+    cymbal(m0 + md - 1.6, -24, 1.4)
+strings(m0, m0 + md, Dm, -22 if not NO_MONT else -25, a=0.2 if not NO_MONT else 0.8, r=0.6, cut=2200)
+if 'showA' in FOOT:                                          # Barça skills showcase: the VO steps aside, the drums take it
+    g = le(48) + 0.3
+    cymbal(g - 1.6, -20, 1.6, swell=True); taiko(g, -12, big=True); boom(g, -18)
+    for t in (g + 0.5, g + 1.0, g + 1.5, g + 2.5, g + 3.0, g + 3.5): taiko(t, -19)
+if 'open_b' in FOOT:                                         # the opening: drums under the footage, then nothing on «الدكة»
+    taiko(FOOT['open_b']['start'], -17); taiko(FOOT['open_b']['start'] + 1.2, -19)
+    cymbal(FOOT['open_b']['start'] + 1.0, -21, 1.38, swell=True)
+if 'open_a' in FOOT: taiko(1.07, -20)
 
 # Act VI, one night: ostinato + taiko groove building with every goal
 strings(ls(81) - 0.2, ls(102), ['D2', 'D3', 'A3', 'D4'], -24, a=1.0, r=0.4, cut=1600)
@@ -236,7 +247,9 @@ wet = np.stack([fftconvolve(wet_in[:, c], ir[:, c])[:N] for c in range(2)], 1)
 mix = dry + 0.55 * wet + drums
 mix = hp(mix, 30)
 # DS §7 silences before impacts, reverb tails included: 1989 · «صح؟ … لأ.» · the freeze before «مقصية»
-for a, b, fade in ((ls(24) + 0.05, ls(26) + 0.5, 0.35), (ls(66) - 0.3, ls(68) - 0.35, 0.5), (le(106), ls(108) - 0.005, 0.03)):
+SIL = [(ls(24) + 0.05, ls(26) + 0.5, 0.35), (ls(66) - 0.3, ls(68) - 0.35, 0.5), (le(106), ls(108) - 0.005, 0.03)]
+if 'open_b' in FOOT: SIL.append((ls(3) - 0.16, ls(4) - 0.35, 0.03))   # the freeze on «لقى نفسه على الدكة»
+for a, b, fade in SIL:
     g = np.ones(N); ia, ib, nf = int(a * SR), int(b * SR), int(fade * SR)
     g[ia:ib] = 0; g[max(0, ia - nf):ia] = np.linspace(1, 0, min(nf, ia))
     mix *= g[:, None]

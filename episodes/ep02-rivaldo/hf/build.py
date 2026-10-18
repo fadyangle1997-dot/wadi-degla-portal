@@ -16,6 +16,10 @@ FPS = 30
 BODY_END = round(L[-1]['end'] + 0.4, 2)
 END_CARD = 4.6
 TOTAL = round(BODY_END + END_CARD, 2)
+# archive footage inserts (footage.py): {name: {src, start, dur, host, mode, fin, fout}}
+_MAN = f'{HERE}/assets/footage/manifest.json'
+FOOT = json.load(open(_MAN)) if os.path.exists(_MAN) else {}
+SCENE_Z = {}
 
 def ls(i): return round(L[i]['start'], 3)
 def le(i): return round(L[i]['end'], 3)
@@ -115,10 +119,11 @@ def punch(sel, t, s=1.28, d=0.26):  # DS 6 punch-in
 
 def scene(sid, t0, t1, inner, z, bg='var(--bgBase)'):
     body.append(f'<section id="{sid}" class="clip scene" data-start="{t0:.3f}" data-duration="{t1-t0:.3f}" '
-                f'data-track-index="{1 + (int(sid[1:]) % 2)}" style="z-index:{z}"><div class="fill" style="background:{bg}"></div>{inner}</section>')
+                f'data-track-index="{1 + (int(sid[1:]) % 2)}" style="z-index:{z}"><div id="{sid}-fill" class="fill" style="background:{bg}"></div>{inner}</section>')
 
 def open_scene(sid, t0, t1, z, bg='var(--bgBase)'):
     """Start collecting body markup for a scene; returns a closer."""
+    SCENE_Z[sid] = z
     start = len(body)
     def close():
         inner = ''.join(body[start:]); del body[start:]
@@ -139,14 +144,18 @@ z = 10
 # s01 cold open: trophy (colour → B&W on «انهارت»), Van Gaal, bench
 t0, t1 = span(0, 3); c = open_scene('s01', t0, t1, z)
 a = photo('s01', '1', 'RIVALDO · BALLON D’OR', 'DECEMBER 1999', 'cold', 'dolly_in', 0, ls(2))
-b = photo('s01', '1', 'RIVALDO · BALLON D’OR', 'DECEMBER 1999', 'I', 'dolly_in', 0, ls(2), z=2)
-fade(f'#{b}', ls(1) + 0.4, 1.2, 1, 0)
-v = photo('s01', '2', 'LOUIS VAN GAAL', 'TOUCHLINE · 1999–2000', 'I', 'dolly_in', ls(2), ls(3), z=3)
-fade(f'#{v}', ls(2) - 0.1, 0.25, 1, 0)
+if 'open_a' in FOOT:   # footage carries line 0 and line 2; the stills keep line 1 («علاقته بمدرب برشلونة انهارت»)
+    v = photo('s01', '2', 'LOUIS VAN GAAL', 'TOUCHLINE · 1999–2000', 'I', 'dolly_in', ls(1) + 0.45, ls(3), z=3)
+    fade(f'#{v}', ls(1) + 0.45, 0.25, 1, 0)
+else:
+    b = photo('s01', '1', 'RIVALDO · BALLON D’OR', 'DECEMBER 1999', 'I', 'dolly_in', 0, ls(2), z=2)
+    fade(f'#{b}', ls(1) + 0.4, 1.2, 1, 0)
+    v = photo('s01', '2', 'LOUIS VAN GAAL', 'TOUCHLINE · 1999–2000', 'I', 'dolly_in', ls(2), ls(3), z=3)
+    fade(f'#{v}', ls(2) - 0.1, 0.25, 1, 0)
 bn = photo('s01', '3', 'RIVALDO ON THE BENCH', '1999–2000', 'I', 'zoom_in', ls(3), t1, z=4, optional=True)
 if bn: fade(f'#{bn}', ls(3) - 0.1, 0.25, 1, 0)
 else: js.append(f'tl.to("#{v}-cam",{{scale:1.16,duration:{t1-ls(3):.2f},ease:"none"}},{ls(3):.3f});')
-c(); z += 1
+c(); z += 2
 
 # s02 rewind 1999 → 1980s
 t0, t1 = span(4, 7); c = open_scene('s02', t0, t1, z, 'var(--bgDeep)')
@@ -162,7 +171,7 @@ for k in range(len(years)):
     if k < len(years) - 1:
         js.append(f'tl.to("#s02-y{k}",{{opacity:0,y:30,duration:0.08,ease:"none"}},{tt+0.17:.3f});')
 js.append(f'tl.to("#s02-y{len(years)-1}",{{opacity:0,duration:0.4}},{t1-0.45:.3f});')
-xin('s02', t0); c(); z += 1
+xin('s02', t0); c(); z += 2
 
 # s03 hunger: neighbourhood + km counter, early portrait
 t0, t1 = span(8, 13); c = open_scene('s03', t0, t1, z)
@@ -175,7 +184,7 @@ body.append('<div id="s03-km" class="plate-mini" style="left:60px;top:680px;opac
 rise('#s03-km', ls(11) + 0.2)
 js.append(f'(()=>{{const o={{v:0}},el=document.getElementById("s03-kmv");tl.to(o,{{v:15,duration:1.6,ease:"power2.out",onUpdate:()=>{{el.textContent=Math.round(o.v)}}}},{ls(11)+0.3:.3f});}})();')
 js.append(f'tl.to("#s03-km",{{opacity:0,duration:0.3}},{ls(12)-0.2:.3f});')
-xin('s03', t0); c(); z += 1
+xin('s03', t0); c(); z += 2
 
 # s04 name reveal
 t0, t1 = span(14, 15); c = open_scene('s04', t0, t1, z)
@@ -187,7 +196,7 @@ body.append('<div class="center-col" style="top:700px;z-index:20"><div class="he
 for k in range(len(name)):
     punch(f'#s04-c{k}', ls(15) + k * 0.045, 1.3, 0.24)
 rise('#s04-full', ls(15) + 0.6)
-xin('s04', t0); c(); z += 1
+xin('s04', t0); c(); z += 2
 
 # s05 map of Brazil, Recife, 1972
 t0, t1 = span(16, 18); c = open_scene('s05', t0, t1, z, 'var(--bgBase)')
@@ -204,12 +213,12 @@ punch('#s05-yr', ls(16) + 0.35, 1.2)
 js.append(f'tl.fromTo("#s05-dot",{{opacity:0,scale:2.4}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(1.9)"}},{ls(16)+1.3:.3f});')
 js.append(f'tl.fromTo("#s05-ring",{{opacity:0.9,scale:0.4}},{{opacity:0,scale:1.6,duration:1.2,ease:"cubic.out",repeat:2}},{ls(16)+1.4:.3f});')
 rise('#s05-lab', ls(16) + 1.5)
-xin('s05', t0); c(); z += 1
+xin('s05', t0); c(); z += 2
 
 # s06 the father
 t0, t1 = span(19, 23); c = open_scene('s06', t0, t1, z)
 photo('s06', '8', 'ROMILDO · HIS FATHER', 'BEFORE 1989', 'I', 'dolly_in', t0, t1, optional=True) or photo('s06', '4', 'HOME', '', 'II', 'dolly_in', t0, t1)
-xin('s06', t0); c(); z += 1
+xin('s06', t0); c(); z += 2
 
 # s07 1989 on black, silence
 t0, t1 = span(24, 28); c = open_scene('s07', t0, t1, z, 'var(--bgDeep)')
@@ -217,12 +226,12 @@ body.append('<div class="center-col" style="top:470px"><div id="s07-y" class="se
 js.append(f'tl.fromTo("#s07-y",{{opacity:0,scale:1.04}},{{opacity:0.92,scale:1,duration:1.2,ease:"cubic.out"}},{ls(24)+0.1:.3f});')
 js.append(f'tl.to("#s07-y",{{opacity:0.35,duration:1.0}},{ls(26)-0.4:.3f});')
 js.append(f'tl.to("#s07-y",{{opacity:0,duration:0.8}},{t1-1.0:.3f});')
-xin('s07', t0); c(); z += 1
+xin('s07', t0); c(); z += 2
 
 # s08 the mother says: keep going
 t0, t1 = span(29, 32); c = open_scene('s08', t0, t1, z)
 photo('s08', '5', 'YOUNG RIVALDO', 'SANTA CRUZ · c.1990', 'II', 'dolly_in', t0, t1)
-xin('s08', t0); c(); z += 1
+xin('s08', t0); c(); z += 2
 
 # s09 the four Brazilian clubs (type-only names, no modern crests)
 t0, t1 = span(33, 37); c = open_scene('s09', t0, t1, z)
@@ -235,7 +244,7 @@ for k, (slot, nm, yrs) in enumerate(clubs):
     js.append(f'tl.fromTo("#{p}",{{x:1080,opacity:1}},{{x:0,duration:0.42,ease:"quint.out"}},{tt-0.12:.3f});')
     body.append(f'<div id="s09-n{k}" class="club" style="top:{150+k*70}px;opacity:0;z-index:20"><span class="label">{nm}</span><span class="mono">{yrs}</span></div>')
     rise(f'#s09-n{k}', tt, 0.28, 10)
-xin('s09', t0); c(); z += 1
+xin('s09', t0); c(); z += 2
 
 # s10 Deportivo
 t0, t1 = span(38, 41); c = open_scene('s10', t0, t1, z)
@@ -243,7 +252,7 @@ if not polaroid('s10', '11', 'LA CORUÑA · 1996–97', 'II', ls(38) + 0.1, t1, 
 body.append('<div class="center-col" style="top:150px;z-index:20"><div id="s10-y" class="serif-i gold" style="font-size:170px;opacity:0">1996</div>'
             '<div id="s10-m" class="mono" style="font-size:24px;color:var(--textSecondary);opacity:0">LA CORUÑA · ONE SEASON</div></div>')
 punch('#s10-y', ls(38) + 0.2, 1.2); rise('#s10-m', ls(40))
-xin('s10', t0); c(); z += 1
+xin('s10', t0); c(); z += 2
 
 # s11 Ronaldo leaves, Rivaldo arrives
 t0, t1 = span(42, 46); c = open_scene('s11', t0, t1, z)
@@ -254,11 +263,15 @@ js.append(f'tl.fromTo("#{rv}",{{x:1080}},{{x:0,duration:0.45,ease:"quint.out"}},
 body.append('<div id="s11-str" class="stripes" style="opacity:0;z-index:2"></div>')
 js.append(f'tl.to("#s11-str",{{opacity:0.10,duration:0.6}},{ls(44)+0.6:.3f});')
 js.append(f'tl.to("#s11-str",{{opacity:0.26,duration:0.5}},{ls(46)+0.6:.3f});')
-xin('s11', t0); c(); z += 1
+xin('s11', t0); c(); z += 2
 
 # s12 two Ligas + one Copa: morph plate over celebration
 t0, t1 = span(47, 51); c = open_scene('s12', t0, t1, z)
-if not photo('s12', '14', 'LIGA CELEBRATION', '1998 OR 1999', 'III', 'dolly_out', t0, t1, optional=True): body.append('<div class="stripes" style="opacity:0.2"></div><div class="fadeV"></div>')
+if 'showA' in FOOT:   # Barça skills showcase plays under the plate (footage sits just below this scene)
+    js.append(f'tl.set("#s12-fill",{{opacity:0}},{t0:.3f});')
+    body.append('<div id="s12-scrim" style="position:absolute;inset:0;background:rgba(6,5,4,.5);opacity:0"></div>')
+    fade('#s12-scrim', ls(49) - 0.1, 0.5)
+elif not photo('s12', '14', 'LIGA CELEBRATION', '1998 OR 1999', 'III', 'dolly_out', t0, t1, optional=True): body.append('<div class="stripes" style="opacity:0.2"></div><div class="fadeV"></div>')
 body.append('<div id="s12-pl" class="plate" style="left:110px;top:430px;width:860px;height:420px;opacity:0;z-index:20">'
             '<div class="tick tl"></div><div class="tick tr"></div><div class="tick bl"></div><div class="tick br"></div><div class="acc"></div>'
             '<div id="s12-r1" class="trow" style="top:50px;opacity:0"><span class="label">LA LIGA</span><span class="hero gold">×2</span></div>'
@@ -267,7 +280,7 @@ body.append('<div id="s12-pl" class="plate" style="left:110px;top:430px;width:86
             '<div class="mono" style="position:absolute;left:70px;bottom:26px;font-size:22px;color:var(--textDim)">1997–98 · 1998–99</div></div>')
 js.append(f'tl.fromTo("#s12-pl",{{opacity:0,scaleY:0.2}},{{opacity:1,scaleY:1,duration:0.62,ease:"cubic.out"}},{ls(49):.3f});')
 rise('#s12-r1', ls(50) + 1.1); rise('#s12-r2', ls(51))
-xin('s12', t0); c(); z += 1
+xin('s12', t0); c(); z += 2
 
 # s13 date card, Ballon d'Or
 t0, t1 = span(52, 55); c = open_scene('s13', t0, t1, z, 'var(--bgDeep)')
@@ -275,7 +288,7 @@ body.append('<div class="center-col" style="top:420px"><div id="s13-l" class="mo
             '<div id="s13-d" class="serif-i gold" style="font-size:150px;line-height:1.1;opacity:0;padding:0 .1em">December 1999</div>'
             '<div id="s13-b" class="label" style="font-size:40px;letter-spacing:16px;color:var(--white100);opacity:0;margin-top:20px">BALLON D’OR</div></div>')
 rise('#s13-l', ls(52) + 0.3); punch('#s13-d', ls(54), 1.15, 0.3); rise('#s13-b', ls(55) + 0.3)
-xin('s13', t0); c(); z += 1
+xin('s13', t0); c(); z += 2
 
 # s14 Beckham, the treble
 t0, t1 = span(56, 57); c = open_scene('s14', t0, t1, z)
@@ -285,7 +298,7 @@ body.append(f'<div class="center-col" style="top:{150 if has15 else 470}px;z-ind
             '<div id="s14-t" class="label" style="font-size:64px;letter-spacing:18px;color:var(--gold300);opacity:0;margin-top:18px">THE TREBLE</div></div>')
 rise('#s14-m', ls(56) + 0.4); punch('#s14-t', ls(57) + 0.6, 1.2)
 if not has15: punch('#s14-n', ls(56) + 0.1, 1.15, 0.3)
-xin('s14', t0); c(); z += 1
+xin('s14', t0); c(); z += 2
 
 # s15 GOLD CLIMAX: 154 / 219, then darkroom reveal of #1 (slowest move)
 HAS17 = photo_file('17') is not None
@@ -314,7 +327,7 @@ if os.path.exists(f'{HERE}/{DARK}'):
     dstart = ls(61) + 0.2
     body.append(f'<video id="s15-dark" class="clip" src="{DARK}" data-start="{dstart:.3f}" data-duration="{t1-dstart:.3f}" data-track-index="3" '
                 f'muted playsinline style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:{z}"></video>')
-z += 1
+z += 2
 
 # s16 FIFA award, then child ↔ trophy split frame
 t0, t1 = span(62 if HAS17 else 63, 64); c = open_scene('s16', t0, t1, z)
@@ -328,13 +341,13 @@ if photo_file('5'):
     fade('#s16-split', ls(64), 0.3)
 else:
     r = photo('s16', '1b', 'BALLON D’OR', '1999', 'IV', 'dolly_in', ls(63) - 0.25, t1, z=3)
-xin('s16', t0); c(); z += 1
+xin('s16', t0); c(); z += 2
 
 # s17 «صح؟» … «لأ.» dip to black
 t0, t1 = span(65, 67); c = open_scene('s17', t0, t1, z, 'var(--bgDeep)')
 body.append('<div class="center-col" style="top:520px"><div id="s17-no" class="ar-statement" style="opacity:0">لأ.</div></div>')
 js.append(f'tl.fromTo("#s17-no",{{opacity:0,scale:1.3}},{{opacity:1,scale:1,duration:0.22,ease:"cubic.out"}},{ls(67):.3f});')
-xin('s17', t0); c(); z += 1
+xin('s17', t0); c(); z += 2
 
 # s18 tactics board: left wing → the centre; dropped
 t0, t1 = span(68, 78); c = open_scene('s18', t0, t1, z)
@@ -354,7 +367,7 @@ js.append(f'tl.fromTo("#s18-dot2",{{opacity:0,scale:2}},{{opacity:1,scale:1,dura
 rise('#s18-no10', ls(72) + 0.2)
 bn = photo('s18', '3', 'RIVALDO ON THE BENCH', '1999–2000', 'V', 'zoom_in', ls(76), t1, z=8, optional=True)
 if bn: js.append(f'tl.fromTo("#{bn}",{{opacity:0}},{{opacity:1,duration:0.3}},{ls(76)-0.1:.3f});')
-xin('s18', t0); c(); z += 1
+xin('s18', t0); c(); z += 2
 
 # s19 17 June 2001 + the stakes
 t0, t1 = span(79, 87); c = open_scene('s19', t0, t1, z)
@@ -369,10 +382,10 @@ body.append('<div class="stripes" style="opacity:0.16"></div><div class="fadeV">
 rise('#s19-m', ls(81) - 0.1); punch('#s19-d', ls(81), 1.15, 0.3)
 js.append(f'tl.fromTo("#s19-pl",{{opacity:0,scaleY:0.2}},{{opacity:1,scaleY:1,duration:0.62,ease:"cubic.out"}},{ls(83):.3f});')
 rise('#s19-w', ls(86)); rise('#s19-dr', ls(87))
-xin('s19', t0); c(); z += 1
+xin('s19', t0); c(); z += 2
 # archive montage answering «لكن لو عايز تعرف ريفالدو كان لاعب عامل إزاي…» (broadcast footage, muted, burned-in caption removed)
 MONT = 'assets/montage_goals.mp4'
-if os.path.exists(f'{HERE}/{MONT}'):
+if 'montB' not in FOOT and os.path.exists(f'{HERE}/{MONT}'):
     ms = round(ls(79) - 0.2, 3); md = 4.6
     body.append(f'<video id="s19-mont" class="clip" src="{MONT}" data-start="{ms:.3f}" data-duration="{md}" data-track-index="4" muted playsinline '
                 f'style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:{z-1};opacity:0"></video>')
@@ -402,18 +415,23 @@ def flip(fid, frm, to, t):
     js.append(f'tl.fromTo("#{fid}-{to}",{{scaleY:0,opacity:1}},{{scaleY:1,opacity:1,duration:0.09,ease:"power2.out"}},{t+0.09:.3f});')
 flip('s20-b', 0, 1, ls(91)); flip('s20-v', 0, 1, ls(92) + 0.3); flip('s20-b', 1, 2, ls(96)); flip('s20-v', 1, 2, ls(98))
 fade('#s20-out', ls(101) + 0.3, 0.3); fade('#s20-edge', ls(101) + 0.3, 0.3)
-xin('s20', t0); c(); z += 1
+xin('s20', t0); c(); z += 2
 
 # s21 ACTION PEAK: minute 87 → chest → air → bicycle kick (freeze, silence) → GOAL flash + shake → 3-2
 t0, t1 = span(102, 111); c = open_scene('s21', t0, t1, z, 'var(--bgDeep)')
 body.append('<div id="s21-shake" style="position:absolute;inset:0">')
 p_chest = photo('s21', '19c', 'DE BOER’S BALL · CHEST CONTROL', '17 JUNE 2001', 'VI', 'dolly_in', ls(103), ls(105), z=2)
-p_air = photo('s21', '19d', 'THE BALL IN THE AIR', '17 JUNE 2001', 'VI', 'zoom_in', ls(105), ls(106), z=3)
-p_kick = photo('s21', '19e', 'THE OVERHEAD KICK', '17 JUNE 2001 · 87’', 'VI', 'zoom_in', ls(106), t1, z=4)
-for pp, tt in ((p_chest, ls(103)), (p_air, ls(105)), (p_kick, ls(106))):
-    js.append(f'tl.fromTo("#{pp}",{{opacity:0,x:120}},{{opacity:1,x:0,duration:0.18,ease:"cubic.out"}},{tt-0.08:.3f});')
-# freeze: stop the kick photo's camera during the inserted silence (counter-scale to hold)
-js.append(f'tl.to("#{p_kick}-cam",{{scale:1.16,duration:0.06,ease:"none"}},{le(106):.3f});')
+KICK = FOOT.get('kick')
+if KICK:   # broadcast footage of the kick (speed-ramped, freeze in the silence) sits just below this scene
+    js.append(f'tl.fromTo("#{p_chest}",{{opacity:0,x:120}},{{opacity:1,x:0,duration:0.18,ease:"cubic.out"}},{ls(103)-0.08:.3f});')
+    js.append(f'tl.to("#{p_chest}",{{opacity:0,duration:0.12}},{KICK["start"]:.3f}); tl.set("#s21-fill",{{opacity:0}},{KICK["start"]+0.12:.3f});')
+else:
+    p_air = photo('s21', '19d', 'THE BALL IN THE AIR', '17 JUNE 2001', 'VI', 'zoom_in', ls(105), ls(106), z=3)
+    p_kick = photo('s21', '19e', 'THE OVERHEAD KICK', '17 JUNE 2001 · 87’', 'VI', 'zoom_in', ls(106), t1, z=4)
+    for pp, tt in ((p_chest, ls(103)), (p_air, ls(105)), (p_kick, ls(106))):
+        js.append(f'tl.fromTo("#{pp}",{{opacity:0,x:120}},{{opacity:1,x:0,duration:0.18,ease:"cubic.out"}},{tt-0.08:.3f});')
+    # freeze: stop the kick photo's camera during the inserted silence (counter-scale to hold)
+    js.append(f'tl.to("#{p_kick}-cam",{{scale:1.16,duration:0.06,ease:"none"}},{le(106):.3f});')
 body.append('</div>')
 body.append('<div class="center-col" style="top:150px;z-index:20"><div id="s21-min" class="serif-i gold" style="font-size:200px;opacity:0;padding:0 .14em">87’</div></div>')
 punch('#s21-min', ls(102), 1.25)
@@ -423,8 +441,9 @@ js.append(f'tl.fromTo("#s21-flash",{{opacity:0}},{{opacity:0.55,duration:0.05,ea
 js.append(f'tl.to("#s21-flash",{{opacity:0,duration:0.12,ease:"none"}},{ls(108)+0.05:.3f});')
 rng = random.Random(87)
 kf = ','.join('{x:%d,y:%d,duration:0.035}' % (rng.randint(-34, 34), rng.randint(-28, 28)) for _ in range(16)) + ',{x:0,y:0,duration:0.06}'
-js.append(f'tl.to("#s21-shake",{{keyframes:[{kf}],ease:"none"}},{ls(108):.3f});')
-js.append(f'tl.fromTo("#s21-shake",{{scale:1.05}},{{scale:1.0,duration:0.6,ease:"cubic.out"}},{ls(108):.3f});')
+for tgt in (['#s21-shake'] + (['#ft-kick'] if KICK else [])):
+    js.append(f'tl.to("{tgt}",{{keyframes:[{kf}],ease:"none"}},{ls(108):.3f});')
+    js.append(f'tl.fromTo("{tgt}",{{scale:1.05}},{{scale:1.0,duration:0.6,ease:"cubic.out"}},{ls(108):.3f});')
 body.append('<div id="s21-pl" class="plate" style="left:110px;top:760px;width:860px;height:260px;opacity:0;z-index:30">'
             '<div class="acc"></div><div class="sboard" style="top:46px">' + flap('s21-b', '23', True) + '<div class="dash">–</div>' + flap('s21-v', '2', False) + '</div>'
             '<div class="hero" style="position:absolute;left:70px;top:76px;font-size:96px;color:var(--white100)">BAR</div>'
@@ -433,12 +452,12 @@ fade('#s21-pl', ls(109) - 0.35, 0.2)
 flip('s21-b', 2, 3, ls(109))
 body.append('<div class="center-col" style="top:1030px;z-index:30"><div id="s21-ht" class="label" style="font-size:34px;letter-spacing:14px;color:var(--gold300);opacity:0">HAT-TRICK · CHAMPIONS LEAGUE</div></div>')
 rise('#s21-ht', ls(110))
-xin('s21', t0); c(); z += 1
+xin('s21', t0); c(); z += 2
 
 # s22 Camp Nou erupts
 t0, t1 = span(112, 115); c = open_scene('s22', t0, t1, z)
 photo('s22', '20', 'CAMP NOU', '17 JUNE 2001', 'VI', 'crane_up', t0, t1)
-xin('s22', t0); c(); z += 1
+xin('s22', t0); c(); z += 2
 
 # s23 Yokohama 2002 (Brazil tricolour bar)
 t0, t1 = span(116, 121); c = open_scene('s23', t0, t1, z)
@@ -447,7 +466,7 @@ body.append('<div class="brbar" style="z-index:25"><i style="background:var(--br
             '<div class="scrim" style="top:760px;height:330px;z-index:19"></div><div class="center-col" style="top:830px;z-index:20"><div id="s23-m" class="mono" style="font-size:24px;color:var(--textSecondary);opacity:0">YOKOHAMA · 30 JUNE 2002 · FINAL</div>'
             '<div id="s23-s" class="hero" style="font-size:150px;color:var(--white100);opacity:0">BRA 2–0 GER</div></div>')
 rise('#s23-m', ls(118)); punch('#s23-s', ls(120) + 0.3, 1.2)
-xin('s23', t0); c(); z += 1
+xin('s23', t0); c(); z += 2
 
 # s24 Van Gaal returns; Rivaldo leaves
 t0, t1 = span(122, 124); c = open_scene('s24', t0, t1, z)
@@ -457,7 +476,7 @@ fade(f'#{lv}', ls(124) - 0.2, 0.3, 1, 0)
 js.append(f'tl.to("#{vg2}",{{opacity:0,duration:0.3}},{ls(124)-0.2:.3f});')
 body.append('<div id="s24-dark" style="position:absolute;inset:0;background:var(--ink);opacity:0;z-index:6"></div>')
 js.append(f'tl.to("#s24-dark",{{opacity:0.72,duration:1.2,ease:"power1.in"}},{ls(124)+0.5:.3f});')
-xin('s24', t0); c(); z += 1
+xin('s24', t0); c(); z += 2
 
 # s25 recap montage
 t0, t1 = span(125, 129); c = open_scene('s25', t0, t1, z)
@@ -467,7 +486,7 @@ for k, (slot, lab, act, li) in enumerate(items):
     tt = t0 if k == 0 else ls(li)
     pp = photo('s25', slot, lab, '', act, 'dolly_in', tt, (ls(items[k+1][3]) if k + 1 < len(items) else t1) + 0.4, z=2 + k)
     if k: fade(f'#{pp}', tt - 0.15, 0.3, 1, 0)
-xin('s25', t0); c(); z += 1
+xin('s25', t0); c(); z += 2
 
 # s26 title
 t0, t1 = span(130, 132); c = open_scene('s26', t0, t1, z)
@@ -476,7 +495,7 @@ body.append('<div class="lowfade"></div><div class="scrim" style="top:560px;heig
             '<div id="s26-ar" class="ar-title" style="opacity:0">ريفالدو</div></div>')
 js.append(f'tl.fromTo("#s26-n",{{opacity:0,y:30}},{{opacity:1,y:0,duration:0.5,ease:"cubic.out"}},{ls(131):.3f});')
 rise('#s26-ar', ls(131) + 0.4)
-xin('s26', t0); c(); z += 1
+xin('s26', t0); c(); z += 2
 
 # s27 next episode: Ronaldinho
 t0, t1 = span(133, 137); c = open_scene('s27', t0, t1, z)
@@ -488,7 +507,7 @@ body.append(f'<div class="center-col" style="top:{150 if has24 else 560}px;z-ind
             f'<div class="center-col" style="top:{800 if has24 else 630}px;z-index:20"><div id="s27-n" class="hero gold" style="font-size:190px;opacity:0">RONALDINHO</div></div>')
 rise('#s27-k', ls(133))
 if not has24: punch('#s27-n', ls(137), 1.25)
-xin('s27', t0); c(); z += 1
+xin('s27', t0); c(); z += 2
 
 # s28 end card (DS 5.9)
 t0, t1 = BODY_END - 0.3, TOTAL
@@ -501,6 +520,15 @@ body.append('<div class="center-col" style="top:330px">' +
             '<div class="label" style="font-size:26px;letter-spacing:12px;color:var(--textSecondary);margin-top:28px">BARCELONA ARMY EGYPT</div></div>')
 js.append(f'tl.fromTo("#s28-v",{{opacity:0,y:40}},{{opacity:1,y:0,duration:0.6,ease:"cubic.out"}},{t0+0.6:.3f});')
 xin('s28', t0); c()
+
+# ======================================================================= archive footage inserts
+for name, f in FOOT.items():
+    hz = SCENE_Z[f['host']]; zz = hz + 1 if f['mode'] == 'over' else hz - 1
+    st, du = f['start'], f['dur']
+    body.append(f'<video id="ft-{name}" class="clip" src="{f["src"]}" data-start="{st:.3f}" data-duration="{du:.3f}" data-track-index="4" muted playsinline '
+                f'style="position:absolute;left:0;top:0;width:1080px;height:1350px;object-fit:cover;z-index:{zz};opacity:{0 if f["fin"] > 0 else 1}"></video>')
+    if f['fin'] > 0: js.append(f'tl.fromTo("#ft-{name}",{{opacity:0}},{{opacity:1,duration:{f["fin"]}}},{st:.3f});')
+    if f['fout'] > 0: js.append(f'tl.to("#ft-{name}",{{opacity:0,duration:{f["fout"]},ease:"power1.in"}},{st + du - f["fout"]:.3f});')
 
 # ======================================================================= chapter markers
 HIDE = [(span(102, 111)[0], span(102, 111)[1])]  # hide during the action peak

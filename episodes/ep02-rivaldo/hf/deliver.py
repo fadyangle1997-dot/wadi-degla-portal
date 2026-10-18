@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-"""Final deliverables for Episode 2 without re-rendering the picture.
+"""Final deliverables for Episode 2.
 
-  1. rivaldo_final.mp4            v3 picture (with the archive montage) + the new mix (assets/mix.wav)
-  2. rivaldo_final_nomontage.mp4  v3 picture with the montage window swapped for the v2 frames (same timeline, no
-                                  broadcast footage) + assets/mix_nomontage.wav. The swap window is found by diffing
-                                  the two renders frame by frame, so nothing else from v2 (old subtitle breaks) leaks in.
-  3. send copies under 30 MB: HEVC 2-pass (hvc1) + AAC 128k, and the ~3-minute highlight cut.
-usage: deliver.py [step ...]   steps: masters, send, highlight (default: all)
+  1. rivaldo_final.mp4  the v4 render (archive footage inserts) remuxed with the current mix (assets/mix.wav), so a
+                        mix change never needs a new picture render
+  2. send copy under 30 MB: HEVC 2-pass (hvc1) + AAC 128k, and the ~3-minute highlight cut
+  (v3 only: `masters-nomontage` swaps the montage frames for the v2 frames by diffing the two renders.)
+usage: deliver.py [step ...]   steps: masters, send, highlight (default: all), masters-nomontage
 """
 import json, os, subprocess, sys, numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); EP = os.path.dirname(HERE)
 R, D = f'{HERE}/renders', f'{EP}/deliver'
-V3, V2 = f'{R}/rivaldo_v3_montage.mp4', f'{R}/rivaldo_v2.mp4'
+V4, V3, V2 = f'{R}/rivaldo_v4_footage.mp4', f'{R}/rivaldo_v3_montage.mp4', f'{R}/rivaldo_v2.mp4'
 FINAL, FINAL_NM = f'{R}/rivaldo_final.mp4', f'{R}/rivaldo_final_nomontage.mp4'
 HL = f'{R}/rivaldo_final_highlight.mp4'
 L = json.load(open(f'{EP}/audio/line_timings_edit.json', encoding='utf-8'))['lines']
@@ -42,8 +41,9 @@ def swap_window():
     return lo, hi
 
 if 'masters' in STEPS:
-    run(['ffmpeg', '-loglevel', 'error', '-y', '-i', V3, '-i', f'{HERE}/assets/mix.wav', '-map', '0:v', '-map', '1:a',
+    run(['ffmpeg', '-loglevel', 'error', '-y', '-i', V4, '-i', f'{HERE}/assets/mix.wav', '-map', '0:v', '-map', '1:a',
          '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-movflags', '+faststart', FINAL])
+if 'masters-nomontage' in STEPS:
     lo, hi = swap_window()
     fc = (f'[0:v]trim=start_frame=0:end_frame={lo},setpts=PTS-STARTPTS[a];'
           f'[1:v]trim=start_frame={lo}:end_frame={hi},setpts=PTS-STARTPTS[b];'
@@ -66,8 +66,8 @@ def hevc(src, out, kbps, tag):
 
 if 'send' in STEPS:
     os.makedirs(D, exist_ok=True)
-    hevc(FINAL, f'{D}/Rivaldo_Ep2_FULL_with-archive-footage.mp4', 600, 'full')
-    hevc(FINAL_NM, f'{D}/Rivaldo_Ep2_FULL_no-archive-footage.mp4', 600, 'nm')
+    hevc(FINAL, f'{D}/Rivaldo_Ep2_FULL.mp4', 600, 'full')
+    if os.path.exists(FINAL_NM) and 'masters-nomontage' in STEPS: hevc(FINAL_NM, f'{D}/Rivaldo_Ep2_FULL_no-archive-footage.mp4', 600, 'nm')
 
 if 'highlight' in STEPS:
     run(['python3', '-I', f'{HERE}/cut_highlight.py', FINAL, HL])
