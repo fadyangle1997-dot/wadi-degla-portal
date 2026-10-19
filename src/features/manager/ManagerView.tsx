@@ -52,11 +52,9 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   // to tamper with (the pattern that caused the ReadinessReportView IDOR).
   const [openUnit, setOpenUnit] = useState<string | null>(null);
 
-  // 🔴 Visibility flows up (frozen authority model): useDashboard already
-  // scopes d.employeeIds via scopeOf/visibleLearners — a branch manager sees
-  // their branch, an area manager sees their branches, a general manager sees
-  // the organization. Nothing here re-derives that; it only decides HOW to
-  // group the same list for readability once it spans more than one branch.
+  // Scope comes from useDashboard (scopeOf/visibleLearners): branch manager →
+  // branch, area manager → their branches, general manager → organisation.
+  // This only groups the already-scoped list once it spans several branches.
   const scope = useMemo(() => scopeOf(identityStore.currentUser(), canDo, orgStore.get()), [canDo]);
   const branchGroups = useMemo(() => {
     if (scope.kind === 'branch' || scope.kind === 'none') return null; // single branch: no grouping needed
@@ -68,12 +66,8 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     return [...byBranch.entries()].sort((a, b) => b[1].length - a[1].length);
   }, [scope, d.employeeIds, users, lang]);
 
-  // 🔴 PERF — orgSummary() runs groupByEmployee(), a FULL scan of the event
-  // log. Calling it inside .map() meant one full scan PER BRANCH on EVERY
-  // render (11 branches = 11 scans, repeated on any state change such as
-  // opening a dossier). Hoisted here so the scans happen once per data
-  // change, not once per paint. Sorting worst-first also belongs here, not in
-  // the JSX — the render should receive a finished list, not compute one.
+  // orgSummary() scans the whole event log, so it runs once per data change
+  // here rather than once per branch per render; sorted worst-first.
   const unitCards = useMemo(() => {
     if (!branchGroups) return [];
     const events = trainingStore.events() as readonly OrgEvent[];
@@ -314,14 +308,9 @@ const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: string)
 
   return (
     <Card>
-      {/* 🔴 «محتاج تدخّلك» WAS TELLING THE TRUTH ABOUT NOTHING. The heading is
-          fixed while the list is not: on a normal branch every row is severity
-          `info` — «لسه من غير أي تقييم» for six new joiners — and the manager
-          is told six times a day that six things need their intervention when
-          none of them do. That is how a list gets ignored on the day it finally
-          carries a `critical`. The heading now says what the list actually
-          holds, and the count is split by severity so the eye sees the shape
-          before it reads a single row. */}
+      {/* The heading says what the list holds, and the count is split by
+          severity, so a list of informational items does not cry «intervene»
+          and get ignored on the day it carries a critical one. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-4)' }}>
         <Eyebrow icon={<AlertTriangle size={13} />}>{urgent > 0 ? tr('mg.needyours', lang) : tr('mg.tofollow', lang)}</Eyebrow>
         <div style={{ flex: 1 }} />
@@ -340,11 +329,8 @@ const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: string)
               style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', textAlign: 'start',
                 padding: 'var(--sp-3) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', cursor: 'pointer', minHeight: 52 }}>
               <StatusBadge tone={sevTone[i.severity]}><ArabicContent as="span">{i.action}</ArabicContent></StatusBadge>
-              {/* 🔴 The row printed the name and then the message — and every
-                  message from health.ts already OPENS with that same name, so
-                  the manager's main list read «Ahmed Magdy — Ahmed Magdy
-                  لسه من غير أي تقييم» on all six rows. The message owns the
-                  name; the row shows it once. */}
+              {/* health.ts messages already start with the person's name, so the row
+                  shows the message only. */}
               <ArabicContent as="span" className="t-sm" style={{ flex: 1 }}>{i.message}</ArabicContent>
             </button>
           ))}
@@ -359,18 +345,10 @@ const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: string)
    name, stage, readiness, risk (health), trainer, last activity. Clicking
    opens the existing Operational Dossier — reused exactly, never redesigned. */
 /**
- * 🔴 THE ROSTER IS FOLDED ON A PHONE, NEVER DROPPED.
- *
- * This screen measured 4108px at 390 wide — roughly five full viewports, most
- * of it one card per employee — so the branch health tiles underneath were
- * unreachable without scrolling past every person on the branch. A manager
- * opening this on the floor wants the count and the exceptions first.
- *
- * Folded, not hidden: the count is on the button, one tap opens the full list,
- * and on desktop — where the grid costs a screenful, not five — nothing folds.
- * `<details>` carries the disclosure semantics natively, so a screen reader
- * announces it as expandable without a line of ARIA; the only thing code
- * decides is the starting position, read once at mount.
+ * The roster folds on phones (it was five screens tall, burying the branch
+ * tiles), never drops: the count is on the toggle and one tap opens it.
+ * <details> carries the disclosure semantics; code only picks the starting
+ * position, once, at mount. Desktop never folds.
  */
 const CollapsibleRoster: React.FC<{ ids: readonly string[]; onInspect: (id: string) => void }> = ({ ids, onInspect }) => {
   const lang = useLang();

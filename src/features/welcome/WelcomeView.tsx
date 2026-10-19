@@ -34,12 +34,8 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
     {
       icon: <GraduationCap size={22} />,
       title: t('wc.learn', lang),
-      // 🔴 THE PROGRAMME HAD TWO DIFFERENT TOTALS. This screen said «9 وحدات»
-      // on day one and the roadmap said «المرحلة 1 من 6» on the same day, with
-      // nothing anywhere explaining that the nine sit inside the six. A trainee
-      // who cannot tell how big the thing is cannot tell how far along they
-      // are. The relationship is stated once, here, where the programme is
-      // first described — and both numbers stay derived from the content.
+      // States how the nine units sit inside the six phases, so the welcome
+      // screen and the roadmap describe the same programme. Both derived from content.
       body: `${stats.lessons} ${t('wc.learnbody', lang)} ${stats.units} ${t('wc.learnunits', lang)} ${PROGRAM.length} ${t('wc.learnphases', lang)}`,
     },
     {
@@ -63,12 +59,8 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
           {t('wc.intro', lang)}
         </p>
 
-        {/* 🔴 THE ONLY ACTION WAS BELOW THE FOLD. On a 1440×900 desktop this
-            screen ran to 1078px, so a new employee's first screen ended in four
-            explanation cards and the one button they needed was off-screen —
-            the product asking to be read before it can be used. The act comes
-            first; the four cards stay, as what they always were: the answer to
-            «إيه ده؟» for whoever scrolls. */}
+        {/* The one action comes first, above the fold; the explanation cards
+            follow for whoever scrolls. */}
         <m.div {...stagger(1, 0.15)} style={{ marginTop: 'var(--sp-6)' }}>
           <Button onClick={onStartFirstLesson}>
             {t('wc.startfirst', lang)} — <ArabicContent as="span">{first?.lessons[0]?.title ?? ''}</ArabicContent> <ArrowRight size={16} className="icon-dir" />
@@ -91,12 +83,7 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
         <m.p {...stagger(facts.length, 0.15)} className="t-sm" style={{ marginTop: 'var(--sp-5)', color: 'var(--tx3)' }}>
           {t('wc.storage', lang)}
         </m.p>
-        {/* 🔴 P1 (Sprint 5.0) — ONE primary action. This used to offer «ابدأ
-            أول درس» beside a ghost «شوف المسار كله الأول», making the very
-            first decision of the employee's professional life a CHOICE rather
-            than an ACT. Exploration is not lost: «الرحلة» sits permanently in
-            the header the moment they land, so the path is one tap away
-            without competing with the only action that matters right now. */}
+        {/* One primary action. The journey is always one tap away in the shell. */}
       </m.main>
     </div>
   );

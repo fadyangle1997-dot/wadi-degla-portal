@@ -15,9 +15,8 @@
  *   «سنة 50% · سنتين 100% · تلات سنين 200% · أربع سنين 300%»
  *   «بتتحسب على قيمة تجديد السنة اللي فاتت نفسها (مش السعر الحالي)»
  *
- * 🔴 The research hypothesis was 50/100/200. The source actually carries FOUR
- * tiers (300% exists) AND a first stage before them. Both corrections are
- * reflected here; nothing was dropped to fit a tidier graphic.
+ * The source has FOUR tiers (300% included) and a first stage before them;
+ * both are shown.
  */
 import React from 'react';
 import { Eyebrow } from '../../ui/primitives';

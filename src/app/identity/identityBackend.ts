@@ -119,18 +119,10 @@ export class LocalStorageIdentityBackend implements IdentityBackend {
   }
 
   /**
-   * 🔴 SECURITY/STABILITY FIX — this is the SAME trust-boundary bug already
-   * found and fixed in backend.ts (Progress) for the stabilization sprint,
-   * just never generalized to the OTHER stores. `read<T>` proves the bytes
-   * are JSON; it proves nothing about their shape. This one matters more
-   * than most: `this.users` backs every permission check in the app
-   * (`can()`, `scopeOf()`). Valid-but-wrong-shaped JSON here — an old schema,
-   * a half-written value, a hand-edited key — doesn't just crash a render
-   * far away; it can silently produce a users array with missing/malformed
-   * roleId fields that authorization code trusts implicitly. Anything
-   * failing the shape check is treated as "no stored users", same as if the
-   * key were empty — never as data.
-   */
+     * Storage is a trust boundary. These users back every permission check, so
+     * anything that is not a well-formed user array is treated as "no stored
+     * users", never as data with a missing roleId.
+     */
   private isUserArray(v: unknown): v is User[] {
     return Array.isArray(v) && v.every(u =>
       u && typeof u === 'object' && typeof (u as Partial<User>).id === 'string' && typeof (u as Partial<User>).roleId === 'string');

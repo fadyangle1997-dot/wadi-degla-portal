@@ -66,22 +66,12 @@ export const AppShell: React.FC<{
 
   return (
     <div className="shell-root" data-collapsed={railCollapsed || undefined} style={{ minHeight: '100vh', background: 'var(--void)' }}>
-      {/* 🔴 NINE STOPS BEFORE THE CONTENT. A keyboard user landed on the rail
-          toggle, the brand, three nav items, the screen bar's back control, the
-          bell, the avatar and the language pill — every screen, every time,
-          before reaching a single word they came for. The skip link is the one
-          WCAG 2.4.1 remedy; it stays invisible until focused, which is why it
-          costs the design nothing. */}
+      {/* Skip link (WCAG 2.4.1): invisible until focused, it lets keyboard users
+          jump past the rail, nav and header controls on every screen. */}
       <a href="#wda-main" className="skip-link">{t('a11y.skip', lang)}</a>
-      {/* 🔴 Mobile P1 — a real, computed problem: a trainee's header packs
-          brand(~180px) + 3 nav pills(~200px) + bell(40px) + greeting+avatar
-          (~180px) ≈ 600px into a 390px viewport. `flexWrap` alone wraps them
-          in DOM order with no priority, so the break point was arbitrary —
-          sometimes splitting the brand name mid-word. `.shell-header` below
-          gives the wrap a shape instead of leaving it to chance: nav becomes
-          its own full-width row, the brand keeps only its mark, and safe-area
-          insets stop the bar sitting under a notch. Desktop is untouched —
-          every rule triggers under 640px. */}
+      {/* Under 640px the header gets a shape instead of an arbitrary wrap: nav
+          takes its own row, the brand keeps only its mark, and safe-area insets
+          keep the bar clear of a notch. Desktop is unaffected. */}
       <header className="shell-header" data-collapsed={railCollapsed || undefined}>
         {/* Padding and gap live in CSS — inline they cannot be narrowed for a
             320px screen, which is trap #4 in this file's own history. */}
@@ -119,11 +109,8 @@ export const AppShell: React.FC<{
               Membership rule that exists in two languages can drift into two
               meanings. */}
           <div className="shell-actions" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-            {/* 🔴 On a phone this pill sat in the top row beside the avatar and
-                the bell — prime real estate for a setting a person touches once,
-                if ever. It moves into the profile menu below 640px, where the
-                other account-level switches already live; the desktop rail has
-                no space pressure and keeps it in reach. */}
+            {/* A once-in-a-while setting: on phones it lives in the profile menu;
+                the desktop rail has room to keep it in reach. */}
             <button className="pill lang-pill" onClick={() => langStore.toggle()}
               aria-label={t('lang.aria', lang)} style={{ minWidth: 72, justifyContent: 'center' }}>
               {/* The other language, written in that language and declared as such. */}
@@ -144,12 +131,8 @@ export const AppShell: React.FC<{
         </div>
       </header>
 
-      {/* 🔴 Mobile navigation moves OFF the header and into a bottom bar.
-          Measured: the stacked header ate 27% of a 390×844 screen before any
-          content appeared. A bottom bar is also where the thumb already is —
-          the same reasoning Apple and Anthropic apply on narrow screens. Built
-          from the SAME permission-filtered `items`, so a role can still never
-          see a tab it cannot open. */}
+      {/* On phones, navigation is a bottom bar: where the thumb is, and it
+          frees the header. Built from the same permission-filtered items. */}
       <nav className="tabbar" aria-label={t('a11y.tabnav', lang)}>
         {items.map(n => (
           <button key={n.view} onClick={() => onNavigate(n.view)}
@@ -313,15 +296,8 @@ const ActionCenter: React.FC<{
         aria-expanded={open}
         aria-label={n === 0 ? t('ac.label.none', lang) : tf('ac.count', { n }, lang)}
         style={{
-          // 🔴 P0 — was 40×40, 4px under this platform's OWN touch standard
-          // (`.icon-btn`/`.pill` both bake in `min-height:44px` — the Apple
-          // HIG minimum). The bell was hand-rolled instead of reusing
-          // `.icon-btn`, which is why it drifted below the standard next to
-          // it. Kept circular (`--r-full`) rather than switching to
-          // `.icon-btn`'s squarer `--r-sm` — the bell sits directly beside
-          // the 48px circular avatar, and two different roundness families
-          // side by side would be the inconsistency this sprint exists to
-          // remove, not introduce.
+          // 44×44: the platform's touch-target minimum (as .icon-btn and .pill).
+          // Circular to match the avatar beside it.
           position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 44, height: 44, background: 'none', border: '1px solid var(--line)',
           borderRadius: 'var(--r-full)', cursor: 'pointer', color: 'var(--tx1)',
@@ -406,13 +382,8 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
             moves into the dropdown: three stacked lines in a header is density,
             not hierarchy, and the person already knows their own role. */}
         <Avatar name={name === '—' ? '' : name} size={48} />
-        {/* 🔴 QA fix — the documented mobile decision was "hide the time
-            greeting, keep the name", but both lines shared ONE `.shell-greeting`
-            wrapper, so hiding it on mobile silently hid the name too — the
-            avatar showed initials with no name anywhere. Only visible by
-            rendering the app in a real browser at mobile width; unreachable
-            from source review alone. Split into two classes so the CSS rule
-            can target only the time line. */}
+        {/* Greeting and name have separate classes so phones can hide the
+            greeting and keep the name. */}
         <div className="shell-idtext" style={{ textAlign: 'start', lineHeight: 1.35 }}>
           <div className="t-label shell-greeting-time" style={{ color: 'var(--tx3)' }}>{greeting(langStore.get())}</div>
           <div className="t-sm" style={{ color: 'var(--tx0)', fontWeight: 500 }}>{name}</div>

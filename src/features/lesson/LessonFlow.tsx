@@ -108,13 +108,8 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 🔴 ORIENTATION. The header carried a unit code and a bar of unnamed
-          segments: a trainee three screens deep could not answer «which lesson
-          am I in?» or «how much of this unit is left?» without leaving. Both
-          questions are self-regulation, not decoration — a learner who cannot
-          locate themselves spends attention on the interface instead of the
-          material. The lesson's own name and its place in the unit now sit in
-          the chrome, and the bar keeps meaning progress WITHIN this lesson. */}
+      {/* Orientation: the lesson's name and its place in the unit sit in the
+          chrome; the bar shows progress within this lesson. */}
       <ScreenHeader onBack={onExit} maxWidth={WIDTH.focus}
         rail={<ProgressRail total={stages.length - 1} current={idx} />}
         leading={
@@ -164,23 +159,14 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
           {stage === 'predict' && <PredictStage key="predict" lesson={lesson} onNext={next} />}
 
           {/* ── LEARN ─────────────────────────────────────────────────────
-              EYE PATH, written before the markup — and the markup obeys it:
+              Eye path, and the markup follows it:
                 ① eyebrow  · a quiet line: where you are
                 ② intro    · one lead sentence, larger than body
-                ③ 🔴 RULES · the focal point. Everything above leads here.
+                ③ RULES    · the focal point. Everything above leads here.
                 ④ example  · supports the rule, never competes with it
                 ⑤ button   · the exit
-
-              🔴 WHAT WAS WRONG: rules and ordinary points rendered IDENTICALLY —
-              same tick, same size, differing only by --g1 vs --g2: two golds
-              nobody can tell apart. Remove the rules and the screen does not
-              change, which by definition means there was no hero. There was a
-              list.
-
-              And «مثال من الشغل» sat in a gradient card with a border — the
-              visually STRONGEST object on screen. The example was the hero and
-              the rule was filler: exactly backwards. The example is disposable;
-              the rule is the job. */}
+              Rules render as RuleObject, ordinary points as SupportingPoint; the
+              example is prose, so it never outweighs the rule. */}
           {stage === 'learn' && (
             <m.section key="learn" {...fade} style={col}>
               <Eyebrow>{lesson.title}</Eyebrow>
@@ -594,20 +580,9 @@ const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }> = ({ p
 
 /* ---------- quick quiz ---------- */
 /**
- * 🔴 A MISSED QUESTION USED TO DISAPPEAR.
- *
- * The trainee picked wrong, read the explanation, pressed «السؤال الجاي», and
- * the item never came back — not in this lesson, not later. Reading an
- * explanation is recognition; the platform's own retrieval module says it
- * plainly («re-reading feels productive and does almost nothing»), and that
- * module only starts after a unit exam is passed, which leaves every lesson
- * quiz with no correction loop at all.
- *
- * So the missed items come back ONCE, at the end of the same quiz, in the same
- * screen, with the options reshuffled. Not a punishment and not a second
- * score: the trainee has just read why, and pulling the answer out of memory
- * a minute later is what makes it stick. Nothing is stored and nothing is
- * graded — the lesson quiz was never a grade.
+ * Missed questions come back once, at the end of the same quiz, with the
+ * options reshuffled: retrieval a minute after reading the explanation is what
+ * makes it stick. Nothing is stored or graded — the lesson quiz is not a grade.
  */
 const QuizStage: React.FC<{
   questions: readonly QuizQuestion[];
@@ -639,11 +614,8 @@ const QuizStage: React.FC<{
           <OptionButton key={i} text={o.text} state={!answered ? 'idle' : o.correct ? 'correct' : picked === i ? 'wrong' : 'dim'}
             onPick={() => {
               setPicked(i);
-              // 🔴 MEASUREMENT IS THE FIRST ATTEMPT. What the trainee could pull
-              // out of memory before being told the answer is the only honest
-              // signal; the correction round below is teaching, and recording it
-              // would both double the attempt count and let a freshly-read
-              // explanation pass as retrieval.
+              // Only the first attempt is measured; the correction round is teaching,
+              // and recording it would count a freshly read explanation as retrieval.
               if (round === 'first') onFirstAttempt?.(q.id, !!o.correct);
               // Recorded on the FIRST round only: a second miss does not queue
               // the item a third time — that is a loop, not a correction.
@@ -679,11 +651,8 @@ const DialogueBlock: React.FC<{
 }> = ({ tone, label, lines, why, whyLabel }) => {
   const accent = tone === 'wrong' ? 'var(--risk)' : 'var(--ready)';
   return (
-    // 🔴 This used to hand-roll its own bordered container with a header strip —
-    // a sixth surface in a language that has five. A transcript is genuinely a
-    // different KIND of content (two speakers, alternating), but that is a
-    // content pattern, not a reason to invent a shape. It composes from Card
-    // like everything else; only the arrangement inside is its own.
+    // A transcript composes from Card like every other surface; only the
+    // two-speaker arrangement inside is its own.
     <Card tone="default" pad={4}>
       <div className="t-label" style={{ color: accent, marginBottom: 'var(--sp-3)' }}>
         {label}
@@ -757,10 +726,8 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
           </div>
         )}
 
-        {/* 🔴 THE HERO of this briefing. Success is the member MOVING — not you
-            performing — and that sentence is the whole exercise. It gets the
-            same shape a rule gets, because it IS one. Same language, no new
-            object: the trainee already learned to stop at a spine. */}
+        {/* The briefing's hero: success is the member moving, not you performing.
+            It takes the rule's shape because it is one. */}
         {p.arc && (
           <div style={{ marginBottom: 'var(--sp-5)' }}>
             <SpineWell label={`النجاح = ${STATE_LABEL[p.arc.opensAs as MemberState]} ← ${STATE_LABEL[p.arc.targetState as MemberState]}`}>

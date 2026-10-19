@@ -90,10 +90,9 @@ export interface JudgmentItem {
  * decided; wisdom tells you what forty people learned the hard way standing at
  * that counter, and it stays true after every fee in the manual has changed.
  *
- * 🔴 THE RISK THIS TYPE EXISTS TO CONTAIN:
- * A line like this is one step away from a motivational poster. «اعمل شغلك بحب»
- * is memorable, timeless, and completely useless — it changes nothing about the
- * next five seconds.
+ * The risk: a line like this is one step from a motivational poster.
+ * «اعمل شغلك بحب» is memorable, timeless, and changes nothing about the next
+ * five seconds.
  *
  * The test every line must pass: **can the trainee ACT on it at the counter in
  * the next ten seconds?** «استعجال العضو بيغيّر سرعتك — مايغيّرش ترتيبك» passes:

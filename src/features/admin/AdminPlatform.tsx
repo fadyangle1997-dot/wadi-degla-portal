@@ -115,12 +115,8 @@ const OperationalDashboard: React.FC = () => {
         <Stat label={t('ad.active', lang)} value={stats.active} />
         <Stat label={t('ad.disabled', lang)} value={stats.disabled} tone={stats.disabled ? 'attn' : undefined} />
         <Stat label={t('ad.archivedst', lang)} value={stats.archived} />
-        {/* 🔴 A NON-ZERO PROBLEM COUNT IS NEVER GREEN. The tone fell through to
-            `ready` whenever nothing was critical or warning — so «11 مشاكل
-            تشغيلية» rendered in the same green the system uses for «approved»
-            and «all clear». Green is the product's word for "nothing to do
-            here"; eleven things to do is not that. Zero is the only count that
-            earns it, and eleven informational issues are `info`. */}
+        {/* Green means nothing to do, so only a zero count is green; informational
+            issues are `info`. */}
         <Stat label={t('ad.opissues', lang)} value={sev.total}
           tone={sev.critical ? 'risk' : sev.warning ? 'attn' : sev.total > 0 ? 'info' : 'ready'} />
       </div>

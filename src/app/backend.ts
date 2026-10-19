@@ -17,18 +17,10 @@ export type ProgressEvent =
   /** First-launch welcome acknowledged (drives the first-run experience). */
   | { readonly type: 'ONBOARDING_COMPLETED'; readonly at: number }
   /**
-   * 🔴 The one thing the trainee promises to do at the desk tomorrow.
-   *
-   * This was React state inside LessonFlow: the trainee chose it, the closing
-   * screen echoed it back, and it died the moment the screen unmounted — while
-   * the interface kept implying it had been kept. In a two-track programme the
-   * commitment is the ONLY thread between what was learned on the platform and
-   * what gets practised at the counter, so a commitment that does not survive
-   * the lesson is the learning loop being cut where it matters most.
-   *
-   * ADDITIVE ONLY: a new event type, no snapshot field, no migration. An event
-   * log written before this release still reduces identically.
-   */
+     * The one thing the trainee commits to do at the desk tomorrow — the thread
+     * between the platform and the counter. Stored as an event so it outlives
+     * the lesson screen. Additive: no snapshot field, no migration.
+     */
   | { readonly type: 'COMMITMENT_MADE'; readonly lessonId: string; readonly text: string; readonly at: number };
 
 /* ---------------- snapshot (derived, for fast reads) ---------------- */

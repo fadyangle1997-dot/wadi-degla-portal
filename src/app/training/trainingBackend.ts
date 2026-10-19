@@ -197,12 +197,8 @@ export class LocalStorageTrainingBackend implements TrainingBackend {
     catch { return null; }
   }
 
-  /** 🔴 SECURITY/STABILITY FIX — same trust-boundary bug as identityBackend
-   *  and the original Progress fix: this state backs every readiness
-   *  decision, review status, and coaching note in the app. A
-   *  valid-but-wrong-shaped snapshot (v mismatch, a non-object `reviews`)
-   *  must resolve to EMPTY_TRAINING, never sail through as real state that
-   *  breaks the first time a screen reads `t.reviews[employeeId]`. */
+  /** Storage is a trust boundary: a wrong-shaped snapshot resolves to
+     *  EMPTY_TRAINING instead of breaking the first screen that reads it. */
   private isTrainingState(v: unknown): v is TrainingState {
     if (!v || typeof v !== 'object') return false;
     const s = v as Partial<TrainingState>;

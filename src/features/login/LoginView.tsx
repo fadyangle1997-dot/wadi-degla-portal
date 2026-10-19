@@ -102,16 +102,8 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
 
         <section
           className="signin-card"
-          // 🔴 Product-experience review — `borderRadius: 22` was a raw number
-          // with no comment, unlike every OTHER legitimate exception in this
-          // codebase (which always explains itself). LoginView's `--sg-*`
-          // exemption covers its distinct COLOR identity, not the shared
-          // spatial grid — radius is structural, not decorative, so this
-          // card should sit on the same scale as every other card in the
-          // product. `--r-lg` ("THE card") is exactly what a sign-in card
-          // conceptually is, and 24px reads as the same family as 22px
-          // without a human ever consciously noticing the 2px — it just
-          // stops being the one surface in the app quietly off-grid.
+          // --r-lg, the card radius: the sign-in card has its own colours but shares
+          // the spatial scale.
           style={{ width: '100%', marginTop: 'var(--sp-7)', padding: 'var(--sp-7) var(--sp-6)', borderRadius: 'var(--r-lg)' }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>

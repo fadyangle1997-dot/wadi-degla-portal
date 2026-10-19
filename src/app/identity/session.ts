@@ -16,31 +16,15 @@ export interface AuthProvider {
 
 /** Development provider until real auth (Phase 7). */
 /**
- * DEV session provider.
+ * Demo session provider (the showcase build's sign-in).
  *
- * 🔴 THIS USED TO RETURN SYSTEM_ADMIN UNCONDITIONALLY — which meant every
- * permission check in the app resolved to "yes", every route guard passed, and
- * the sign-in screen was theatre. The RBAC engine was correct and fully tested;
- * it was simply never consulted about a real identity. A permission system that
- * is bypassed by its own session provider is not a permission system.
+ * Fail-closed: no session until someone signs in, and `getSession()` returns
+ * null otherwise, so `can()` grants nothing and the app shows the door.
  *
- * Now: no session until someone signs in, and sign-out actually ends it.
- * `getSession()` returning null is the fail-closed state — `currentActor()`
- * has no user, so `can()` grants nothing and the app shows the door.
- *
- * 🔴 P0 FIX — the session used to live ONLY in this field, so a browser refresh
- * ended it. That single fact caused two production bugs, not one: the user was
- * silently signed out, AND the next write threw «no signed-in user» because the
- * hash URL still pointed at a protected screen — which surfaced as the crash
- * screen telling them to refresh, which ended the session again. A loop.
- *
- * Restoration is SYNCHRONOUS (localStorage is a sync API), so there is no
- * window in which the app is mounted but auth is "still loading" — the session
- * is already resolved before the first render. That is a stronger guarantee
- * than a loading flag: a redirect-to-login race cannot exist if there is no
- * asynchronous gap to race with. A future OIDC provider WILL need that gap, and
- * it implements the same interface — the loading state belongs with it, not
- * invented here where it would only add a flicker.
+ * The session is restored synchronously from localStorage before the first
+ * render, so a refresh keeps the user signed in and there is no "auth still
+ * loading" window to race. An OIDC provider implements the same interface and
+ * owns its own loading state.
  */
 const SESSION_KEY = 'wda.identity.session.v2';
 

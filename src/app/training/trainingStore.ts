@@ -15,24 +15,11 @@ import {
 } from './trainingBackend';
 
 /**
- * The signed-in trainee's id.
+ * The signed-in trainee's id, for WRITES.
  *
- * 🔴 This replaces `LOCAL_TRAINEE_ID = 'local-trainee'` — a single shared record
- * that every trainee screen and the trainer's queue read from. Its own comment
- * promised it would be "bound to a real user id when auth arrives". Auth arrived
- * in v3.7 and the constant stayed, which meant:
- *
- *   • every trainee wrote into the same record
- *   • a trainer opening Mariam's file read Ahmed's work
- *   • approving one approved both, and the audit log said so
- *
- * That is not a scale limit. It is wrong data attributed to the wrong people —
- * and no test could catch it, because a single-tenant store behaves perfectly
- * when there is exactly one tenant.
- *
- * Throws rather than falling back. A training write with no identity cannot be
- * attributed, and a silent fallback is how the shared record happened in the
- * first place. Every caller sits behind the sign-in gate.
+ * Throws rather than falling back: a training write with no identity cannot be
+ * attributed, and a silent fallback is how one shared record once collected
+ * every trainee's work. Every caller sits behind the sign-in gate.
  */
 export function currentTraineeId(): string {
   const actor = identityStore.currentUser();
@@ -41,17 +28,9 @@ export function currentTraineeId(): string {
 }
 
 /**
- * 🔴 STABILITY — the READ half of the same question.
- *
- * The throw above is correct for WRITES: an unattributable write is a data
- * bug and must fail loudly. But the same function was being called from render
- * paths, where a missing session is not a data bug — it is a transient state
- * (signing out, a fresh tab, a guard that has not run yet). Throwing there
- * converts a recoverable moment into the crash screen, and that screen tells
- * the user to refresh, which is precisely the wrong advice.
- *
- * One function cannot honour two contracts. Reads get this one: no session
- * resolves to null, the caller renders an empty state, the app stays alive.
+ * The signed-in trainee's id, for READS: null when no one is signed in.
+ * Render paths meet transient no-session states (signing out, a fresh tab), and
+ * those must render an empty state, not the crash screen.
  */
 export function traineeIdOrNull(): string | null {
   return identityStore.currentUser()?.id ?? null;
@@ -74,10 +53,8 @@ export const trainingStore = {
   events: () => backend.events(),
   healthy: () => backend.healthy(),
 
-  // 🔴 P0 FIX — idempotent by construction. This used to record a fresh
-  // UNIT_SUBMITTED_FOR_REVIEW every call, so retrying after a transient
-  // failure (session gap, storage hiccup) duplicated the event. A caller that
-  // retries after catching an error must be safe to call twice.
+  // Idempotent: a retry after a transient failure must not record a second
+  // submission.
   submitForReview: (employeeId: string, moduleId: string) => {
     if (reviewOf(state, employeeId, moduleId).status !== 'none') return; // already submitted
     apply(() => backend.record({ type: 'UNIT_SUBMITTED_FOR_REVIEW', employeeId, moduleId, at: now() }));
@@ -162,12 +139,8 @@ export const useTrainingEvents = (): readonly TrainingEvent[] =>
   useSyncExternalStore(trainingStore.subscribe, trainingStore.events);
 
 /* ---------- pure reads ----------
-   🔴 These now LIVE in `domain/training/selectors.ts` and are re-exported here.
-   Four domain modules imported them from this file as values, which dragged
-   React and localStorage — this module's own dependencies — into any Node
-   process that imported the domain. The server has to run the same pure
-   functions as the client, so the functions cannot live behind a store.
-   Every existing import path still works. */
+   Defined in `domain/training/selectors.ts` (the server runs the same
+   functions) and re-exported here so existing imports keep working. */
 export { reviewOf, assignedLessonsOf, finalDecisionOf };
 
 export { EMPTY_TRAINING };

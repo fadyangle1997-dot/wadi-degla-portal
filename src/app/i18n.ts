@@ -27,10 +27,7 @@ const DICT = {
   // shell / navigation
   'nav.academy':    { ar: 'الأكاديمية',        en: 'Dashboard' },
   'nav.journey':    { ar: 'رحلتي',             en: 'Learning Journey' },
-  /* 🔴 ONE WORD, ONE MEANING. This tab said «Progress», opened a screen headed
-     «Skills», and the profile called a third thing «Progress» as well: one word
-     for three places, in a product whose whole claim is that the trainee always
-     knows where they are. The tab is now named after the screen it opens. */
+  /* One word, one meaning: each tab is named after the screen it opens. */
   'nav.skills':     { ar: 'مهاراتك',           en: 'Skills' },
   'nav.trainer':    { ar: 'المدرب',            en: 'Trainer' },
   'nav.manager':    { ar: 'المدير',            en: 'Manager' },
@@ -648,21 +645,12 @@ let lang: Lang = read();
 const listeners = new Set<() => void>();
 
 /**
- * 🔴 DIRECTION IS A PROPERTY OF LANGUAGE, AND IT LIVES ON <html>.
+ * Direction is a property of language, and it lives on <html>.
  *
- * The document was pinned to `dir="rtl"` in twenty places and `lang="ar"` in
- * the HTML file, in BOTH modes. English mode therefore ran inside a right-to-
- * left document: tabs read right-to-left for a left-to-right reader, trailing
- * punctuation jumped to the head of the line («.Membership team»), and — the
- * part no screenshot shows — a screen reader announced every English label with
- * Arabic phonetics, because `lang` never changed. WCAG 3.1.1/3.1.2 are not
- * satisfied by translating strings; they are satisfied by declaring which
- * language each part IS.
- *
- * One function, called from one place, owns both attributes. Nothing else in
- * the product sets `dir` on the document — screens that legitimately need a
- * different direction (Arabic lesson content inside English chrome) declare it
- * on their own block, with `lang` beside it, through <ArabicContent>.
+ * One function, called from one place, sets both `lang` and `dir` on the
+ * document (WCAG 3.1.1/3.1.2). Blocks that need another direction (Arabic
+ * lesson content inside English chrome) declare it themselves through
+ * <ArabicContent>.
  */
 export const dirOf = (l: Lang): 'rtl' | 'ltr' => (l === 'ar' ? 'rtl' : 'ltr');
 
@@ -670,9 +658,8 @@ const applyDocumentLanguage = (l: Lang) => {
   if (typeof document === 'undefined') return;
   document.documentElement.lang = l;
   document.documentElement.dir = dirOf(l);
-  /* 🔴 The <title> is the first thing a screen reader announces on load, and it
-     stayed Arabic in English mode — a page announcing itself in a language the
-     document has just declared it is not. It follows the language too. */
+  /* The document title follows the language: it is the first thing a screen
+       reader announces. */
   document.title = DICT['a11y.doctitle'][l] ?? DICT['a11y.doctitle'].ar;
 };
 applyDocumentLanguage(lang);

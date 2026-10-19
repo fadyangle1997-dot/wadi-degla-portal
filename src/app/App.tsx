@@ -96,15 +96,9 @@ const ExamCooldown: React.FC<{ retryAt: number; onExit: () => void }> = ({ retry
 
 export const App: React.FC = () => {
   const [view, setViewState] = useState<View>(initialView);
-  // 🔴 ROOT-CAUSE FIX — the attempt gate is an ENTRY condition, cached per
-  // module for as long as this session stays on that exam. It used to be
-  // recomputed on every render, so the instant onFinish wrote the attempt to
-  // progressStore, App re-rendered, the gate counted the attempt just recorded,
-  // and on a final failed attempt it flipped to "blocked" — swapping ExamView
-  // out for the cooldown screen WHILE the trainee's result was animating in.
-  // They pressed finish and their score vanished behind a "come back tomorrow"
-  // notice. Caching is not a workaround: "may I start this exam?" is a question
-  // about entering, and re-asking it mid-exam was the defect.
+  // The exam attempt gate is an ENTRY condition: decided once when the trainee
+  // enters an exam and cached until they leave. Re-asking it mid-exam would count
+  // the attempt just recorded and swap the result screen for the cooldown.
   const gateCache = useRef(new Map<string, ReturnType<typeof examGate>>());
   // Leaving an exam clears its cached decision, so the NEXT entry re-asks the
   // question against the attempts as they now stand. Without this the cache
@@ -292,49 +286,22 @@ export const App: React.FC = () => {
     const lessonsDone = m ? m.lessons.every(l => isLessonDone(p, l.id)) : false;
     if (!m || !isModuleUnlocked(p, m.id) || !lessonsDone) { toPath(); return null; }
 
-    // 🔴 ROOT-CAUSE FIX — reported bug: "finishing an exam and refreshing
-    // restarts it". Distinct from the two exam-flow fixes above this one:
-    // those governed re-renders WITHIN one mounted session. This one governs
-    // RE-ENTRY after a full page reload. onFinish never changes the URL —
-    // ExamView just shows its own internal result screen while the hash
-    // stays `#/exam/:id` — so a refresh at that exact moment re-parses the
-    // same hash and this route runs again from a cold app instance. The
-    // attempt-cooldown gate below only answers "may they attempt again?",
-    // which is true whenever attempts remain — it says nothing about whether
-    // the LATEST attempt already passed. A passed exam must never be
-    // re-enterable, refresh or not: redirect to path, where nextAction()
-    // already derives the correct post-exam state (waiting_review or
-    // needs_submission) from the very attempt that was just recorded.
+    // A passed exam is never re-entered. A refresh on the result screen re-parses
+    // #/exam/:id; send it to the path, where nextAction() already derives the
+    // post-exam state from the attempt that was just recorded.
     const attempts = examAttemptsOf(m.id);
     const latestAttempt = attempts[attempts.length - 1];
     if (latestAttempt?.passed) { toPath(); return null; }
 
-    // P0-3: attempt policy — infinite retries can't brute-force a pass.
-    //
-    // 🔴 ROOT-CAUSE FIX — this gate is an ENTRY condition, and it was being
-    // evaluated on every render. The moment onFinish wrote the attempt to
-    // progressStore, App re-rendered, examGate() counted the attempt that had
-    // just been recorded, and on a final failed attempt `allowed` flipped to
-    // false — swapping ExamView out for ExamCooldown WHILE the trainee's
-    // result screen was animating in. They pressed "finish" and their score
-    // was destroyed mid-transition by a screen telling them to come back
-    // tomorrow. Freezing the decision at mount is not a workaround: "may I
-    // start this exam?" is a question about entering, and answering it again
-    // halfway through an exam already in progress was the bug.
+    // Attempt policy: unlimited retries cannot brute-force a pass. The decision is
+    // the entry-time one cached above (gateFor).
     const gate = gateFor(m.id);
     if (!gate.allowed) return <ExamCooldown retryAt={gate.retryAt} onExit={toPath} />;
     return <Lazy><ArabicContent><ExamView module={m} onExit={toPath} onFinish={score => {
-      // 🔴 P0 FIX — these are two writes to two separate stores with no shared
-      // transaction (a real architectural constraint, not something a single
-      // sprint can merge). recordExam is the one that MUST succeed — it is a
-      // real, earned result, and rolling it back on a downstream failure would
-      // force the trainee to retake a passed exam over a plumbing error that
-      // was never theirs. So: never roll it back. Instead make the next step
-      // safe to retry. If submitForReview throws (e.g. the session gap that
-      // made currentTraineeId() throw), catch it here — nextAction() now
-      // resolves the resulting 'none' review status to 'needs_submission'
-      // with its own retry button (PathView), so the trainee always has a
-      // real next step instead of a crash screen.
+      // Two stores, no shared transaction. The exam result is earned and must never
+      // be rolled back; submitting for review is the retryable step. If it throws,
+      // nextAction() resolves the trainee to 'needs_submission', which has its own
+      // retry button on the path.
       progressStore.recordExam(m.id, score);
       if (TRAINING_POLICY.evaluationGating === 'per-unit' && score >= TRAINING_POLICY.passThreshold) {
         try {

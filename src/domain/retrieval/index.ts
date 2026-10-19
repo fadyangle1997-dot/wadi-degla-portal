@@ -48,18 +48,11 @@ export interface RetrievalItem {
 }
 
 /**
- * 🔴 ELIGIBILITY IS PER ITEM, NOT PER UNIT (sprint 02).
- *
- * The rule used to be "nothing until a unit is passed", which for the units
- * carrying 45% of the official score meant nothing for the first three weeks —
- * the exact window where the material is most fragile. The rule is now the
- * honest one, item by item:
- *
+ * Eligibility is per item, fail-closed:
  *   lesson question → eligible when THAT LESSON is completed
- *   exam question   → eligible when ITS UNIT is passed  (unchanged)
- *
- * Still fail-closed: an item whose gate has not opened is never asked, because
- * retrieving what was never taught teaches helplessness, not the rule.
+ *   exam question   → eligible when ITS UNIT is passed
+ * An item whose gate has not opened is never asked: retrieving what was never
+ * taught teaches helplessness, not the rule.
  */
 export function eligibleItems(input: {
   readonly bank: readonly RetrievalItem[];
@@ -185,15 +178,13 @@ export function isDue(state: ItemState | undefined, now: number): boolean {
  *     never taught, and asking would teach helplessness.
  *  2. only items that are DUE — retrieving what is still fresh spends the day's
  *     three minutes on the material least at risk
- *  3. 🔴 YESTERDAY'S MISTAKES FIRST. A lapse is the strongest signal the bank
- *     produces: the trainee reached for it and it was not there. Those items
- *     lead the queue, and they are the only reason the set may stretch to
- *     DAILY_SET_MAX.
+ *  3. yesterday's mistakes first — a lapse is the strongest signal the bank
+ *     produces. Those items lead the queue, and they are the only reason the
+ *     set may stretch to DAILY_SET_MAX.
  *  4. then oldest-due first — the weakest memory next
- *  5. INTERLEAVE across units, with the unit order ROTATING by day. Round-robin
- *     from a fixed starting queue quietly meant "m1 first, always", so the last
- *     unit in the list was reviewed least. At the counter nobody announces the
- *     category; the set must not announce it either.
+ *  5. INTERLEAVE across units, with the unit order ROTATING by day, so no unit
+ *     is always first. At the counter nobody announces the category; the set
+ *     must not announce it either.
  *  6. capped: DAILY_SET_SIZE normally, DAILY_SET_MAX when lapses need the room
  *
  * Fail-closed: no eligible items → empty set, never a set of unlearned material.

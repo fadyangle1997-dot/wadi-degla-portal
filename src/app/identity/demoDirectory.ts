@@ -18,10 +18,8 @@ interface DirectoryEntry {
 }
 
 /** Names, roles and reporting lines — no secrets. Safe in any bundle.
- *  🔴 Two real branches now exist (Nasr City, Maadi — "Maadi" is the actual
- *  branch name seen in the real CMS screenshots, not invented) so an area
- *  manager has something real to compare. Every record below carries a
- *  branchId; area.hoda oversees both. */
+ *  Two branches (Maadi, Nakhil), so an area manager has something to
+ *  compare; area.hoda oversees both. */
 const DIRECTORY: readonly DirectoryEntry[] = [
   { id: 'admin', name: 'System Administrator', roleId: 'admin' },
   { id: 'manager.nabil', name: 'Nabil Sherif', roleId: 'manager', branchId: 'maadi' },

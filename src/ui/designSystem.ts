@@ -39,14 +39,9 @@
    The only brand colours. Nothing else is permitted anywhere in the app. */
 export const COLOR = {
   /**
-   * The room.
-   *
-   * 🔴 This was #121212 — a NEUTRAL near-black under a WARM brown surface. The
-   * temperature mismatch is the kind of thing nobody can name and everybody
-   * feels: it makes the surface read as a panel stuck onto a background rather
-   * than a shape cut out of one material. #141212 is #34312F's own hue at 7.5%
-   * lightness. Same material, all the way down.
-   */
+     * The room: #34312F's own hue at 7.5% lightness, so page and surface read
+     * as one material (a neutral near-black under a warm surface did not).
+     */
   bg: '#161310',
   /** THE surface — the brand colour, exactly. */
   surface: '#34312F',
@@ -83,12 +78,9 @@ export const COLOR = {
 export const STATUS = {
   success: '#74A67E',
   /**
-   * 🔴 This was #C9A227 — which is the brand gold with a different name: same
-   * saturation, three degrees of hue apart. A warning that looks exactly like
-   * the primary button is not a warning; the trainee reads it as "the thing to
-   * click". Pushed to burnt amber so it separates by hue while staying inside
-   * the warm family. It is still never the only signal — always icon + text.
-   */
+     * Burnt amber, separated from the brand gold by hue: a warning must not look
+     * like the primary button. Never the only signal — always icon + text.
+     */
   warning: '#D98650',
   error: '#D1887F',
   info: '#929CA6',
@@ -129,19 +121,9 @@ export const RADIUS = {
    colour alone, and never from a second typeface. */
 export const TYPE = {
   /**
-   * 🔴 THESE ARE THE SHIPPED VALUES, and a contract test proves it.
-   *
-   * This table used to describe a scale the product does not have — display at
-   * 2rem while `.t-display` shipped a clamp topping out at 3rem, `.t-h2` at
-   * 1.15rem against a shipped 1.5rem, label .72 against .78. Every row
-   * disagreed with the CSS it claimed to specify, and nothing imported the
-   * module, so nothing ever caught it: a design system whose spec is fiction is
-   * worse than none, because people trust it and build against numbers that
-   * were never on screen. The values below are now read back out of theme.css
-   * by `designSystem.test.ts` — change one without the other and the suite
-   * fails. The scale itself is deliberately untouched: it was audited and
-   * closed, and this sprint is about the spec telling the truth about it.
-   */
+     * The shipped values: designSystem.test.ts reads them back out of theme.css,
+     * so this table and the CSS cannot disagree.
+     */
   display: { size: 'clamp(2.1rem,5vw,3rem)',    weight: 700, leading: 1.15 },
   h1:      { size: 'clamp(1.7rem,4vw,2.25rem)', weight: 700, leading: 1.22 },
   h2:      { size: '1.5rem',                    weight: 700, leading: 1.25 },
@@ -163,17 +145,9 @@ export const TYPE = {
 export const MEASURE = '68ch';
 
 /**
- * CONTENT WIDTH — four steps, and every screen takes one of them.
- *
- * 🔴 There were EIGHT: 640 · 680 · 720 · 760 · 860 · 920 · 960 · 1080. Nobody
- * chose eight; each screen chose once, alone, and the result is that moving
- * between two screens shifts the column by 40–100px for no reason the eye can
- * justify. A person cannot name the defect and still feels the product being
- * assembled rather than designed — the column is the one line every screen
- * shares, so it is the one line that must not drift.
- *
- * The four steps are the four JOBS the system already names (see THE FOUR
- * PLATFORMS above), not four tastes:
+ * CONTENT WIDTH — four steps, and every screen takes one of them, so the
+ * column does not drift between screens. The steps are the four jobs the
+ * system names (see THE FOUR PLATFORMS above):
  *   focus   — one thing on screen: lesson, exam, boss, daily debrief, welcome
  *   read    — the trainee's own screens: path, journey, skills, readiness, profile
  *   staff   — scanning tables and rosters: trainer, manager, admin

@@ -99,15 +99,9 @@ export const TodayRetrieval: React.FC<{
       <div className="t-label" style={{ marginBottom: 'var(--sp-3)', color: 'var(--tx3)' }}>{module.title}</div>
       <p className="t-body" style={{ margin: '0 0 var(--sp-4)' }}>{question.prompt}</p>
 
-      {/* 🔴 ONE ANSWER CONTROL IN THE PRODUCT, NOT TWO. This screen hand-rolled
-          its own option button — its own padding, radius, border, disabled
-          state and focus behaviour — while the lesson, the unit exam and the
-          boss battle all shared `OptionButton`. Four screens ask the trainee to
-          choose an answer; three of them looked and behaved identically and the
-          fourth quietly did not. Retrieval's own rule is kept intact through
-          the component's states: the correct option is marked, every other one
-          dims, and the trainee's wrong pick is never painted red — the reason
-          is the lesson, not the verdict. */}
+      {/* The product's one answer control (OptionButton). Retrieval's rule holds
+          through its states: the correct option is marked, the rest dim, and a
+          wrong pick is never painted red — the reason is the lesson, not the verdict. */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {order.map(oi => {
           const o = question.options[oi]!;

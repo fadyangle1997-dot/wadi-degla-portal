@@ -57,14 +57,9 @@ export const branchesOfArea = (areaId: string, branches: readonly Branch[]): rea
   branches.filter(b => b.areaId === areaId);
 
 /**
- * The branch as a PERSON reads it.
- *
- * 🔴 Four screens printed `user.branchId` straight onto the surface, so staff
- * saw «maadi» and «nakhil» — the storage key, lowercase, where the branch's
- * own name has existed on the record since the seed. A raw identifier on a
- * finished screen is the single loudest tell that a product is a prototype.
- * Falls back to the id: a branch that vanished from the org book must still
- * render something traceable rather than an empty cell.
+ * The branch as a person reads it: its name, not its storage key. Falls back
+ * to the id so a branch missing from the org book still renders something
+ * traceable.
  */
 export const branchNameOf = (branchId: string | undefined | null, branches: readonly Branch[]): string =>
   (branchId ? branches.find(b => b.id === branchId)?.name ?? branchId : '—');

@@ -160,12 +160,8 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
               backing data at all, so it was a fake affordance and is gone. ── */}
         <section aria-label={tr('pf.evidence', lang)}>
           <div className="pf-stats">
-            {/* 🔴 TWO OF THESE FOUR WERE THE SAME FACT. «المعتمد 0%» and «وحدات
-                معتمدة 0» are one number in two units, printed side by side, so
-                a trainee reads four measures and can only act on three — and
-                the percentage was the weaker of the pair: it hid the
-                denominator, which is the part that answers «قد إيه فاضل؟».
-                Three cards now, and the approval one carries x/y. */}
+            {/* Three measures, not four: approval shows x/y, so the denominator
+                answers «how much is left?». */}
             <StatCard label={tr('db.completion', lang)} value={`${learnPct}%`} sub={tr('pf.lessonsdone', lang)} />
             <StatCard label={tr('pf.unitsapp', lang)} value={`${readiness.approvedModules}/${MODULES.length}`} sub={tr('pf.fromtrainer', lang)} />
             <StatCard label={tr('db.readiness', lang)} value={readiness.readinessIndex > 0 ? `${readiness.readinessIndex}%` : '—'} sub={readiness.readinessIndex > 0 ? tr('pf.lastassess', lang) : tr('pf.noassess', lang)} />

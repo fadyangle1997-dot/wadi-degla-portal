@@ -1,7 +1,7 @@
 {
   "name": "wadi-degla-operations-academy",
   "private": true,
-  "version": "7.27.0",
+  "version": "7.28.0",
   "type": "module",
   "description": "Wadi Degla Operations Academy — enterprise training platform. Content-as-data, isolated business-rules engine, feature-based architecture.",
   "scripts": {

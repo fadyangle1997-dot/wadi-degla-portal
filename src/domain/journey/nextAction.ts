@@ -64,13 +64,8 @@ export function nextAction(p: Progress, t: TrainingState, traineeId: string): Ne
     // exam passed, waiting on the trainer → surface the wait
     const status = reviewOf(t, traineeId, m.id).status;
     if (status === 'waiting') return { kind: 'waiting_review', module: m };
-    // 🔴 P0 FIX — 'none' used to fall through to "otherwise fully approved,
-    // keep walking", silently reaching 'all_done' even though the module was
-    // NEVER submitted (submitForReview failed or never ran). The trainee saw
-    // "خلّصت كل حاجة متاحة" while permanently stuck: nothing was waiting for
-    // anyone, because nothing had been sent. 'none' now gets its own action so
-    // the trainee has a real next step — resubmitting — instead of a dead end
-    // dressed as completion.
+    // An unsubmitted unit ('none') gets its own action, resubmitting, rather than
+    // falling through to 'all_done' while nothing reached the trainer.
     if (status === 'none') return { kind: 'needs_submission', module: m };
     // otherwise ('ready'): this module is genuinely approved — keep walking
   }

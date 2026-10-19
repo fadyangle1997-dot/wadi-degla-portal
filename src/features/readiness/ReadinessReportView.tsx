@@ -42,16 +42,8 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
   const { users } = useIdentity();
   const canDo = useCan();
 
-  // 🔴 SECURITY FIX — this screen is a real route (#/readiness-report/:id),
-  // reachable by editing the URL directly, not just by clicking a filtered
-  // list. Every other place a manager reaches an employee's data (the
-  // Dossier in ManagerView) is local component state seeded from an
-  // already-scoped list — there was never a route to bypass. This one WAS
-  // a route, and until this fix it trusted employeeId completely: any
-  // signed-in trainer or manager could edit the URL to another employee's
-  // id — including one in a different branch — and read their full
-  // readiness report. Same authorization primitive already used
-  // everywhere else (scopeOf + isInScope), just never called here.
+  // This is a URL route (#/readiness-report/:id), so it authorises the id
+  // itself with the same scopeOf + isInScope used everywhere else.
   const target = users.find(u => u.id === employeeId);
   const scope = scopeOf(identityStore.currentUser(), canDo, orgStore.get());
   const authorized = !!target && isInScope(target, scope);

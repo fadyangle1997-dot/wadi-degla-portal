@@ -28,9 +28,8 @@ import { fade, stagger } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 // DayRing now lives in shared primitives (see import below).
 
-// 🔴 `labelKey` NOT a translated string: this object is module-level, where no
-// translation context exists. The visible label is resolved inside the
-// component, which is the only place `lang` is valid.
+// Module-level, so it holds translation KEYS; the label is resolved inside
+// the component, where `lang` exists.
 const STATUS_META: Record<PhaseStatus, { labelKey: Key; tone: 'ready' | 'attn' | 'gold' | 'neutral'; color: string; icon: React.ReactNode }> = {
   completed:       { labelKey: 'ps.completed',            tone: 'ready',   color: 'var(--ready)', icon: <Check size={13} /> },
   waiting_trainer: { labelKey: 'ps.waiting',   tone: 'attn',    color: 'var(--attn)',  icon: <Clock size={13} /> },  // label overridden per-trainee via waitingForTrainer()
@@ -53,10 +52,8 @@ export const TrainingJourney: React.FC<{
   const t = useTraining();
 
   // The context bridges stores → pure domain. All derivation lives in the domain.
-  // 🔴 The ONE module the trainee should act on right now — resolved by the
-  // same nextAction() the home screen and profile use, so the three screens
-  // can never disagree about "what do I open". Only this module earns the
-  // primary CTA; every other unlocked module stays ghost.
+    // The one module to act on now, from the same nextAction() the home screen
+    // and profile use; only it gets the primary CTA.
   const actionableModuleId = nextAction(p, t, traineeIdOrNull() ?? '').module?.id ?? null;
 
   const ctx: PhaseContext = {
@@ -79,12 +76,9 @@ export const TrainingJourney: React.FC<{
   // for "is this phase behind me", so the ledger can never disagree with the
   // route it sits next to.
   const donePhases = PROGRAM.filter(ph => phaseStatus(ph, ctx) === 'completed').length;
-  // 🔴 A phase only counts as done when EVERY unit in it is trainer-approved —
-  // four lessons, an exam and a review, i.e. weeks. So a trainee who has
-  // genuinely started sees «0 من 6» and reasonably concludes nothing was
-  // recorded. The phase count is the truth and stays; this adds the movement
-  // that is also true — lessons finished inside the phase they are working on.
-  // Derived from moduleLessonsDone/MODULES, no new state.
+  // A phase counts as done only when every unit in it is approved, which takes
+  // weeks. Lessons finished inside the current phase show the movement that is
+  // also true, so a trainee who has started does not read «0 of 6» as nothing.
   const currentLessons = (() => {
     if (!current) return null;
     let done = 0, total = 0;
@@ -103,17 +97,9 @@ export const TrainingJourney: React.FC<{
   void learningProgress;   // (available from the same module when a second indicator is wanted)
 
   /**
-   * Today's acts, RANKED — not listed.
-   *
-   * 🔴 This screen used to stack three cards of identical width, padding and
-   * weight. Three equal cards tell a trainee three things matter equally, which
-   * is never true, and force them to read all three to find the one. That is a
-   * dashboard grid rotated ninety degrees.
-   *
-   * Priority is real and belongs in code: qualification is the gate between this
-   * person and doing the job unsupervised, so it outranks the debrief, which
-   * outranks ordinary study. Exactly one act is promoted; the rest become a line.
-   */
+     * Today's acts, ranked: qualification outranks the debrief, which outranks
+     * ordinary study. Exactly one act is promoted; the rest become a line.
+     */
   const acts = useMemo(() => ([
     day >= READINESS_PHASE_DAY && {
       gate: true,
@@ -139,12 +125,8 @@ export const TrainingJourney: React.FC<{
     <div style={{ minHeight: '100vh' }}>
       <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.journey} leading={<Eyebrow>{tr('jr.header', lang)}</Eyebrow>} />
 
-      {/* 🔴 Was 760px — which is why ~48% of a 1280px desktop sat empty: the
-          container itself was the constraint, not the card inside it. 1080
-          matches the app shell's own width so the journey stops looking
-          narrower than every other screen, and gives the route + ledger grid
-          the room it needs. Reading width is still protected: the route column
-          is capped by the grid, not by the page. */}
+      {/* Same width as the app shell, so the route and its ledger have room;
+          the route column's reading width is capped by the grid. */}
       <main style={{ maxWidth: WIDTH.journey, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)' }}>
         {/* ── THE HERO ─────────────────────────────────────────────────────
             An editorial spread has one focal point and everything defers to it.
@@ -214,31 +196,15 @@ export const TrainingJourney: React.FC<{
           </m.section>
         )}
 
-        {/* 🔴 Retrieval MOVED to the dashboard (sprint 02). It used to live
-            here, on a screen a day-one trainee has no reason to open — so the
-            review that is supposed to happen "on the way to today's work" sat
-            behind a tab. It now renders under «مهمة النهارده», never above it:
-            new learning keeps the top of the day. Mounting it in both places
-            would have asked the same items twice in one morning, which is
-            massed practice — the opposite of the point. */}
+        {/* Spaced retrieval lives on the dashboard, under today's mission, so it
+            happens on the way to the day's work. Mounting it here too would ask the
+            same items twice in one morning. */}
 
         {/* ── THE ROUTE + ITS LEDGER ───────────────────────────────────────
-            The journey reads as a route, not a list: one vertical rail, every
-            station sitting on it, travelled track in gold.
-
-            🔴 Desktop was wasting half its width — the card measured 620px of
-            a 1280px viewport, so ~48% of the screen was abandoned space rather
-            than breathing room. The fix is NOT a wider card (that would push
-            line length past a comfortable measure); it is a companion column
-            that earns its place with information the route itself cannot show:
-            how many stations are actually behind you, and what the next gate
-            is. Everything in it is DERIVED from the same `phaseStatus` the
-            rail already uses — no new state, no new numbers invented.
-
-            On mobile the grid collapses to one column and the ledger moves
-            BELOW the route: on a phone the route is the whole point, and a
-            summary above it would push the trainee's actual next step off
-            screen. */}
+            One vertical rail, every station on it, travelled track in gold. The
+            ledger beside it shows what the route cannot (stations behind you, the
+            next gate), derived from the same phaseStatus. On phones it moves below
+            the route so the next step stays on screen. */}
         <div className="journey-grid">
         <m.ol className="snake-path" style={{ listStyle: 'none', margin: 0, padding: 0, position: 'relative' }}>
           {PROGRAM.map(phase => (
@@ -328,11 +294,7 @@ const SnakeStation: React.FC<{
   // Progressive disclosure: only the phase you act on shows its full detail.
   const showDetail = isCurrent || status === 'waiting_trainer';
   const locked = status === 'locked' || status === 'planned';
-  // 🔴 A journey has to READ as one continuous route, so the spine is a single
-  // vertical rail every station sits ON — not two alternating columns joined by
-  // a curve that ended in empty space. The rail's colour is the progress:
-  // travelled track is gold, track ahead is line-grey. That single decision is
-  // what turns "a list of modules" into "how far I've come, and what's left".
+  // One continuous rail; its colour is the progress (gold travelled, grey ahead).
   const travelled = status === 'completed';
   return (
     <m.li {...stagger(index)}
@@ -341,10 +303,8 @@ const SnakeStation: React.FC<{
     >
       {/* THE RAIL — the spine of the journey. The orb sits directly on it, so
           the eye reads one unbroken line from day 1 to graduation. */}
-      {/* 🔴 The orb used to hang off the card's top EDGE, level with nothing —
-          a station marker floating beside the corner of its own card. It now
-          centres on the card's first LINE (padding + half a badge row − half
-          the orb), so the eye reads «station · its label» across one line. */}
+      {/* The orb centres on the card's first line (padding + half a badge row −
+          half the orb), so «station · label» reads across one line. */}
       <div aria-hidden className="snake-rail" style={{ paddingTop: showDetail ? 'var(--sp-5)' : 'var(--sp-3)' }}>
         <span className={`snake-orb${phase.milestone ? ' snake-orb--milestone' : ''}${isCurrent ? ' snake-pulse' : ''}`} style={{
           borderRadius: 'var(--r-full)', flexShrink: 0,
@@ -368,16 +328,13 @@ const SnakeStation: React.FC<{
 
       <div style={{ flex: 1, paddingBottom: 'var(--sp-5)' }}>
 
-      {/* 🔴 PADDING LIVES IN CSS. Written inline, it could not be narrowed for a
-          320px screen — the trap this codebase has paid for five times now — and
-          the journey grid needed 327px inside a 256px column there. */}
+      {/* Padding lives in CSS so it can narrow on 320px screens. */}
       <div className={`snake-card${showDetail ? ' snake-card--detail' : ''}${isCurrent ? ' snake-card--current' : ''}${locked ? ' snake-card--locked' : ''}`} style={{
         background: isCurrent ? 'var(--s0)' : 'var(--s-1)',
         border: `1px solid ${isCurrent ? 'var(--g3)' : 'var(--line)'}`,
         borderRadius: 'var(--r-lg)',
-        /* 🔴 The locked veil measured 3.01:1 on the day label — «locked» is
-           already said by the lock icon, the muted border and the status badge,
-           so the card recedes without multiplying every child's contrast. */
+        /* No veil on locked cards: the icon, border and badge already say locked,
+           and opacity would drop the text below contrast. */
         transition: 'border-color .3s var(--ease), background .3s var(--ease)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
@@ -412,13 +369,8 @@ const SnakeStation: React.FC<{
                   const unlocked = ctx.isModuleUnlocked(id);
                   return (
                     <Card key={id} tone="quiet" pad={4} className="row-hover">
-                    {/* 🔴 Two rows, not one. Four items on one flex line
-                        (code · title · count · action) had no room on a 390px
-                        phone, so the TITLE wrapped one word per line into a
-                        tall vertical stack — verified in a real mobile
-                        screenshot. Title owns the first line; the meta and the
-                        action share the second, so the module name always
-                        reads as a sentence at every width. */}
+                    {/* Two rows: the title owns the first, meta and action share the second,
+                        so the module name reads as a sentence on a 390px phone. */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-2)' }}>
                         <span className="t-label" style={{ color: 'var(--tx2)', flexShrink: 0 }}>{m.code}</span>

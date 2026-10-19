@@ -24,13 +24,8 @@ function read<T>(key: string): T | null {
   } catch { return null; }
 }
 
-/** 🔴 SECURITY/STABILITY FIX — same trust-boundary bug as every other store
- *  in this codebase, caught in the same audit pass: `read<T>` proved nothing
- *  about shape. A malformed AREAS_KEY/BRANCHES_KEY value (an old schema, a
- *  hand-edited key) would have sailed through as Area[]/Branch[] and broken
- *  the first `.filter()`/`.find()` call in a screen far away. Anything
- *  failing the shape check resolves to null → the real seed, never to
- *  garbage treated as data. */
+/** Storage is a trust boundary: anything that is not a well-formed array
+ *  resolves to null, and the seed is used instead. */
 function isAreaArray(v: unknown): v is Area[] {
   return Array.isArray(v) && v.every(a => a && typeof a === 'object' && typeof (a as Partial<Area>).id === 'string');
 }

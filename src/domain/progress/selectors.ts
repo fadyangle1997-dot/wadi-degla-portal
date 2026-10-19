@@ -1,17 +1,8 @@
 /**
- * Pure reads over Progress — the domain's own selectors.
+ * Pure reads over Progress — the domain's own selectors, runnable in Node.
  *
- * 🔴 WHY THESE MOVED (Phase 1, R1). `domain/journey/nextAction.ts` imported
- * them from `app/progress.ts`, which imports React and constructs a
- * localStorage backend at module load. That single import chain meant the
- * server could not compute the next action, the very thing the dashboard and
- * the trainer's queue are built on.
- *
- * The only real change is that `isModuleUnlocked` takes its training state and
- * trainee id EXPLICITLY. In `app/progress.ts` those arguments defaulted to the
- * live store — convenient in a component, impossible on a server, and the
- * reason this function could not be shared. The app keeps that convenience
- * through a thin wrapper there; the domain keeps the pure function here.
+ * `isModuleUnlocked` takes its training state and trainee id explicitly; the
+ * app keeps a store-backed convenience wrapper in `app/progress.ts`.
  */
 import type { Progress } from '../../app/backend';
 import type { TrainingState } from '../../app/training/trainingBackend';

@@ -21,13 +21,8 @@ import { t, langStore } from '../../app/i18n';
 export const Capsule: React.FC<{ children: React.ReactNode; label?: string; style?: Pick<React.CSSProperties, 'position' | 'insetInlineEnd' | 'insetInlineStart' | 'bottom' | 'top'> }> = ({ children, label, style }) => (
   <span
     aria-label={label}
-    /* 🔴 `display` LIVES IN CSS, NOT HERE — the trap this codebase has now paid
-       for four times. The mobile rule that hides this capsule where it overlaps
-       the shrunken day ring («.jr-hero .dayring > *:last-child { display:none }»)
-       was written, shipped and believed, and never fired once: an inline
-       `display:inline-flex` outranks any media query, so the capsule kept
-       covering «من 60 يوم» on every phone. Only the layout properties move to
-       the class; the capsule's identity stays here. */
+    /* `display` lives in the CSS class: an inline display would outrank the
+       media query that hides this capsule on phones. */
     className="capsule"
     style={{
       background: 'var(--s0)', border: '1px solid var(--line-2)',
@@ -42,18 +37,9 @@ export const Capsule: React.FC<{ children: React.ReactNode; label?: string; styl
 );
 
 /**
- * Card — the platform's one surface.
- *
- * 🔴 THIS EXISTED AND ALMOST NOBODY USED IT. Two screens imported it; the rest
- * hand-rolled `background + border + radius + padding` inline, each picking its
- * own values. That is the entire reason cards do not feel like each other — not
- * taste, just eleven independent guesses.
- *
- * `tone` and `pad` replace the old `style` free-for-all. A spread of arbitrary
- * style is how a shared component quietly becomes eleven components again: it
- * looks shared in the import list and is not shared on screen. Layout props
- * (margin, width, grid placement) still pass through, because those belong to
- * the parent — but the card's own identity is not negotiable.
+ * Card — the platform's one surface. `tone` and `pad` instead of free-form
+ * style, so cards stay alike; layout props (margin, width, grid placement)
+ * pass through because they belong to the parent.
  *
  *   default — a surface. Most things.
  *   raised  — sits above the page. Today's work, dialogs.
@@ -172,19 +158,10 @@ export const OptionButton: React.FC<{
 );
 
 /* ---------------- Arabic content island ----------------
-   🔴 THE LEARNING CONTENT IS ARABIC IN BOTH MODES — SO IT SAYS SO.
-
-   With the document following the interface language, an English shell renders
-   LTR; the lesson inside it is still Arabic and still reads right-to-left. That
-   is not a conflict to paper over — it is a bilingual document, and the web has
-   had an answer since HTML 4: declare the island.
-
-   `lang="ar"` makes a screen reader switch voice and phonetics at the boundary
-   instead of pronouncing Arabic with an English engine; `dir="rtl"` restores
-   right-to-left flow for the block; `unicode-bidi: isolate` (in .ar-content)
-   stops the island's direction from leaking into the sentence around it.
-   Declared at the CONTENT BLOCK, never at the document — which is exactly the
-   distinction the old fixed `dir="rtl"` could not make. */
+   Learning content is Arabic in both interface languages, so the block
+   declares it: lang="ar" switches a screen reader's voice, dir="rtl" restores
+   the flow, and unicode-bidi: isolate (in .ar-content) keeps the direction
+   from leaking into the surrounding sentence. */
 export const ArabicContent: React.FC<{
   children: React.ReactNode;
   as?: 'div' | 'section' | 'article' | 'main' | 'span';
@@ -209,29 +186,14 @@ export const ScreenHeader: React.FC<{
    *  column; a header that centres on a different width than the content under
    *  it is a misalignment nobody reports and everybody sees. */
   /**
-   * 🔴 TAB ROUTES DO NOT GET A SECOND BAR ON A PHONE.
-   *
-   * Measured at 390×844: the shell header (89px) and this header (76px) stacked
-   * to 165px, with a 57px tab bar below — 222px, **26% of the viewport**, spent
-   * on chrome before a single word of content, on the three screens the trainee
-   * opens most. And the bar was repeating what the phone already said: a back
-   * arrow to a screen that is one tap away in the tab bar, above a label naming
-   * the tab that is already highlighted in it.
-   *
-   * On a phone this collapses to a plain line that scrolls away with the
-   * content; the desktop bar, where there is no tab bar and the column is
-   * narrow, is untouched. Screens with no tab of their own — lesson, exam,
-   * profile, the arena — keep the sticky bar and the back button on every
-   * viewport, because there the back button IS the only way out.
-   */
+     * Tab routes collapse to a plain, scrolling line on phones: the shell header
+     * plus this bar plus the tab bar took a quarter of the screen, and the bottom
+     * tab bar already names the screen and offers the way back. Screens without a
+     * tab (lesson, exam, profile, arena) keep the sticky bar and back button.
+     */
   tabRoute?: boolean;
 }> = ({ onBack, leading, rail, trailing, tone = 'default', maxWidth = WIDTH.read, tabRoute }) => (
-  /* 🔴 A <header> HERE WAS A SECOND BANNER LANDMARK. The shell already owns the
-     page's banner; this bar is a screen-level toolbar sitting inside it, and
-     marking it <header> gave every screen two banners with no way for a screen
-     reader user to tell them apart (axe: landmark-no-duplicate-banner ×10,
-     landmark-unique ×10). It is a <div> now — the bar loses nothing, and the
-     page has exactly one banner again. */
+  /* A <div>, not <header>: the shell owns the page's one banner landmark. */
   /* …and a <nav>, not a bare <div>: everything interactive in this bar is
      navigation — the back control, and on the admin screens the section tabs —
      so it is a NAMED landmark. That keeps every screen's content inside a
@@ -276,15 +238,8 @@ export const ProgressRail: React.FC<{ total: number; current: number; emphasis?:
 );
 
 /* ---------------- status badge ----------------
-   🔴 THE BORDERS WERE THE PREVIOUS PALETTE. Every text colour here is a token,
-   and three of the borders were literals left over from the saturated status
-   set the system replaced: mint #3DD68C, the yellow #F5C147 — which is the
-   very hue the palette comment kills, because a warning that looks like the
-   primary button is not a warning — and a hot red. So each badge drew its ring
-   in one colour family and its text in another, and the mismatch is the kind
-   of thing that reads as «assembled» without anyone being able to name it.
-   Every tone now takes its own -line token, which is the same hue as its text
-   at the alpha the palette already defines. */
+   Text and ring come from the same status token (the ring is its -line
+   alpha), so each badge reads as one colour. */
 const BADGE = {
   ready: { c: 'var(--ready)', b: 'var(--ready-line)' },
   attn: { c: 'var(--attn)', b: 'var(--attn-line)' },
@@ -361,22 +316,13 @@ export const SkillBar: React.FC<{ pct: number; segments?: number }> = ({ pct, se
 
 /* ---------------- empty & loading states ---------------- */
 /**
- * 🔴 THE EMPTY STATE WAS ALWAYS AN <h3>. Dropped under an <h1> it skipped a
- * level (axe: heading-order), and a screen-reader user navigating by heading
- * met a level-3 with no level-2 above it — the outline says «you are inside a
- * subsection» when the screen has no subsections. The level is now the
- * caller's to state, because only the caller knows the outline it sits in; it
- * defaults to the level that is correct directly under a page title.
+ * The heading level is the caller's to state, because only the caller knows
+ * the outline it sits in; the default is right directly under a page title.
  */
 export const EmptyState: React.FC<{ icon?: React.ReactNode; title: string; body: string; action?: React.ReactNode; headingLevel?: 2 | 3 }> =
   ({ icon, title, body, action, headingLevel = 2 }) => (
     <div style={{ textAlign: 'center', padding: 'var(--sp-8) var(--sp-5)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-3)' }}>
-      {/* 🔴 THE COMPONENT OWNS THE ICON SIZE. Empty states shipped at two sizes
-          at once — 22 on the trainee's screens, 26 on the trainer's, manager's
-          and admin's — because the size was passed in by each caller. Same
-          component, same moment in the product, two sizes, split by whoever
-          wrote the screen. The class pins it, so a caller's `size` can no
-          longer leak into the system. */}
+      {/* The component owns the icon size, so every empty state matches. */}
       {icon && <span className="empty-state-icon" style={{ color: 'var(--tx3)' }}>{icon}</span>}
       {headingLevel === 2 ? <h2 className="t-h3">{title}</h2> : <h3 className="t-h3">{title}</h3>}
       <p className="t-sm measure" style={{ margin: 0 }}>{body}</p>

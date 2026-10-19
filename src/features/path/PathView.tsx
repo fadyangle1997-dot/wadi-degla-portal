@@ -60,13 +60,8 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      {/* 🔴 P0 (Mobile pass) — this screen used to carry its OWN sticky header
-          with its own title and its own nav pills, sitting directly beneath the
-          shell's. Two stacked sticky bars ate roughly a third of an iPhone
-          screen before the trainee saw their mission, and two navigation
-          sources made "الرحلة" vs "رحلتي" a question they had to answer every
-          visit. The title and both destinations already exist in the shell —
-          «مهاراتك» simply joined «رحلتي» there. One header, one navigation. */}
+      {/* The shell owns the title and navigation; this screen has no header
+          of its own (two stacked sticky bars cost a third of a phone screen). */}
 
       {!progressStore.healthy() && (
         <div role="alert" style={{ background: 'var(--attn-bg)', borderBottom: '1px solid var(--attn-line)', padding: 'var(--sp-2) var(--sp-5)', textAlign: 'center' }}>
@@ -74,19 +69,8 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
         </div>
       )}
 
-      {/* 🔴 Mobile P2 — every section here used to sit at the identical 80px
-          (--sp-8) gap regardless of tier: the hero and its two supporting
-          sections all read as equally (un)related. Proximity now matches
-          structure instead: the hero (Today's Mission) is Tier 1 — the one
-          decision this screen exists for — and stands alone. Everything below
-          it (current-module context, the locked next-module preview) is
-          Tier 2, supporting information, and now groups together at the
-          tighter --sp-4 (matching the "related cards" gap already used in
-          JourneyView/OrganizationPanel) with --sp-8 of breath separating it
-          from the hero above. Two tiers, two gaps — not three peers at one
-          uniform distance. On an iPhone viewport this also means the
-          supporting context arrives right after the hero, not after 80px of
-          air the trainee had to scroll past first. */}
+      {/* Two tiers, two gaps: the hero (Today's Mission) stands alone; the
+          supporting cards below it group at the tighter related-cards gap. */}
       <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-8) var(--sp-5) var(--sp-9)', display: 'flex', flexDirection: 'column' }}>
 
         {/* ① Today's Mission — the single hero. It stands alone with a full sp-8
@@ -102,21 +86,12 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
             spacing (sp-4) reads as one secondary block beneath the hero, not
             three peers competing with it. marginTop keeps the category shift
             (active work → this block) at the wider sp-8 breath. */}
-        {/* 🔴 sp-8 IS A DESKTOP BREATH. On a phone the same 80px is a tenth of
-            the viewport spent separating the mission from the work that follows
-            it, on the one screen opened every morning. The tier separation is
-            the point and stays; its SIZE follows the device, which is exactly
-            what the system's own density rule says. */}
+        {/* The tier gap follows the device: a desktop breath is a tenth of a
+            phone screen. */}
         <div className="tier-gap" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
 
-        {/* 🔴 THE COMMITMENT COMES BACK. The trainee chose one thing to do at
-            the desk today, at the end of yesterday's lesson; until now that
-            choice existed for ninety seconds and was gone. A promise nobody
-            ever reads again is not a habit mechanism, and in a two-track
-            programme it is the only line connecting the platform to the
-            counter. Quiet by design: it states what they chose, and when —
-            never «did you do it?», which the platform cannot know and must
-            not pretend to. */}
+        {/* Yesterday's commitment, shown back to the trainee: what they chose and
+            when. Never «did you do it?» — the platform cannot know (ADR-004). */}
         {commitment && (
           <Card tone="quiet">
             <Eyebrow icon={<Flag size={13} />}>
@@ -126,12 +101,8 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
           </Card>
         )}
 
-        {/* 🔴 ② QUICK REVIEW — two questions, under the mission, never above it.
-            Spaced retrieval now starts on day 4 instead of day 23, so it lands
-            on the screen the trainee actually opens. It is silent whenever
-            nothing is due: an empty «no reviews today!» card is noise dressed
-            as feedback. Nothing here is scored, and nothing here touches the
-            unit exam, readiness or certification. */}
+        {/* Quick review: spaced retrieval under the mission, silent when nothing
+            is due. Not scored; never touches exams, readiness or certification. */}
         {hasRetrieval && (
           <TodayRetrieval passedModuleIds={passedModuleIds} completedLessonIds={completedLessonIds} />
         )}
@@ -144,13 +115,9 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
             waiting={action.kind === 'waiting_review' && action.module?.id === currentModule.id}
             trainerName={trainerName}
             done={moduleLessonsDone(p, currentModule.id)}
-            /* 🔴 The hero states the unit's big question whenever it resolves to
-               a lesson in THIS unit — and this card then printed the same
-               sentence again, verbatim, one card below. Repetition is not
-               emphasis; it reads as a template filling itself in. The card
-               keeps the question only when the hero is showing something else
-               (exam, waiting, rejected, retry), where it is the one place the
-               framing still exists. */
+            /* The unit's big question appears here only when the hero is showing
+               something else (exam, waiting, rejected, retry); otherwise the hero
+               already states it. */
             showQuestion={!(
               action.module?.id === currentModule.id
               && action.kind !== 'take_exam'
@@ -210,10 +177,8 @@ const TodaysMission: React.FC<{
         <Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>
         <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{waitingForTrainer(trainerName)}</h1>
         <p className="t-sm measure">{tf('pv.waitingbody', { m: m?.title ?? '' }, lang)}</p>
-        {/* 🔴 P2 (Sprint 5.0) — waiting is correctly a dead end (the trainee's
-            job right now IS to wait), but silence reads as "stuck". These two
-            lines remove the uncertainty without adding an action: what already
-            happened, and what to do with the wait. Zero business logic. */}
+        {/* Waiting is the trainee's job right now; these lines say what happened
+            and what to do meanwhile, so the wait does not read as stuck. */}
         <p className="t-sm measure" style={{ marginTop: 'var(--sp-4)', color: 'var(--tx3)' }}>
           {tr('db.waiting', lang)}
         </p>
@@ -224,13 +189,8 @@ const TodaysMission: React.FC<{
     );
   }
 
-  // 🔴 P0 FIX — the trainee's own recovery path for the root-cause bug: the
-  // exam passed and is safely recorded, but the submit-for-review step never
-  // landed (a transient session gap, a storage hiccup). Previously this fell
-  // through to «خلّصت كل حاجة متاحة» — a dead end disguised as completion,
-  // since nothing had actually reached the trainer. The retry calls the same
-  // idempotent submitForReview; if it already landed on a previous attempt,
-  // this is a safe no-op.
+  // The exam passed and is recorded, but the submission never reached the
+  // trainer. Retry calls the same idempotent submitForReview.
   if (action.kind === 'needs_submission') {
     return (
       <Card tone="accent" pad={6}>
@@ -267,14 +227,8 @@ const TodaysMission: React.FC<{
 };
 
 /**
- * ② Current module — title, question, progress. NO call to action.
- *
- * 🔴 P0 (Sprint 5.0): this card used to carry its own «استئناف» button that
- * fired the identical onOpenLesson(module, lesson) call as Today's Mission
- * above it — two differently-labelled buttons, one behaviour. A first-day
- * trainee reasonably assumes different labels mean different outcomes, so
- * they stop and read both. The hero owns the action now; this card owns
- * context and progress. One screen, one primary action.
+ * ② Current module — title, question, progress. No call to action: the hero
+ * above owns the one primary action on this screen.
  */
 const CurrentModuleCard: React.FC<{
   moduleId: string;
@@ -318,24 +272,15 @@ const NextModulePreview: React.FC<{ moduleId: string }> = ({ moduleId }) => {
   // serve one screen; wrapping Card in a dimming div would nest two boxes to
   // draw one.
   return (
-    /* 🔴 `opacity: 0.7` DIMMED THE TEXT BELOW THE FLOOR. It reads as one tidy
-       "this is inactive" switch, but it multiplies every child's contrast:
-       --tx3 on --s-2 measured 5.38:1 and landed at 3.9:1 through the veil, and
-       axe flagged 13 nodes here and on the archive list. «Locked» is now said
-       with colour and the lock icon — both already present — at full opacity,
-       so the card still recedes and the words stay readable. */
+    /* No opacity on locked cards: opacity multiplies every child's contrast
+       below the floor. Colour and the lock icon say «locked». */
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-4) var(--sp-5)', border: '1px solid var(--line)', borderRadius: 'var(--r-lg)', background: 'var(--s-2)' }}>
       <Lock size={16} style={{ color: 'var(--tx3)', flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
         <span className="t-label" style={{ color: 'var(--tx3)' }}>{tr('db.nextunit', lang)}</span>
         <span className="t-sm" style={{ display: 'block', color: 'var(--tx2)', marginTop: 'var(--sp-1)' }}><ArabicContent as="span">{m.title}</ArabicContent></span>
-        {/* 🔴 A LOCK WITHOUT A REASON IS A DEAD END. The card said «مقفولة» and
-            stopped there, so the trainee could see the next unit and had no way
-            to know what opens it — the one question a lock creates. The answer
-            is a CONDITION, not a date: this programme does not unlock on the
-            calendar, it unlocks when the trainer approves the unit in hand, and
-            saying «بعد كذا يوم» would be both wrong and a promise the platform
-            cannot keep. */}
+        {/* A lock states what opens it: the trainer's approval of the current
+            unit, not a date the platform cannot promise. */}
         <span className="t-label" style={{ display: 'block', color: 'var(--tx3)', marginTop: 'var(--sp-2)' }}>
           {tr('db.unlockrule', lang)}
         </span>

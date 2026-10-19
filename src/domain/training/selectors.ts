@@ -1,21 +1,8 @@
 /**
  * Pure reads over TrainingState — the domain's own selectors.
  *
- * 🔴 WHY THESE MOVED (Phase 1, R1). They lived in `app/training/trainingStore.ts`,
- * which imports React (`useSyncExternalStore`) and constructs a localStorage
- * backend at module load. Four domain modules imported them as VALUES —
- * `domain/readiness/report.ts`, `domain/journey/nextAction.ts`,
- * `domain/journey/programCompletion.ts`, `domain/training/moduleStatus.ts` —
- * so importing readiness or next-action on a server pulled React and
- * localStorage into Node with them.
- *
- * The whole backend plan rests on one property: the server runs the SAME pure
- * functions as the client. That property did not hold; this file is what makes
- * it hold. Nothing here touches a store, a hook or a browser API — it reads a
- * state object it is handed and returns a value.
- *
- * `app/training/trainingStore.ts` re-exports these, so every existing caller
- * and every test keeps its import path.
+ * No store, hook or browser API: the server runs these same functions.
+ * `app/training/trainingStore.ts` re-exports them, so existing imports work.
  */
 import type { TrainingState, ModuleReview, FinalDecision } from '../../app/training/trainingBackend';
 

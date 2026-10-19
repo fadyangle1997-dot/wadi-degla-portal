@@ -27,13 +27,8 @@ export type DemoRole = 'admin' | 'general_manager' | 'area_manager' | 'manager' 
 
 export interface DemoAccount {
   readonly id: string;
-  /**
-   * For trainees: the trainer responsible for them.
-   *
-   * 🔴 Without this, `scopeOf()` correctly returns {kind:'assigned', trainerId}
-   * and correctly finds NOBODY — every trainer saw an empty platform. The scope
-   * logic was right the whole time; the link simply did not exist in the data.
-   */
+  /** For trainees: the trainer responsible for them. scopeOf() finds a
+     *  trainer's learners through this link. */
   readonly trainerId?: string;
   /** For trainers: the manager responsible. */
   readonly managerId?: string;

@@ -49,21 +49,8 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     [users, roles, canDo],
   );
 
-  // 🔴 THE FIX FOR C1. This queue used to read reviewOf(t, LOCAL_TRAINEE_ID, …)
-  // — one shared record — so a trainer with twelve trainees saw ONE person's
-  // work twelve times over, attributed to whoever they happened to open. Now
-  // the queue is built ACROSS the trainer's assigned learners: every waiting
-  // unit is paired with the trainee it actually belongs to.
-  //
-  // `employees` comes from visibleLearners(scopeOf(...)) — the row-level
-  // authorization that was already correct and already computed, and until now
-  // unused. A trainer sees their own trainees' work and no one else's.
-  //
-  // 🔴 PRESENTATION FIX (Phase 3): the queue was unordered — built by iterating
-  // employees then modules, so whoever submitted first could land last on
-  // screen. A trainer working through this once a week needs the oldest wait
-  // first. submittedAt reads the same event log already in memory; no new
-  // event, no new store.
+  // The queue spans the trainer's own learners (visibleLearners(scopeOf(...))),
+  // pairing every waiting unit with the trainee it belongs to, oldest wait first.
   const submittedAt = (employeeId: string, moduleId: string): number => {
     const evs = trainingStore.events().filter(e =>
       e.type === 'UNIT_SUBMITTED_FOR_REVIEW' && e.employeeId === employeeId && e.moduleId === moduleId);
@@ -284,11 +271,8 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
   // Unset = not observed = fail. Professionalism is never assumed.
   const [conduct, setConduct] = useState<ConductObservations>({});
   const conductOk = conductPassed(conduct);
-  // 🔴 PRESENTATION FIX (Phase 3): weakSkills used to come from a flat list of
-  // 23 skill names — a taxonomy, not something observed. It is now DERIVED
-  // from per-lesson picks (LessonCoachingCard): picking "needsWork" on a
-  // lesson attributes its declared skills as weak. Same field, same event
-  // shape, same recommendFor() input — only the interaction changed.
+  // Weak skills are derived from per-lesson picks: marking a lesson «needs work»
+  // attributes its declared skills. Same event shape and recommendFor() input.
   const [lessonPicks, setLessonPicks] = useState<Record<string, 'strength' | 'weak' | null>>({});
   const weakSkills = useMemo(() => {
     const ids = new Set<string>();

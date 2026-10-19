@@ -43,16 +43,8 @@
   --s0:   #34312F;
   --s1:   #3F3B39;
 
-  /* 🔴 OVERLAYS ARE THE SAME MATERIAL, TRANSLUCENT — never a second black.
-     The sticky header, the mobile tab bar and the arena surface each carried
-     its own cool near-black (blue leading the channels) floating
-     over a warm brown room. It is the exact temperature break the palette
-     comment above spends a paragraph killing in the neutral near-black that
-     used to sit under this surface, and it survived only
-     because it was written as a literal inside three unrelated rules instead
-     of a token. These are --void's own channels at the alphas already in use,
-     so the bars now read as the room seen through frosted glass rather than a
-     panel from another product. */
+  /* Overlays are the room's own material, translucent: --void's channels at
+     the alphas in use, never a second (cool) black. */
   --overlay:        rgba(22,19,16,.85);   /* sticky screen header */
   --overlay-strong: rgba(22,19,16,.92);   /* mobile tab bar — sits over content */
   --overlay-arena:  rgba(22,19,16,.88);   /* exam/boss chrome */
@@ -83,12 +75,8 @@
   --tx0: #FFFFFF;
   --tx1: #CFCFCF;
   --tx2: #A39D96;
-  /* 🔴 RAISED FOR AA ON THE SURFACE IT IS ACTUALLY USED ON. #8A847D measured
-     4.37:1 over --s-1 — under the floor — while passing only on the bare void,
-     which is not where components put it. #948E86 clears 4.5 on the void
-     (5.70), --s-2 (5.38) and --s-1 (4.98), and stays a clear step below --tx2
-     (5.70 vs 6.89) so the three-tier hierarchy survives. --s0 is still out of
-     bounds for it; the one component that did that now uses --tx2. */
+  /* #948E86 clears AA on the void (5.70), --s-2 (5.38) and --s-1 (4.98) and
+     stays a step below --tx2. Not for use on --s0. */
   --tx3: #948E86;
 
   /* ── Status ──────────────────────────────────────────────────────────────
@@ -119,18 +107,7 @@
   --sp-5: 32px;   --sp-6: 40px;   --sp-7: 56px;   --sp-8: 80px;
   --sp-9: 120px;  --sp-10: 160px;
 
-  /* 🔴 Root-cause fix — `.measure { max-width: var(--measure) }` has been
-     referenced across 10 files (exam prompts, empty-state copy, lesson body
-     text) since early in this project, but `--measure` was never DEFINED
-     anywhere. An undefined custom property resolves to its initial value —
-     `none` for max-width — so the constraint has been silently doing nothing
-     this whole time; paragraphs stretched to whatever container they sat in
-     (up to 720px) instead of a comfortable reading width. `60ch` is the
-     typographic standard (60–75 characters/line) and scales WITH font-size
-     automatically, unlike a fixed px value — it stays correct if .t-body or
-     .t-sm's size ever changes. Mobile was never visibly affected (viewport
-     width already self-constrains under ~390px); desktop/tablet paragraphs
-     were the real, previously-invisible defect this closes. */
+  /* Reading width for running text: 60ch scales with the font size. */
   --measure: 60ch;
 
   /* The shell's own column — the same 1080 as WIDTH.journey in designSystem.ts,
@@ -173,29 +150,13 @@ body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--fon
 .t-sm { font-size:0.9rem; font-weight:400; line-height:1.65; color:var(--tx2); }
 .t-num { font-family:var(--font-mono); font-weight:500; font-variant-numeric:tabular-nums; }
 
-/* 🔴 `.t-title` WAS A CLASS THAT DID NOT EXIST. Eight components used it for a
-   person's or a unit's name; most passed an inline colour and looked fine, and
-   the ones that did not fell through to the user-agent default — BLACK text on
-   a warm-black card, measured 1.3:1. Not «low contrast»: invisible. It is a
-   real role (the name line inside a row or card), so it gets a real rule —
-   colour only, because every existing call site already sits at the size its
-   context gives it and this is an accessibility fix, not a redesign. */
+/* The name line inside a row or card. Colour only; size comes from context. */
 .t-title { color: var(--tx0); }
-/* 🔴 --tx3 is the floor on the VOID, not on a card: measured 4.37:1 over
-   --s-1 and 3.49:1 over --s0, so every unit code, day range and counter sitting
-   inside a card was under the AA floor. Metadata should read quiet; it was
-   reading faint, which is what «cheap» looks like at a glance. --tx2 is 6.01:1
-   on the same surface and still recedes behind body text. */
+/* Inside cards, metadata uses --tx2 (6.01:1 on --s-1): --tx3 is only AA on
+   the void, not on a card. */
 .t-label { font-size:0.78rem; font-weight:600; color:var(--tx2); }
-/* 🔴 THE EYEBROW IS A LABEL, SO IT TAKES THE LABEL GOLD, NOT THE PRIMARY ONE.
-   The palette above assigns --g2 exactly one job — "the one thing you must
-   see" — and --g1 the labels. Every section eyebrow on every screen was
-   painted --g2, so the roadmap showed ten elements in primary gold and the
-   Open button was one of them: when everything is the accent, nothing is.
-   --g1 keeps the eyebrow unmistakably gold (saturation is what reads as gold
-   in this brand) while handing the primary tone back to actions and to «you
-   are here». It also measures better on the surface it sits on: 8.47 against
-   the void where --g2 measured 5.74. */
+/* Eyebrows are labels, so they take the label gold (--g1); --g2 is reserved
+   for actions and «you are here». */
 .t-eyebrow { font-size:0.78rem; font-weight:600; color:var(--g1); }
 
 /* Capsule — base layout only, so a media query can still reach it. */
@@ -239,10 +200,8 @@ body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--fon
 }
 .skip-link:focus-visible { top: var(--sp-3); outline: 2px solid var(--g0); outline-offset: 2px; }
 
-/* 🔴 ARROWS ARE DIRECTIONAL, SO THE DIRECTION FLIPS THEM — not the author.
-   Eighteen icons carried `transform: scaleX(-1)` inline to point the Arabic
-   way; in an LTR document every one of them pointed backwards. The class flips
-   in RTL only, so «continue» points where the reader is going in both modes. */
+/* Directional icons flip in RTL only, so «continue» points where the reader
+   is going in both languages. */
 .icon-dir { transition: transform .2s var(--ease); }
 [dir="rtl"] .icon-dir { transform: scaleX(-1); }
 
@@ -332,23 +291,14 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   transition:background .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease), transform .15s var(--ease); }
 .btn:disabled { opacity:.4; cursor:default; }
 .btn:active:not(:disabled) { transform:scale(.97); }
-/* 🔴 The primary button now matches the Sign In button exactly — same
-   capsule, same three-stop gold gradient, same gold halo. They were two
-   different buttons doing the same job: the sign-in screen felt like a
-   more premium product than the app behind it, which is the opposite of
-   what a first screen should promise. One primary action, one look. */
+/* The primary button matches the sign-in button: one primary action, one look. */
 .btn-primary {
   border: 0;
   border-radius: var(--r-full);
   color: #241B05;
   background: linear-gradient(100deg, var(--g2) 0%, var(--g1) 52%, var(--g0) 100%);
-  /* 🔴 A CONTACT SHADOW, NOT A GLOW. At .7 over 28px the button emitted light:
-     a halo the eye reads as a game reward, and the elevation rule three
-     blocks up ("a shadow you can SEE is a shadow doing the work spacing
-     should be doing") applies to a coloured shadow exactly as it does to a
-     black one. Tightened and quieted so the button still lifts off the page
-     and stops broadcasting. The gradient — which is what actually makes it
-     read as gold — is untouched. */
+  /* A contact shadow, not a glow: the button lifts off the page without
+     broadcasting light. */
   box-shadow: 0 6px 18px -12px rgba(var(--g2-rgb), .45);
 }
 .btn-primary:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 8px 22px -12px rgba(var(--g2-rgb), .6); }
@@ -391,17 +341,10 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .back-btn:hover { color:var(--tx0); background:var(--s0); }
 
 /*
- * 🔴 Product-experience review — press feedback was missing on the FOUR most
- * frequently tapped element families in the app: nav pills, quiz/commitment
- * choices, the back button, and every clickable row (roster rows, unit
- * cards). They all had `:hover`, which is invisible on a touchscreen — the
- * majority of real usage here. `.btn` already had `scale(.97)` on `:active`;
- * this brings the other four in line with that existing, proven pattern
- * rather than inventing a new one. `:not(:disabled)` matches `.btn`'s guard
- * so a disabled pill/row never LOOKS pressable. `translateY` on `.row-hover`
- * instead of `scale` — rows are wide and full-bleed, so a horizontal-safe
- * 1px nudge reads as "pressed" without the row visually resizing against its
- * neighbours. Respects prefers-reduced-motion via the existing global rule.
+ * Press feedback for touch (where :hover is invisible): pills, choices, the
+ * back button and clickable rows follow .btn's :active pattern. Rows nudge
+ * 1px instead of scaling, so wide rows do not resize against neighbours.
+ * Disabled controls never look pressable. Honours reduced motion globally.
  */
 .pill:active:not(:disabled), .icon-btn:active:not(:disabled), .back-btn:active:not(:disabled) { transform:scale(.97); }
 
@@ -578,14 +521,9 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
    so node + card are one milestone. Cards alternate sides, joined by a soft
    drawn connector. Tokens only — black + gold identity, calm motion, no glow. */
 .snake-path { position: relative; }
-/* 🔴 Route + ledger. Mobile-first: ONE column, and the ledger comes AFTER the
-   route in source order — on a phone the route is the whole point, and a
-   summary panel above it would push the trainee's actual next step below the
-   fold. From 900px up (where the 620px card was leaving ~48% of the viewport
-   abandoned) a second column appears and the ledger sticks to the top of the
-   scroll, so the sense of "how far am I" stays visible while the route scrolls
-   past it. `align-items: start` keeps the sticky behaviour working — a
-   stretched grid item cannot stick. */
+/* Route + ledger. Mobile-first: one column, ledger after the route so the
+   next step stays on screen. From 900px a second column appears and the
+   ledger sticks while the route scrolls (align-items: start lets it stick). */
 .journey-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-6); align-items: start; }
 .journey-ledger { min-width: 0; }
 
@@ -595,27 +533,16 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 }
 
 .snake-node { width: 100%; }
-/* 🔴 The journey is ONE vertical rail every station sits on — not two
-   alternating columns joined by a curve. Alternating sides left half of every
-   desktop row dead, and the curve ended in empty space instead of reaching the
-   next node, which reads as a rendering fault rather than a route. A single
-   spine with the orb ON it, and travelled track coloured gold while the road
-   ahead stays grey, is what makes progress legible at a glance: the trainee
-   sees how far they have come, not just a list of modules. */
+/* One vertical rail every station sits on; travelled track gold, road
+   ahead grey. */
 .snake-card { width: 100%; }
 
 /* the node sits on the rail; a subtle lift on hover keeps it feeling alive */
 .snake-orb { width: 44px; height: 44px; transition: transform .28s var(--ease), box-shadow .28s var(--ease); }
 .snake-orb--milestone { width: 52px; height: 52px; }
 
-/* 🔴 THE STATION NUMBER. It was `.t-num .t-sm`, and `.t-sm` carries
-   `color: var(--tx2)` — which overrode the colour the orb sets on itself, so
-   on the CURRENT station the numeral rendered muted grey on gold: measured
-   1.2:1, a number you can see the shape of and not read. It also came in at
-   14.4px/500 inside a 44px disc, which is why it read as faint rather than as
-   the landmark it is. Colour is inherited from the orb (near-black on gold =
-   5.28:1, --tx3 on the void ahead = 5.0:1), and the numeral is sized to the
-   disc it sits in. */
+/* The station numeral inherits the orb's colour (5.28:1 on gold, 5.0:1 on
+   the void) and is sized to the disc. */
 .snake-orb-num {
   font-size: 1.05rem; font-weight: 700; line-height: 1;
   color: inherit; font-variant-numeric: tabular-nums;
@@ -953,36 +880,22 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 }
 
 /* ─── SIDEBAR SHELL (≥1100px) ───────────────────────────────────────────
-   The same header element becomes a vertical rail. No JSX restructure — the
-   flex row turns into a column and the page grid shifts to make room.
-
-   🔴 It sits at the INLINE START (right in RTL, left in LTR), not a hard
-   "left". The platform is RTL and the eye enters from the right; a hard-left
-   rail would put navigation where an Arabic reader's eye exits. The logical
-   property also means the rail follows automatically if the product language
-   ever flips the document direction.
-
-   Below 1100px the horizontal header returns untouched: a fixed rail on a
-   tablet or phone spends width the content needs, and the existing mobile
-   header rules already solve that case. */
+   The same header element becomes a vertical rail: the flex row turns into a
+   column and the page grid shifts to make room. Below 1100px the horizontal
+   header returns; a fixed rail would spend width the content needs. */
 /* Moved out of an inline style: `margin: 0 auto` beat the media query and the
    page never shifted when the rail collapsed — the same inline-wins trap the
    header hit earlier. */
 .shell-content { max-width: var(--w-shell); margin: 0 auto; }
 
 @media (min-width: 1100px) {
-  /* 🔴 Rail moved to the physical LEFT (`left: 0`, not inline-start) at the
-     user's explicit request, and the page is pushed by `margin-left`. The
-     document stays dir="rtl" — only the rail's side is pinned. */
+  /* The rail is pinned to the physical left (product decision); the document
+     stays dir="rtl". */
   .shell-header {
     position: fixed; top: 0; bottom: 0; left: 0;
     width: var(--rail-w, 264px); border-bottom: 0;
     border-inline-end: 0; border-right: 1px solid var(--line);
-    /* 🔴 `overflow-y: auto` clipped the profile popover — it opened INSIDE a
-       264px rail and got cut off. The rail's own content never overflows
-       (mark, identity, three links, two controls), so visible is safe and the
-       popover can escape the rail the way Apple's and Anthropic's sidebars
-       let theirs sit beside the column rather than under the trigger. */
+    /* overflow visible: the profile popover must escape the 264px rail. */
     overflow: visible; z-index: 20;
     transition: width .22s var(--ease);
   }
@@ -1009,11 +922,8 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   .shell-nav .pill[aria-current="page"],
   .shell-nav .pill:hover { border-color: var(--line-2); background: var(--s-1); }
 
-  /* 🔴 The rail is PADDING on the root, not a margin on the content. With a
-     margin the 1080px column stayed pinned beside the rail, so every pixel the
-     rail gave back on collapse became dead space on the far side — measured at
-     1920px: 576px of gap open, 764px collapsed, i.e. collapsing made it worse.
-     As padding, the content column re-centres inside whatever space is left. */
+  /* The rail is padding on the root, so the content column re-centres in the
+     space left when the rail collapses (a margin left dead space instead). */
   .shell-root { padding-left: var(--rail-w, 264px); transition: padding-left .22s var(--ease); }
   .shell-root[data-collapsed="true"] { --rail-w: 76px; }
 

@@ -60,19 +60,11 @@ export const curriculumStats = () => ({
  * worse, would have drifted toward definition questions.
  */
 /**
- * 🔴 LESSON QUESTIONS JOIN THE BANK (sprint 02).
- *
- * The bank was exam questions only, and an exam question becomes eligible when
- * its unit is PASSED — which for m2_1 is day 23. A trainee spent the first
- * three weeks with no retrieval at all, on exactly the material that carries
- * 45% of the official score. The lesson's own quiz questions are already
- * judgment items in a real situation (same authoring rules as the exam), so the
- * bank grows from the content that exists — no second question set, no new
- * authoring, no definition quiz.
- *
- * `lessonId` is what makes an item eligible: a lesson question opens when that
- * lesson is completed, an exam question when its unit is passed. It is the only
- * field added, and it is absent on exam items by design.
+ * Lesson quiz questions join the retrieval bank, so review starts in week one
+ * instead of after the first unit exam. They follow the same authoring rules
+ * as exam items. `lessonId` decides eligibility: a lesson question opens when
+ * that lesson is completed, an exam question when its unit is passed; it is
+ * absent on exam items.
  */
 export const RETRIEVAL_BANK: readonly { id: string; moduleId: string; lessonId?: string }[] = [
   ...MODULES.flatMap(m =>
@@ -95,16 +87,9 @@ export function retrievalId(moduleId: string, questionId: string): string {
 }
 
 /**
- * Lesson items are qualified by their LESSON as well as their unit.
- *
- * 🔴 Question ids are unique inside a lesson, not inside a unit: m1 carries two
- * different questions both authored as `l3q1`, in two different lessons. Under
- * the two-part id they collapsed into one item — a success on one would have
- * silently retired the other, and the trainee would have been shown a question
- * from a lesson they were not being asked about. Qualifying by lesson fixes it
- * without touching a line of curriculum content, and leaves EXAM ids byte-for-
- * byte identical, so retrieval history recorded before this release still
- * resolves.
+ * Lesson items are qualified by their LESSON as well as their unit: question
+ * ids are unique within a lesson, not within a unit (m1 has two `l3q1`).
+ * Exam ids are unchanged, so recorded retrieval history still resolves.
  */
 export function lessonRetrievalId(moduleId: string, lessonId: string, questionId: string): string {
   return `${moduleId}::${lessonId}::${questionId}`;

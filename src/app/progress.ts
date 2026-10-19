@@ -64,20 +64,11 @@ export const progressStore = {
   commit: (lessonId: string, text: string) =>
     apply(() => backend.record({ type: 'COMMITMENT_MADE', lessonId, text, at: now() })),
   /**
-   * 🔴 THE WELCOME SCREEN WAS A TRAP DOOR ON EVERY REFRESH.
-   *
-   * ONBOARDING_COMPLETED is written by ONE button — the welcome screen's own
-   * CTA. But after sign-in the shell routes straight to the path (the landing
-   * is derived from permissions), so a trainee who starts a lesson from the
-   * dashboard never passes through that button. The first-run redirect then
-   * fires on every reload and drops them back on «أهلاً بيك في فريق العضويات»
-   * — a person three lessons in, told to start again, with their own progress
-   * one click away and invisible.
-   *
-   * Onboarding is a STATE, not a button: whoever has opened a lesson has been
-   * welcomed. Derived from the log the app already writes, so nothing new is
-   * stored and an existing trainee is repaired on their next load.
-   */
+     * Onboarding is a state, not a button press: anyone who has opened a lesson
+     * has been welcomed. After sign-in the shell lands on the path, so the welcome
+     * button alone would send an active trainee back to the welcome screen on
+     * every reload.
+     */
   hasOnboarded: () => backend.events().some(e => e.type === 'ONBOARDING_COMPLETED' || e.type === 'LESSON_STARTED'),
   reset: () => apply(() => { backend.reset(); return backend.load(); }),
 };
@@ -113,11 +104,9 @@ export const currentCommitment = (
 };
 
 /* ---------- pure reads ----------
-   🔴 These live in `domain/progress/selectors.ts` (Phase 1, R1) because
-   `domain/journey/nextAction.ts` needs them and must not drag React and
-   localStorage — this module's own dependencies — into a Node process.
-   `isModuleUnlocked` keeps its convenient store-backed defaults HERE, where a
-   store exists; the domain version takes both arguments explicitly. */
+   Defined in `domain/progress/selectors.ts` so the domain runs in Node without
+   React or storage. `isModuleUnlocked` keeps store-backed defaults here; the
+   domain version takes both arguments explicitly. */
 import { isLessonDone, moduleLessonsDone, examPassed, isModuleComplete } from '../domain/progress/selectors';
 export { isLessonDone, moduleLessonsDone, examPassed, isModuleComplete };
 
