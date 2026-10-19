@@ -20,12 +20,12 @@ export const SkillsView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const started = skills.some(s => s.earned > 0);
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <ScreenHeader onBack={onExit} tabRoute leading={<Eyebrow icon={<TrendingUp size={13} />}>{t('sk.title', lang)}</Eyebrow>} />
 
       <m.main {...fade} aria-label={t('sk.aria', lang)} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         <h1 className="t-h1">{t('sk.headline', lang)}</h1>
-        <p className="t-sm measure" style={{ marginTop: 'var(--sp-2)', marginBottom: 'var(--sp-7)' }}>
+        <p className="t-sm measure mt-2 mb-7">
           {t('sk.sub', lang)}
         </p>
 
@@ -36,20 +36,20 @@ export const SkillsView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             action={<Button onClick={onExit}>{t('sk.gotofirst', lang)}</Button>}
           />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+          <div className="stack gap-4">
             {skills.map(s => {
               const st = skillState(s);
               return (
                 <div key={s.id}
                   style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: `1px solid ${st === 'mastered' ? 'rgba(var(--g2-rgb),.35)' : 'var(--line)'}`, borderRadius: 'var(--r-md)' }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--sp-3)', marginBottom: 'var(--sp-2)' }}>
-                    <span className="t-title" style={{ color: 'var(--tx0)' }}>{s.name}</span>
+                  <div className="row items-baseline justify-between gap-3 mb-2">
+                    <span className="t-title c-tx0">{s.name}</span>
                     <span className="t-label" style={{ color: st === 'mastered' ? 'var(--g1)' : st === 'working' ? 'var(--tx2)' : 'var(--tx3)' }}>
                       {SKILL_STATE_LABEL[st]}
                     </span>
                   </div>
                   <SkillBar pct={s.pct} />
-                  <p className="t-sm" style={{ marginTop: 'var(--sp-2)' }}>{s.description}</p>
+                  <p className="t-sm mt-2">{s.description}</p>
                 </div>
               );
             })}

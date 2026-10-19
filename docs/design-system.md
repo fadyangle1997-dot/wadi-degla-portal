@@ -26,10 +26,31 @@
 | `PricesNote` | تنويه الأسعار الإلزامي | مع أي مثال مالي |
 
 ## 3) لغة التفاعل الواحدة (`.btn/.option/.field/.pill/.icon-btn/.back-btn/.row-hover`)
-كل عنصر تفاعلي: **hover** (رفع حد `line-3` + سطح أفتح، 150ms) · **focus-visible** (outline ذهبي) · **active** (scale .97) · **disabled** (opacity .4) · **هدف ≥44px**. الحالات في CSS classes لأن الـpseudo-states مستحيلة inline — التخطيط الساكن يبقى في المكوّن.
+كل عنصر تفاعلي: **hover** (رفع حد `line-3` + سطح أفتح، 150ms) · **focus-visible** (outline ذهبي) · **active** (scale .97) · **disabled** (opacity .4) · **هدف ≥44px**. الحالات في CSS classes لأن الـpseudo-states مستحيلة inline، والتخطيط الساكن بمفردات التخطيط (القسم 4).
 
-## 4) قرار معماري: تركيب بدل QuestionRunner واحد
+## 4) مفردات التخطيط (`theme.css` ← LAYOUT VOCABULARY)
+التخطيط الساكن بقى classes بدل `style={{}}`. القاموس مقفول ومبني من الـtokens بس، فأي قيمة برّه السلم مش متاحة فيه أصلًا.
+
+| الفئة | الـclasses |
+|---|---|
+| الاتجاه | `.stack` (عمود flex) · `.row` (صف flex) · `.wrap` · `.block` |
+| المحاذاة | `.items-center/start/end/baseline/stretch` · `.justify-center/between/end/start` |
+| المرونة والمكان | `.grow` · `.no-shrink` · `.relative` · `.w-full` · `.min-h-screen` · `.text-center` · `.text-start` |
+| المسافات | `.gap-1..9` · `.mt-0..9` · `.mb-0..9` · `.m-0` |
+| لون النص | `.c-tx0..3` · `.c-g1` · `.c-g2` · `.c-ready` · `.c-attn` · `.c-risk` · `.c-info` |
+| العمود | `.focus-col`: عمود الشاشة اللي فيها حاجة واحدة (درس، امتحان، Boss، مراجعة اليوم)، وعرضه `--w-focus` = `WIDTH.focus` |
+
+**القوة:** الـclasses دي عليها `!important` وفي أول الملف، فبتتصرف بالظبط زي الـinline style اللي استبدلته: بتغلب أي قاعدة عادية، وأي قاعدة `!important` بعدها (تعديلات الموبايل) بتغلبها هي. عشان كده التعديل حسب المقاس مكانه class المكوّن، مش utility تانية.
+
+**الـinline بيفضل لـ:** القيم المحسوبة (`active ? … : …`، أو لون جاي من خريطة حالة)، والقيم اللي برّه القاموس (`padding`، `border`، `maxWidth`)، وأي خاصية مكتوبة قبل `...style`، لأن الـspread ممكن يغيّرها والـ`!important` هيمنعه.
+
+**الحارس:** `src/ui/__tests__/vocabulary.test.ts` بيفشل لو:
+- قيمة ساكنة القاموس بيغطيها اتكتبت inline على عنصر DOM أو أيقونة lucide أو `ArabicContent`؛
+- class شكلها من القاموس ومش موجودة فيه (`gap-10`، `c-gold`)؛
+- class في القاموس اتكتبت بقيمة خام بدل token.
+
+## 5) قرار معماري: تركيب بدل QuestionRunner واحد
 امتحان الوحدة والـBoss والدرس **آلات حالة مختلفة** (تسجيل نتيجة / عدّ أخطاء / مراحل). مكوّن واحد بأعلام تكوين = تجريد مسرّب. النظام يوفّر **القطع الموحّدة** (OptionButton + FeedbackBlock + ProgressRail + ScreenHeader) وكل تدفق يملك حالته — نفس الاتساق البصري بصفر هشاشة.
 
-## 5) Anti-patterns (مرفوضة في المراجعة)
-letter-spacing على عربي · إيموجي كأيقونة (lucide فقط) · فعل هدّام بلا ConfirmDialog · mutation بلا Toast · ذهبي مشبع للإنجازات · لون بلا نص · هدف تفاعلي <44px · مقارنة اسم دور في UI (`can()` فقط) · أرقام مدة inline (presets `ui/motion.ts` فقط).
+## 6) Anti-patterns (مرفوضة في المراجعة)
+letter-spacing على عربي · إيموجي كأيقونة (lucide فقط) · فعل هدّام بلا ConfirmDialog · mutation بلا Toast · ذهبي مشبع للإنجازات · لون بلا نص · هدف تفاعلي <44px · مقارنة اسم دور في UI (`can()` فقط) · أرقام مدة inline (presets `ui/motion.ts` فقط) · `style={{ display: 'flex' }}` أو أي قيمة ساكنة مفردات التخطيط بتغطيها.

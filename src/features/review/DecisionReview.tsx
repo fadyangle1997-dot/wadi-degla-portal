@@ -38,7 +38,6 @@ const RATIONALE: Record<ReviewField, string> = {
   improvement: 'التحسين اللي بتكتبه بنفسك بيثبت أكتر من أي ملاحظة بتتقالّك.',
 };
 
-const col: React.CSSProperties = { width: '100%', maxWidth: WIDTH.focus, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5)' };
 
 export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -66,16 +65,16 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
 
   if (filed) {
     return (
-      <div style={{ minHeight: '100vh' }}>
+      <div className="min-h-screen">
         <ScreenHeader onBack={onExit} maxWidth={WIDTH.focus} leading={<Eyebrow>مراجعة اليوم</Eyebrow>} />
-        <m.section {...fade} style={{ ...col, textAlign: 'center', paddingTop: 'var(--sp-8)' }}>
-          <Check size={32} style={{ color: 'var(--ready)' }} />
+        <m.section {...fade} className="focus-col text-center" style={{ paddingTop: 'var(--sp-8)' }}>
+          <Check size={32} className="c-ready" />
           <h1 className="t-h2" style={{ margin: 'var(--sp-4) 0 var(--sp-2)' }}>اتسجّلت</h1>
           {/* No congratulation. Filing a debrief is the job, not an achievement. */}
-          <p className="t-body" style={{ color: 'var(--tx2)' }}>
+          <p className="t-body c-tx2">
             المدرب هيشوفها ويعلّق. الحلقة بتتقفل لما تقرا تعليقه.
           </p>
-          <div style={{ marginTop: 'var(--sp-6)' }}>
+          <div className="mt-6">
             <Button variant="ghost" onClick={onExit}>رجوع</Button>
           </div>
         </m.section>
@@ -84,17 +83,17 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <ScreenHeader onBack={onExit} maxWidth={WIDTH.focus} leading={<Eyebrow>مراجعة اليوم · {idx + 1} من {REVIEW_FIELDS.length}</Eyebrow>} />
 
-      <main style={col}>
+      <main className="focus-col">
         {/* The chain so far — you reason forward from what you already said. */}
         {idx > 0 && (
-          <div style={{ marginBottom: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div className="stack mb-6 gap-2">
             {REVIEW_FIELDS.slice(0, idx).map(f => (
-              <div key={f} style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start', padding: 'var(--sp-2) var(--sp-3)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
-                <span className="t-label" style={{ minWidth: 96, flexShrink: 0, color: 'var(--tx3)' }}>{REVIEW_LABELS[f]}</span>
-                <span className="t-sm" style={{ flex: 1, color: 'var(--tx1)' }}>{answers[f]}</span>
+              <div key={f} className="row gap-3 items-start" style={{ padding: 'var(--sp-2) var(--sp-3)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
+                <span className="t-label no-shrink c-tx3" style={{ minWidth: 96 }}>{REVIEW_LABELS[f]}</span>
+                <span className="t-sm grow c-tx1">{answers[f]}</span>
                 <button className="icon-btn" onClick={() => setIdx(REVIEW_FIELDS.indexOf(f))} aria-label={`تعديل ${REVIEW_LABELS[f]}`}>تعديل</button>
               </div>
             ))}
@@ -102,22 +101,22 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
         )}
 
         <m.section key={field} {...fade}>
-          <h1 className="t-h2" style={{ margin: 0 }}>{REVIEW_PROMPTS[field]}</h1>
-          <p className="t-sm" style={{ color: 'var(--tx3)', margin: 'var(--sp-2) 0 var(--sp-5)' }}>{RATIONALE[field]}</p>
+          <h1 className="t-h2 m-0">{REVIEW_PROMPTS[field]}</h1>
+          <p className="t-sm c-tx3" style={{ margin: 'var(--sp-2) 0 var(--sp-5)' }}>{RATIONALE[field]}</p>
 
           <textarea
             value={value}
             onChange={e => setAnswers(a => ({ ...a, [field]: e.target.value }))}
-            className="field"
+            className="field w-full"
             aria-label={REVIEW_LABELS[field]}
             rows={4}
             autoFocus
-            style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.7 }}
+            style={{ resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.7 }}
           />
 
-          <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-5)', alignItems: 'center' }}>
+          <div className="row gap-2 mt-5 items-center">
             {idx > 0 && <Button variant="ghost" onClick={() => setIdx(i => i - 1)}>رجوع</Button>}
-            <div style={{ flex: 1 }} />
+            <div className="grow" />
             <Button onClick={advance} disabled={!canAdvance}>
               {isLast ? 'سجّل المراجعة' : <>كمّل <ArrowRight size={16} className="icon-dir" /></>}
             </Button>

@@ -79,7 +79,7 @@ export const Card: React.FC<
 );
 
 export const Eyebrow: React.FC<{ children: React.ReactNode; icon?: React.ReactNode }> = ({ children, icon }) => (
-  <span className="t-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-2)' }}>{icon}{children}</span>
+  <span className="t-eyebrow items-center gap-2" style={{ display: 'inline-flex' }}>{icon}{children}</span>
 );
 
 /* ---------------- button ---------------- */
@@ -104,7 +104,7 @@ export const Callout: React.FC<{ tone: Tone; title?: string; children: React.Rea
   const t = TONES[tone];
   return (
     <div style={{ background: t.bg, borderRight: `2px solid ${t.c}`, borderRadius: 'var(--r-sm)', padding: 'var(--sp-4) var(--sp-5)' }}>
-      <div className="t-label" style={{ color: t.c, marginBottom: 'var(--sp-2)' }}>{title ?? t.label}</div>
+      <div className="t-label mb-2" style={{ color: t.c }}>{title ?? t.label}</div>
       <div className="t-body">{children}</div>
     </div>
   );
@@ -122,7 +122,7 @@ export const FeedbackBlock: React.FC<{
   return (
     <div role="status" aria-live="polite">
       <Callout tone={tone} title={title}>{children}</Callout>
-      <div style={{ marginTop: 'var(--sp-5)' }}>
+      <div className="mt-5">
         <Button ref={ref} onClick={onAction}>{actionLabel}</Button>
       </div>
     </div>
@@ -131,9 +131,8 @@ export const FeedbackBlock: React.FC<{
 
 /* ---------------- prices disclaimer ---------------- */
 export const PricesNote: React.FC<{ text: string }> = ({ text }) => (
-  <div style={{ display: 'flex', gap: 'var(--sp-2)', padding: 'var(--sp-3) var(--sp-4)', borderRadius: 'var(--r-sm)',
-    background: 'rgba(var(--g2-rgb),.05)', border: '1px solid rgba(var(--g2-rgb),.16)', alignItems: 'flex-start' }}>
-    <Info size={16} style={{ color: 'var(--g2)', flexShrink: 0, marginTop: 'var(--sp-1)' }} />
+  <div className="row gap-2 items-start" style={{ padding: 'var(--sp-3) var(--sp-4)', borderRadius: 'var(--r-sm)', background: 'rgba(var(--g2-rgb),.05)', border: '1px solid rgba(var(--g2-rgb),.16)' }}>
+    <Info size={16} className="c-g2 no-shrink mt-1" />
     <span className="t-sm">{text}</span>
   </div>
 );
@@ -150,8 +149,8 @@ export const OptionButton: React.FC<{
     onClick={onPick}
     aria-pressed={state !== 'idle' && state !== 'dim'}
     className={`option ${state === 'idle' ? 'option-idle' : ''} ${arena && (state === 'idle' || state === 'dim') ? 'option-arena' : ''} ${state === 'correct' ? 'option-correct' : ''} ${state === 'wrong' ? 'option-wrong' : ''}`}>
-    {state === 'correct' ? <Check size={16} style={{ color: 'var(--ready)', flexShrink: 0 }} />
-      : state === 'wrong' ? <X size={16} style={{ color: 'var(--risk)', flexShrink: 0 }} />
+    {state === 'correct' ? <Check size={16} className="c-ready no-shrink" />
+      : state === 'wrong' ? <X size={16} className="c-risk no-shrink" />
       : state === 'dim' ? <span style={{ width: 17 }} /> : null}
     {text}
   </button>
@@ -210,15 +209,15 @@ export const ScreenHeader: React.FC<{
       background: tone === 'arena' ? 'var(--overlay-arena)' : 'var(--overlay)',
       borderBottom: `1px solid ${tone === 'arena' ? 'rgba(var(--g2-rgb),.3)' : 'var(--line)'}`,
     }}>
-    <div style={{ maxWidth, margin: '0 auto', padding: 'var(--sp-3) var(--sp-5)', display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+    <div className="row items-center gap-3 wrap" style={{ maxWidth, margin: '0 auto', padding: 'var(--sp-3) var(--sp-5)' }}>
       {onBack && (
         <button onClick={onBack} aria-label={t('ex.backtopath', langStore.get())} className="back-btn">
           <ChevronLeft size={22} className="icon-dir" />
         </button>
       )}
       <span className="screen-header-label">{leading}</span>
-      {rail && <div style={{ flex: 1, minWidth: 120 }}>{rail}</div>}
-      {!rail && <div style={{ flex: 1 }} />}
+      {rail && <div className="grow" style={{ minWidth: 120 }}>{rail}</div>}
+      {!rail && <div className="grow" />}
       {trailing}
     </div>
   </nav>
@@ -226,13 +225,9 @@ export const ScreenHeader: React.FC<{
 
 /* ---------------- progress rail ---------------- */
 export const ProgressRail: React.FC<{ total: number; current: number; emphasis?: boolean }> = ({ total, current, emphasis }) => (
-  <div style={{ display: 'flex', gap: 'var(--sp-1)' }} aria-hidden>
+  <div className="row gap-1" aria-hidden>
     {Array.from({ length: total }, (_, i) => (
-      <div key={i} style={{
-        height: 4, flex: 1, borderRadius: 'var(--r-full)',
-        background: i < current ? 'var(--g3)' : i === current ? (emphasis ? 'var(--g1)' : 'var(--g2)') : 'var(--line-2)',
-        transition: 'background .3s var(--ease)',
-      }} />
+      <div key={i} className="grow" style={{ height: 4, borderRadius: 'var(--r-full)', background: i < current ? 'var(--g3)' : i === current ? (emphasis ? 'var(--g1)' : 'var(--g2)') : 'var(--line-2)', transition: 'background .3s var(--ease)' }} />
     ))}
   </div>
 );
@@ -251,7 +246,7 @@ const BADGE = {
 export const StatusBadge: React.FC<{ tone: keyof typeof BADGE; children: React.ReactNode; icon?: React.ReactNode }> = ({ tone, children, icon }) => {
   const t = BADGE[tone];
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-1)', padding: 'var(--sp-1) var(--sp-3)', borderRadius: 'var(--r-full)', border: `1px solid ${t.b}`, color: t.c, fontSize: '0.72rem', fontWeight: 600 }}>
+    <span className="items-center gap-1" style={{ display: 'inline-flex', padding: 'var(--sp-1) var(--sp-3)', borderRadius: 'var(--r-full)', border: `1px solid ${t.b}`, color: t.c, fontSize: '0.72rem', fontWeight: 600 }}>
       {icon}{children}
     </span>
   );
@@ -275,9 +270,9 @@ export const ConfirmDialog: React.FC<{
   return (
     <div className="dialog-scrim" onClick={onCancel}>
       <div className="dialog" role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()}>
-        <h2 className="t-h3" style={{ margin: 0 }}>{title}</h2>
+        <h2 className="t-h3 m-0">{title}</h2>
         <p className="t-sm" style={{ margin: 'var(--sp-3) 0 var(--sp-5)' }}>{body}</p>
-        <div style={{ display: 'flex', gap: 'var(--sp-3)', justifyContent: 'flex-start' }}>
+        <div className="row gap-3 justify-start">
           <Button ref={ref} onClick={onConfirm}
             style={danger ? { background: 'var(--risk)', borderColor: 'var(--risk)', color: '#fff' } : undefined}>
             {confirmLabel}
@@ -293,7 +288,7 @@ export const ConfirmDialog: React.FC<{
 export const Toast: React.FC<{ message: string | null }> = ({ message }) =>
   message ? (
     <div className="toast" role="status" aria-live="polite">
-      <Check size={13} style={{ color: 'var(--ready)' }} />{message}
+      <Check size={13} className="c-ready" />{message}
     </div>
   ) : null;
 
@@ -302,13 +297,9 @@ export const SkillBar: React.FC<{ pct: number; segments?: number }> = ({ pct, se
   const filled = Math.round(pct * segments);
   return (
     <div role="progressbar" aria-valuenow={Math.round(pct * 100)} aria-valuemin={0} aria-valuemax={100}
-      style={{ display: 'flex', gap: 'var(--sp-1)' }}>
+      className="row gap-1">
       {Array.from({ length: segments }, (_, i) => (
-        <span key={i} style={{
-          height: 6, flex: 1, borderRadius: 'var(--r-full)',
-          background: i < filled ? 'var(--g2)' : 'var(--line-2)',
-          transition: 'background .3s var(--ease)',
-        }} />
+        <span key={i} className="grow" style={{ height: 6, borderRadius: 'var(--r-full)', background: i < filled ? 'var(--g2)' : 'var(--line-2)', transition: 'background .3s var(--ease)' }} />
       ))}
     </div>
   );
@@ -321,12 +312,12 @@ export const SkillBar: React.FC<{ pct: number; segments?: number }> = ({ pct, se
  */
 export const EmptyState: React.FC<{ icon?: React.ReactNode; title: string; body: string; action?: React.ReactNode; headingLevel?: 2 | 3 }> =
   ({ icon, title, body, action, headingLevel = 2 }) => (
-    <div style={{ textAlign: 'center', padding: 'var(--sp-8) var(--sp-5)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-3)' }}>
+    <div className="stack text-center items-center gap-3" style={{ padding: 'var(--sp-8) var(--sp-5)' }}>
       {/* The component owns the icon size, so every empty state matches. */}
-      {icon && <span className="empty-state-icon" style={{ color: 'var(--tx3)' }}>{icon}</span>}
+      {icon && <span className="empty-state-icon c-tx3">{icon}</span>}
       {headingLevel === 2 ? <h2 className="t-h3">{title}</h2> : <h3 className="t-h3">{title}</h3>}
-      <p className="t-sm measure" style={{ margin: 0 }}>{body}</p>
-      {action && <div style={{ marginTop: 'var(--sp-3)' }}>{action}</div>}
+      <p className="t-sm measure m-0">{body}</p>
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 
@@ -348,9 +339,9 @@ export const Skeleton: React.FC<{ height?: number; width?: string }> = ({ height
  * ownership move only.
  */
 export const SpineWell: React.FC<{ children: React.ReactNode; spine?: 'rule' | 'risk'; label?: React.ReactNode }> = ({ children, spine = 'rule', label }) => (
-  <div style={{ position: 'relative', background: 'var(--s-2)', borderRadius: 'var(--r-md)', padding: 'var(--sp-4) var(--sp-5)', overflow: 'hidden' }}>
+  <div className="relative" style={{ background: 'var(--s-2)', borderRadius: 'var(--r-md)', padding: 'var(--sp-4) var(--sp-5)', overflow: 'hidden' }}>
     <span aria-hidden style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: 3, background: spine === 'risk' ? 'var(--risk)' : 'var(--g2)' }} />
-    {label && <div className="t-label" style={{ color: spine === 'risk' ? 'var(--risk)' : 'var(--g1)', marginBottom: 'var(--sp-2)' }}>{label}</div>}
+    {label && <div className="t-label mb-2" style={{ color: spine === 'risk' ? 'var(--risk)' : 'var(--g1)' }}>{label}</div>}
     {children}
   </div>
 );
@@ -371,8 +362,8 @@ export const DayRing: React.FC<{ day: number; total: number; pct: number }> = ({
   return (
     /* Sized by CSS var so a media query can shrink it without touching the
        geometry maths: the SVG scales with the box via viewBox. */
-    <div className="dayring" style={{ position: 'relative', width: 'var(--ring, ' + size + 'px)', height: 'var(--ring, ' + size + 'px)', flexShrink: 0 }}>
-      <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" aria-hidden style={{ display: 'block', transform: 'rotate(-90deg)' }}>
+    <div className="dayring relative no-shrink" style={{ width: 'var(--ring, ' + size + 'px)', height: 'var(--ring, ' + size + 'px)' }}>
+      <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" aria-hidden className="block" style={{ transform: 'rotate(-90deg)' }}>
         <circle cx={size / 2} cy={size / 2} r={R} fill="none" stroke="var(--line-2)" strokeWidth={STROKE} />
         <circle
           cx={size / 2} cy={size / 2} r={R} fill="none"
@@ -382,11 +373,11 @@ export const DayRing: React.FC<{ day: number; total: number; pct: number }> = ({
         />
       </svg>
 
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <span className="t-num" style={{ fontSize: '3rem', fontWeight: 600, color: 'var(--tx0)', lineHeight: 1, letterSpacing: '-.03em' }}>
+      <div className="stack items-center justify-center" style={{ position: 'absolute', inset: 0 }}>
+        <span className="t-num c-tx0" style={{ fontSize: '3rem', fontWeight: 600, lineHeight: 1, letterSpacing: '-.03em' }}>
           {day}
         </span>
-        <span className="t-label" style={{ color: 'var(--tx3)', marginTop: 'var(--sp-1)' }}>من {total} يوم</span>
+        <span className="t-label c-tx3 mt-1">من {total} يوم</span>
       </div>
 
       {/* Approval rides ON the ring: it belongs to the same fact, and a second

@@ -44,7 +44,7 @@ const initialView = (): View => {
 };
 
 const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Suspense fallback={<div role="status" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>{t('sh.loading')}</div>}>
+  <Suspense fallback={<div role="status" className="row min-h-screen items-center justify-center c-tx3">{t('sh.loading')}</div>}>
     {children}
   </Suspense>
 );
@@ -67,10 +67,10 @@ const Redirect: React.FC<{ to: string; onGo: (k: string) => void }> = ({ to, onG
 const NoAccess: React.FC = () => {
   const lang = useLang();
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 'var(--sp-6)' }}>
-      <div style={{ textAlign: 'center', maxWidth: 380 }}>
+    <div className="min-h-screen" style={{ display: 'grid', placeItems: 'center', padding: 'var(--sp-6)' }}>
+      <div className="text-center" style={{ maxWidth: 380 }}>
         <h1 className="t-h3">{t('sh.noaccess', lang)}</h1>
-        <p className="t-body" style={{ color: 'var(--tx2)', marginTop: 'var(--sp-2)' }}>{t('sh.noaccessbody', lang)}</p>
+        <p className="t-body c-tx2 mt-2">{t('sh.noaccessbody', lang)}</p>
       </div>
     </div>
   );
@@ -80,7 +80,7 @@ const ExamCooldown: React.FC<{ retryAt: number; onExit: () => void }> = ({ retry
   const lang = useLang();
   const when = new Date(retryAt).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <ScreenHeader onBack={onExit} maxWidth={680} leading={<Eyebrow>{t('sh.unitexam', lang)}</Eyebrow>} />
       <main style={{ maxWidth: 680, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5)' }}>
         <EmptyState

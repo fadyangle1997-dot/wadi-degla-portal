@@ -45,7 +45,7 @@ const Root = () => {
     );
   }
   return (
-    <Suspense fallback={<div role="status" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--tx3)' }}>{t('sh.loading')}</div>}>
+    <Suspense fallback={<div role="status" className="min-h-screen c-tx3" style={{ display: 'grid', placeItems: 'center' }}>{t('sh.loading')}</div>}>
       <App />
     </Suspense>
   );

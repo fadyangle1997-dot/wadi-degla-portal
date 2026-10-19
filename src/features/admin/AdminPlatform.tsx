@@ -35,7 +35,7 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
   if (!canDo('operations.view') && !canDo('users.view')) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="row min-h-screen items-center justify-center">
         <EmptyState title={t('ad.noaccess', lang)} body={t('ad.noaccessops', lang)} action={<Button onClick={onExit}>{t('ad.back', lang)}</Button>} />
       </div>
     );
@@ -62,7 +62,7 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <TabBar tabs={visibleTabs} active={tab} onChange={setTab} onExit={onExit} />
       <m.main key={tab} {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         {tab === 'dashboard' && <OperationalDashboard />}
@@ -84,7 +84,7 @@ const TabBar: React.FC<{ tabs: { id: Tab; label: string; icon: React.ReactNode }
     <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.staff}
       leading={<Eyebrow icon={<ShieldCheck size={13} />}>{tr('ad.platform', lang)}</Eyebrow>}
       trailing={
-        <nav style={{ display: 'flex', gap: 'var(--sp-1)', flexWrap: 'wrap' }} aria-label={tr('ad.sections', lang)}>
+        <nav className="row gap-1 wrap" aria-label={tr('ad.sections', lang)}>
           {tabs.map(t => (
             <button key={t.id} onClick={() => onChange(t.id)} aria-current={active === t.id}
               className="pill" style={active === t.id ? { borderColor: 'var(--g2)', color: 'var(--g1)' } : undefined}>
@@ -108,10 +108,10 @@ const OperationalDashboard: React.FC = () => {
 
   return (
     <>
-      <h1 className="t-h2" style={{ marginBottom: 'var(--sp-2)' }}>{t('ad.dirhealth', lang)}</h1>
-      <p className="t-sm" style={{ marginBottom: 'var(--sp-5)' }}>{t('ad.dirhealthsub', lang)}</p>
+      <h1 className="t-h2 mb-2">{t('ad.dirhealth', lang)}</h1>
+      <p className="t-sm mb-5">{t('ad.dirhealthsub', lang)}</p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 'var(--sp-3)' }}>
+      <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
         <Stat label={t('ad.active', lang)} value={stats.active} />
         <Stat label={t('ad.disabled', lang)} value={stats.disabled} tone={stats.disabled ? 'attn' : undefined} />
         <Stat label={t('ad.archivedst', lang)} value={stats.archived} />
@@ -121,10 +121,10 @@ const OperationalDashboard: React.FC = () => {
           tone={sev.critical ? 'risk' : sev.warning ? 'attn' : sev.total > 0 ? 'info' : 'ready'} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)' }}>
+      <div className="gap-3 mt-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
         <Card>
           <Eyebrow>{t('ad.byrole', lang)}</Eyebrow>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: 'var(--sp-3)' }}>
+          <div className="stack gap-2 mt-3">
             <Dist label={t('ad.employees', lang)} n={stats.employees} />
             <Dist label={t('ad.trainers', lang)} n={stats.trainers} />
             <Dist label={t('ad.managers', lang)} n={stats.managers} />
@@ -133,16 +133,16 @@ const OperationalDashboard: React.FC = () => {
         </Card>
         <Card>
           <Eyebrow>{t('ad.coverage', lang)}</Eyebrow>
-          <div style={{ marginTop: 'var(--sp-3)' }}>
+          <div className="mt-3">
             <Coverage label={t('ad.covtrainer', lang)} pct={stats.trainerCoverage} />
             <Coverage label={t('ad.covmanager', lang)} pct={stats.managerCoverage} />
           </div>
         </Card>
         <Card>
           <Eyebrow>{t('ad.bybranch', lang)}</Eyebrow>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: 'var(--sp-3)' }}>
+          <div className="stack gap-2 mt-3">
             {stats.branches.length === 0
-              ? <p className="t-sm" style={{ color: 'var(--tx3)', margin: 0 }}>{t('ad.nobranches', lang)}</p>
+              ? <p className="t-sm c-tx3 m-0">{t('ad.nobranches', lang)}</p>
               : stats.branches.map(b => <Dist key={b.branch} label={branchNameOf(b.branch, org.branches)} n={b.count} />)}
           </div>
         </Card>
@@ -164,7 +164,7 @@ const DemoDataCard: React.FC = () => {
     <Card layout={{ marginTop: 'var(--sp-4)' }}>
       <Eyebrow>{t('ad.demo', lang)}</Eyebrow>
       <p className="t-sm measure" style={{ margin: 'var(--sp-2) 0 var(--sp-4)' }}>{t('ad.demosub', lang)}</p>
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+      <div className="row gap-3 wrap">
         <Button onClick={() => setConfirm('load')}>{t('ad.demoload', lang)}</Button>
         <Button variant="ghost" onClick={() => setConfirm('clear')}>{t('ad.democlear', lang)}</Button>
       </div>
@@ -196,19 +196,19 @@ const Stat: React.FC<{ label: string; value: number; tone?: 'ready' | 'attn' | '
   return (
     <div style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
       <span className="t-label">{label}</span>
-      <div className="t-num t-h2" style={{ color, marginTop: 'var(--sp-1)' }}>{value}</div>
+      <div className="t-num t-h2 mt-1" style={{ color }}>{value}</div>
     </div>
   );
 };
 const Dist: React.FC<{ label: string; n: number }> = ({ label, n }) => (
-  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+  <div className="row justify-between">
     <span className="t-sm">{label}</span>
-    <span className="t-num" style={{ color: 'var(--tx0)' }}>{n}</span>
+    <span className="t-num c-tx0">{n}</span>
   </div>
 );
 const Coverage: React.FC<{ label: string; pct: number }> = ({ label, pct }) => (
-  <div style={{ marginBottom: 'var(--sp-3)' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--sp-1)' }}>
+  <div className="mb-3">
+    <div className="row justify-between mb-1">
       <span className="t-sm">{label}</span>
       <span className="t-num t-label" style={{ color: pct >= 90 ? 'var(--ready)' : pct >= 60 ? 'var(--attn)' : 'var(--risk)' }}>{pct}%</span>
     </div>
@@ -234,23 +234,23 @@ const OperationalInbox: React.FC<{ onGoToUsers: () => void }> = ({ onGoToUsers }
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-3)', flexWrap: 'wrap', marginBottom: 'var(--sp-2)' }}>
-        <h1 className="t-h2" style={{ margin: 0 }}>{t('ad.needsyou', lang)}</h1>
-        {issues.length > 0 && <span className="t-num t-label" style={{ color: 'var(--tx2)' }}>{issues.length} {t('ad.issuecount', lang)}</span>}
+      <div className="row items-baseline gap-3 wrap mb-2">
+        <h1 className="t-h2 m-0">{t('ad.needsyou', lang)}</h1>
+        {issues.length > 0 && <span className="t-num t-label c-tx2">{issues.length} {t('ad.issuecount', lang)}</span>}
       </div>
-      <p className="t-sm" style={{ marginBottom: 'var(--sp-5)' }}>{t('ad.autodetect', lang)}</p>
+      <p className="t-sm mb-5">{t('ad.autodetect', lang)}</p>
 
       {issues.length === 0 ? (
         <EmptyState icon={<ShieldCheck />} title={t('ad.allclear', lang)}
           body={t('ad.allclearbody', lang)} />
       ) : (
         <>
-          <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginBottom: 'var(--sp-4)' }}>
+          <div className="row gap-3 wrap mb-4">
             {sev.critical > 0 && <StatusBadge tone="risk">{sev.critical} {t('ad.sevcritical', lang)}</StatusBadge>}
             {sev.warning > 0 && <StatusBadge tone="attn">{sev.warning} {t('ad.sevwarning', lang)}</StatusBadge>}
             {sev.info > 0 && <StatusBadge tone="info">{sev.info} {t('ad.sevinfo', lang)}</StatusBadge>}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div className="stack gap-2">
             {issues.map(issue => <InboxRow key={issue.id} issue={issue} onAction={onGoToUsers} />)}
           </div>
         </>
@@ -263,12 +263,12 @@ const InboxRow: React.FC<{ issue: OperationalIssue; onAction: () => void }> = ({
   const lang = useLang();
   const meta = SEV_META[issue.severity];
   return (
-    <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', padding: 'var(--sp-3) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', minHeight: 52 }}>
-      <span style={{ color: `var(--${meta.tone === 'risk' ? 'risk' : meta.tone === 'attn' ? 'attn' : 'info'})`, flexShrink: 0 }}
+    <div className="row-hover row items-center gap-3 wrap" style={{ padding: 'var(--sp-3) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', minHeight: 52 }}>
+      <span className="no-shrink" style={{ color: `var(--${meta.tone === 'risk' ? 'risk' : meta.tone === 'attn' ? 'attn' : 'info'})` }}
         title={t(meta.labelKey, lang)} aria-label={t(meta.labelKey, lang)}>{meta.icon}</span>
       {/* The issue text and its action come from the operations engine in
           Arabic — operational content, so an island, not a translation. */}
-      <ArabicContent as="span" className="t-sm" style={{ flex: '1 1 240px', color: 'var(--tx1)' }}>{issue.message}</ArabicContent>
+      <ArabicContent as="span" className="t-sm c-tx1" style={{ flex: '1 1 240px' }}>{issue.message}</ArabicContent>
       <Button variant="ghost" onClick={onAction}><ArabicContent as="span">{issue.action}</ArabicContent></Button>
     </div>
   );
@@ -291,10 +291,10 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
 
   return (
     <>
-      <h1 className="t-h2" style={{ marginBottom: 'var(--sp-2)' }}>{t('ad.audittitle', lang)}</h1>
-      <p className="t-sm" style={{ marginBottom: 'var(--sp-5)' }}>{t('ad.auditsub', lang)}</p>
+      <h1 className="t-h2 mb-2">{t('ad.audittitle', lang)}</h1>
+      <p className="t-sm mb-5">{t('ad.auditsub', lang)}</p>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginBottom: 'var(--sp-4)' }}>
+      <div className="row gap-3 wrap mb-4">
         <input className="field" style={{ flex: '1 1 220px' }} placeholder={t('ad.searchlog', lang)} aria-label={t('ad.searcharia', lang)}
           value={filter.text ?? ''} onChange={e => setFilter(f => ({ ...f, text: e.target.value || undefined }))} />
         <select className="field" aria-label={t('ad.actiontype', lang)} value={filter.action ?? ''}
@@ -310,15 +310,15 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
       {filtered.length === 0 ? (
         <EmptyState title={t('ad.noevents', lang)} body={t('ad.noeventsbody', lang)} />
       ) : (
-        <ol role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+        <ol role="list" className="stack m-0 gap-2" style={{ listStyle: 'none', padding: 0 }}>
           {filtered.map((e, i) => (
-            <li key={i} style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start', padding: 'var(--sp-3) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--g2)', marginTop: 'var(--sp-2)', flexShrink: 0 }} aria-hidden />
-              <div style={{ flex: 1 }}>
-                <span className="t-sm" style={{ color: 'var(--tx1)' }}>{describeAudit(e, nameOf)}</span>
-                <span className="t-label" style={{ display: 'block', marginTop: 'var(--sp-1)' }}>{new Date(e.at).toLocaleString('ar-EG')}</span>
+            <li key={i} className="row gap-3 items-start" style={{ padding: 'var(--sp-3) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
+              <span className="mt-2 no-shrink" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--g2)' }} aria-hidden />
+              <div className="grow">
+                <span className="t-sm c-tx1">{describeAudit(e, nameOf)}</span>
+                <span className="t-label block mt-1">{new Date(e.at).toLocaleString('ar-EG')}</span>
               </div>
-              <span className="t-label" style={{ color: 'var(--tx3)' }}>{PERMISSIONS['audit.view'] ? e.type : e.type}</span>
+              <span className="t-label c-tx3">{PERMISSIONS['audit.view'] ? e.type : e.type}</span>
             </li>
           ))}
         </ol>

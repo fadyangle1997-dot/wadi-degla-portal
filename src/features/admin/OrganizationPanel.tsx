@@ -37,14 +37,14 @@ export const OrganizationPanel: React.FC = () => {
 
   return (
     <section aria-label={t('og.title', lang)}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: 'var(--sp-2)' }}>
-        <h1 className="t-h2" style={{ margin: 0 }}>{t('og.title', lang)}</h1>
-        <div style={{ flex: 1 }} />
+      <div className="row items-center gap-3 mb-2">
+        <h1 className="t-h2 m-0">{t('og.title', lang)}</h1>
+        <div className="grow" />
         {creating ? (
-          <span style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
-            <input className="t-body" autoFocus value={draft} onChange={e => setDraft(e.target.value)}
+          <span className="row gap-2 items-center">
+            <input className="t-body c-tx0" autoFocus value={draft} onChange={e => setDraft(e.target.value)}
               placeholder={t('og.areaname', lang)} aria-label={t('og.newareaname', lang)}
-              style={{ padding: 'var(--sp-2) var(--sp-3)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', color: 'var(--tx0)' }} />
+              style={{ padding: 'var(--sp-2) var(--sp-3)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }} />
             <button className="pill" aria-label={t('og.confirm', lang)}
               onClick={() => { if (draft.trim()) orgStore.createArea(draft.trim()); setDraft(''); setCreating(false); }}>
               <Check size={13} />
@@ -57,11 +57,11 @@ export const OrganizationPanel: React.FC = () => {
           <Button variant="ghost" onClick={() => setCreating(true)}><Plus size={16} /> {t('og.newarea', lang)}</Button>
         )}
       </div>
-      <p className="t-sm measure" style={{ marginBottom: 'var(--sp-6)' }}>
+      <p className="t-sm measure mb-6">
         {t('og.intro', lang)}
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+      <div className="stack gap-4">
         {areas.map(area => {
           const kids = branchesOfArea(area.id, branches);
           const people = kids.reduce((n, b) => n + usersOfBranch(b.id, 'employee', users).length, 0);
@@ -69,13 +69,13 @@ export const OrganizationPanel: React.FC = () => {
 
           return (
             <Card key={area.id} tone={archived ? undefined : 'raised'} pad={5}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+              <div className="row items-center gap-3 wrap">
                 <Eyebrow icon={<MapPin size={13} />}>{t('og.area', lang)}</Eyebrow>
                 {renaming === area.id ? (
                   <>
-                    <input className="t-body" autoFocus value={draft} onChange={e => setDraft(e.target.value)}
+                    <input className="t-body c-tx0" autoFocus value={draft} onChange={e => setDraft(e.target.value)}
                       aria-label={`${t('og.newnamefor', lang)} ${area.name}`}
-                      style={{ padding: 'var(--sp-1) var(--sp-3)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', color: 'var(--tx0)' }} />
+                      style={{ padding: 'var(--sp-1) var(--sp-3)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }} />
                     <button className="pill" aria-label={t('og.savename', lang)}
                       onClick={() => { if (draft.trim()) orgStore.renameArea(area.id, draft.trim()); setRenaming(null); }}>
                       <Check size={13} />
@@ -89,7 +89,7 @@ export const OrganizationPanel: React.FC = () => {
                       onClick={() => { setDraft(area.name); setRenaming(area.id); }}><Pencil size={13} /></button>
                   </>
                 )}
-                <div style={{ flex: 1 }} />
+                <div className="grow" />
                 {archived && <StatusBadge tone="risk">{t('og.archived', lang)}</StatusBadge>}
                 <button className="pill" onClick={() => orgStore.setAreaStatus(area.id, archived ? 'active' : 'inactive')}>
                   {archived ? <><ArchiveRestore size={13} /> {t('og.restore', lang)}</> : <><Archive size={13} /> {t('og.archive', lang)}</>}
@@ -97,40 +97,40 @@ export const OrganizationPanel: React.FC = () => {
               </div>
 
               {/* Area manager — the one assignment that changes who sees what */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
-                <span className="t-label" style={{ color: 'var(--tx3)' }}>{t('og.areamanager', lang)}</span>
-                <select className="t-sm" value={area.managerId ?? ''}
+              <div className="row items-center gap-3 mt-4 wrap">
+                <span className="t-label c-tx3">{t('og.areamanager', lang)}</span>
+                <select className="t-sm c-tx0" value={area.managerId ?? ''}
                   aria-label={`${t('og.mgrofarea', lang)} ${area.name}`}
                   onChange={e => orgStore.assignAreaManager(area.id, e.target.value || null)}
-                  style={{ padding: 'var(--sp-1) var(--sp-3)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', color: 'var(--tx0)' }}>
+                  style={{ padding: 'var(--sp-1) var(--sp-3)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
                   <option value="">{t('og.unassigned', lang)}</option>
                   {areaManagers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </select>
                 {archived && area.managerId && (
-                  <span className="t-sm" style={{ color: 'var(--risk)' }}>{t('og.archivednote', lang)}</span>
+                  <span className="t-sm c-risk">{t('og.archivednote', lang)}</span>
                 )}
               </div>
 
               {/* Branches inside this area */}
-              <div style={{ marginTop: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                <span className="t-label" style={{ color: 'var(--tx3)' }}>
+              <div className="stack mt-4 gap-2">
+                <span className="t-label c-tx3">
                   {kids.length} {t('og.branches', lang)} · {people} {t('og.staff', lang)}
                 </span>
                 {kids.map(b => {
                   const trainers = usersOfBranch(b.id, 'trainer', users);
                   const staff = usersOfBranch(b.id, 'employee', users);
                   return (
-                    <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
-                      <Building2 size={13} style={{ color: 'var(--tx3)', flexShrink: 0 }} />
-                      <span className="t-body" style={{ color: 'var(--tx0)' }}>{b.name}</span>
-                      <span className="t-label" style={{ color: 'var(--tx3)' }}>
+                    <div key={b.id} className="row items-center gap-3 wrap" style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
+                      <Building2 size={13} className="c-tx3 no-shrink" />
+                      <span className="t-body c-tx0">{b.name}</span>
+                      <span className="t-label c-tx3">
                         {nameOf(b.branchManagerId) ?? t('og.nomanager', lang)} · {trainers.length} {t('og.trainers', lang)} · {staff.length} {t('og.staff', lang)}
                       </span>
-                      <div style={{ flex: 1 }} />
-                      <select className="t-sm" value={b.areaId ?? ''}
+                      <div className="grow" />
+                      <select className="t-sm c-tx1" value={b.areaId ?? ''}
                         aria-label={`${t('og.areaofbranch', lang)} ${b.name}`}
                         onChange={e => orgStore.transferBranch(b.id, e.target.value || null)}
-                        style={{ padding: 'var(--sp-1) var(--sp-2)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', color: 'var(--tx1)' }}>
+                        style={{ padding: 'var(--sp-1) var(--sp-2)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
                         <option value="">{t('og.noarea', lang)}</option>
                         {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                       </select>
@@ -138,7 +138,7 @@ export const OrganizationPanel: React.FC = () => {
                   );
                 })}
                 {kids.length === 0 && (
-                  <span className="t-sm" style={{ color: 'var(--tx3)' }}>{t('og.nobranches', lang)}</span>
+                  <span className="t-sm c-tx3">{t('og.nobranches', lang)}</span>
                 )}
               </div>
             </Card>
@@ -151,18 +151,18 @@ export const OrganizationPanel: React.FC = () => {
         {unassigned.length > 0 && (
           <Card pad={5}>
             <Eyebrow icon={<Users2 size={13} />}>{t('og.orphans', lang)}</Eyebrow>
-            <p className="t-sm" style={{ margin: 'var(--sp-2) 0 var(--sp-3)', color: 'var(--tx2)' }}>
+            <p className="t-sm c-tx2" style={{ margin: 'var(--sp-2) 0 var(--sp-3)' }}>
               {t('og.orphanshint', lang)}
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+            <div className="stack gap-2">
               {unassigned.map(b => (
-                <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--attn-line)', borderRadius: 'var(--r-sm)' }}>
-                  <Building2 size={13} style={{ color: 'var(--attn)', flexShrink: 0 }} />
+                <div key={b.id} className="row items-center gap-3" style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--attn-line)', borderRadius: 'var(--r-sm)' }}>
+                  <Building2 size={13} className="c-attn no-shrink" />
                   <span className="t-body">{b.name}</span>
-                  <div style={{ flex: 1 }} />
-                  <select className="t-sm" value="" aria-label={`${t('og.assignarea', lang)} ${b.name}`}
+                  <div className="grow" />
+                  <select className="t-sm c-tx1" value="" aria-label={`${t('og.assignarea', lang)} ${b.name}`}
                     onChange={e => e.target.value && orgStore.transferBranch(b.id, e.target.value)}
-                    style={{ padding: 'var(--sp-1) var(--sp-2)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', color: 'var(--tx1)' }}>
+                    style={{ padding: 'var(--sp-1) var(--sp-2)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
                     <option value="">{t('og.pickarea', lang)}</option>
                     {areas.filter(a => a.status === 'active').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                   </select>

@@ -59,7 +59,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
 
   return (
     <div
-      className="signin"
+      className="signin row relative min-h-screen items-center justify-center"
       /* The mirror of the Arabic island: this screen is English and LTR in
          BOTH modes by design, so it declares both — `lang` beside `dir`, or a
          screen reader in Arabic mode announces «Sign In» with Arabic phonetics.
@@ -67,11 +67,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
       lang="en"
       dir="ltr"
       onKeyDown={e => { if (e.key === 'Enter') submit(); }}
-      style={{
-        position: 'relative', minHeight: '100vh', overflow: 'hidden',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 'var(--sp-6) var(--sp-5)',
-      }}
+      style={{ overflow: 'hidden', padding: 'var(--sp-6) var(--sp-5)' }}
     >
       {/* Ambient club light — behind everything, never on the reading path. */}
       <span aria-hidden className="signin-orb" style={{ width: 340, height: 340, top: '-8%', left: '-10%', background: '#CCAB6C', animationDelay: '0s' }} />
@@ -80,34 +76,27 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
 
       {/* A CSS entrance, not Motion: the sign-in screen paints before the
           animation engine has loaded, so it must not start invisible. */}
-      <main className="enter-rise"
-        style={{ position: 'relative', width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+      <main className="enter-rise stack relative w-full items-center"
+        style={{ maxWidth: 420 }}
       >
         <BrandLogo size={104} />
 
-        <h1 style={{
-          margin: 'var(--sp-6) 0 var(--sp-2)', textAlign: 'center',
-          fontSize: 'clamp(1.5rem, 4vw, 1.85rem)', fontWeight: 600, letterSpacing: '-.015em',
-          color: 'var(--sg-tx)', lineHeight: 1.25,
-        }}>
+        <h1 className="text-center" style={{ margin: 'var(--sp-6) 0 var(--sp-2)', fontSize: 'clamp(1.5rem, 4vw, 1.85rem)', fontWeight: 600, letterSpacing: '-.015em', color: 'var(--sg-tx)', lineHeight: 1.25 }}>
           Wadi Degla Academy
         </h1>
-        <p style={{
-          margin: 0, textAlign: 'center', fontSize: '.78rem', fontWeight: 500,
-          letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--sg-gold-soft)',
-        }}>
+        <p className="m-0 text-center" style={{ fontSize: '.78rem', fontWeight: 500, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--sg-gold-soft)' }}>
           Membership Training Platform
         </p>
 
         <section
-          className="signin-card"
+          className="signin-card w-full mt-7"
           // --r-lg, the card radius: the sign-in card has its own colours but shares
           // the spatial scale.
-          style={{ width: '100%', marginTop: 'var(--sp-7)', padding: 'var(--sp-7) var(--sp-6)', borderRadius: 'var(--r-lg)' }}
+          style={{ padding: 'var(--sp-7) var(--sp-6)', borderRadius: 'var(--r-lg)' }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
+          <div className="stack gap-5">
             <div>
-              <label htmlFor="signin-user" style={labelStyle}>Username</label>
+              <label htmlFor="signin-user" className="block mb-2" style={labelStyle}>Username</label>
               <input
                 id="signin-user" className="signin-field" type="text" autoComplete="username"
                 value={username} onChange={e => { setUsername(e.target.value); setError(''); }}
@@ -116,8 +105,8 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
             </div>
 
             <div>
-              <label htmlFor="signin-pass" style={labelStyle}>Password</label>
-              <div style={{ position: 'relative' }}>
+              <label htmlFor="signin-pass" className="block mb-2" style={labelStyle}>Password</label>
+              <div className="relative">
                 <input
                   id="signin-pass" className="signin-field" type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
@@ -139,8 +128,8 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', cursor: 'pointer', minHeight: 44, fontSize: '.84rem', color: 'var(--sg-tx-dim)' }}>
+            <div className="row items-center justify-between gap-3 wrap">
+              <label className="row items-center gap-2" style={{ cursor: 'pointer', minHeight: 44, fontSize: '.84rem', color: 'var(--sg-tx-dim)' }}>
                 <input
                   type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}
                   style={{ width: 17, height: 17, accentColor: 'var(--sg-gold)', cursor: 'pointer' }}
@@ -155,14 +144,14 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
             {/* Announced, never a colour-only signal. */}
             <div aria-live="polite" style={{ minHeight: error ? 'auto' : 0 }}>
               {error && (
-                <p style={{ margin: 0, fontSize: '.82rem', color: 'var(--sg-gold-light)', lineHeight: 1.6 }}>
+                <p className="m-0" style={{ fontSize: '.82rem', color: 'var(--sg-gold-light)', lineHeight: 1.6 }}>
                   {error}
                 </p>
               )}
             </div>
 
-            <button type="button" className="signin-btn" onClick={submit} disabled={busy} aria-busy={busy}
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-2)' }}>
+            <button type="button" className="signin-btn items-center justify-center gap-2" onClick={submit} disabled={busy} aria-busy={busy}
+              style={{ display: 'inline-flex' }}>
               {busy
                 ? <><Loader2 size={16} className="spin" /> Signing in…</>
                 : <>Sign In <ArrowRight size={16} /></>}
@@ -170,7 +159,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
           </div>
         </section>
 
-        <p style={{ marginTop: 'var(--sp-6)', textAlign: 'center', fontSize: '.75rem', color: 'var(--sg-tx-dim)', letterSpacing: '.02em' }}>
+        <p className="mt-6 text-center" style={{ fontSize: '.75rem', color: 'var(--sg-tx-dim)', letterSpacing: '.02em' }}>
           Official Membership Operations Academy · Internal use only
         </p>
 
@@ -182,14 +171,13 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
 };
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', marginBottom: 'var(--sp-2)',
   fontSize: '.72rem', fontWeight: 500, letterSpacing: '.1em',
   textTransform: 'uppercase', color: 'var(--sg-tx-dim)',
 };
 
 /** DEV ONLY — fills a demo credential. Statically dropped from prod builds. */
 const DevPanel: React.FC<{ onFill: (u: string, p: string) => void }> = ({ onFill }) => (
-  <div style={{ marginTop: 'var(--sp-5)', display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap', justifyContent: 'center' }}>
+  <div className="row mt-5 gap-2 wrap justify-center">
     {[
       ['ahmed.m', 'Welcome@123', 'trainee'],
       ['trainer.adel', 'Welcome@123', 'trainer'],

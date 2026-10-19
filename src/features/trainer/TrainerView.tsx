@@ -75,32 +75,32 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
   if (!canDo('training.review')) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="row min-h-screen items-center justify-center">
         <EmptyState title={tr('ad.noaccess', lang)} body={tr('tn.noaccess', lang)} action={<Button onClick={onExit}>{tr('ad.back', lang)}</Button>} />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.staff}
         leading={<Eyebrow icon={<ClipboardList size={13} />}>{tr('tn.title', lang)}</Eyebrow>} />
 
       <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         {/* ---------- 1) who needs me TODAY ---------- */}
-        <h1 className="t-h2" style={{ marginBottom: 'var(--sp-2)' }}>{tr('tn.needyou', lang)}</h1>
-        <p className="t-sm" style={{ marginBottom: 'var(--sp-5)' }}>{tr('tn.needyousub', lang)}</p>
+        <h1 className="t-h2 mb-2">{tr('tn.needyou', lang)}</h1>
+        <p className="t-sm mb-5">{tr('tn.needyousub', lang)}</p>
 
         {queue.length === 0 && needsWork.length === 0 ? (
           <EmptyState icon={<UserCheck />} title={tr('tn.nothing', lang)}
             body={tr('tn.nothingbody', lang)} />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          <div className="stack gap-3">
             {queue.map(({ employee, module: m, at }) => (
-              <div key={`${employee.id}:${m.id}`} className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--attn-line)', borderRadius: 'var(--r-md)' }}>
+              <div key={`${employee.id}:${m.id}`} className="row-hover row items-center gap-3 wrap" style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--attn-line)', borderRadius: 'var(--r-md)' }}>
                 <div style={{ flex: '1 1 220px' }}>
-                  <span className="t-title" style={{ color: 'var(--tx0)' }}>{employee.name} · <ArabicContent as="span">{m.title}</ArabicContent></span>
-                  <span className="t-label" style={{ display: 'block', marginTop: 'var(--sp-1)' }}>
+                  <span className="t-title c-tx0">{employee.name} · <ArabicContent as="span">{m.title}</ArabicContent></span>
+                  <span className="t-label block mt-1">
                     {m.code} · {tr('tn.passedwait', lang)}
                   </span>
                 </div>
@@ -109,10 +109,10 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
               </div>
             ))}
             {needsWork.map(({ employee, module: m }) => (
-              <div key={`${employee.id}:${m.id}`} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
+              <div key={`${employee.id}:${m.id}`} className="row items-center gap-3 wrap" style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
                 <div style={{ flex: '1 1 220px' }}>
-                  <span className="t-title" style={{ color: 'var(--tx0)' }}>{employee.name} · <ArabicContent as="span">{m.title}</ArabicContent></span>
-                  <span className="t-label" style={{ display: 'block', marginTop: 'var(--sp-1)' }}>{tr('tn.reviewing', lang)} — {tr('tn.reassesswhen', lang)}</span>
+                  <span className="t-title c-tx0">{employee.name} · <ArabicContent as="span">{m.title}</ArabicContent></span>
+                  <span className="t-label block mt-1">{tr('tn.reviewing', lang)} — {tr('tn.reassesswhen', lang)}</span>
                 </div>
                 <StatusBadge tone="risk">{tr('tn.improving', lang)}</StatusBadge>
                 <Button variant="ghost" onClick={() => setEvaluating({ employee, moduleId: m.id })}>{tr('tn.reassess', lang)}</Button>
@@ -129,10 +129,10 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
         {/* ---------- 2) roster ---------- */}
         <h2 className="t-h3" style={{ margin: 'var(--sp-8) 0 var(--sp-2)' }}>{tr('tn.yourstaff', lang)}</h2>
-        <p className="t-sm" style={{ marginBottom: 'var(--sp-4)' }}>{tr('tn.deviceonly', lang)}</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+        <p className="t-sm mb-4">{tr('tn.deviceonly', lang)}</p>
+        <div className="stack gap-2">
           {employees.length === 0 && (
-            <p className="t-sm" style={{ color: 'var(--tx3)' }}>{tr('tn.nostaff', lang)}</p>
+            <p className="t-sm c-tx3">{tr('tn.nostaff', lang)}</p>
           )}
           {employees.map(u => (
             <RosterRow key={u.id} name={u.name} branch={branchNameOf(u.branchId, org.branches)} progress={learningProgress(progressOf(u.id))} onNote={note => {
@@ -143,10 +143,10 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
         {/* ---------- 3) readiness assessment (programme finished) ---------- */}
         <h2 className="t-h3" style={{ margin: 'var(--sp-8) 0 var(--sp-2)' }}>{tr('rd.title', lang)}</h2>
-        <p className="t-sm" style={{ marginBottom: 'var(--sp-4)' }}>{tr('rd.sub', lang)}</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        <p className="t-sm mb-4">{tr('rd.sub', lang)}</p>
+        <div className="stack gap-3">
           {employees.filter(u => isProgramComplete(t, u.id)).length === 0 && (
-            <p className="t-sm" style={{ color: 'var(--tx3)' }}>{tr('rd.none', lang)}</p>
+            <p className="t-sm c-tx3">{tr('rd.none', lang)}</p>
           )}
           {employees.filter(u => isProgramComplete(t, u.id)).map(u => (
             <TraineeReadinessBlock key={u.id} employeeId={u.id} name={u.name} assessor="trainer" onSaved={notify} />
@@ -173,15 +173,15 @@ const RosterRow: React.FC<{ name: string; branch?: string; progress: number; onN
   const [note, setNote] = useState('');
   return (
     <div style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
-        <span className="t-sm" style={{ flex: '1 1 180px', color: 'var(--tx1)' }}>{name}{branch ? ` · ${branch}` : ''}</span>
+      <div className="row items-center gap-3 wrap">
+        <span className="t-sm c-tx1" style={{ flex: '1 1 180px' }}>{name}{branch ? ` · ${branch}` : ''}</span>
         <StatusBadge tone={progress >= 1 ? 'ready' : 'neutral'}>
           {tr('tn.learned', lang)} <span className="t-num">{Math.round(progress * 100)}%</span>
         </StatusBadge>
         <button className="icon-btn" onClick={() => setOpen(v => !v)} aria-expanded={open}><StickyNote size={13} /> {tr('tn.note', lang)}</button>
       </div>
       {open && (
-        <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-3)', flexWrap: 'wrap' }}>
+        <div className="row gap-2 mt-3 wrap">
           <input className="field" style={{ flex: '1 1 220px' }} placeholder={tr('tn.noteph', lang)} value={note} onChange={e => setNote(e.target.value)} aria-label={`${tr('tn.noteabout', lang)} ${name}`} />
           <Button disabled={!note.trim()} onClick={() => { onNote(note.trim()); setNote(''); setOpen(false); }}>{tr('tn.save', lang)}</Button>
         </div>
@@ -211,37 +211,37 @@ const LessonCoachingCard: React.FC<{
       <ArabicContent as="span" className="t-title">{lesson.title}</ArabicContent>
 
       {pro.weeklyReview?.observation?.length > 0 && (
-        <ul role="list" style={{ listStyle: 'none', margin: 'var(--sp-2) 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
+        <ul role="list" className="stack gap-1" style={{ listStyle: 'none', margin: 'var(--sp-2) 0 0', padding: 0 }}>
           {pro.weeklyReview.observation.map((o: string, i: number) => (
-            <li key={i} className="t-sm" style={{ color: 'var(--tx2)' }}>· {o}</li>
+            <li key={i} className="t-sm c-tx2">· {o}</li>
           ))}
         </ul>
       )}
 
       {pro.officeTask && (
-        <p className="t-sm" style={{ color: 'var(--tx3)', marginTop: 'var(--sp-2)' }}>
+        <p className="t-sm c-tx3 mt-2">
           {tr('tn.task', lang)} <ArabicContent as="span">{pro.officeTask}</ArabicContent>
         </p>
       )}
 
       {pro.weeklyDiscussion && (
-        <p className="t-sm" style={{ color: 'var(--g1)', marginTop: 'var(--sp-2)' }}>
+        <p className="t-sm c-g1 mt-2">
           {tr('tn.discussion', lang)} <ArabicContent as="span">{pro.weeklyDiscussion}</ArabicContent>
         </p>
       )}
 
       {pro.commonMistakes?.length > 0 && (
-        <details style={{ marginTop: 'var(--sp-2)' }}>
+        <details className="mt-2">
           <summary className="t-label" style={{ cursor: 'pointer' }}>{tr('tn.mistakes', lang)}</summary>
           <ul role="list" style={{ listStyle: 'none', margin: 'var(--sp-2) 0 0', padding: 0 }}>
             {pro.commonMistakes.map((m: string, i: number) => (
-              <li key={i} className="t-sm" style={{ color: 'var(--tx3)' }}>✕ {m}</li>
+              <li key={i} className="t-sm c-tx3">✕ {m}</li>
             ))}
           </ul>
         </details>
       )}
 
-      <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-3)', flexWrap: 'wrap' }}>
+      <div className="row gap-2 mt-3 wrap">
         {pro.weeklyReview?.strengths?.[0] && (
           <button className="pill" aria-pressed={pick === 'strength'}
             style={pick === 'strength' ? { borderColor: 'var(--ready)', color: 'var(--ready)' } : undefined}
@@ -310,9 +310,9 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
   if (!m) return null;
   return (
     <Card tone="accent" pad={6} layout={{ marginTop: 'var(--sp-5)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+      <div className="row items-center gap-3 wrap">
         <Eyebrow icon={<UserCheck size={13} />}>{tr('tn.practical', lang)} <ArabicContent as="span">{m.title}</ArabicContent></Eyebrow>
-        <div style={{ flex: 1 }} />
+        <div className="grow" />
         <span className="t-label">{tr('tn.overall', lang)}</span>
         <span className="t-num t-h2" style={{ color: readiness >= 80 ? 'var(--ready)' : readiness >= 60 ? 'var(--attn)' : 'var(--risk)' }}>
           {readiness}%
@@ -320,15 +320,15 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
       </div>
 
       {/* six measurable dimensions */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+      <div className="gap-4 mt-5" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         {ALL_DIMENSIONS.map(d => (
-          <label key={d} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <label key={d} className="stack gap-2">
             <span className="t-sm">{EVALUATION_DIMENSIONS[d]}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+            <div className="row items-center gap-3">
               <input type="range" min={0} max={100} value={scores[d]} aria-label={EVALUATION_DIMENSIONS[d]}
                 onChange={e => setScores(s => ({ ...s, [d]: Number(e.target.value) }))}
-                style={{ flex: 1, accentColor: 'var(--g2)', minHeight: 44 }} />
-              <span className="t-num t-sm" style={{ width: 'var(--sp-5)', textAlign: 'end', color: 'var(--tx1)' }}>{scores[d]}</span>
+                className="grow" style={{ accentColor: 'var(--g2)', minHeight: 44 }} />
+              <span className="t-num t-sm c-tx1" style={{ width: 'var(--sp-5)', textAlign: 'end' }}>{scores[d]}</span>
             </div>
           </label>
         ))}
@@ -336,15 +336,15 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
 
       {/* per-lesson coaching cards — replaces the flat 23-skill picker */}
       <p className="t-label" style={{ margin: 'var(--sp-5) 0 var(--sp-2)' }}>{tr('tn.observed', lang)}</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+      <div className="stack gap-3">
         {m.lessons.map(l => (
           <LessonCoachingCard key={l.id} lesson={l} pick={lessonPicks[l.id] ?? null}
             onPick={v => setLessonPicks(p => ({ ...p, [l.id]: v }))} />
         ))}
       </div>
-      <details style={{ marginTop: 'var(--sp-4)' }}>
+      <details className="mt-4">
         <summary className="t-label" style={{ cursor: 'pointer' }}>{tr('tn.rulesmissed', lang)}</summary>
-        <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap', marginTop: 'var(--sp-2)' }}>
+        <div className="row gap-2 wrap mt-2">
           {Object.keys(RULE_META).map(r => (
             <button key={r} className="pill" aria-pressed={weakRules.includes(r)}
               style={weakRules.includes(r) ? { borderColor: 'var(--risk)', color: 'var(--risk)' } : undefined}
@@ -357,19 +357,19 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
 
       {/* auto recommendations */}
       {recs.length > 0 && (
-        <div style={{ marginTop: 'var(--sp-4)' }}>
+        <div className="mt-4">
           <Callout tone="note" title={tr('tn.autosuggest', lang)}>
             <ArabicContent as="span">{recs.map(r => `«${r.title}» (${r.because})`).join(' · ')}</ArabicContent> {tr('tn.willopen', lang)}
           </Callout>
         </div>
       )}
 
-      <textarea className="field" style={{ width: '100%', marginTop: 'var(--sp-4)', minHeight: 76, resize: 'vertical' }}
+      <textarea className="field w-full mt-4" style={{ minHeight: 76, resize: 'vertical' }}
         placeholder={tr('tn.guideph', lang)} value={note} onChange={e => setNote(e.target.value)} aria-label={tr('tn.evalnotes', lang)} />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
-        <label className="t-sm" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-          <CalendarPlus size={13} style={{ color: 'var(--tx3)' }} /> {tr('tn.extenddays', lang)}
+      <div className="row items-center gap-3 mt-4 wrap">
+        <label className="t-sm row items-center gap-2">
+          <CalendarPlus size={13} className="c-tx3" /> {tr('tn.extenddays', lang)}
           <input type="number" min={1} max={60} value={days} onChange={e => setDays(Number(e.target.value) || 7)}
             className="field" style={{ width: 80 }} aria-label={tr('tn.extendaria', lang)} /> {tr('tn.day', lang)}
         </label>
@@ -378,11 +378,11 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
       {/* Observable conduct — binary, never "sounds professional". Two trainers
           grade an opinion differently; they cannot grade "did he name the rule?"
           differently. This is what makes representation assessable at all. */}
-      <div style={{ marginTop: 'var(--sp-5)', padding: 'var(--sp-4)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-        <div className="t-label" style={{ marginBottom: 'var(--sp-3)' }}>{tr('tn.conduct', lang)}</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+      <div className="mt-5" style={{ padding: 'var(--sp-4)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
+        <div className="t-label mb-3">{tr('tn.conduct', lang)}</div>
+        <div className="stack gap-2">
           {ALL_CONDUCT_CHECKS.map(c => (
-            <label key={c} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', cursor: 'pointer', minHeight: 34 }}>
+            <label key={c} className="row items-center gap-3" style={{ cursor: 'pointer', minHeight: 34 }}>
               <input type="checkbox" checked={conduct[c] === true} style={{ width: 17, height: 17, accentColor: 'var(--g2)' }}
                 onChange={e => setConduct(p => ({ ...p, [c]: e.target.checked }))} />
               <span className="t-sm">{CONDUCT_CHECKS[c]}</span>
@@ -390,14 +390,14 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
           ))}
         </div>
         {!conductOk && (
-          <p className="t-sm" style={{ margin: 'var(--sp-3) 0 0', color: 'var(--attn)' }}>
+          <p className="t-sm c-attn" style={{ margin: 'var(--sp-3) 0 0' }}>
             {tr('tn.conductnote', lang)}
           </p>
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-5)', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ flex: 1 }} />
+      <div className="row gap-2 mt-5 wrap items-center">
+        <div className="grow" />
         <Button variant="ghost" onClick={onCancel}>{tr('tn.cancel', lang)}</Button>
         {/* The guide's four decisions. Two were previously missing: «تمديد» is
             not a failure, and «تصعيد» is not a verdict — forcing either into

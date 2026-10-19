@@ -122,7 +122,7 @@ export const TrainingJourney: React.FC<{
   const secondary = acts.slice(1);
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.journey} leading={<Eyebrow>{tr('jr.header', lang)}</Eyebrow>} />
 
       {/* Same width as the app shell, so the route and its ledger have room;
@@ -139,20 +139,17 @@ export const TrainingJourney: React.FC<{
             Centred, it would read as a dashboard widget; asymmetric, it reads as
             a composition. Same information, different posture. */}
         <m.header
-          className="jr-hero"
+          className="jr-hero row items-center gap-6 wrap"
           {...fade}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 'var(--sp-6)',
-            padding: 'var(--sp-7) 0 var(--sp-6)', flexWrap: 'wrap',
-          }}
+          style={{ padding: 'var(--sp-7) 0 var(--sp-6)' }}
         >
           <DayRing day={day} total={PROGRAM_DAYS} pct={pct} />
-          <div className="jr-hero-text" style={{ flex: 1, minWidth: '18ch' }}>
+          <div className="jr-hero-text grow" style={{ minWidth: '18ch' }}>
             <Eyebrow>{current ? `${tr('jr.phaseof', lang)} ${String(current.order).padStart(2, '0')} / ${PROGRAM.length}` : tr('jr.done', lang)}</Eyebrow>
             <h1 className="t-h1" style={{ margin: 'var(--sp-2) 0 var(--sp-3)', letterSpacing: '-.025em' }}>
               {current ? <ArabicContent as="span">{current.title}</ArabicContent> : tr('jr.allapproved', lang)}
             </h1>
-            <p className="t-sm" style={{ margin: 0, color: 'var(--tx2)' }}>
+            <p className="t-sm m-0 c-tx2">
               {tr('jr.daysleft', lang)} {remaining} {tr('jr.days', lang)} · {pct}% {tr('jr.unitsapp', lang)}
             </p>
           </div>
@@ -166,27 +163,23 @@ export const TrainingJourney: React.FC<{
             The section disappears entirely when nothing is due. An empty
             «no tasks!» panel is noise dressed as feedback. */}
         {primary && (
-          <m.section {...fade} style={{ marginBottom: 'var(--sp-7)' }}>
+          <m.section {...fade} className="mb-7">
             <Card tone={primary.gate ? 'accent' : 'raised'} pad={6}>
               <Eyebrow>{tr('db.mission', lang)}</Eyebrow>
               <h2 className="t-h3" style={{ margin: 'var(--sp-3) 0', letterSpacing: '-.015em' }}>
                 {primary.title}
               </h2>
-              <p className="t-sm" style={{ margin: '0 0 var(--sp-5)', color: 'var(--tx2)', maxWidth: '54ch', lineHeight: 1.75 }}>
+              <p className="t-sm c-tx2" style={{ margin: '0 0 var(--sp-5)', maxWidth: '54ch', lineHeight: 1.75 }}>
                 {primary.blurb}
               </p>
               <Button onClick={primary.open}>{primary.cta} <ArrowRight size={16} className="icon-dir" /></Button>
             </Card>
 
             {secondary.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', padding: 'var(--sp-4) var(--sp-2) 0' }}>
+              <div className="row wrap gap-4" style={{ padding: 'var(--sp-4) var(--sp-2) 0' }}>
                 {secondary.map(act => (
-                  <button key={act.title} type="button" onClick={act.open} className="quiet-act t-sm"
-                    style={{
-                      background: 'none', border: 0, padding: 0, cursor: 'pointer', font: 'inherit',
-                      color: 'var(--tx2)',
-                      display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-2)',
-                    }}
+                  <button key={act.title} type="button" onClick={act.open} className="quiet-act t-sm c-tx2 items-center gap-2"
+                    style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', font: 'inherit', display: 'inline-flex' }}
                   >
                     {act.title} <ArrowRight size={13} className="icon-dir" />
                   </button>
@@ -206,7 +199,7 @@ export const TrainingJourney: React.FC<{
             next gate), derived from the same phaseStatus. On phones it moves below
             the route so the next step stays on screen. */}
         <div className="journey-grid">
-        <m.ol className="snake-path" style={{ listStyle: 'none', margin: 0, padding: 0, position: 'relative' }}>
+        <m.ol className="snake-path m-0 relative" style={{ listStyle: 'none', padding: 0 }}>
           {PROGRAM.map(phase => (
             <SnakeStation
               key={phase.id}
@@ -232,36 +225,33 @@ export const TrainingJourney: React.FC<{
         <aside className="journey-ledger" aria-label={tr('jr.ledger', lang)}>
           <Card pad={5}>
             <Eyebrow>{tr('jr.distance', lang)}</Eyebrow>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-2)', margin: 'var(--sp-3) 0 var(--sp-1)' }}>
-              <span className="t-num t-h1" style={{ color: 'var(--g1)' }}>{donePhases}</span>
-              <span className="t-sm" style={{ color: 'var(--tx3)' }}>{tr('jr.of', lang)} {PROGRAM.length} {tr('jr.phasesof', lang)}</span>
+            <div className="row items-baseline gap-2" style={{ margin: 'var(--sp-3) 0 var(--sp-1)' }}>
+              <span className="t-num t-h1 c-g1">{donePhases}</span>
+              <span className="t-sm c-tx3">{tr('jr.of', lang)} {PROGRAM.length} {tr('jr.phasesof', lang)}</span>
             </div>
             {currentLessons && (
-              <p className="t-sm" style={{ margin: 'var(--sp-1) 0 0', color: 'var(--tx2)' }}>
-                {tr('jr.inphase', lang)} <strong style={{ color: 'var(--g1)' }}>{currentLessons.done} {tr('jr.of', lang)} {currentLessons.total}</strong> {tr('jr.lessons', lang)}
+              <p className="t-sm c-tx2" style={{ margin: 'var(--sp-1) 0 0' }}>
+                {tr('jr.inphase', lang)} <strong className="c-g1">{currentLessons.done} {tr('jr.of', lang)} {currentLessons.total}</strong> {tr('jr.lessons', lang)}
               </p>
             )}
             {/* Six segments, one per phase — the same rail, read at a glance. */}
-            <div style={{ display: 'flex', gap: 'var(--sp-1)', marginTop: 'var(--sp-3)' }} aria-hidden>
+            <div className="row gap-1 mt-3" aria-hidden>
               {PROGRAM.map(ph => {
                 const st = phaseStatus(ph, ctx);
                 return (
-                  <span key={ph.id} style={{
-                    flex: 1, height: 4, borderRadius: 'var(--r-full)',
-                    background: st === 'completed' ? 'var(--g2)'
-                      : current?.id === ph.id ? 'var(--g1)' : 'var(--line-2)',
-                  }} />
+                  <span key={ph.id} className="grow" style={{ height: 4, borderRadius: 'var(--r-full)', background: st === 'completed' ? 'var(--g2)'
+                      : current?.id === ph.id ? 'var(--g1)' : 'var(--line-2)' }} />
                 );
               })}
             </div>
 
             {current && (
-              <div style={{ marginTop: 'var(--sp-5)', paddingTop: 'var(--sp-4)', borderTop: '1px solid var(--line)' }}>
+              <div className="mt-5" style={{ paddingTop: 'var(--sp-4)', borderTop: '1px solid var(--line)' }}>
                 <Eyebrow>{tr('jr.nextgate', lang)}</Eyebrow>
-                <p className="t-sm" style={{ margin: 'var(--sp-2) 0 0', color: 'var(--tx1)' }}>
+                <p className="t-sm c-tx1" style={{ margin: 'var(--sp-2) 0 0' }}>
                   <ArabicContent as="span">{current.title}</ArabicContent>
                 </p>
-                <p className="t-label" style={{ margin: 'var(--sp-1) 0 0', color: 'var(--tx3)' }}>
+                <p className="t-label c-tx3" style={{ margin: 'var(--sp-1) 0 0' }}>
                   {tr('jr.day', lang)} {current.dayStart}–{current.dayEnd}
                 </p>
               </div>
@@ -298,35 +288,31 @@ const SnakeStation: React.FC<{
   const travelled = status === 'completed';
   return (
     <m.li {...stagger(index)}
-      className={`snake-node${isCurrent ? ' snake-node--current' : ''}`}
-      style={{ position: 'relative', display: 'flex', gap: 'var(--sp-4)', alignItems: 'stretch' }}
+      className={`snake-node relative row gap-4 items-stretch${isCurrent ? ' snake-node--current' : ''}`}
     >
       {/* THE RAIL — the spine of the journey. The orb sits directly on it, so
           the eye reads one unbroken line from day 1 to graduation. */}
       {/* The orb centres on the card's first line (padding + half a badge row −
           half the orb), so «station · label» reads across one line. */}
       <div aria-hidden className="snake-rail" style={{ paddingTop: showDetail ? 'var(--sp-5)' : 'var(--sp-3)' }}>
-        <span className={`snake-orb${phase.milestone ? ' snake-orb--milestone' : ''}${isCurrent ? ' snake-pulse' : ''}`} style={{
-          borderRadius: 'var(--r-full)', flexShrink: 0,
+        <span className={`snake-orb row items-center justify-center no-shrink${phase.milestone ? ' snake-orb--milestone' : ''}${isCurrent ? ' snake-pulse' : ''}`} style={{
+          borderRadius: 'var(--r-full)',
           background: isCurrent ? meta.color : travelled ? 'var(--g2)' : 'var(--void)',
           border: `2px solid ${travelled || isCurrent ? meta.color : 'var(--line-2)'}`,
           color: isCurrent || travelled ? 'var(--void)' : 'var(--tx3)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {travelled ? <Check size={22} /> : locked ? <Lock size={16} /> : <span className="t-num snake-orb-num">{phase.order}</span>}
         </span>
         {index < PROGRAM.length - 1 && (
-          <span style={{
-            flex: 1, width: 2, minHeight: 'var(--sp-6)',
+          <span className="grow mt-2 mb-2" style={{
+            width: 2, minHeight: 'var(--sp-6)', borderRadius: 'var(--r-full)',
             // Travelled track is gold; the road ahead stays quiet.
             background: travelled ? 'var(--g2)' : 'var(--line-2)',
-            marginTop: 'var(--sp-2)', marginBottom: 'var(--sp-2)',
-            borderRadius: 'var(--r-full)',
           }} />
         )}
       </div>
 
-      <div style={{ flex: 1, paddingBottom: 'var(--sp-5)' }}>
+      <div className="grow" style={{ paddingBottom: 'var(--sp-5)' }}>
 
       {/* Padding lives in CSS so it can narrow on 320px screens. */}
       <div className={`snake-card${showDetail ? ' snake-card--detail' : ''}${isCurrent ? ' snake-card--current' : ''}${locked ? ' snake-card--locked' : ''}`} style={{
@@ -337,7 +323,7 @@ const SnakeStation: React.FC<{
            and opacity would drop the text below contrast. */
         transition: 'border-color .3s var(--ease), background .3s var(--ease)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+        <div className="row items-center gap-3 wrap">
           {/* "You are here" as WORDS, not colour alone. Position on the rail was
               carried only by the accent, which fails for anyone who can't
               separate it from the surrounding tones — and is the first thing
@@ -345,7 +331,7 @@ const SnakeStation: React.FC<{
           {isCurrent && <span className="snake-here">{tr('jr.youarehere', lang)}</span>}
           {/* --tx2 here: this label rides both --s-1 and the lighter --s0 of the
               current card, and --tx3 is out of bounds on --s0 (3.97:1). */}
-          <span className="t-label" style={{ color: 'var(--tx2)' }}>{tr('jr.day', lang)} {phase.dayStart}–{phase.dayEnd}</span>
+          <span className="t-label c-tx2">{tr('jr.day', lang)} {phase.dayStart}–{phase.dayEnd}</span>
           <StatusBadge tone={meta.tone}>{label}</StatusBadge>
         </div>
 
@@ -353,15 +339,15 @@ const SnakeStation: React.FC<{
 
         {showDetail && (
           <>
-            <p className="t-body" style={{ color: 'var(--tx2)', margin: 'var(--sp-2) 0 var(--sp-4)' }}>{phase.purpose}</p>
-            <div className="t-label" style={{ marginBottom: 'var(--sp-2)' }}>{tr('jr.whatnext', lang)}</div>
-            <ul style={{ margin: 0, paddingInlineStart: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
-              {phase.outcomes.map(o => <li key={o} className="t-sm" style={{ color: 'var(--tx1)' }}>{o}</li>)}
+            <p className="t-body c-tx2" style={{ margin: 'var(--sp-2) 0 var(--sp-4)' }}>{phase.purpose}</p>
+            <div className="t-label mb-2">{tr('jr.whatnext', lang)}</div>
+            <ul className="stack m-0 gap-1" style={{ paddingInlineStart: 'var(--sp-4)' }}>
+              {phase.outcomes.map(o => <li key={o} className="t-sm c-tx1">{o}</li>)}
             </ul>
 
             {/* the units that carry this phase */}
             {phase.moduleIds.length > 0 && (
-              <div style={{ marginTop: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+              <div className="stack mt-4 gap-2">
                 {phase.moduleIds.map(id => {
                   const m = moduleById(id);
                   if (!m) return null;
@@ -371,24 +357,24 @@ const SnakeStation: React.FC<{
                     <Card key={id} tone="quiet" pad={4} className="row-hover">
                     {/* Two rows: the title owns the first, meta and action share the second,
                         so the module name reads as a sentence on a 390px phone. */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-2)' }}>
-                        <span className="t-label" style={{ color: 'var(--tx2)', flexShrink: 0 }}>{m.code}</span>
-                        <span className="t-sm" style={{ flex: 1, minWidth: 0 }}>{m.title}</span>
+                    <div className="stack gap-2">
+                      <div className="row items-baseline gap-2">
+                        <span className="t-label c-tx2 no-shrink">{m.code}</span>
+                        <span className="t-sm grow" style={{ minWidth: 0 }}>{m.title}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                      <div className="row items-center gap-3">
                         {/* This counter sits on --s0, the lightest surface in
                             the system, where --tx3 measures 3.49:1. --tx2 is
                             the quiet tier that is legal here. */}
-                        <span className="t-label t-num" style={{ color: 'var(--tx2)' }}>
+                        <span className="t-label t-num c-tx2">
                           {lessonsDone(id)}/{m.lessons.length}
                         </span>
-                        <div style={{ flex: 1 }} />
+                        <div className="grow" />
                         {approved
                           ? <StatusBadge tone="ready">{tr('jr.approved', lang)}</StatusBadge>
                           : unlocked
                             ? <Button variant={id === actionableModuleId ? 'primary' : 'ghost'} onClick={() => onOpenModule(id)}>{tr('jr.open', lang)}</Button>
-                            : <Lock size={13} style={{ color: 'var(--tx3)' }} />}
+                            : <Lock size={13} className="c-tx3" />}
                       </div>
                     </div>
                     </Card>
@@ -401,14 +387,14 @@ const SnakeStation: React.FC<{
                   const passed = bossDone(b.id);
                   return (
                     <Card key={b.id} tone="quiet" pad={4} className="row-hover">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-                      {passed ? <Trophy size={16} style={{ color: 'var(--g1)', flexShrink: 0 }} /> : <Swords size={16} style={{ color: 'var(--g2)', flexShrink: 0 }} />}
-                      <span className="t-sm" style={{ flex: 1, minWidth: 0, color: ready || passed ? 'var(--g1)' : 'var(--tx2)' }}>{b.title}</span>
+                    <div className="row items-center gap-3">
+                      {passed ? <Trophy size={16} className="c-g1 no-shrink" /> : <Swords size={16} className="c-g2 no-shrink" />}
+                      <span className="t-sm grow" style={{ minWidth: 0, color: ready || passed ? 'var(--g1)' : 'var(--tx2)' }}>{b.title}</span>
                       {passed
                         ? <StatusBadge tone="ready">{tr('jr.passed', lang)}</StatusBadge>
                         : ready
                           ? <Button variant="ghost" onClick={() => onOpenBoss(b.id)}>{tr('jr.start', lang)}</Button>
-                          : <Lock size={13} style={{ color: 'var(--tx3)' }} />}
+                          : <Lock size={13} className="c-tx3" />}
                     </div>
                     </Card>
                   );
@@ -417,7 +403,7 @@ const SnakeStation: React.FC<{
             )}
 
             {phase.moduleIds.length === 0 && (
-              <p className="t-sm" style={{ marginTop: 'var(--sp-4)', color: 'var(--tx3)' }}>
+              <p className="t-sm mt-4 c-tx3">
                 {tr('jr.buildsoon', lang)}
               </p>
             )}

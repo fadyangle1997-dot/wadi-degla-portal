@@ -51,36 +51,36 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      <m.main {...fade} aria-label="أهلاً بيك في أكاديمية عمليات العضويات" style={{ width: '100%', maxWidth: WIDTH.focus, margin: '0 auto', padding: 'var(--sp-7) var(--sp-5)' }}>
+    <div className="stack min-h-screen justify-center">
+      <m.main {...fade} aria-label="أهلاً بيك في أكاديمية عمليات العضويات" className="w-full" style={{ maxWidth: WIDTH.focus, margin: '0 auto', padding: 'var(--sp-7) var(--sp-5)' }}>
         <Eyebrow>{t('wel.eyebrow', lang)}</Eyebrow>
-        <h1 className="t-display" style={{ marginTop: 'var(--sp-4)' }}>{t('wel.title', lang)}</h1>
-        <p className="t-lead measure" style={{ marginTop: 'var(--sp-4)' }}>
+        <h1 className="t-display mt-4">{t('wel.title', lang)}</h1>
+        <p className="t-lead measure mt-4">
           {t('wc.intro', lang)}
         </p>
 
         {/* The one action comes first, above the fold; the explanation cards
             follow for whoever scrolls. */}
-        <m.div {...stagger(1, 0.15)} style={{ marginTop: 'var(--sp-6)' }}>
+        <m.div {...stagger(1, 0.15)} className="mt-6">
           <Button onClick={onStartFirstLesson}>
             {t('wc.startfirst', lang)} — <ArabicContent as="span">{first?.lessons[0]?.title ?? ''}</ArabicContent> <ArrowRight size={16} className="icon-dir" />
           </Button>
         </m.div>
 
-        <div style={{ marginTop: 'var(--sp-7)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        <div className="stack mt-7 gap-3">
           {facts.map((f, i) => (
             <m.div key={f.title} {...stagger(i + 2, 0.15)}
-              style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'flex-start', padding: 'var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-              <span style={{ color: 'var(--g2)', marginTop: 'var(--sp-1)', flexShrink: 0 }}>{f.icon}</span>
+              className="row gap-4 items-start" style={{ padding: 'var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
+              <span className="c-g2 mt-1 no-shrink">{f.icon}</span>
               <span>
-                <span className="t-title" style={{ display: 'block', color: 'var(--tx0)' }}>{f.title}</span>
-                <span className="t-sm" style={{ display: 'block', marginTop: 'var(--sp-1)' }}>{f.body}</span>
+                <span className="t-title block c-tx0">{f.title}</span>
+                <span className="t-sm block mt-1">{f.body}</span>
               </span>
             </m.div>
           ))}
         </div>
 
-        <m.p {...stagger(facts.length, 0.15)} className="t-sm" style={{ marginTop: 'var(--sp-5)', color: 'var(--tx3)' }}>
+        <m.p {...stagger(facts.length, 0.15)} className="t-sm mt-5 c-tx3">
           {t('wc.storage', lang)}
         </m.p>
         {/* One primary action. The journey is always one tap away in the shell. */}

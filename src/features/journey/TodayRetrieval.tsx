@@ -91,18 +91,18 @@ export const TodayRetrieval: React.FC<{
     // card ends up feeling like it came from a different application.
     <m.div {...fade}>
      <Card tone="raised" pad={5}>
-      <div className="t-label" style={{ marginBottom: 'var(--sp-2)', color: 'var(--tx3)' }}>
+      <div className="t-label mb-2 c-tx3">
         فكّرني · {idx + 1} من {set.length}
       </div>
       {/* The unit is named, but the SET is mixed on purpose — working out which
           rule applies is the skill; at the counter nobody announces it. */}
-      <div className="t-label" style={{ marginBottom: 'var(--sp-3)', color: 'var(--tx3)' }}>{module.title}</div>
+      <div className="t-label mb-3 c-tx3">{module.title}</div>
       <p className="t-body" style={{ margin: '0 0 var(--sp-4)' }}>{question.prompt}</p>
 
       {/* The product's one answer control (OptionButton). Retrieval's rule holds
           through its states: the correct option is marked, the rest dim, and a
           wrong pick is never painted red — the reason is the lesson, not the verdict. */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+      <div className="stack gap-2">
         {order.map(oi => {
           const o = question.options[oi]!;
           return (
@@ -113,7 +113,7 @@ export const TodayRetrieval: React.FC<{
       </div>
 
       {answered && (
-        <m.div {...fade} style={{ marginTop: 'var(--sp-4)' }}>
+        <m.div {...fade} className="mt-4">
           {/* The same explanation block the lesson and the exam use — which also
               brings aria-live and the focus move to the continue button that
               this hand-rolled version never had. */}

@@ -19,16 +19,12 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Stat
   render() {
     if (!this.state.error) return this.props.children;
     return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', gap: 16, padding: 24, background: 'var(--void, #060607)',
-        color: 'var(--tx1, #D2CFC7)', fontFamily: "'IBM Plex Sans Arabic', system-ui, sans-serif", textAlign: 'center',
-      }}>
+      <div className="stack min-h-screen items-center justify-center text-center" style={{ gap: 16, padding: 24, background: 'var(--void, #060607)', color: 'var(--tx1, #D2CFC7)', fontFamily: "'IBM Plex Sans Arabic', system-ui, sans-serif" }}>
         <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#D4A84B' }}>
           أكاديمية العضويات
         </span>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#F5F3EE', margin: 0 }}>حصلت مشكلة غير متوقعة</h1>
-        <p style={{ maxWidth: 420, lineHeight: 1.8, margin: 0, fontSize: '0.95rem' }}>
+        <h1 className="m-0" style={{ fontSize: '1.5rem', fontWeight: 700, color: '#F5F3EE' }}>حصلت مشكلة غير متوقعة</h1>
+        <p className="m-0" style={{ maxWidth: 420, lineHeight: 1.8, fontSize: '0.95rem' }}>
           تقدّمك محفوظ. اعمل تحديث للصفحة وهترجع لمسارك عادي — ولو المشكلة اتكررت، بلّغ المدرب.
         </p>
         <button onClick={() => location.reload()} style={{

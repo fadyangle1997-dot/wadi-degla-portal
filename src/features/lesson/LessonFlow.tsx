@@ -49,7 +49,6 @@ interface Props {
   onExit: () => void;
 }
 
-const col: React.CSSProperties = { width: '100%', maxWidth: WIDTH.focus, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5)' };
 
 export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lessonIndex, lessonCount, nextStep, onCommit, onQuizAttempt, onComplete, onFinish, onExit }) => {
   // Stage list derived from data — optional stages appear only when content exists.
@@ -107,50 +106,50 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
   }, [onExit]);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="stack min-h-screen">
       {/* Orientation: the lesson's name and its place in the unit sit in the
           chrome; the bar shows progress within this lesson. */}
       <ScreenHeader onBack={onExit} maxWidth={WIDTH.focus}
         rail={<ProgressRail total={stages.length - 1} current={idx} />}
         leading={
-          <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <span className="stack" style={{ minWidth: 0 }}>
             <span className="t-label">{unitCode} · درس {lessonIndex + 1} من {lessonCount}</span>
-            <span className="t-sm" style={{ color: 'var(--tx1)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '42vw' }}>
+            <span className="t-sm c-tx1" style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '42vw' }}>
               {lesson.title}
             </span>
           </span>
         } />
 
-      <main ref={headingRef} tabIndex={-1} style={{ flex: 1, display: 'flex', flexDirection: 'column', outline: 'none' }}>
+      <main ref={headingRef} tabIndex={-1} className="stack grow" style={{ outline: 'none' }}>
         <AnimatePresence mode="wait">
           {/* ── CHALLENGE ─────────────────────────────────────────────────
               A real situation, alone, before a single word of explanation.
               The trainee must want the answer before being given one. */}
           {stage === 'challenge' && lesson.pro?.openingChallenge && (
-            <m.section key="challenge" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="challenge" {...fade} className="focus-col stack grow justify-center">
               <Eyebrow icon={<HelpCircle size={13} />}>موقف في المكتب</Eyebrow>
-              <h1 className="t-h1 measure" style={{ marginTop: 'var(--sp-4)' }}>{lesson.pro.openingChallenge}</h1>
+              <h1 className="t-h1 measure mt-4">{lesson.pro.openingChallenge}</h1>
               {/* The trainee's own question, under the situation that provokes
                   it — one beat, one screen. Splitting them would open the
                   lesson twice with the same emotion. */}
-              <p className="t-lead measure" style={{ marginTop: 'var(--sp-4)', color: 'var(--tx2)' }}>{lesson.employeeQuestion}</p>
-              <div style={{ marginTop: 'var(--sp-5)' }}>
+              <p className="t-lead measure mt-4 c-tx2">{lesson.employeeQuestion}</p>
+              <div className="mt-5">
                 <Callout tone="objective">{lesson.objective}</Callout>
               </div>
-              <div style={{ marginTop: 'var(--sp-7)' }}>
+              <div className="mt-7">
                 <Button onClick={next}>تفتكر تعمل إيه؟ <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
             </m.section>
           )}
 
           {stage === 'ask' && (
-            <m.section key="ask" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="ask" {...fade} className="focus-col stack grow justify-center">
               <Eyebrow icon={<HelpCircle size={13} />}>سؤال بيقابلك في الشغل</Eyebrow>
-              <h1 className="t-h1 measure" style={{ marginTop: 'var(--sp-4)' }}>{lesson.employeeQuestion}</h1>
-              <div style={{ marginTop: 'var(--sp-6)' }}>
+              <h1 className="t-h1 measure mt-4">{lesson.employeeQuestion}</h1>
+              <div className="mt-6">
                 <Callout tone="objective">{lesson.objective}</Callout>
               </div>
-              <div style={{ marginTop: 'var(--sp-7)' }}>
+              <div className="mt-7">
                 <Button onClick={next}>يلا نجاوب عليه <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
             </m.section>
@@ -168,10 +167,10 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               Rules render as RuleObject, ordinary points as SupportingPoint; the
               example is prose, so it never outweighs the rule. */}
           {stage === 'learn' && (
-            <m.section key="learn" {...fade} style={col}>
+            <m.section key="learn" {...fade} className="focus-col">
               <Eyebrow>{lesson.title}</Eyebrow>
 
-              <p className="t-lead measure" style={{ marginTop: 'var(--sp-3)', marginBottom: 'var(--sp-6)' }}>
+              <p className="t-lead measure mt-3 mb-6">
                 {lesson.intro}
               </p>
 
@@ -179,13 +178,13 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
                   Continue tap. It sits above the rules because it is why they
                   matter — the rule stays the hero. */}
               {lesson.pro?.whyMatters && (
-                <div style={{ marginBottom: 'var(--sp-6)' }}>
+                <div className="mb-6">
                   <Callout tone="objective">{lesson.pro.whyMatters}</Callout>
                 </div>
               )}
 
               {/* ③ THE HERO */}
-              <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+              <ul role="list" className="stack m-0 gap-3" style={{ listStyle: 'none', padding: 0 }}>
                 {lesson.points.map((pt, i) => (
                   <m.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06 + i * 0.06 }}>
                     {pt.rule ? <RuleObject text={pt.text} /> : <SupportingPoint text={pt.text} />}
@@ -197,16 +196,16 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               <m.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 + lesson.points.length * 0.06 }}
-                style={{ marginTop: 'var(--sp-6)' }}
+                className="mt-6"
               >
                 <Eyebrow icon={<Lightbulb size={13} />}>مثال من الشغل</Eyebrow>
-                <p className="t-body measure" style={{ marginTop: 'var(--sp-3)', color: 'var(--tx2)' }}>
+                <p className="t-body measure mt-3 c-tx2">
                   {lesson.example}
                 </p>
 
                 <RuleExamples rules={ruleRefs} />
 
-                <div style={{ marginTop: 'var(--sp-6)' }}>
+                <div className="mt-6">
                   <Button onClick={next}>
                     {lesson.practice ? 'جرّب بنفسك' : 'فهمت — اختبرني'} <ArrowRight size={16} className="icon-dir" />
                   </Button>
@@ -220,10 +219,10 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               answer, no options. The button says «فكّرت» — a small contract
               with yourself, not a navigation label. */}
           {stage === 'reflect' && lesson.pro?.reflectiveQuestion && (
-            <m.section key="reflect" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="reflect" {...fade} className="focus-col stack grow justify-center">
               <Eyebrow icon={<Lightbulb size={13} />}>خد ثانية وفكّر</Eyebrow>
-              <h2 className="t-h2 measure" style={{ marginTop: 'var(--sp-4)' }}>{lesson.pro.reflectiveQuestion}</h2>
-              <div style={{ marginTop: 'var(--sp-7)' }}>
+              <h2 className="t-h2 measure mt-4">{lesson.pro.reflectiveQuestion}</h2>
+              <div className="mt-7">
                 <Button variant="ghost" onClick={next}>فكّرت <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
             </m.section>
@@ -233,9 +232,9 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               One moment from two sides — what happened, and what the member
               felt while it happened. Splitting them would break the scene. */}
           {stage === 'office' && lesson.pro?.officeScenario && (
-            <m.section key="office" {...fade} style={col}>
+            <m.section key="office" {...fade} className="focus-col">
               <Eyebrow icon={<ClipboardCheck size={13} />}>في المكتب</Eyebrow>
-              <p className="t-lead measure" style={{ marginTop: 'var(--sp-3)' }}>{lesson.pro.officeScenario}</p>
+              <p className="t-lead measure mt-3">{lesson.pro.officeScenario}</p>
               {/* The journey-overview lesson compresses all eleven stages into
                   one arrow-separated sentence — the hardest possible shape to
                   remember. The map below shows the SAME approved sequence and
@@ -264,14 +263,14 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
                   the ORDER of questions before touching a document. */}
               {lesson.id === 'l2-missing-vs-broken' && <CheckBeforeActFlow />}
               {lesson.pro.customerPerspective && (
-                <div style={{ marginTop: 'var(--sp-6)' }}>
+                <div className="mt-6">
                   <SpineWell>
-                    <span className="t-label" style={{ color: 'var(--tx3)' }}>العضو حاسس بإيه</span>
+                    <span className="t-label c-tx3">العضو حاسس بإيه</span>
                     <p className="t-body measure" style={{ margin: 'var(--sp-2) 0 0' }}>{lesson.pro.customerPerspective}</p>
                   </SpineWell>
                 </div>
               )}
-              <div style={{ marginTop: 'var(--sp-7)' }}>
+              <div className="mt-7">
                 <Button onClick={next}>طيب أتصرّف إزاي؟ <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
             </m.section>
@@ -281,18 +280,18 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               The emotional peak: the trainer talking in your ear. It closes on
               the golden rule — the one line meant to survive years. */}
           {stage === 'coach' && lesson.pro?.professionalThinking && (
-            <m.section key="coach" {...fade} style={col}>
+            <m.section key="coach" {...fade} className="focus-col">
               <Eyebrow icon={<Sparkles size={13} />}>إزاي المحترف بيفكّر</Eyebrow>
-              <p className="t-lead measure" style={{ marginTop: 'var(--sp-3)' }}>{lesson.pro.professionalThinking}</p>
+              <p className="t-lead measure mt-3">{lesson.pro.professionalThinking}</p>
               {lesson.pro.ownershipMindset && (
-                <p className="t-body measure" style={{ marginTop: 'var(--sp-5)', color: 'var(--tx1)' }}>{lesson.pro.ownershipMindset}</p>
+                <p className="t-body measure mt-5 c-tx1">{lesson.pro.ownershipMindset}</p>
               )}
               {lesson.pro.goldenRule && (
-                <div style={{ marginTop: 'var(--sp-6)' }}>
+                <div className="mt-6">
                   <Callout tone="objective">{lesson.pro.goldenRule}</Callout>
                 </div>
               )}
-              <div style={{ marginTop: 'var(--sp-7)' }}>
+              <div className="mt-7">
                 <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
             </m.section>
@@ -301,50 +300,50 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
           {/* ── MISTAKES ──────────────────────────────────────────────────
               Contrast, and only after the right model exists to contrast with. */}
           {stage === 'mistakes' && lesson.pro?.commonMistakes?.length && (
-            <m.section key="mistakes" {...fade} style={col}>
+            <m.section key="mistakes" {...fade} className="focus-col">
               <Eyebrow>أخطاء بتحصل كتير</Eyebrow>
-              <ul role="list" style={{ listStyle: 'none', margin: 'var(--sp-4) 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+              <ul role="list" className="stack gap-3" style={{ listStyle: 'none', margin: 'var(--sp-4) 0 0', padding: 0 }}>
                 {lesson.pro.commonMistakes.map((m, i) => (
-                  <li key={i} className="t-body measure" style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start' }}>
-                    <span aria-hidden style={{ color: 'var(--risk)', flexShrink: 0 }}>✕</span>
+                  <li key={i} className="t-body measure row gap-3 items-start">
+                    <span aria-hidden className="c-risk no-shrink">✕</span>
                     <span>{m}</span>
                   </li>
                 ))}
               </ul>
-              <div style={{ marginTop: 'var(--sp-7)' }}>
+              <div className="mt-7">
                 <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
             </m.section>
           )}
 
           {stage === 'dialogue' && lesson.dialogue && (
-        <m.section {...fade} style={col}>
+        <m.section {...fade} className="focus-col">
           <Eyebrow>نفس الموقف · نفس القرار</Eyebrow>
           <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>الفرق في التوصيل</h2>
-          <p className="t-body" style={{ color: 'var(--tx2)', marginBottom: 'var(--sp-5)' }}>{lesson.dialogue.setup}</p>
+          <p className="t-body c-tx2 mb-5">{lesson.dialogue.setup}</p>
 
           <DialogueBlock tone="wrong" label="❌ الحوار الغلط" lines={lesson.dialogue.wrong} why={lesson.dialogue.whyWrongFails} whyLabel="ليه بيفشل" />
           <div style={{ height: 'var(--sp-5)' }} />
           <DialogueBlock tone="right" label="✅ الحوار الصح" lines={lesson.dialogue.right} why={lesson.dialogue.whyRightWorks} whyLabel="ليه بينجح" />
 
-          <p className="t-sm" style={{ color: 'var(--tx3)', marginTop: 'var(--sp-5)' }}>
+          <p className="t-sm c-tx3 mt-5">
             الحوارات دي أمثلة مش جمل تتحفظ — اللي بينتقل معاك هو المبدأ.
           </p>
-          <div style={{ marginTop: 'var(--sp-5)' }}>
+          <div className="mt-5">
             <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
           </div>
         </m.section>
       )}
 
       {stage === 'comms' && lesson.comms && (
-        <m.section {...fade} style={col}>
+        <m.section {...fade} className="focus-col">
           <Eyebrow>{lesson.comms.audience === 'sales' ? 'التوصيل الداخلي · للمبيعات' : 'التوصيل · للعضو'}</Eyebrow>
           <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-5)' }}>
             {lesson.comms.audience === 'sales'
               ? 'الفخ والأفضل — في الطلب الداخلي'
               : 'الفخ والأفضل — قدّام العضو'}
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+          <div className="stack gap-4">
             {/* EYE PATH: the trap · its cost · the way out.
                 ① and ③ are objects — they are things that happen and things you
                    do, and the trainee already knows a spine means «stop here».
@@ -352,19 +351,19 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
                    consequence read as an equal option rather than the reason the
                    trap matters at all. */}
             <SpineWell spine="risk" label="⚠️ فخ احترافي">
-              <p className="t-body measure" style={{ margin: 0 }}>{lesson.comms.risk}</p>
+              <p className="t-body measure m-0">{lesson.comms.risk}</p>
             </SpineWell>
 
             <div style={{ padding: '0 var(--sp-2)' }}>
-              <div className="t-label" style={{ color: 'var(--tx3)', marginBottom: 'var(--sp-2)' }}>بيحصل إيه لما تقع فيه</div>
-              <p className="t-body measure" style={{ margin: 0, color: 'var(--tx2)' }}>{lesson.comms.why}</p>
+              <div className="t-label c-tx3 mb-2">بيحصل إيه لما تقع فيه</div>
+              <p className="t-body measure m-0 c-tx2">{lesson.comms.why}</p>
             </div>
 
             <SpineWell label="⭐ الأفضل">
-              <p className="t-body measure" style={{ margin: 0, color: 'var(--tx0)', fontWeight: 500 }}>{lesson.comms.instead}</p>
+              <p className="t-body measure m-0 c-tx0" style={{ fontWeight: 500 }}>{lesson.comms.instead}</p>
             </SpineWell>
           </div>
-          <div style={{ marginTop: 'var(--sp-6)' }}>
+          <div className="mt-6">
             <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
           </div>
         </m.section>
@@ -388,30 +387,30 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               commits to nothing. The choice is echoed on the closing screen so
               it is not swallowed the moment it is made. */}
           {stage === 'commit' && lesson.pro?.commitmentOptions?.length && (
-            <m.section key="commit" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="commit" {...fade} className="focus-col stack grow justify-center">
               <Eyebrow>هتركّز على إيه بكرة؟</Eyebrow>
-              <h2 className="t-h3 measure" style={{ marginTop: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>اختار حاجة واحدة بس.</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+              <h2 className="t-h3 measure mt-3 mb-5">اختار حاجة واحدة بس.</h2>
+              <div className="stack gap-3">
                 {lesson.pro.commitmentOptions.map(o => (
                   <OptionButton key={o} text={o}
                     state={commitment === o ? 'correct' : commitment ? 'dim' : 'idle'}
                     onPick={() => setCommitment(o)} />
                 ))}
               </div>
-              <div style={{ marginTop: 'var(--sp-6)' }}>
+              <div className="mt-6">
                 <Button disabled={!commitment} onClick={() => { if (commitment) onCommit?.(commitment); next(); }}>ده اللي هركّز عليه <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
             </m.section>
           )}
 
           {stage === 'done' && (
-            <m.section key="done" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="done" {...fade} className="focus-col stack grow justify-center">
               {/* THE HERO — capability, never completion. «You finished» rewards
                   attendance; «tomorrow you can» rewards becoming. The whole
                   screen is sized so the eye lands here first and only here. */}
-              <div style={{ textAlign: 'center' }}>
+              <div className="text-center">
                 <Eyebrow icon={<Sparkles size={13} />}>بكرة في الفرع</Eyebrow>
-                <h2 className="t-h2 measure" style={{ marginTop: 'var(--sp-3)', marginInline: 'auto' }}>
+                <h2 className="t-h2 measure mt-3" style={{ marginInline: 'auto' }}>
                   {lesson.pro?.tomorrowInBranch ?? lesson.canNow}
                 </h2>
               </div>
@@ -419,7 +418,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               {/* The golden rule, second and last time — spaced repetition
                   inside one lesson is how a line survives a year. */}
               {lesson.pro?.goldenRule && (
-                <p className="t-lead measure" style={{ marginTop: 'var(--sp-5)', marginInline: 'auto', textAlign: 'center', color: 'var(--g1)' }}>
+                <p className="t-lead measure mt-5 text-center c-g1" style={{ marginInline: 'auto' }}>
                   {lesson.pro.goldenRule}
                 </p>
               )}
@@ -427,42 +426,42 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               {/* Everything practical drops to a quiet block: present, findable,
                   and never competing with the hero above it. */}
               {lesson.pro && (
-                <div style={{ marginTop: 'var(--sp-7)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+                <div className="stack mt-7 gap-4">
                   {commitment && <DoneRow label="التزامك بكرة" body={commitment} />}
                   {lesson.pro.dailyHabit && <DoneRow label="عادة النهاردة · أقل من دقيقة" body={lesson.pro.dailyHabit} />}
                   {lesson.pro.officeTask && <DoneRow label="مهمتك مع مدربك" body={lesson.pro.officeTask} />}
                   {lesson.pro.trainerQuestions?.length ? (
                     <div>
-                      <span className="t-label" style={{ color: 'var(--tx3)' }}>اسأل مدربك — متخمّنش</span>
-                      <ul role="list" style={{ listStyle: 'none', margin: 'var(--sp-2) 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                      <span className="t-label c-tx3">اسأل مدربك — متخمّنش</span>
+                      <ul role="list" className="stack gap-2" style={{ listStyle: 'none', margin: 'var(--sp-2) 0 0', padding: 0 }}>
                         {lesson.pro.trainerQuestions.map((q, i) => (
-                          <li key={i} className="t-sm" style={{ color: 'var(--tx1)' }}>• {q}</li>
+                          <li key={i} className="t-sm c-tx1">• {q}</li>
                         ))}
                       </ul>
                     </div>
                   ) : null}
                   {lesson.pro.readinessCheck && (
                     <SpineWell>
-                      <span className="t-label" style={{ color: 'var(--tx3)' }}>
+                      <span className="t-label c-tx3">
                         {lesson.pro.readinessCheck.level === 'YES' ? 'جاهز' : lesson.pro.readinessCheck.level === 'NO' ? 'لسه بدري' : 'قربت'}
                       </span>
                       <p className="t-body measure" style={{ margin: 'var(--sp-2) 0 0' }}>{lesson.pro.readinessCheck.why}</p>
                     </SpineWell>
                   )}
                   {lesson.pro.closingReflection && (
-                    <p className="t-sm measure" style={{ color: 'var(--tx2)' }}>{lesson.pro.closingReflection}</p>
+                    <p className="t-sm measure c-tx2">{lesson.pro.closingReflection}</p>
                   )}
                 </div>
               )}
 
               {/* skills this lesson moved */}
-              <div style={{ marginTop: 'var(--sp-6)', display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div className="row mt-6 gap-2 wrap justify-center">
                 {lessonSkillTouches(moduleId, lesson.id).map(t => (
                   <Capsule key={t.name}>{t.name} · {LEVEL_LABEL[t.level]}</Capsule>
                 ))}
               </div>
 
-              <div style={{ marginTop: 'var(--sp-6)', display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div className="row mt-6 gap-3 wrap justify-center">
                 {nextStep && (
                   <Button onClick={() => { onComplete(); nextStep.go(); }}>
                     {nextStep.label} <ArrowRight size={16} className="icon-dir" />
@@ -482,7 +481,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
  *  that matters. Kept flat on purpose — cards here would compete with the hero. */
 const DoneRow: React.FC<{ label: string; body: string }> = ({ label, body }) => (
   <div>
-    <span className="t-label" style={{ color: 'var(--tx3)' }}>{label}</span>
+    <span className="t-label c-tx3">{label}</span>
     <p className="t-body measure" style={{ margin: 'var(--sp-2) 0 0' }}>{body}</p>
   </div>
 );
@@ -492,17 +491,17 @@ const PredictStage: React.FC<{ lesson: Lesson; onNext: () => void }> = ({ lesson
   const [picked, setPicked] = useState<number | null>(null);
   const p = lesson.prediction;
   return (
-    <m.section {...fade} style={col}>
+    <m.section {...fade} className="focus-col">
       <Eyebrow icon={<HelpCircle size={13} />}>قبل ما نقولك القاعدة — إنت إيه رأيك؟</Eyebrow>
-      <h2 className="t-h2 measure" style={{ marginTop: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>{p.prompt}</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+      <h2 className="t-h2 measure mt-4 mb-6">{p.prompt}</h2>
+      <div className="stack gap-3">
         {shuffleOptions(p.options, p.prompt).map((o, i) => (
           <OptionButton key={i} text={o.text} state={picked === null ? 'idle' : o.correct ? 'correct' : picked === i ? 'wrong' : 'dim'} onPick={() => setPicked(i)} />
         ))}
       </div>
       <AnimatePresence>
         {picked !== null && (
-          <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 'var(--sp-5)' }}>
+          <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
             <FeedbackBlock tone="summary" title="القاعدة" onAction={onNext}
               actionLabel={<>كمّل الشرح <ArrowRight size={16} className="icon-dir" /></>}>
               {p.reveal}
@@ -522,11 +521,11 @@ const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }> = ({ p
   const allCorrect = checked && practice.items.every((it, i) => marks[i] === it.correct);
 
   return (
-    <m.section {...fade} style={col}>
+    <m.section {...fade} className="focus-col">
       <Eyebrow icon={<ClipboardCheck size={13} />}>تمرين — قرارك إنت</Eyebrow>
-      <h2 className="t-h2 measure" style={{ marginTop: 'var(--sp-4)', marginBottom: 'var(--sp-3)' }}>{practice.prompt}</h2>
-      <p className="t-sm" style={{ marginBottom: 'var(--sp-5)' }}>حدّد لكل بند: مطلوب فعلاً في الملف ده، ولا لأ؟</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+      <h2 className="t-h2 measure mt-4 mb-3">{practice.prompt}</h2>
+      <p className="t-sm mb-5">حدّد لكل بند: مطلوب فعلاً في الملف ده، ولا لأ؟</p>
+      <div className="stack gap-3">
         {practice.items.map((it, i) => {
           const mark = marks[i];
           const showResult = checked;
@@ -536,9 +535,9 @@ const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }> = ({ p
               padding: 'var(--sp-4)', borderRadius: 'var(--r-md)', background: 'var(--s-1)',
               border: `1px solid ${showResult ? (isRight ? 'var(--ready)' : 'var(--risk)') : 'var(--line-2)'}`,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
-                <span className="t-body" style={{ flex: 1, minWidth: 200 }}>{it.text}</span>
-                <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+              <div className="row items-center gap-3 wrap">
+                <span className="t-body grow" style={{ minWidth: 200 }}>{it.text}</span>
+                <div className="row gap-2">
                   {[{ v: true, label: 'مطلوب' }, { v: false, label: 'مش مطلوب' }].map(b => (
                     <button key={String(b.v)} type="button" disabled={checked} aria-pressed={mark === b.v}
                       onClick={() => setMarks(m => ({ ...m, [i]: b.v }))}
@@ -556,7 +555,7 @@ const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }> = ({ p
                 </div>
               </div>
               {showResult && (
-                <p className="t-sm" style={{ marginTop: 'var(--sp-3)', color: isRight ? 'var(--ready)' : 'var(--risk)' }} role="status">
+                <p className="t-sm mt-3" style={{ color: isRight ? 'var(--ready)' : 'var(--risk)' }} role="status">
                   {isRight ? '✓ ' : '✕ '}{it.feedback}
                 </p>
               )}
@@ -564,7 +563,7 @@ const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }> = ({ p
           );
         })}
       </div>
-      <div style={{ marginTop: 'var(--sp-5)' }} aria-live="polite">
+      <div className="mt-5" aria-live="polite">
         {!checked
           ? <Button disabled={!allMarked} onClick={() => setChecked(true)}>راجع إجاباتي <ClipboardCheck size={16} /></Button>
           : (
@@ -606,10 +605,10 @@ const QuizStage: React.FC<{
   };
 
   return (
-    <m.section {...fade} style={col}>
+    <m.section {...fade} className="focus-col">
       <Eyebrow>{round === 'first' ? 'اتأكد إنك فهمت' : 'الأسئلة اللي زغللت — جاوبها تاني'} · {qi + 1} من {pool.length}</Eyebrow>
-      <h2 className="t-h2 measure" style={{ marginTop: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>{q.prompt}</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+      <h2 className="t-h2 measure mt-4 mb-6">{q.prompt}</h2>
+      <div className="stack gap-3">
         {shuffleOptions(q.options, q.id + q.prompt + round).map((o, i) => (
           <OptionButton key={i} text={o.text} state={!answered ? 'idle' : o.correct ? 'correct' : picked === i ? 'wrong' : 'dim'}
             onPick={() => {
@@ -625,7 +624,7 @@ const QuizStage: React.FC<{
       </div>
       <AnimatePresence>
         {answered && (
-          <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 'var(--sp-5)' }}>
+          <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
             <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'صح' : 'مش صح — اعرف ليه'}
               onAction={advance}
               actionLabel={<>
@@ -654,28 +653,24 @@ const DialogueBlock: React.FC<{
     // A transcript composes from Card like every other surface; only the
     // two-speaker arrangement inside is its own.
     <Card tone="default" pad={4}>
-      <div className="t-label" style={{ color: accent, marginBottom: 'var(--sp-3)' }}>
+      <div className="t-label mb-3" style={{ color: accent }}>
         {label}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+      <div className="stack gap-3">
         {lines.map((l, i) => (
-          <div key={i} style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start' }}>
-            <span className="t-label" style={{ minWidth: 44, flexShrink: 0, color: 'var(--tx3)', paddingTop: 'var(--sp-1)' }}>
+          <div key={i} className="row gap-3 items-start">
+            <span className="t-label no-shrink c-tx3" style={{ minWidth: 44, paddingTop: 'var(--sp-1)' }}>
               {l.speaker === 'member' ? 'العضو' : 'إنت'}
             </span>
-            <span className="t-body" style={{
-              flex: 1, padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--r-sm)',
-              background: l.speaker === 'staff' ? 'var(--s0)' : 'var(--s-2)',
-              border: '1px solid var(--line)',
-            }}>{l.line}</span>
+            <span className="t-body grow" style={{ padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--r-sm)', background: l.speaker === 'staff' ? 'var(--s0)' : 'var(--s-2)', border: '1px solid var(--line)' }}>{l.line}</span>
           </div>
         ))}
       </div>
       {/* The verdict on the exchange. Separated by space, not by a divider —
           negative space groups; a rule line only draws attention to itself. */}
-      <div style={{ marginTop: 'var(--sp-4)', paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--line)' }}>
-        <div className="t-label" style={{ color: accent, marginBottom: 'var(--sp-2)' }}>{whyLabel}</div>
-        <p className="t-sm measure" style={{ margin: 0, color: 'var(--tx2)' }}>{why}</p>
+      <div className="mt-4" style={{ paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--line)' }}>
+        <div className="t-label mb-2" style={{ color: accent }}>{whyLabel}</div>
+        <p className="t-sm measure m-0 c-tx2">{why}</p>
       </div>
     </Card>
   );
@@ -706,19 +701,19 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
 
   if (!started) {
     return (
-      <m.section {...fade} style={col}>
+      <m.section {...fade} className="focus-col">
         <Eyebrow>إنتاج · {MODE_LABEL[p.mode]}</Eyebrow>
         <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-4)' }}>دورك دلوقتي</h2>
-        <p className="t-body" style={{ marginBottom: 'var(--sp-5)' }}>{p.task}</p>
+        <p className="t-body mb-5">{p.task}</p>
 
         {/* You face a PERSON, not a line. The gap between what they DO and what
             they WANT is where every beginner mistake lives. */}
         {arch && (
-          <div style={{ marginBottom: 'var(--sp-5)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
+          <div className="mb-5" style={{ border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
             <div className="t-label" style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-2)', borderBottom: '1px solid var(--line)' }}>
               مين قدّامك · {arch.name}
             </div>
-            <div style={{ padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+            <div className="stack gap-3" style={{ padding: 'var(--sp-4)' }}>
               <Row k="بيعمل إيه" v={arch.does} />
               <Row k="عايز إيه فعلاً" v={arch.wants} accent />
               <Row k="الفخ بتاعه" v={arch.trap} risk />
@@ -729,13 +724,13 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
         {/* The briefing's hero: success is the member moving, not you performing.
             It takes the rule's shape because it is one. */}
         {p.arc && (
-          <div style={{ marginBottom: 'var(--sp-5)' }}>
+          <div className="mb-5">
             <SpineWell label={`النجاح = ${STATE_LABEL[p.arc.opensAs as MemberState]} ← ${STATE_LABEL[p.arc.targetState as MemberState]}`}>
-              <p className="t-body measure" style={{ margin: 0, color: 'var(--tx0)', fontWeight: 500 }}>
+              <p className="t-body measure m-0 c-tx0" style={{ fontWeight: 500 }}>
                 مش إنك تقول الجملة الصح — إنه يتحرك.
               </p>
-              <ul className="t-sm" style={{ margin: 'var(--sp-3) 0 0', paddingInlineStart: '1.1em', color: 'var(--tx2)' }}>
-                {p.arc.signsOfShift.map(sg => <li key={sg} style={{ marginBottom: 'var(--sp-1)' }}>{sg}</li>)}
+              <ul className="t-sm c-tx2" style={{ margin: 'var(--sp-3) 0 0', paddingInlineStart: '1.1em' }}>
+                {p.arc.signsOfShift.map(sg => <li key={sg} className="mb-1">{sg}</li>)}
               </ul>
             </SpineWell>
           </div>
@@ -744,11 +739,11 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
         {/* The counter is never a quiet room. */}
         {p.distractors && p.distractors.length > 0 && (
           <Card tone="quiet" pad={4} layout={{ marginBottom: 'var(--sp-5)' }}>
-            <div className="t-label" style={{ color: 'var(--attn)', marginBottom: 'var(--sp-3)' }}>هيحصل كمان أثناء الكلام</div>
+            <div className="t-label c-attn mb-3">هيحصل كمان أثناء الكلام</div>
             {p.distractors.map(d => (
-              <div key={d.event} style={{ marginBottom: 'var(--sp-3)' }}>
-                <p className="t-sm" style={{ margin: 0, color: 'var(--tx1)' }}>{d.event}</p>
-                <p className="t-sm" style={{ margin: 'var(--sp-1) 0 0', color: 'var(--tx3)' }}>{d.tests}</p>
+              <div key={d.event} className="mb-3">
+                <p className="t-sm m-0 c-tx1">{d.event}</p>
+                <p className="t-sm c-tx3" style={{ margin: 'var(--sp-1) 0 0' }}>{d.tests}</p>
               </div>
             ))}
           </Card>
@@ -756,9 +751,9 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
         {/* Prose, not a card. This is a kind aside, and a card would have given
             it the same footing as the exercise — four surfaces in a row and the
             trainee reads none of them. */}
-        <p className="t-sm measure" style={{ margin: '0 var(--sp-2) var(--sp-6)', color: 'var(--tx3)', lineHeight: 1.75 }}>
+        <p className="t-sm measure c-tx3" style={{ margin: '0 var(--sp-2) var(--sp-6)', lineHeight: 1.75 }}>
           محدش بيقيّمك هنا. ده تمرين — تقولها، تشوف نقصت إيه، وتقولها تاني.
-          <strong style={{ color: 'var(--tx2)' }}> أول مرة تنطقها المفروض تكون هنا، مش قدّام عضو.</strong>
+          <strong className="c-tx2"> أول مرة تنطقها المفروض تكون هنا، مش قدّام عضو.</strong>
         </p>
         <Button onClick={() => setStarted(true)}>بدأت <ArrowRight size={16} className="icon-dir" /></Button>
       </m.section>
@@ -766,44 +761,44 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
   }
 
   return (
-    <m.section {...fade} style={col}>
+    <m.section {...fade} className="focus-col">
       <Eyebrow>إنتاج · محاولة {attempt}</Eyebrow>
       <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>راجع اللي قلته</h2>
-      <p className="t-sm" style={{ color: 'var(--tx3)', marginBottom: 'var(--sp-5)' }}>
+      <p className="t-sm c-tx3 mb-5">
         علّم على اللي عملته فعلاً — مش على اللي كنت ناوي تعمله.
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+      <div className="stack gap-2">
         {p.criteria.map((c, i) => (
-          <label key={i} className="row-hover" style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start', padding: 'var(--sp-3)', borderRadius: 'var(--r-sm)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={checked[i] === true} style={{ width: 17, height: 17, marginTop: 'var(--sp-1)', accentColor: 'var(--g2)' }}
+          <label key={i} className="row-hover row gap-3 items-start" style={{ padding: 'var(--sp-3)', borderRadius: 'var(--r-sm)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={checked[i] === true} className="mt-1" style={{ width: 17, height: 17, accentColor: 'var(--g2)' }}
               onChange={e => { setChecked(v => ({ ...v, [i]: e.target.checked })); setReviewed(false); }} />
-            <span className="t-sm" style={{ flex: 1 }}>{c}</span>
+            <span className="t-sm grow">{c}</span>
           </label>
         ))}
       </div>
 
       {!reviewed && (
-        <div style={{ marginTop: 'var(--sp-5)' }}>
+        <div className="mt-5">
           <Button onClick={() => setReviewed(true)}>شوف نتيجتي</Button>
         </div>
       )}
 
       {reviewed && !passed && (
-        <m.div {...fade} style={{ marginTop: 'var(--sp-5)' }}>
+        <m.div {...fade} className="mt-5">
           <SpineWell spine="risk" label={`ناقص ${missed.length}`}>
-            <ul className="t-sm" style={{ margin: 0, paddingInlineStart: '1.1em', color: 'var(--tx1)' }}>
-              {missed.map(i => <li key={i} style={{ marginBottom: 'var(--sp-1)' }}>{p.criteria[i]}</li>)}
+            <ul className="t-sm m-0 c-tx1" style={{ paddingInlineStart: '1.1em' }}>
+              {missed.map(i => <li key={i} className="mb-1">{p.criteria[i]}</li>)}
             </ul>
           </SpineWell>
           <Card tone="quiet" pad={4} layout={{ marginTop: 'var(--sp-3)' }}>
-            <div className="t-label" style={{ color: 'var(--tx3)', marginBottom: 'var(--sp-2)' }}>اللي بيحصل عادة في المحاولة الأولى</div>
-            <ul className="t-sm" style={{ margin: 0, paddingInlineStart: '1.1em', color: 'var(--tx2)' }}>
-              {p.commonMisses.map(m => <li key={m} style={{ marginBottom: 'var(--sp-1)' }}>{m}</li>)}
+            <div className="t-label c-tx3 mb-2">اللي بيحصل عادة في المحاولة الأولى</div>
+            <ul className="t-sm m-0 c-tx2" style={{ paddingInlineStart: '1.1em' }}>
+              {p.commonMisses.map(m => <li key={m} className="mb-1">{m}</li>)}
             </ul>
           </Card>
           {/* The retry IS the method. Nothing here calls it a failure. */}
-          <div style={{ marginTop: 'var(--sp-5)' }}>
+          <div className="mt-5">
             <Button onClick={() => { setAttempt(a => a + 1); setChecked({}); setReviewed(false); }}>
               قولها تاني — والمرة دي ركّز على اللي فوق
             </Button>
@@ -812,7 +807,7 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
       )}
 
       {reviewed && passed && (
-        <m.div {...fade} style={{ marginTop: 'var(--sp-5)' }}>
+        <m.div {...fade} className="mt-5">
           <p className="t-body" style={{ margin: '0 0 var(--sp-4)' }}>
             الأربعة اتعملوا{attempt > 1 ? ` — بعد ${attempt} محاولات، وده الطبيعي` : ''}.
             {' '}دي الجملة اللي هتقولها بكرة على الكاونتر.
@@ -821,9 +816,9 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
               check — those measure the wrong thing at the wrong moment. */}
           {p.reflection && (
             <Card tone="raised" pad={4} layout={{ marginBottom: 'var(--sp-5)' }}>
-              <div className="t-label" style={{ marginBottom: 'var(--sp-2)' }}>سؤال واحد قبل ما تكمّل</div>
-              <p className="t-body" style={{ margin: 0 }}>{p.reflection}</p>
-              <p className="t-sm" style={{ margin: 'var(--sp-2) 0 0', color: 'var(--tx3)' }}>
+              <div className="t-label mb-2">سؤال واحد قبل ما تكمّل</div>
+              <p className="t-body m-0">{p.reflection}</p>
+              <p className="t-sm c-tx3" style={{ margin: 'var(--sp-2) 0 0' }}>
                 مش محتاج تكتبه — بس متعديش من غير ما تجاوبه لنفسك.
               </p>
             </Card>
@@ -837,9 +832,9 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
 
 /** One labelled line inside the archetype brief. */
 const Row: React.FC<{ k: string; v: string; accent?: boolean; risk?: boolean }> = ({ k, v, accent, risk }) => (
-  <div style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start' }}>
-    <span className="t-label" style={{ minWidth: 92, flexShrink: 0, color: risk ? 'var(--risk)' : accent ? 'var(--g1)' : 'var(--tx3)' }}>{k}</span>
-    <span className="t-sm" style={{ flex: 1, color: 'var(--tx1)' }}>{v}</span>
+  <div className="row gap-3 items-start">
+    <span className="t-label no-shrink" style={{ minWidth: 92, color: risk ? 'var(--risk)' : accent ? 'var(--g1)' : 'var(--tx3)' }}>{k}</span>
+    <span className="t-sm grow c-tx1">{v}</span>
   </div>
 );
 
@@ -864,7 +859,7 @@ const Row: React.FC<{ k: string; v: string; accent?: boolean; risk?: boolean }> 
 /** A rule — the sentence that decides whether a member is served right tomorrow. */
 const RuleObject: React.FC<{ text: string }> = ({ text }) => (
   <SpineWell>
-    <p className="t-body measure" style={{ margin: 0, color: 'var(--tx0)', fontWeight: 500, lineHeight: 1.75 }}>{text}</p>
+    <p className="t-body measure m-0 c-tx0" style={{ fontWeight: 500, lineHeight: 1.75 }}>{text}</p>
   </SpineWell>
 );
 
@@ -874,8 +869,8 @@ const RuleObject: React.FC<{ text: string }> = ({ text }) => (
  * If everything is an object, nothing is.
  */
 const SupportingPoint: React.FC<{ text: string }> = ({ text }) => (
-  <div style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start', padding: '0 var(--sp-2)' }}>
-    <Check size={16} strokeWidth={2.5} style={{ color: 'var(--tx3)', marginTop: 'var(--sp-1)', flexShrink: 0 }} />
-    <span className="t-body measure" style={{ color: 'var(--tx1)' }}>{text}</span>
+  <div className="row gap-3 items-start" style={{ padding: '0 var(--sp-2)' }}>
+    <Check size={16} strokeWidth={2.5} className="c-tx3 mt-1 no-shrink" />
+    <span className="t-body measure c-tx1">{text}</span>
   </div>
 );

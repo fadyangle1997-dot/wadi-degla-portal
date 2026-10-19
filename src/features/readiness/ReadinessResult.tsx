@@ -69,47 +69,47 @@ export const ReadinessResult: React.FC<{ outcome: ReadinessOutcome; onExit: () =
   const color = TONE_COLOR[o.tone];
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <ScreenHeader onBack={onExit} maxWidth={WIDTH.read} leading={<Eyebrow>تقييم الجاهزية · اليوم 54–60</Eyebrow>} />
 
       <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-8)' }}>
         {/* The decision, stated plainly. No euphemism, no confetti. */}
-        <m.header {...fade} style={{ marginBottom: 'var(--sp-7)' }}>
+        <m.header {...fade} className="mb-7">
           <span aria-hidden style={{ color, display: 'inline-flex' }}>{o.icon}</span>
           <h1 className="t-h1" style={{ margin: 'var(--sp-3) 0 var(--sp-3)' }}>{o.headline}</h1>
-          <p className="t-body" style={{ color: 'var(--tx1)', margin: 0 }}>{o.meaning}</p>
+          <p className="t-body c-tx1 m-0">{o.meaning}</p>
         </m.header>
 
         {/* WHY — the engine's own reasons. This is the respect. */}
-        <m.section {...stagger(0)} style={{ marginBottom: 'var(--sp-6)' }}>
-          <div className="t-label" style={{ marginBottom: 'var(--sp-3)' }}>على أي أساس</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+        <m.section {...stagger(0)} className="mb-6">
+          <div className="t-label mb-3">على أي أساس</div>
+          <div className="stack gap-2">
             {outcome.reasons.map(r => (
               <div key={r} style={{
                 padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-1)',
                 border: '1px solid var(--line)', borderRadius: 'var(--r-sm)',
                 borderInlineStartWidth: 3, borderInlineStartColor: color,
               }}>
-                <p className="t-body" style={{ margin: 0 }}>{r}</p>
+                <p className="t-body m-0">{r}</p>
               </div>
             ))}
           </div>
         </m.section>
 
         {/* Named, per-KPI evidence — never a single opaque number. */}
-        <m.section {...stagger(1)} style={{ marginBottom: 'var(--sp-6)' }}>
-          <div className="t-label" style={{ marginBottom: 'var(--sp-3)' }}>
+        <m.section {...stagger(1)} className="mb-6">
+          <div className="t-label mb-3">
             الأدلة حسب المحاور الرسمية · الإجمالي {outcome.overall}%
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div className="stack gap-2">
             {(Object.keys(EVALUATION_DIMENSIONS) as (keyof typeof EVALUATION_DIMENSIONS)[]).map(d => {
               const score = outcome.scores[d];
               const floor = READINESS_FLOORS[d];
               const below = score < floor;
               return (
-                <div key={d} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-2) var(--sp-3)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
+                <div key={d} className="row items-center gap-3" style={{ padding: 'var(--sp-2) var(--sp-3)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
                   <span className="t-sm" style={{ flex: '1 1 130px', minWidth: 0 }}>{EVALUATION_DIMENSIONS[d]}</span>
-                  <span style={{ flex: '2 1 120px', height: 4, background: 'var(--s1)', borderRadius: 'var(--r-full)', position: 'relative', overflow: 'hidden' }}>
+                  <span className="relative" style={{ flex: '2 1 120px', height: 4, background: 'var(--s1)', borderRadius: 'var(--r-full)', overflow: 'hidden' }}>
                     <span style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: `${score}%`, background: below ? 'var(--risk)' : 'var(--ready)' }} />
                   </span>
                   <span className="t-num t-label" style={{ minWidth: 'var(--sp-5)', textAlign: 'end', color: below ? 'var(--risk)' : 'var(--tx2)' }}>{score}%</span>
@@ -123,9 +123,9 @@ export const ReadinessResult: React.FC<{ outcome: ReadinessOutcome; onExit: () =
         {/* Strengths are named too — an assessment that only names failures is
             an audit, not a development conversation. */}
         {outcome.strengths.length > 0 && (
-          <m.section {...stagger(2)} style={{ marginBottom: 'var(--sp-6)' }}>
-            <div className="t-label" style={{ marginBottom: 'var(--sp-2)' }}>اللي ظهر قوي</div>
-            <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
+          <m.section {...stagger(2)} className="mb-6">
+            <div className="t-label mb-2">اللي ظهر قوي</div>
+            <div className="row gap-2 wrap">
               {outcome.strengths.map(d => <StatusBadge key={d} tone="ready">{EVALUATION_DIMENSIONS[d]}</StatusBadge>)}
             </div>
           </m.section>
@@ -133,26 +133,26 @@ export const ReadinessResult: React.FC<{ outcome: ReadinessOutcome; onExit: () =
 
         {/* Every outcome has a route forward — including the hard ones. */}
         <m.section {...stagger(3)} style={{ padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)' }}>
-          <div className="t-label" style={{ marginBottom: 'var(--sp-2)' }}>الخطوة الجاية</div>
-          <p className="t-body" style={{ margin: 0, color: 'var(--tx1)' }}>{o.next}</p>
+          <div className="t-label mb-2">الخطوة الجاية</div>
+          <p className="t-body m-0 c-tx1">{o.next}</p>
         </m.section>
 
         {/* Certification is a moment, not a destination — it lands here, on the
             terminal state, rather than as a page nobody would navigate to. */}
         {outcome.decision === 'ready' && (
-          <m.section {...stagger(4)} style={{ marginTop: 'var(--sp-6)', padding: 'var(--sp-5)', border: `1px solid var(--g3)`, borderRadius: 'var(--r-md)' }}>
-            <p className="t-body" style={{ margin: 0 }}>
+          <m.section {...stagger(4)} className="mt-6" style={{ padding: 'var(--sp-5)', border: `1px solid var(--g3)`, borderRadius: 'var(--r-md)' }}>
+            <p className="t-body m-0">
               <strong>لما اعتماد المدير ينزل، إنت بقيت موثوق تمثّل وادي دجلة قدّام أعضائه.</strong>
               {' '}يعني كل جملة هتقولها بعد كده هي موقف النادي — زي أول يوم بالظبط، بس دلوقتي لوحدك.
             </p>
           </m.section>
         )}
 
-        <div style={{ marginTop: 'var(--sp-7)' }}>
+        <div className="mt-7">
           <Button variant="ghost" onClick={onExit}>رجوع لرحلتي</Button>
         </div>
 
-        <p className="t-sm" style={{ color: 'var(--tx3)', marginTop: 'var(--sp-5)' }}>
+        <p className="t-sm c-tx3 mt-5">
           القرار: {DECISION_LABEL[outcome.decision]} · مبني على أدلة من {6 - outcome.stationsMissing.length} من 6 محطات.
         </p>
       </main>

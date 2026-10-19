@@ -30,11 +30,11 @@ export const BrandLogo: React.FC<{ size?: number; className?: string }> = ({ siz
     alt="وادي دجلة"
     width={size}
     height={size}
-    className={className}
+    className={className ? `block ${className}` : 'block'}
     // Decoding async keeps the mark off the critical path: the sign-in card
     // paints immediately and the logo lands a frame later, rather than the
     // whole screen waiting on an image.
     decoding="async"
-    style={{ objectFit: 'contain', display: 'block' }}
+    style={{ objectFit: 'contain' }}
   />
 );

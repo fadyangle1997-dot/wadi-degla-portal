@@ -16,7 +16,6 @@ import { useLang, t } from '../../app/i18n';
 import { WIDTH } from '../../ui/designSystem';
 interface Props { module: Module; onExit: () => void; onFinish: (score: number) => void; }
 
-const col: React.CSSProperties = { width: '100%', maxWidth: WIDTH.focus, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5)' };
 
 export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
   const lang = useLang();
@@ -44,23 +43,23 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
       .map(id => module.lessons.find(l => l.id === id))
       .filter((l): l is NonNullable<typeof l> => !!l);
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <m.section {...fade} style={{ ...col, textAlign: 'center' }}>
+      <div className="stack min-h-screen justify-center">
+        <m.section {...fade} className="focus-col text-center">
           {passed && (
             <m.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 15 }}
-              style={{ width: 76, height: 76, margin: '0 auto var(--sp-4)', borderRadius: '50%', background: 'rgba(var(--g2-rgb),.13)', border: '2px solid var(--g1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 56px rgba(var(--g2-rgb),.3)' }}>
+              className="row items-center justify-center" style={{ width: 76, height: 76, margin: '0 auto var(--sp-4)', borderRadius: '50%', background: 'rgba(var(--g2-rgb),.13)', border: '2px solid var(--g1)', boxShadow: '0 0 56px rgba(var(--g2-rgb),.3)' }}>
               <GraduationCap size={32} style={{ color: 'var(--g0)' }} />
             </m.div>
           )}
           <m.p initial={{ scale: 0.7 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}
-            className="t-num" style={{ fontSize: '3.4rem', color: passed ? 'var(--g1)' : 'var(--attn)', margin: 0 }}>
+            className="t-num m-0" style={{ fontSize: '3.4rem', color: passed ? 'var(--g1)' : 'var(--attn)' }}>
             {Math.round(score * 100)}%
           </m.p>
-          <h2 className="t-h2" style={{ marginTop: 'var(--sp-3)' }}>{passed ? 'الوحدة دي بقت في جيبك.' : 'قرّبت — راجع وارجع'}</h2>
+          <h2 className="t-h2 mt-3">{passed ? 'الوحدة دي بقت في جيبك.' : 'قرّبت — راجع وارجع'}</h2>
           {passed && (() => {
             const opened = MODULES.filter(x => x.unlock.requiresUnits.includes(module.id)).map(x => x.title);
             return opened.length > 0 && (
-              <p className="t-sm" style={{ marginTop: 'var(--sp-2)', color: 'var(--g1)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-2)' }}>
+              <p className="t-sm row mt-2 c-g1 items-center justify-center gap-2">
                 <Unlock size={13} /> {t('ex.unlocked', lang)} {opened.join(' · ')}
               </p>
             );
@@ -69,15 +68,15 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
             {passed ? 'ده مش حفظ — ده فهم بيشتغل على حالات مخلوطة زي الواقع.' : `المطلوب ${Math.round(TRAINING_POLICY.passThreshold * 100)}%. المراجعة دي معمولة ليك بالظبط على اللي غلطت فيه:`}
           </p>
           {!passed && reviewLessons.length > 0 && (
-            <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', textAlign: 'start' }}>
+            <div className="stack mt-5 gap-2 text-start">
               {reviewLessons.map(l => (
                 <div key={l.id} style={{ padding: 'var(--sp-3) var(--sp-4)', borderRadius: 'var(--r-sm)', background: 'var(--attn-bg)', border: '1px solid var(--attn-line)' }}>
-                  <span className="t-sm" style={{ color: 'var(--attn)' }}>راجع درس: {l.title}</span>
+                  <span className="t-sm c-attn">راجع درس: {l.title}</span>
                 </div>
               ))}
             </div>
           )}
-          <div style={{ marginTop: 'var(--sp-7)', display: 'flex', gap: 'var(--sp-3)', justifyContent: 'center' }}>
+          <div className="row mt-7 gap-3 justify-center">
             {!passed && <Button variant="ghost" onClick={() => { setQi(0); setPicked(null); setAnswers([]); setWrongIds([]); setFinalScore(null); }}><RotateCcw size={16} /> حاول تاني</Button>}
             <Button onClick={onExit}>ارجع للمسار <ArrowRight size={16} className="icon-dir" /></Button>
           </div>
@@ -90,18 +89,18 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
   const correct = answered && shuffledOptions[picked]?.correct;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="stack min-h-screen">
       <ScreenHeader maxWidth={WIDTH.focus}
         leading={<Eyebrow icon={<GraduationCap size={13} />}>امتحان {module.title}</Eyebrow>}
         rail={<ProgressRail total={qs.length} current={qi} />}
         trailing={<span className="t-num t-label">{qi + 1}/{qs.length}</span>} />
 
-      <main style={{ flex: 1 }}>
+      <main className="grow">
         <AnimatePresence mode="wait">
-          <m.section key={qi} {...fade} style={col}>
-            <p className="t-sm" style={{ marginBottom: 'var(--sp-3)' }}>الأسئلة هنا بتخلط الدروس — زي عميل حقيقي بالظبط.</p>
-            <h2 className="t-h2 measure" style={{ marginBottom: 'var(--sp-6)' }}>{q.prompt}</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          <m.section key={qi} {...fade} className="focus-col">
+            <p className="t-sm mb-3">الأسئلة هنا بتخلط الدروس — زي عميل حقيقي بالظبط.</p>
+            <h2 className="t-h2 measure mb-6">{q.prompt}</h2>
+            <div className="stack gap-3">
               {shuffledOptions.map((o, i) => (
                 <OptionButton key={i} text={o.text}
                   state={!answered ? 'idle' : o.correct ? 'correct' : picked === i ? 'wrong' : 'dim'}
@@ -110,7 +109,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
             </div>
             <AnimatePresence>
               {answered && (
-                <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 'var(--sp-5)' }}>
+                <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
                   <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'صح' : 'مش صح'}
                     onAction={() => {
                       const nextAnswers = [...answers, !!correct];

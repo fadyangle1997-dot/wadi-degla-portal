@@ -30,14 +30,14 @@ export const ReadinessOutcomeSummary: React.FC<{ employeeId: string }> = ({ empl
   const outcome = useMemo(() => assessReadiness(readinessInputOf(events, employeeId)), [events, employeeId]);
   const done = STATIONS.length - outcome.stationsMissing.length;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+    <div className="stack gap-2">
+      <div className="row items-center gap-3 wrap">
         <span className="t-label">{tr('rd.outcome', lang)}</span>
         <StatusBadge tone={DECISION_TONE[outcome.decision]}>{tr(`rd.dec.${outcome.decision}` as Key, lang)}</StatusBadge>
-        <span className="t-sm t-num" style={{ color: 'var(--tx2)' }}>{tf('rd.progress', { n: done, total: STATIONS.length }, lang)}</span>
+        <span className="t-sm t-num c-tx2">{tf('rd.progress', { n: done, total: STATIONS.length }, lang)}</span>
       </div>
       {outcome.reasons.map(r => (
-        <ArabicContent key={r} as="div" className="t-sm" style={{ color: 'var(--tx2)' }}>{r}</ArabicContent>
+        <ArabicContent key={r} as="div" className="t-sm c-tx2">{r}</ArabicContent>
       ))}
     </div>
   );
@@ -55,15 +55,15 @@ export const StationAssessment: React.FC<{
   const [open, setOpen] = useState<string | null>(null);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+    <div className="stack gap-2">
       {stationsFor(assessor).map(st => {
         const prev = latest.get(st.id);
         const isOpen = open === st.id;
         return (
           <div key={st.id} style={{ border: '1px solid var(--line)', borderRadius: 'var(--r-md)', background: 'var(--s-2)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)', flexWrap: 'wrap' }}>
-              <span className="t-num t-label" style={{ color: 'var(--g1)' }}>{st.order}</span>
-              <ArabicContent as="span" className="t-sm" style={{ flex: '1 1 200px', color: 'var(--tx0)' }}>{st.title}</ArabicContent>
+            <div className="row items-center gap-3 wrap" style={{ padding: 'var(--sp-3) var(--sp-4)' }}>
+              <span className="t-num t-label c-g1">{st.order}</span>
+              <ArabicContent as="span" className="t-sm c-tx0" style={{ flex: '1 1 200px' }}>{st.title}</ArabicContent>
               <StatusBadge tone={prev ? 'ready' : 'neutral'}>
                 {prev ? <span className="t-num">{average(prev.scores, st.measures)}%</span> : tr('rd.notyet', lang)}
               </StatusBadge>
@@ -114,24 +114,24 @@ const StationForm: React.FC<{
   const obsId = `obs-${station.id}`;
 
   return (
-    <div style={{ padding: '0 var(--sp-4) var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-      <ArabicContent as="div" className="t-sm measure" style={{ color: 'var(--tx2)' }}>{station.situation}</ArabicContent>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--sp-3)' }}>
+    <div className="stack gap-3" style={{ padding: '0 var(--sp-4) var(--sp-4)' }}>
+      <ArabicContent as="div" className="t-sm measure c-tx2">{station.situation}</ArabicContent>
+      <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         {station.measures.map(d => (
-          <label key={d} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
+          <label key={d} className="stack gap-1">
             <ArabicContent as="span" className="t-sm">{EVALUATION_DIMENSIONS[d]}</ArabicContent>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+            <span className="row items-center gap-3">
               <input type="range" min={0} max={100} value={scores[d] ?? 70} aria-label={EVALUATION_DIMENSIONS[d]}
                 onChange={e => setScores(s => ({ ...s, [d]: Number(e.target.value) }))}
-                style={{ flex: 1, accentColor: 'var(--g2)', minHeight: 44 }} />
+                className="grow" style={{ accentColor: 'var(--g2)', minHeight: 44 }} />
               <span className="t-num t-sm" style={{ width: 'var(--sp-5)', textAlign: 'end' }}>{scores[d]}</span>
             </span>
           </label>
         ))}
       </div>
       <label htmlFor={obsId} className="t-label">{tr('rd.observation', lang)}</label>
-      <textarea id={obsId} className="field" rows={2} dir="auto" value={observation} onChange={e => setObservation(e.target.value)}
-        style={{ width: '100%', resize: 'vertical' }} />
+      <textarea id={obsId} className="field w-full" rows={2} dir="auto" value={observation} onChange={e => setObservation(e.target.value)}
+        style={{ resize: 'vertical' }} />
       <div>
         <Button disabled={problem !== null} onClick={() => onSave(scores, observation)}>
           <ClipboardCheck size={16} /> {tr('rd.save', lang)}
@@ -146,17 +146,17 @@ const ConductForm: React.FC<{ initial: ConductObservations; onSave: (c: ConductO
   const [conduct, setConduct] = useState<ConductObservations>(initial);
   return (
     <div style={{ padding: 'var(--sp-4)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-      <div className="t-label" style={{ marginBottom: 'var(--sp-3)' }}>{tr('rd.conduct', lang)}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+      <div className="t-label mb-3">{tr('rd.conduct', lang)}</div>
+      <div className="stack gap-2">
         {ALL_CONDUCT_CHECKS.map(c => (
-          <label key={c} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', cursor: 'pointer', minHeight: 34 }}>
+          <label key={c} className="row items-center gap-3" style={{ cursor: 'pointer', minHeight: 34 }}>
             <input type="checkbox" checked={conduct[c] === true} style={{ width: 17, height: 17, accentColor: 'var(--g2)' }}
               onChange={e => setConduct(p => ({ ...p, [c]: e.target.checked }))} />
             <ArabicContent as="span" className="t-sm">{CONDUCT_CHECKS[c]}</ArabicContent>
           </label>
         ))}
       </div>
-      <div style={{ marginTop: 'var(--sp-3)' }}>
+      <div className="mt-3">
         <Button variant="ghost" onClick={() => onSave(conduct)}>{tr('rd.conductsave', lang)}</Button>
       </div>
     </div>
@@ -171,10 +171,10 @@ export const TraineeReadinessBlock: React.FC<{
   const [open, setOpen] = useState(false);
   return (
     <section aria-label={`${tr('rd.title', lang)} — ${name}`}
-      style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+      className="stack gap-3" style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
+      <div className="row items-center gap-3 wrap">
         <Eyebrow>{name}</Eyebrow>
-        <div style={{ flex: 1 }} />
+        <div className="grow" />
         <Button variant="ghost" aria-expanded={open} onClick={() => setOpen(v => !v)}>
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />} {open ? tr('rd.close', lang) : tr('rd.open', lang)}
         </Button>

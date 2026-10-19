@@ -59,19 +59,19 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
   const hasRetrieval = dueToday({ passedModuleIds, completedLessonIds });
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       {/* The shell owns the title and navigation; this screen has no header
           of its own (two stacked sticky bars cost a third of a phone screen). */}
 
       {!progressStore.healthy() && (
-        <div role="alert" style={{ background: 'var(--attn-bg)', borderBottom: '1px solid var(--attn-line)', padding: 'var(--sp-2) var(--sp-5)', textAlign: 'center' }}>
-          <span className="t-sm" style={{ color: 'var(--attn)' }}>{tr('db.nosave', lang)}</span>
+        <div role="alert" className="text-center" style={{ background: 'var(--attn-bg)', borderBottom: '1px solid var(--attn-line)', padding: 'var(--sp-2) var(--sp-5)' }}>
+          <span className="t-sm c-attn">{tr('db.nosave', lang)}</span>
         </div>
       )}
 
       {/* Two tiers, two gaps: the hero (Today's Mission) stands alone; the
           supporting cards below it group at the tighter related-cards gap. */}
-      <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-8) var(--sp-5) var(--sp-9)', display: 'flex', flexDirection: 'column' }}>
+      <main className="stack" style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-8) var(--sp-5) var(--sp-9)' }}>
 
         {/* ① Today's Mission — the single hero. It stands alone with a full sp-8
             of air beneath it so nothing competes for the first glance. */}
@@ -88,7 +88,7 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
             (active work → this block) at the wider sp-8 breath. */}
         {/* The tier gap follows the device: a desktop breath is a tenth of a
             phone screen. */}
-        <div className="tier-gap" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+        <div className="tier-gap stack gap-4">
 
         {/* Yesterday's commitment, shown back to the trainee: what they chose and
             when. Never «did you do it?» — the platform cannot know (ADR-004). */}
@@ -97,7 +97,7 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
             <Eyebrow icon={<Flag size={13} />}>
               {commitment.daysAgo === 0 ? tr('db.committoday', lang) : commitment.daysAgo === 1 ? tr('db.commitysdy', lang) : `${tr('db.commitdays', lang)} ${commitment.daysAgo} ${tr('db.daysago', lang)}`}
             </Eyebrow>
-            <p className="t-body" style={{ margin: 'var(--sp-2) 0 0', color: 'var(--tx0)' }}>{commitment.text}</p>
+            <p className="t-body c-tx0" style={{ margin: 'var(--sp-2) 0 0' }}>{commitment.text}</p>
           </Card>
         )}
 
@@ -162,8 +162,8 @@ const TodaysMission: React.FC<{
     return (
       <Card tone="accent" pad={6}>
         <Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>
-        <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)', color: 'var(--risk)' }}>{tr('path.needswork', lang)}</h1>
-        <p className="t-sm measure" style={{ marginBottom: 'var(--sp-5)' }}>{tf('pv.rejectedbody', { m: m?.title ?? '' }, lang)}</p>
+        <h1 className="t-h2 c-risk" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{tr('path.needswork', lang)}</h1>
+        <p className="t-sm measure mb-5">{tf('pv.rejectedbody', { m: m?.title ?? '' }, lang)}</p>
         <Button onClick={() => { if (m?.lessons[0]) onOpenLesson(m.id, m.lessons[0].id); }}>
           {tr('db.reviewunit', lang)} <ArrowRight size={16} className="icon-dir" />
         </Button>
@@ -179,10 +179,10 @@ const TodaysMission: React.FC<{
         <p className="t-sm measure">{tf('pv.waitingbody', { m: m?.title ?? '' }, lang)}</p>
         {/* Waiting is the trainee's job right now; these lines say what happened
             and what to do meanwhile, so the wait does not read as stuck. */}
-        <p className="t-sm measure" style={{ marginTop: 'var(--sp-4)', color: 'var(--tx3)' }}>
+        <p className="t-sm measure mt-4 c-tx3">
           {tr('db.waiting', lang)}
         </p>
-        <p className="t-sm measure" style={{ marginTop: 'var(--sp-2)', color: 'var(--tx3)' }}>
+        <p className="t-sm measure mt-2 c-tx3">
           {tr('db.meanwhile', lang)}
         </p>
       </Card>
@@ -196,7 +196,7 @@ const TodaysMission: React.FC<{
       <Card tone="accent" pad={6}>
         <Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>
         <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{tf('pv.submittitle', { m: m?.title ?? '' }, lang)}</h1>
-        <p className="t-sm measure" style={{ marginBottom: 'var(--sp-5)' }}>
+        <p className="t-sm measure mb-5">
           {tr('db.retrysubmit', lang)}
         </p>
         <Button onClick={() => { if (m) trainingStore.submitForReview(traineeIdOrNull() ?? '', m.id); }}>
@@ -213,7 +213,7 @@ const TodaysMission: React.FC<{
       <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>
         {isExam ? <>{tr('db.examof', lang)} <ArabicContent as="span">{m?.title}</ArabicContent></> : <>{tr('db.contunit', lang)} <ArabicContent as="span">«{m?.title}»</ArabicContent></>}
       </h1>
-      <p className="t-sm measure" style={{ marginBottom: 'var(--sp-5)' }}>
+      <p className="t-sm measure mb-5">
         {isExam ? tr('db.examintro', lang) : <ArabicContent as="span">{m?.bigQuestion}</ArabicContent>}
       </p>
       <Button onClick={() => {
@@ -244,17 +244,17 @@ const CurrentModuleCard: React.FC<{
 
   return (
     <Card>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+      <div className="row items-center gap-3">
         <Eyebrow>{m.code} · <ArabicContent as="span">{m.timeline}</ArabicContent></Eyebrow>
-        <div style={{ flex: 1 }} />
+        <div className="grow" />
         {waiting && <StatusBadge tone="attn">{waitingForTrainer(trainerName)}</StatusBadge>}
       </div>
-      <h2 className="t-h3" style={{ marginTop: 'var(--sp-2)' }}><ArabicContent as="span">{m.title}</ArabicContent></h2>
-      {showQuestion && <p className="t-sm" style={{ marginTop: 'var(--sp-1)', marginBottom: 'var(--sp-3)' }}><ArabicContent as="span">{m.bigQuestion}</ArabicContent></p>}
+      <h2 className="t-h3 mt-2"><ArabicContent as="span">{m.title}</ArabicContent></h2>
+      {showQuestion && <p className="t-sm mt-1 mb-3"><ArabicContent as="span">{m.bigQuestion}</ArabicContent></p>}
 
       <div style={{ marginTop: showQuestion ? 0 : 'var(--sp-3)' }}>
         <ProgressRail total={m.lessons.length} current={done} />
-        <span className="t-label" style={{ color: 'var(--tx3)', marginTop: 'var(--sp-1)', display: 'block' }}>{done} {tr('jr.of', lang)} {m.lessons.length} {tr('db.lessonsof', lang)}</span>
+        <span className="t-label block c-tx3 mt-1">{done} {tr('jr.of', lang)} {m.lessons.length} {tr('db.lessonsof', lang)}</span>
       </div>
     </Card>
   );
@@ -274,14 +274,14 @@ const NextModulePreview: React.FC<{ moduleId: string }> = ({ moduleId }) => {
   return (
     /* No opacity on locked cards: opacity multiplies every child's contrast
        below the floor. Colour and the lock icon say «locked». */
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-4) var(--sp-5)', border: '1px solid var(--line)', borderRadius: 'var(--r-lg)', background: 'var(--s-2)' }}>
-      <Lock size={16} style={{ color: 'var(--tx3)', flexShrink: 0 }} />
-      <div style={{ flex: 1 }}>
-        <span className="t-label" style={{ color: 'var(--tx3)' }}>{tr('db.nextunit', lang)}</span>
-        <span className="t-sm" style={{ display: 'block', color: 'var(--tx2)', marginTop: 'var(--sp-1)' }}><ArabicContent as="span">{m.title}</ArabicContent></span>
+    <div className="row items-center gap-3" style={{ padding: 'var(--sp-4) var(--sp-5)', border: '1px solid var(--line)', borderRadius: 'var(--r-lg)', background: 'var(--s-2)' }}>
+      <Lock size={16} className="c-tx3 no-shrink" />
+      <div className="grow">
+        <span className="t-label c-tx3">{tr('db.nextunit', lang)}</span>
+        <span className="t-sm block c-tx2 mt-1"><ArabicContent as="span">{m.title}</ArabicContent></span>
         {/* A lock states what opens it: the trainer's approval of the current
             unit, not a date the platform cannot promise. */}
-        <span className="t-label" style={{ display: 'block', color: 'var(--tx3)', marginTop: 'var(--sp-2)' }}>
+        <span className="t-label block c-tx3 mt-2">
           {tr('db.unlockrule', lang)}
         </span>
       </div>

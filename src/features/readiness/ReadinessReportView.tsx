@@ -62,8 +62,8 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
   // shown for a target outside scope, period.
   if (!authorized) {
     return (
-      <div style={{ minHeight: '100vh' }}>
-        <ScreenHeader onBack={onExit} leading={<span className="t-title" style={{ color: 'var(--g1)' }}>{tr('rr.title', lang)}</span>} />
+      <div className="min-h-screen">
+        <ScreenHeader onBack={onExit} leading={<span className="t-title c-g1">{tr('rr.title', lang)}</span>} />
         <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-9) var(--sp-5)' }}>
           <EmptyState icon={<Lock size={22} />} title={tr('rr.noaccess', lang)} body={tr("rr.noaccessbody", lang)} />
         </main>
@@ -76,33 +76,33 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
   const risk = RISK_META[r.risk];
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <ScreenHeader
         onBack={onExit}
-        leading={<span className="t-title" style={{ color: 'var(--g1)' }}>{tr('rr.title', lang)}</span>}
+        leading={<span className="t-title c-g1">{tr('rr.title', lang)}</span>}
       />
 
-      <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
+      <main className="stack gap-6" style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
 
         {/* ── Executive verdict — decision first ── */}
         <Card tone="accent" pad={6}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+          <div className="row items-center gap-3 wrap">
             <Eyebrow icon={<ShieldCheck size={13} />}>{tr('rr.summary', lang)} {name}</Eyebrow>
-            <div style={{ flex: 1 }} />
+            <div className="grow" />
             <StatusBadge tone={v.tone}>{tr(v.labelKey, lang)}</StatusBadge>
           </div>
           <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{r.overall}% {tr('rr.operational', lang)}</h1>
-          <p className="t-sm measure" style={{ marginBottom: 'var(--sp-4)' }}>{tr(v.lineKey, lang)}</p>
-          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
+          <p className="t-sm measure mb-4">{tr(v.lineKey, lang)}</p>
+          <div className="row gap-2 wrap">
             <StatusBadge tone={risk.tone}>{tr(risk.labelKey, lang)}</StatusBadge>
             <StatusBadge tone="neutral">{r.modulesApproved}/{r.modulesTotal} {tr('rr.unitsapp', lang)}</StatusBadge>
             {r.evaluationsCount > 0 && <StatusBadge tone="neutral">{r.evaluationsCount} {tr('rr.assessments', lang)}</StatusBadge>}
           </div>
           {r.reasons.length > 0 && (
-            <ul role="list" style={{ listStyle: 'none', margin: 'var(--sp-4) 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+            <ul role="list" className="stack gap-2" style={{ listStyle: 'none', margin: 'var(--sp-4) 0 0', padding: 0 }}>
               {r.reasons.map((reason, i) => (
-                <li key={i} style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'flex-start' }}>
-                  <Info size={13} style={{ color: 'var(--tx3)', marginTop: 'var(--sp-1)', flexShrink: 0 }} aria-hidden />
+                <li key={i} className="row gap-2 items-start">
+                  <Info size={13} className="c-tx3 mt-1 no-shrink" aria-hidden />
                   <span className="t-sm">{reason}</span>
                 </li>
               ))}
@@ -113,15 +113,15 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
         {/* ── Critical operational dimensions — highlight failures ── */}
         <section aria-label={tr('rr.dimensions', lang)}>
           <Eyebrow>{tr('rr.dimensions', lang)}</Eyebrow>
-          <div style={{ marginTop: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div className="stack mt-3 gap-2">
             {r.dimensions.map(d => (
-              <div key={d.dimension} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-                <span className="t-sm" style={{ flex: 1, minWidth: 0, color: d.belowFloor ? 'var(--risk)' : 'var(--tx1)' }}>
+              <div key={d.dimension} className="row items-center gap-3">
+                <span className="t-sm grow" style={{ minWidth: 0, color: d.belowFloor ? 'var(--risk)' : 'var(--tx1)' }}>
                   {/* `d.label` is assessment content (the dimension's own
                       Arabic name from the readiness engine) — an island, never
                       a translation. The «critical» flag beside it is chrome. */}
                   <ArabicContent as="span">{d.label}</ArabicContent>
-                  {d.critical && <span className="t-label" style={{ color: 'var(--tx3)', marginInlineStart: 'var(--sp-2)' }}>{tr('rr.critical', lang)}</span>}
+                  {d.critical && <span className="t-label c-tx3" style={{ marginInlineStart: 'var(--sp-2)' }}>{tr('rr.critical', lang)}</span>}
                 </span>
                 <div style={{ width: 140, height: 5, borderRadius: 'var(--r-full)', background: 'var(--line-2)', overflow: 'hidden' }}
                   role="progressbar" aria-valuenow={d.score} aria-valuemin={0} aria-valuemax={100} aria-label={d.label}>
@@ -137,7 +137,7 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
         {r.strengths.length > 0 && (
           <section aria-label={tr('rr.strengths', lang)}>
             <Eyebrow icon={<TrendingUp size={13} />}>{tr('rr.strengths', lang)}</Eyebrow>
-            <div style={{ marginTop: 'var(--sp-3)', display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
+            <div className="row mt-3 wrap gap-2">
               {r.strengths.map(s => (
                 <StatusBadge key={s.dimension} tone="ready" icon={<CheckCircle2 size={13} />}>{s.label} · {s.score}</StatusBadge>
               ))}
@@ -149,15 +149,15 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
         {r.developmentAreas.length > 0 && (
           <section aria-label={tr('rr.development', lang)}>
             <Eyebrow icon={<AlertTriangle size={13} />}>{tr('rr.development', lang)}</Eyebrow>
-            <div style={{ marginTop: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+            <div className="stack mt-3 gap-3">
               {r.developmentAreas.map(d => (
                 <Card key={d.dimension} tone="quiet" pad={4}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-                    <span className="t-sm" style={{ flex: 1, color: d.critical ? 'var(--risk)' : 'var(--tx1)' }}>{d.label}</span>
+                  <div className="row items-center gap-2">
+                    <span className="t-sm grow" style={{ color: d.critical ? 'var(--risk)' : 'var(--tx1)' }}>{d.label}</span>
                     {d.critical && <StatusBadge tone="risk">{tr('rr.critical', lang)}</StatusBadge>}
                   </div>
-                  <p className="t-sm" style={{ marginTop: 'var(--sp-2)', color: 'var(--tx2)' }}>{d.why}</p>
-                  <p className="t-sm" style={{ marginTop: 'var(--sp-1)', color: 'var(--tx3)' }}>{tr('rr.suggestion', lang)} {d.suggestion}</p>
+                  <p className="t-sm mt-2 c-tx2">{d.why}</p>
+                  <p className="t-sm mt-1 c-tx3">{tr('rr.suggestion', lang)} {d.suggestion}</p>
                 </Card>
               ))}
             </div>
@@ -167,23 +167,23 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
         {/* ── Trainer recommendation + manager decision (reused, not duplicated) ── */}
         <section aria-label={tr('rr.decision', lang)}>
           <Eyebrow>{tr('rr.decision', lang)}</Eyebrow>
-          <div style={{ marginTop: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-              <span className="t-sm" style={{ flex: 1, color: 'var(--tx2)' }}>{tr('rr.trainerrec', lang)}</span>
+          <div className="stack mt-3 gap-2">
+            <div className="row items-center gap-3">
+              <span className="t-sm grow c-tx2">{tr('rr.trainerrec', lang)}</span>
               {r.trainerRecommendation
                 ? <StatusBadge tone="neutral">{DECISION_LABEL[r.trainerRecommendation]}</StatusBadge>
-                : <span className="t-label" style={{ color: 'var(--tx3)' }}>{tr('rr.pending', lang)}</span>}
+                : <span className="t-label c-tx3">{tr('rr.pending', lang)}</span>}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-              <span className="t-sm" style={{ flex: 1, color: 'var(--tx2)' }}>{tr('rr.managerdec', lang)}</span>
+            <div className="row items-center gap-3">
+              <span className="t-sm grow c-tx2">{tr('rr.managerdec', lang)}</span>
               {r.managerDecision
                 ? <StatusBadge tone={r.managerDecision.decision === 'ready' ? 'ready' : r.managerDecision.decision === 'extend' ? 'attn' : 'risk'}>
                     {r.managerDecision.decision === 'ready' ? tr('rr.readywork', lang) : r.managerDecision.decision === 'extend' ? tr('rr.extend', lang) : tr('rr.notready', lang)}
                   </StatusBadge>
-                : <span className="t-label" style={{ color: 'var(--tx3)' }}>{tr('rr.waitprogram', lang)}</span>}
+                : <span className="t-label c-tx3">{tr('rr.waitprogram', lang)}</span>}
             </div>
             {r.managerDecision?.rationale && (
-              <p className="t-sm" style={{ color: 'var(--tx3)', marginTop: 'var(--sp-1)' }}>{r.managerDecision.rationale}</p>
+              <p className="t-sm c-tx3 mt-1">{r.managerDecision.rationale}</p>
             )}
           </div>
         </section>

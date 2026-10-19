@@ -79,40 +79,35 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
   const initials = (me?.name ?? '؟').split(' ').slice(0, 2).map(s => s[0]).join('');
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <ScreenHeader onBack={onClose} maxWidth={WIDTH.read} leading={<Eyebrow>{tr('pf.title', lang)}</Eyebrow>} />
 
       {/* Enters with the same fade as every other screen — this was the
           only one that appeared instantly, which read as a different product
           for the half-second it took to notice. Consistency, not decoration:
           the shared `fade` already respects prefers-reduced-motion. */}
-      <m.main {...fade} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
+      <m.main {...fade} className="stack gap-6" style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)' }}>
 
         {/* ── 1 · Hero Identity — who am I ── */}
         <Card tone="accent" pad={6}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)', flexWrap: 'wrap' }}>
-            <span aria-hidden style={{
-              width: 76, height: 76, borderRadius: 'var(--r-full)', flexShrink: 0,
-              background: 'var(--s0)', border: '2px solid var(--g3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--g1)',
-            }}>
-              <span className="t-h3" style={{ margin: 0 }}>{initials}</span>
+          <div className="row items-center gap-5 wrap">
+            <span aria-hidden className="row no-shrink items-center justify-center c-g1" style={{ width: 76, height: 76, borderRadius: 'var(--r-full)', background: 'var(--s0)', border: '2px solid var(--g3)' }}>
+              <span className="t-h3 m-0">{initials}</span>
             </span>
-            <div style={{ flex: 1, minWidth: '16ch' }}>
-              <h1 className="t-h2" style={{ margin: 0 }}>{me?.name ?? '—'}</h1>
-              <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', marginTop: 'var(--sp-2)' }}>
-                <span className="t-sm" style={{ color: 'var(--tx2)', display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
+            <div className="grow" style={{ minWidth: '16ch' }}>
+              <h1 className="t-h2 m-0">{me?.name ?? '—'}</h1>
+              <div className="row gap-4 wrap mt-2">
+                <span className="t-sm c-tx2 items-center gap-1" style={{ display: 'inline-flex' }}>
                   <User2 size={13} aria-hidden /> {me?.id ?? '—'}
                 </span>
                 {me?.branchId && (
-                  <span className="t-sm" style={{ color: 'var(--tx2)', display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
+                  <span className="t-sm c-tx2 items-center gap-1" style={{ display: 'inline-flex' }}>
                     <MapPin size={13} aria-hidden /> {branchNameOf(me.branchId, org.branches)}
                   </span>
                 )}
               </div>
               {phase && (
-                <div style={{ marginTop: 'var(--sp-3)' }}>
+                <div className="mt-3">
                   <StatusBadge tone="info"><ArabicContent as="span">{phase.title}</ArabicContent></StatusBadge>
                 </div>
               )}
@@ -170,20 +165,16 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
 
         <section aria-label={tr('pf.trainer', lang)}>
           <Eyebrow icon={<BadgeCheck size={13} />}>{tr('pf.assigned', lang)}</Eyebrow>
-          <div style={{ marginTop: 'var(--sp-3)' }}>
+          <div className="mt-3">
             {trainer ? (
               <Card tone="quiet" pad={5}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-                  <span aria-hidden style={{
-                    width: 44, height: 44, borderRadius: 'var(--r-full)', flexShrink: 0,
-                    background: 'var(--s0)', border: '1px solid var(--line-2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx2)',
-                  }}>
+                <div className="row items-center gap-3">
+                  <span aria-hidden className="row no-shrink items-center justify-center c-tx2" style={{ width: 44, height: 44, borderRadius: 'var(--r-full)', background: 'var(--s0)', border: '1px solid var(--line-2)' }}>
                     <User2 size={22} />
                   </span>
                   <div>
-                    <div className="t-sm" style={{ color: 'var(--tx0)' }}>{trainer.name}</div>
-                    <div className="t-label" style={{ color: 'var(--tx3)' }}>{tr('pf.assigned', lang)}</div>
+                    <div className="t-sm c-tx0">{trainer.name}</div>
+                    <div className="t-label c-tx3">{tr('pf.assigned', lang)}</div>
                   </div>
                 </div>
               </Card>
@@ -197,15 +188,15 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
         {/* ── 6 · Personal Information ── */}
         <section aria-label={tr('pf.personal', lang)}>
           <Eyebrow icon={<User2 size={13} />}>{tr('pf.personal', lang)}</Eyebrow>
-          <div style={{ marginTop: 'var(--sp-3)' }}>
+          <div className="mt-3">
           <Card tone="quiet" pad={5}>
-            <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 'var(--sp-2) var(--sp-5)' }}>
-              <dt className="t-label" style={{ color: 'var(--tx3)' }}>{tr('pf.name', lang)}</dt>
-              <dd className="t-sm" style={{ margin: 0, color: 'var(--tx1)' }}>{me?.name ?? '—'}</dd>
-              <dt className="t-label" style={{ color: 'var(--tx3)' }}>{tr('pf.staffno', lang)}</dt>
-              <dd className="t-sm" style={{ margin: 0, color: 'var(--tx1)' }}>{me?.id ?? '—'}</dd>
-              <dt className="t-label" style={{ color: 'var(--tx3)' }}>{tr('pf.branch', lang)}</dt>
-              <dd className="t-sm" style={{ margin: 0, color: 'var(--tx1)' }}>{branchNameOf(me?.branchId, org.branches)}</dd>
+            <dl className="m-0" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 'var(--sp-2) var(--sp-5)' }}>
+              <dt className="t-label c-tx3">{tr('pf.name', lang)}</dt>
+              <dd className="t-sm m-0 c-tx1">{me?.name ?? '—'}</dd>
+              <dt className="t-label c-tx3">{tr('pf.staffno', lang)}</dt>
+              <dd className="t-sm m-0 c-tx1">{me?.id ?? '—'}</dd>
+              <dt className="t-label c-tx3">{tr('pf.branch', lang)}</dt>
+              <dd className="t-sm m-0 c-tx1">{branchNameOf(me?.branchId, org.branches)}</dd>
             </dl>
           </Card>
           </div>
@@ -214,7 +205,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
         {/* ── 7 · Certificates — honest empty state, never a faked cert ── */}
         <section aria-label={tr('pf.certs', lang)}>
           <Eyebrow icon={<Award size={13} />}>{tr('pf.certs', lang)}</Eyebrow>
-          <div style={{ marginTop: 'var(--sp-3)' }}>
+          <div className="mt-3">
             <EmptyState icon={<Award size={22} />} title={tr('pf.nocert', lang)}
               body={tr('pf.nocertbody', lang)} />
           </div>
@@ -228,8 +219,8 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
  *  sections — same shape, so the eye reads them as one family. */
 const StatCard: React.FC<{ label: string; value: string; sub: string }> = ({ label, value, sub }) => (
   <Card tone="quiet" pad={5}>
-    <div className="t-label" style={{ color: 'var(--tx3)' }}>{label}</div>
+    <div className="t-label c-tx3">{label}</div>
     <div className="t-h3 t-num" style={{ margin: 'var(--sp-1) 0' }}>{value}</div>
-    <div className="t-label" style={{ color: 'var(--tx3)' }}>{sub}</div>
+    <div className="t-label c-tx3">{sub}</div>
   </Card>
 );

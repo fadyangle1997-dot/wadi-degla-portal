@@ -65,7 +65,7 @@ export const AppShell: React.FC<{
   const actions = useActionCenter();
 
   return (
-    <div className="shell-root" data-collapsed={railCollapsed || undefined} style={{ minHeight: '100vh', background: 'var(--void)' }}>
+    <div className="shell-root min-h-screen" data-collapsed={railCollapsed || undefined} style={{ background: 'var(--void)' }}>
       {/* Skip link (WCAG 2.4.1): invisible until focused, it lets keyboard users
           jump past the rail, nav and header controls on every screen. */}
       <a href="#wda-main" className="skip-link">{t('a11y.skip', lang)}</a>
@@ -75,7 +75,7 @@ export const AppShell: React.FC<{
       <header className="shell-header" data-collapsed={railCollapsed || undefined}>
         {/* Padding and gap live in CSS — inline they cannot be narrowed for a
             320px screen, which is trap #4 in this file's own history. */}
-        <div className="shell-header-row" style={{ maxWidth: WIDTH.journey, margin: '0 auto', display: 'flex', alignItems: 'center' }}>
+        <div className="shell-header-row row items-center" style={{ maxWidth: WIDTH.journey, margin: '0 auto' }}>
           <button className="rail-toggle" onClick={toggleRail}
             aria-label={railCollapsed ? 'Expand menu' : 'Collapse menu'}
             aria-expanded={!railCollapsed}>
@@ -83,9 +83,9 @@ export const AppShell: React.FC<{
           </button>
 
           {/* brand */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+          <div className="row items-center gap-2">
             <BrandLogo size={28} />
-            <span className="t-title shell-brand-name" style={{ color: 'var(--tx0)' }}>{t('brand.name', lang)}</span>
+            <span className="t-title shell-brand-name c-tx0">{t('brand.name', lang)}</span>
           </div>
 
           {/* site-wide navigation */}
@@ -99,7 +99,7 @@ export const AppShell: React.FC<{
             ))}
           </nav>
 
-          <div className="shell-spacer" style={{ flex: 1 }} />
+          <div className="shell-spacer grow" />
 
           {/* Action Center — only ever rendered against real derived state.
               No items means no badge; the bell still answers "is anything
@@ -108,11 +108,11 @@ export const AppShell: React.FC<{
               lessons, SOPs and questions stay Arabic in both modes, because a
               Membership rule that exists in two languages can drift into two
               meanings. */}
-          <div className="shell-actions" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+          <div className="shell-actions row items-center gap-3">
             {/* A once-in-a-while setting: on phones it lives in the profile menu;
                 the desktop rail has room to keep it in reach. */}
-            <button className="pill lang-pill" onClick={() => langStore.toggle()}
-              aria-label={t('lang.aria', lang)} style={{ minWidth: 72, justifyContent: 'center' }}>
+            <button className="pill lang-pill justify-center" onClick={() => langStore.toggle()}
+              aria-label={t('lang.aria', lang)} style={{ minWidth: 72 }}>
               {/* The other language, written in that language and declared as such. */}
               <span className="lang-label" lang={lang === 'ar' ? 'en' : 'ar'}>{t('lang.switch', lang)}</span>
             </button>
@@ -176,13 +176,7 @@ export const AppShell: React.FC<{
 const Avatar: React.FC<{ name: string; size?: 34 | 48 }> = ({ name, size = 34 }) => (
   <span
     aria-hidden
-    style={{
-      width: size, height: size, flexShrink: 0, borderRadius: '50%',
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--s0)', border: '1px solid var(--g3)',
-      color: 'var(--g1)', fontSize: size === 48 ? '.9rem' : '.72rem',
-      fontWeight: 600, letterSpacing: '.02em',
-    }}
+    className="no-shrink items-center justify-center c-g1" style={{ width: size, height: size, borderRadius: '50%', display: 'inline-flex', background: 'var(--s0)', border: '1px solid var(--g3)', fontSize: size === 48 ? '.9rem' : '.72rem', fontWeight: 600, letterSpacing: '.02em' }}
   >
     {initialsOf(name)}
   </span>
@@ -288,19 +282,19 @@ const ActionCenter: React.FC<{
 
   const n = items.length;
   return (
-    <div ref={rootRef} style={{ position: 'relative' }}>
+    <div ref={rootRef} className="relative">
       <button
         ref={triggerRef}
         onClick={() => setOpen(v => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={n === 0 ? t('ac.label.none', lang) : tf('ac.count', { n }, lang)}
+        className="relative items-center justify-center c-tx1"
         style={{
           // 44×44: the platform's touch-target minimum (as .icon-btn and .pill).
           // Circular to match the avatar beside it.
-          position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 44, height: 44, background: 'none', border: '1px solid var(--line)',
-          borderRadius: 'var(--r-full)', cursor: 'pointer', color: 'var(--tx1)',
+          display: 'inline-flex', width: 44, height: 44, background: 'none',
+          border: '1px solid var(--line)', borderRadius: 'var(--r-full)', cursor: 'pointer',
         }}
       >
         <Bell size={16} aria-hidden />
@@ -322,22 +316,18 @@ const ActionCenter: React.FC<{
           borderRadius: 'var(--r-md)', boxShadow: 'var(--e-floating)', overflow: 'hidden', zIndex: 30,
         }}>
           {n === 0 ? (
-            <p className="t-sm" style={{ margin: 0, padding: 'var(--sp-4)', color: 'var(--tx3)' }}>
+            <p className="t-sm m-0 c-tx3" style={{ padding: 'var(--sp-4)' }}>
               {t('ac.none', lang)}
             </p>
           ) : items.map(it => (
             <button
               key={it.key}
               role="menuitem"
-              className="row-hover"
+              className="row-hover row items-center gap-3 w-full text-start c-tx1"
               onClick={() => { setOpen(false); onNavigate(it.view); }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', width: '100%',
-                textAlign: 'start', padding: 'var(--sp-3) var(--sp-4)', background: 'none',
-                border: 'none', cursor: 'pointer', color: 'var(--tx1)', minHeight: 48,
-              }}
+              style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 48 }}
             >
-              <span aria-hidden style={{ width: 6, height: 6, borderRadius: 'var(--r-full)', background: 'var(--attn)', flexShrink: 0 }} />
+              <span aria-hidden className="no-shrink" style={{ width: 6, height: 6, borderRadius: 'var(--r-full)', background: 'var(--attn)' }} />
               <span className="t-sm">{it.label}</span>
             </button>
           ))}
@@ -366,17 +356,13 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
   }, [open]);
 
   return (
-    <div ref={rootRef} style={{ position: 'relative' }}>
+    <div ref={rootRef} className="relative">
       <button
         ref={triggerRef}
         onClick={() => setOpen(v => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-3)',
-          background: 'none', border: 'none', cursor: 'pointer', padding: 'var(--sp-1)',
-          borderRadius: 'var(--r-md)',
-        }}
+        className="items-center gap-3" style={{ display: 'inline-flex', background: 'none', border: 'none', cursor: 'pointer', padding: 'var(--sp-1)', borderRadius: 'var(--r-md)' }}
       >
         {/* Avatar leads (48px — presence), then greeting above name. The role
             moves into the dropdown: three stacked lines in a header is density,
@@ -384,9 +370,9 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
         <Avatar name={name === '—' ? '' : name} size={48} />
         {/* Greeting and name have separate classes so phones can hide the
             greeting and keep the name. */}
-        <div className="shell-idtext" style={{ textAlign: 'start', lineHeight: 1.35 }}>
-          <div className="t-label shell-greeting-time" style={{ color: 'var(--tx3)' }}>{greeting(langStore.get())}</div>
-          <div className="t-sm" style={{ color: 'var(--tx0)', fontWeight: 500 }}>{name}</div>
+        <div className="shell-idtext text-start" style={{ lineHeight: 1.35 }}>
+          <div className="t-label shell-greeting-time c-tx3">{greeting(langStore.get())}</div>
+          <div className="t-sm c-tx0" style={{ fontWeight: 500 }}>{name}</div>
         </div>
         {/* The accessible name is the visible text plus this, so speech users
             can say what they see (WCAG 2.5.3) and screen readers hear the role. */}
@@ -405,20 +391,16 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
           }}
         >
           <div style={{ padding: 'var(--sp-4) var(--sp-4) var(--sp-3)' }}>
-            <div className="t-sm" style={{ color: 'var(--tx0)', fontWeight: 600 }}>{name}</div>
-            <div className="t-label" style={{ color: 'var(--tx3)', marginTop: 'var(--sp-1)' }}>{role}</div>
+            <div className="t-sm c-tx0" style={{ fontWeight: 600 }}>{name}</div>
+            <div className="t-label c-tx3 mt-1">{role}</div>
           </div>
           <div style={{ height: 1, background: 'var(--line)' }} />
           {onOpenProfile && (
             <button
               role="menuitem"
               onClick={() => { setOpen(false); onOpenProfile(); }}
-              className="row-hover"
-              style={{
-                display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', width: '100%',
-                textAlign: 'start', padding: 'var(--sp-3) var(--sp-4)', background: 'none',
-                border: 'none', cursor: 'pointer', color: 'var(--tx1)', minHeight: 48,
-              }}
+              className="row-hover row items-center gap-3 w-full text-start c-tx1"
+              style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 48 }}
             >
               <User2 size={16} aria-hidden />
               <span className="t-sm">{t('menu.profile', langStore.get())}</span>
@@ -426,16 +408,12 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
           )}
           <button
             role="menuitem"
-            className="row-hover menu-lang"
+            className="row-hover menu-lang items-center gap-3 w-full text-start c-tx1"
             onClick={() => { langStore.toggle(); setOpen(false); }}
             /* `display` is NOT inline here: this row exists only below 640px,
                and an inline display would outrank the media query that hides
                it — the trap this file has already paid for three times. */
-            style={{
-              alignItems: 'center', gap: 'var(--sp-3)', width: '100%',
-              textAlign: 'start', padding: 'var(--sp-3) var(--sp-4)', background: 'none',
-              border: 'none', cursor: 'pointer', color: 'var(--tx1)', minHeight: 48,
-            }}
+            style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 48 }}
           >
             <Languages size={16} aria-hidden />
             <span className="t-sm">{t('lang.switch', langStore.get())}</span>
@@ -443,15 +421,11 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
           <button
             role="menuitem"
             onClick={() => { setOpen(false); identityStore.signOut(); }}
-            className="row-hover"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', width: '100%',
-              textAlign: 'start', padding: 'var(--sp-3) var(--sp-4)', background: 'none',
-              border: 'none', cursor: 'pointer', color: 'var(--risk)', minHeight: 48,
-            }}
+            className="row-hover row items-center gap-3 w-full text-start c-risk"
+            style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 48 }}
           >
             <LogOut size={16} aria-hidden />
-            <span className="t-sm" style={{ color: 'var(--tx1)' }}>{t('menu.signout', langStore.get())}</span>
+            <span className="t-sm c-tx1">{t('menu.signout', langStore.get())}</span>
           </button>
         </div>
       )}

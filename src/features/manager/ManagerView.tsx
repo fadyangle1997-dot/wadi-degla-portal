@@ -98,7 +98,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
   if (!canDo('reports.view')) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="row min-h-screen items-center justify-center">
         <EmptyState title={tr('ad.noaccess', lang)} body={tr('mg.noaccess', lang)} action={<Button onClick={onExit}>{tr('ad.back', lang)}</Button>} />
       </div>
     );
@@ -108,13 +108,13 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const noData = s.activeTrainees === 0;
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.staff}
         leading={<Eyebrow icon={<LayoutDashboard size={13} />}>{tr('mg.title', lang)}</Eyebrow>} />
 
       <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
-        <h1 className="t-h2" style={{ marginBottom: 'var(--sp-2)' }}>{scopeTitle}</h1>
-        <p className="t-sm" style={{ marginBottom: 'var(--sp-6)' }}>{tr('mg.sub', lang)}</p>
+        <h1 className="t-h2 mb-2">{scopeTitle}</h1>
+        <p className="t-sm mb-6">{tr('mg.sub', lang)}</p>
 
         {noData ? (
           <EmptyState icon={<Users2 />} title={tr('mg.nodata', lang)}
@@ -123,19 +123,16 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
           <>
             {/* ═══ pending decisions — the manager's single most urgent number ═══ */}
             {canDo('readiness.decide') && pendingDecisions.length > 0 && (
-              <button className="row-hover" onClick={() => setDrill(pendingDecisions[0]!)}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 'var(--sp-4)', textAlign: 'start',
-                  padding: 'var(--sp-5)', marginBottom: 'var(--sp-4)', background: 'var(--s-1)',
-                  border: '1px solid var(--attn)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}>
-                <span aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: 44, height: 44, borderRadius: 'var(--r-full)', background: 'var(--s0)', color: 'var(--attn)', flexShrink: 0 }}>
+              <button className="row-hover row w-full items-center gap-4 text-start mb-4" onClick={() => setDrill(pendingDecisions[0]!)}
+                style={{ padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--attn)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}>
+                <span aria-hidden className="row items-center justify-center c-attn no-shrink" style={{ width: 44, height: 44, borderRadius: 'var(--r-full)', background: 'var(--s0)' }}>
                   <Gavel size={22} />
                 </span>
-                <div style={{ flex: 1 }}>
+                <div className="grow">
                   <div className="t-title">{tr('mg.decisions', lang)}</div>
-                  <div className="t-label" style={{ color: 'var(--tx3)' }}>{tr('mg.decisionsub', lang)}</div>
+                  <div className="t-label c-tx3">{tr('mg.decisionsub', lang)}</div>
                 </div>
-                <span className="t-h2 t-num" style={{ color: 'var(--attn)' }}>{pendingDecisions.length}</span>
+                <span className="t-h2 t-num c-attn">{pendingDecisions.length}</span>
               </button>
             )}
 
@@ -159,7 +156,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 <h2 className="t-h3" style={{ margin: 'var(--sp-7) 0 var(--sp-3)' }}>
                   {scope.kind === 'organization' ? tr('mg.branches', lang) : tr('mg.yourbranches', lang)}
                 </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+                <div className="stack gap-3">
                   {unitCards.map(u => (
                     <UnitCard key={u.id} name={u.name} people={u.people} s={u.s}
                       onOpen={() => setOpenUnit(u.id)} />
@@ -168,7 +165,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
               </>
             ) : branchGroups && openUnit ? (
               <>
-                <button className="pill" onClick={() => setOpenUnit(null)} style={{ marginTop: 'var(--sp-7)' }}>
+                <button className="pill mt-7" onClick={() => setOpenUnit(null)}>
                   ← {tr('mg.allbranches', lang)}
                 </button>
                 <h2 className="t-h3" style={{ margin: 'var(--sp-4) 0 var(--sp-3)' }}>
@@ -188,7 +185,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             <h2 className="t-h3" style={{ margin: 'var(--sp-7) 0 var(--sp-3)' }}>
               {scope.kind === 'organization' ? tr('mg.orghealth', lang) : scope.kind === 'area' ? tr('mg.areahealth', lang) : tr('mg.branchhealth', lang)}
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--sp-3)' }}>
+            <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
               <IndexTile icon={<ShieldCheck size={16} />} label={tr('mg.readiness', lang)} value={`${s.avgReadiness}%`}
                 sub={tr('mg.avgbranch', lang)} tone={s.avgReadiness >= 80 ? 'ready' : s.avgReadiness >= 65 ? 'attn' : 'risk'} />
               <IndexTile icon={<GraduationCap size={16} />} label={tr('mg.readystaff', lang)} value={`${Math.round(s.certificationRate * 100)}%`}
@@ -215,9 +212,9 @@ const IndexTile: React.FC<{ icon: React.ReactNode; label: string; value: string;
     const color = tone === 'ready' ? 'var(--ready)' : tone === 'attn' ? 'var(--attn)' : tone === 'risk' ? 'var(--risk)' : 'var(--info)';
     return (
       <div style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-        <span className="t-label" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)', color: 'var(--tx3)' }}>{icon}{label}</span>
+        <span className="t-label row items-center gap-1 c-tx3">{icon}{label}</span>
         <div className="t-h2 t-num" style={{ color, margin: 'var(--sp-2) 0 var(--sp-1)' }}>{value}</div>
-        <span className="t-label" style={{ color: 'var(--tx3)' }}>{sub}</span>
+        <span className="t-label c-tx3">{sub}</span>
       </div>
     );
   };
@@ -255,27 +252,27 @@ const UnitCard: React.FC<{
   const color = tone === 'risk' ? 'var(--risk)' : tone === 'attn' ? 'var(--attn)' : 'var(--ready)';
 
   return (
-    <button className="row-hover" onClick={onOpen}
-      style={{ textAlign: 'start', width: '100%', padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-3)' }}>
-        <span className="t-title" style={{ color: 'var(--tx0)' }}>{name}</span>
-        <div style={{ flex: 1 }} />
+    <button className="row-hover text-start w-full" onClick={onOpen}
+      style={{ padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}>
+      <div className="row items-baseline gap-3">
+        <span className="t-title c-tx0">{name}</span>
+        <div className="grow" />
         <StatusBadge tone={tone}>
           {attention > 0 ? `${attention} ${tr('mg.needint', lang)}` : s.waitingForTrainer > 0 ? `${s.waitingForTrainer} ${tr('mg.awaitreview', lang)}` : tr('mg.stable', lang)}
         </StatusBadge>
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-6)', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
+      <div className="row gap-6 mt-4 wrap">
         <span>
-          <span className="t-label" style={{ display: 'block', color: 'var(--tx3)' }}>{tr('mg.readiness', lang)}</span>
+          <span className="t-label block c-tx3">{tr('mg.readiness', lang)}</span>
           <span className="t-h3 t-num" style={{ color }}>{s.avgReadiness}%</span>
         </span>
         <span>
-          <span className="t-label" style={{ display: 'block', color: 'var(--tx3)' }}>{tr('mg.readystaff', lang)}</span>
+          <span className="t-label block c-tx3">{tr('mg.readystaff', lang)}</span>
           <span className="t-h3 t-num">{Math.round(s.certificationRate * 100)}%</span>
         </span>
         <span>
-          <span className="t-label" style={{ display: 'block', color: 'var(--tx3)' }}>{tr('mg.staff', lang)}</span>
+          <span className="t-label block c-tx3">{tr('mg.staff', lang)}</span>
           <span className="t-h3 t-num">{people}</span>
         </span>
       </div>
@@ -311,9 +308,9 @@ const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: string)
       {/* The heading says what the list holds, and the count is split by
           severity, so a list of informational items does not cry «intervene»
           and get ignored on the day it carries a critical one. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-4)' }}>
+      <div className="row items-center gap-2 mb-4">
         <Eyebrow icon={<AlertTriangle size={13} />}>{urgent > 0 ? tr('mg.needyours', lang) : tr('mg.tofollow', lang)}</Eyebrow>
-        <div style={{ flex: 1 }} />
+        <div className="grow" />
         {issues.length > 0 && (
           <span className="t-label">
             {urgent > 0 ? `${urgent} ${tr('mg.needint', lang)} · ${issues.length - urgent} ${tr('mg.forinfo', lang)}` : `${issues.length} ${tr('mg.forinfo', lang)}`}
@@ -321,17 +318,16 @@ const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: string)
         )}
       </div>
       {issues.length === 0 ? (
-        <p className="t-sm" style={{ color: 'var(--tx3)' }}>{tr('mg.allgood', lang)}</p>
+        <p className="t-sm c-tx3">{tr('mg.allgood', lang)}</p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+        <div className="stack gap-2">
           {issues.map(i => (
-            <button key={i.id} className="row-hover" onClick={() => i.targetUserId && onInspect(i.targetUserId)}
-              style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', textAlign: 'start',
-                padding: 'var(--sp-3) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', cursor: 'pointer', minHeight: 52 }}>
+            <button key={i.id} className="row-hover row items-center gap-3 wrap text-start" onClick={() => i.targetUserId && onInspect(i.targetUserId)}
+              style={{ padding: 'var(--sp-3) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', cursor: 'pointer', minHeight: 52 }}>
               <StatusBadge tone={sevTone[i.severity]}><ArabicContent as="span">{i.action}</ArabicContent></StatusBadge>
               {/* health.ts messages already start with the person's name, so the row
                   shows the message only. */}
-              <ArabicContent as="span" className="t-sm" style={{ flex: 1 }}>{i.message}</ArabicContent>
+              <ArabicContent as="span" className="t-sm grow">{i.message}</ArabicContent>
             </button>
           ))}
         </div>
@@ -359,10 +355,10 @@ const CollapsibleRoster: React.FC<{ ids: readonly string[]; onInspect: (id: stri
   return (
     <details className="roster" open={openByDefault}>
       <summary className="roster-summary">
-        <h2 className="t-h3" style={{ margin: 0 }}>{tr('mg.staff', lang)}</h2>
+        <h2 className="t-h3 m-0">{tr('mg.staff', lang)}</h2>
         <span className="t-label roster-count">{ids.length}</span>
       </summary>
-      <div style={{ marginTop: 'var(--sp-3)' }}>
+      <div className="mt-3">
         <EmployeeGrid ids={ids} onInspect={onInspect} />
       </div>
     </details>
@@ -393,19 +389,17 @@ const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: string) =
     }).sort((a, b) => rank(b.r.health) - rank(a.r.health));
   }, [ids, users, events, t, lang]);
 
-  if (rows.length === 0) return <p className="t-sm" style={{ color: 'var(--tx3)' }}>{tr('mg.nostaff', lang)}</p>;
+  if (rows.length === 0) return <p className="t-sm c-tx3">{tr('mg.nostaff', lang)}</p>;
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--sp-3)' }}>
+    <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
       {rows.map(({ id, name, trainer, stage, r, lastAt }) => {
         const meta = HEALTH_META[r.health];
         return (
-          <button key={id} className="row-hover" onClick={() => onInspect(id)}
-            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', textAlign: 'start',
-              padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}>
+          <button key={id} className="row-hover stack gap-3 text-start" onClick={() => onInspect(id)}
+            style={{ padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}>
             {/* avatar + name */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-              <span aria-hidden style={{ width: 40, height: 40, borderRadius: 'var(--r-full)', flexShrink: 0,
-                background: 'var(--s0)', border: '1px solid var(--line-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx2)' }}>
+            <div className="row items-center gap-3">
+              <span aria-hidden className="row no-shrink items-center justify-center c-tx2" style={{ width: 40, height: 40, borderRadius: 'var(--r-full)', background: 'var(--s0)', border: '1px solid var(--line-2)' }}>
                 <span className="t-sm">{initialsOf(name)}</span>
               </span>
               <div style={{ minWidth: 0 }}>
@@ -413,19 +407,19 @@ const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: string) =
                 {/* The stage name comes from the curriculum — content, so an
                     island; the trainee's phase is called the same thing in both
                     modes because it IS the same thing. */}
-                <ArabicContent as="div" className="t-label" style={{ color: 'var(--tx3)' }}>{stage}</ArabicContent>
+                <ArabicContent as="div" className="t-label c-tx3">{stage}</ArabicContent>
               </div>
             </div>
             {/* readiness + risk */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
-              <span className="t-sm">{tr('mg.readinessof', lang)} <b className="t-num" style={{ color: 'var(--tx0)' }}>{r.readinessIndex}%</b></span>
+            <div className="row items-center gap-3 wrap">
+              <span className="t-sm">{tr('mg.readinessof', lang)} <b className="t-num c-tx0">{r.readinessIndex}%</b></span>
               <StatusBadge tone={meta.tone}>{tr(meta.labelKey, lang)}</StatusBadge>
             </div>
             {/* trainer + last activity */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', borderTop: '1px solid var(--line)', paddingTop: 'var(--sp-3)' }}>
-              <span className="t-label" style={{ color: 'var(--tx3)' }}>{tr('mg.trainerof', lang)} {trainer}</span>
-              <div style={{ flex: 1 }} />
-              <span className="t-label" style={{ color: 'var(--tx3)' }}>{lastAt ? relativeDay(lastAt, lang) : tr('mg.notstarted', lang)}</span>
+            <div className="row items-center gap-3 wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 'var(--sp-3)' }}>
+              <span className="t-label c-tx3">{tr('mg.trainerof', lang)} {trainer}</span>
+              <div className="grow" />
+              <span className="t-label c-tx3">{lastAt ? relativeDay(lastAt, lang) : tr('mg.notstarted', lang)}</span>
             </div>
           </button>
         );
@@ -523,47 +517,47 @@ const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => void }> = 
       <div ref={dialogRef} tabIndex={-1} className="dialog" role="dialog" aria-modal="true" aria-label={`${tr('mg.filetitle', lang)} ${name}`} onClick={e => e.stopPropagation()} style={{ maxWidth: 560, outline: 'none' }}>
 
         {/* header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-          <h2 className="t-h3" style={{ margin: 0, flex: 1 }}>{name}</h2>
+        <div className="row items-center gap-3">
+          <h2 className="t-h3 m-0 grow">{name}</h2>
           <Button variant="ghost" onClick={() => { window.location.hash = `#/readiness-report/${employeeId}`; }}>{tr('mg.report', lang)}</Button>
           <Button variant="ghost" onClick={onClose}>{tr('mg.close', lang)}</Button>
         </div>
 
         {/* ── LAYER 1 · THE VERDICT — "do I need to act?" ── */}
-        <div style={{ marginTop: 'var(--sp-4)', display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)', alignItems: 'center' }}>
+        <div className="row mt-4 wrap gap-2 items-center">
           <StatusBadge tone={verdictMeta.tone}>{verdictMeta.label}</StatusBadge>
           <StatusBadge tone={riskMeta.tone}>{riskMeta.label}</StatusBadge>
           {isOrphan && <StatusBadge tone="risk">{tr('mg.orphan', lang)}</StatusBadge>}
-          {hasEvidence && <span className="t-label t-num" style={{ color: 'var(--tx3)', marginInlineStart: 'auto' }}>{tr('mg.readiness', lang)} {report.overall}%</span>}
+          {hasEvidence && <span className="t-label t-num c-tx3" style={{ marginInlineStart: 'auto' }}>{tr('mg.readiness', lang)} {report.overall}%</span>}
         </div>
 
         {!hasEvidence && (
-          <p className="t-sm" style={{ marginTop: 'var(--sp-3)', color: 'var(--tx3)' }}>
+          <p className="t-sm mt-3 c-tx3">
             {tr('mg.noassess', lang)}
           </p>
         )}
 
         {/* ── LAYER 2 · THE EVIDENCE — "on what basis?" ── */}
         {hasEvidence && (
-          <div style={{ marginTop: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-              <span className="t-label" style={{ color: 'var(--tx3)' }}>{tr('mg.trend', lang)}</span>
+          <div className="stack mt-4 gap-3">
+            <div className="row items-center gap-2">
+              <span className="t-label c-tx3">{tr('mg.trend', lang)}</span>
               <StatusBadge tone={trendDir === 'up' ? 'ready' : trendDir === 'down' ? 'risk' : 'neutral'}>
                 {trendDir === 'up' ? tr('mg.improving', lang) : trendDir === 'down' ? tr('mg.declining', lang) : tr('mg.stable', lang)}
               </StatusBadge>
             </div>
             {report.developmentAreas.length > 0 && (
               <div>
-                <span className="t-label" style={{ color: 'var(--tx3)' }}>{tr('mg.needsimp', lang)}</span>
-                <div style={{ marginTop: 'var(--sp-2)', display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
+                <span className="t-label c-tx3">{tr('mg.needsimp', lang)}</span>
+                <div className="row mt-2 wrap gap-2">
                   {report.developmentAreas.map(a => (
                     <StatusBadge key={a.dimension} tone={a.critical ? 'risk' : 'attn'}>{a.label}</StatusBadge>
                   ))}
                 </div>
               </div>
             )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-              <span className="t-label" style={{ color: 'var(--tx3)' }}>{tr('mg.responsible', lang)}</span>
+            <div className="row items-center gap-2">
+              <span className="t-label c-tx3">{tr('mg.responsible', lang)}</span>
               <span className="t-sm">{trainer?.name ?? tr('mg.unassigned', lang)}</span>
             </div>
           </div>
@@ -571,12 +565,12 @@ const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => void }> = 
 
         {/* ── LAYER 3 · CONTEXT — the timeline, folded below the verdict ── */}
         {events.length > 0 && (
-          <details style={{ marginTop: 'var(--sp-4)' }}>
-            <summary className="t-sm" style={{ cursor: 'pointer', color: 'var(--tx2)' }}>{tr('mg.timeline', lang)}</summary>
-            <ol role="list" style={{ listStyle: 'none', margin: 'var(--sp-3) 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          <details className="mt-4">
+            <summary className="t-sm c-tx2" style={{ cursor: 'pointer' }}>{tr('mg.timeline', lang)}</summary>
+            <ol role="list" className="stack gap-3" style={{ listStyle: 'none', margin: 'var(--sp-3) 0 0', padding: 0 }}>
               {events.map((e, i) => (
-                <li key={i} style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 'var(--r-full)', background: 'var(--g2)', marginTop: 'var(--sp-2)', flexShrink: 0 }} aria-hidden />
+                <li key={i} className="row gap-3 items-start">
+                  <span className="mt-2 no-shrink" style={{ width: 8, height: 8, borderRadius: 'var(--r-full)', background: 'var(--g2)' }} aria-hidden />
                   <span className="t-sm">{label(e)}</span>
                 </li>
               ))}
@@ -616,11 +610,11 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
   };
 
   return (
-    <div style={{ marginTop: 'var(--sp-5)', paddingTop: 'var(--sp-5)', borderTop: '1px solid var(--line)' }}>
+    <div className="mt-5" style={{ paddingTop: 'var(--sp-5)', borderTop: '1px solid var(--line)' }}>
       <Eyebrow icon={<ShieldCheck size={13} />}>{tr('mg.decision', lang)}</Eyebrow>
 
       {existing && (
-        <div style={{ marginTop: 'var(--sp-3)', display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+        <div className="row mt-3 items-center gap-3">
           {(() => {
             // The decision comes off the event log, so a value written by an
             // older build (or hand-edited storage) can miss this table — and
@@ -629,12 +623,12 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
             const meta = DECISION_META[existing.decision];
             return <StatusBadge tone={meta?.tone ?? 'info'}>{meta?.label ?? existing.decision}</StatusBadge>;
           })()}
-          {existing.rationale && <span className="t-sm" style={{ color: 'var(--tx2)' }}>{existing.rationale}</span>}
+          {existing.rationale && <span className="t-sm c-tx2">{existing.rationale}</span>}
         </div>
       )}
 
       {complete && (
-        <div style={{ marginTop: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        <div className="stack mt-3 gap-3">
           <ReadinessOutcomeSummary employeeId={employeeId} />
           {/* Station 6 — the readiness interview — is the manager's own evidence. */}
           {canDecide && <StationAssessment employeeId={employeeId} assessor="manager" onSaved={() => undefined} />}
@@ -642,25 +636,25 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
       )}
 
       {!complete ? (
-        <p className="t-sm" style={{ marginTop: 'var(--sp-3)', color: 'var(--tx3)' }}>
+        <p className="t-sm mt-3 c-tx3">
           {tr('mg.locked', lang)} {approved} {tr('jr.of', lang)} {total}.
         </p>
       ) : !canDecide ? (
-        <p className="t-sm" style={{ marginTop: 'var(--sp-3)', color: 'var(--tx3)' }}>
+        <p className="t-sm mt-3 c-tx3">
           {tr('mg.unlocked', lang)}
         </p>
       ) : (
-        <div style={{ marginTop: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        <div className="stack mt-3 gap-3">
           <textarea
             value={rationale}
             onChange={e => setRationale(e.target.value)}
             placeholder={tr('mg.rationaleph', lang)}
             aria-label={tr('mg.rationale', lang)}
             rows={2}
-            className="t-sm"
-            style={{ width: '100%', background: 'var(--s-1)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)', padding: 'var(--sp-3)', color: 'var(--tx0)', resize: 'vertical', fontFamily: 'inherit' }}
+            className="t-sm w-full c-tx0"
+            style={{ background: 'var(--s-1)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)', padding: 'var(--sp-3)', resize: 'vertical', fontFamily: 'inherit' }}
           />
-          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
+          <div className="row gap-2 wrap">
             <Button onClick={() => decide('ready')} disabled={!rationale.trim()}>{tr('mg.decready', lang)}</Button>
             <Button variant="ghost" onClick={() => decide('extend')} disabled={!rationale.trim()}>{tr('mg.decextend', lang)}</Button>
             <Button variant="ghost" onClick={() => decide('reject')} disabled={!rationale.trim()} style={{ color: 'var(--risk)', borderColor: 'var(--risk)' }}>{tr('mg.decreject', lang)}</Button>

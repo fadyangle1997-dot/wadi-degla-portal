@@ -20,15 +20,15 @@ import { Eyebrow, PricesNote } from '../../ui/primitives';
 const ExampleCard: React.FC<{ title: string; result: CalculationResult }> = ({ title, result }) => (
   <div style={{ background: 'linear-gradient(180deg, var(--s0), var(--s-1))', border: '1px solid rgba(var(--g2-rgb),.28)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)' }}>
     <Eyebrow icon={<Sparkles size={13} />}>{title} — محسوب مباشرة من المحرك</Eyebrow>
-    <p className="t-num t-h2" style={{ color: 'var(--g1)', margin: 'var(--sp-3) 0 var(--sp-2)' }}>
-      {result.total}<span className="t-sm" style={{ color: 'var(--tx2)', marginInlineStart: 'var(--sp-2)' }}>ج.م</span>
+    <p className="t-num t-h2 c-g1" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>
+      {result.total}<span className="t-sm c-tx2" style={{ marginInlineStart: 'var(--sp-2)' }}>ج.م</span>
     </p>
     {result.lines.length > 0 && (
       <ul role="list" style={{ listStyle: 'none', margin: '0 0 var(--sp-2)', padding: 0 }}>
         {result.lines.map((l, i) => (
-          <li key={i} className="t-sm" style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-3)', padding: 'var(--sp-1) 0' }}>
+          <li key={i} className="t-sm row justify-between gap-3" style={{ padding: 'var(--sp-1) 0' }}>
             <span>{l.label}{l.note ? ` (${l.note})` : ''}</span>
-            <span className="t-num" style={{ color: 'var(--tx1)' }}>{l.amount}</span>
+            <span className="t-num c-tx1">{l.amount}</span>
           </li>
         ))}
       </ul>
@@ -57,7 +57,7 @@ const CancellationCard: React.FC = () => (
   <Card tone="raised" pad={5}>
     <Eyebrow>سياسة الإلغاء المعتمدة</Eyebrow>
     <p className="t-body" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>
-      بدون أسباب: أول <b className="t-num" style={{ color: 'var(--g1)' }}>{CANCELLATION_POLICY.noReasonWindowDays}</b> يوم من التعاقد.
+      بدون أسباب: أول <b className="t-num c-g1">{CANCELLATION_POLICY.noReasonWindowDays}</b> يوم من التعاقد.
     </p>
     <p className="t-sm">
       بعدها: {CANCELLATION_POLICY.afterWindow.acceptedReasons.join(' · ')} — بمستند رسمي. {CANCELLATION_POLICY.afterWindow.refundNote}
@@ -81,7 +81,7 @@ export const RuleExamples: React.FC<{ rules: readonly string[] }> = ({ rules }) 
   if (distinct.length === 0) return null;
   const financial = distinct.some(r => FINANCIAL.has(r));
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+    <div className="stack gap-3">
       {distinct.map(r => {
         const C = REGISTRY[r]!;
         return <C key={r} />;

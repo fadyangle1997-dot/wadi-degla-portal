@@ -42,14 +42,14 @@ export const AdminView: React.FC<{ onExit: () => void; embedded?: boolean }> = (
 
   if (!canDo('users.view')) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="row min-h-screen items-center justify-center">
         <EmptyState title={t('ad.noaccess', lang)} body={t('us.noaccess', lang)} action={<Button onClick={onExit}>{t('ad.back', lang)}</Button>} />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div className="min-h-screen">
       {!embedded && (
         <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.staff}
           leading={<Eyebrow icon={<ShieldCheck size={13} />}>{t('us.title', lang)}</Eyebrow>}
@@ -58,7 +58,7 @@ export const AdminView: React.FC<{ onExit: () => void; embedded?: boolean }> = (
             : undefined} />
       )}
       {embedded && canDo('users.create') && (
-        <div style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-4) var(--sp-5) 0', display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="row justify-end" style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-4) var(--sp-5) 0' }}>
           <Button onClick={() => setShowCreate(v => !v)}><UserPlus size={16} /> {t('us.adduser', lang)}</Button>
         </div>
       )}
@@ -68,7 +68,7 @@ export const AdminView: React.FC<{ onExit: () => void; embedded?: boolean }> = (
           <CreateUserForm onDone={created => { setShowCreate(false); if (created) notify(t('us.added', lang)); }} />
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: showCreate ? 'var(--sp-5)' : 0 }}>
+        <div className="stack gap-3" style={{ marginTop: showCreate ? 'var(--sp-5)' : 0 }}>
           {active.map(u => (
             <UserRow key={u.id} u={u} roles={roles} trainers={trainers} managers={managers}
               roleName={roleName} canDo={canDo} notify={notify}
@@ -78,11 +78,11 @@ export const AdminView: React.FC<{ onExit: () => void; embedded?: boolean }> = (
         </div>
 
         {archived.length > 0 && (
-          <details style={{ marginTop: 'var(--sp-6)' }}>
+          <details className="mt-6">
             <summary className="t-label" style={{ cursor: 'pointer', padding: 'var(--sp-2) 0' }}>
               {t('us.archiveList', lang)} ({archived.length}) {t('us.archivenote', lang)}
             </summary>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: 'var(--sp-3)' }}>
+            <div className="stack gap-2 mt-3">
               {archived.map(u => (
                 <div key={u.id} style={{ padding: 'var(--sp-3) var(--sp-4)', borderRadius: 'var(--r-sm)', background: 'var(--s-2)', border: '1px dashed var(--line-2)' }}>
                   <span className="t-sm">{u.name} · {roleName(u.roleId)} · {t('us.archived', lang)}</span>
@@ -122,7 +122,7 @@ const CreateUserForm: React.FC<{ onDone: (created: boolean) => void }> = ({ onDo
   return (
     <Card tone="accent">
       <Eyebrow icon={<UserPlus size={13} />}>{t('us.newuser', lang)}</Eyebrow>
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 'var(--sp-4)' }}>
+      <div className="row gap-3 wrap mt-4">
         <input aria-label={t('us.name', lang)} placeholder={t('us.name', lang)} value={name} onChange={e => setName(e.target.value)} className="field" style={{ flex: '1 1 180px' }} />
         <input aria-label={t('us.email', lang)} placeholder={t('us.emailopt', lang)} value={email} onChange={e => setEmail(e.target.value)} className="field" style={{ flex: '1 1 180px' }} />
         <input aria-label={t('us.branch', lang)} placeholder={t('us.branchopt', lang)} value={branchId} onChange={e => setBranchId(e.target.value)} className="field" style={{ flex: '1 1 140px' }} />
@@ -130,7 +130,7 @@ const CreateUserForm: React.FC<{ onDone: (created: boolean) => void }> = ({ onDo
           {roles.map(r => <option key={r.id} value={r.id}>{roleDisplayName(r, lang)}</option>)}
         </select>
       </div>
-      <div style={{ marginTop: 'var(--sp-4)', display: 'flex', gap: 'var(--sp-3)' }}>
+      <div className="row mt-4 gap-3">
         <Button disabled={!name.trim()}
           onClick={() => {
             identityStore.createUser({ name: name.trim(), email: email.trim() || undefined, branchId: branchId.trim() || undefined, roleId });
@@ -168,8 +168,8 @@ const UserRow: React.FC<{
       <div className="admin-row">
         {/* col 1 — identity */}
         <div>
-          <span className="t-title" style={{ color: 'var(--tx0)' }}>{u.name}</span>
-          <span className="t-label" style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-1)', alignItems: 'center' }}>
+          <span className="t-title c-tx0">{u.name}</span>
+          <span className="t-label row gap-2 mt-1 items-center">
             {roleName(u.roleId)}{u.branchId ? ` · ${u.branchId}` : ''}
             {disabled && <StatusBadge tone="attn">{t('us.disabled', lang)}</StatusBadge>}
           </span>
@@ -199,7 +199,7 @@ const UserRow: React.FC<{
         ) : <span aria-hidden />}
 
         {/* col 4 — actions */}
-        <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <div className="row gap-2 wrap justify-end">
           {canDo('users.edit') && (
             <button className="icon-btn" onClick={onToggleEdit} aria-expanded={editing}><Pencil size={13} /> {t('us.edit', lang)}</button>
           )}
@@ -216,7 +216,7 @@ const UserRow: React.FC<{
             </button>
           )}
           {canDo('users.archive') && u.id !== 'u-admin' && (
-            <button className="icon-btn" style={{ color: 'var(--risk)' }} onClick={onAskArchive}>
+            <button className="icon-btn c-risk" onClick={onAskArchive}>
               <Archive size={13} /> {t('us.archive', lang)}
             </button>
           )}
@@ -224,7 +224,7 @@ const UserRow: React.FC<{
       </div>
 
       {editing && (
-        <div style={{ marginTop: 'var(--sp-4)', paddingTop: 'var(--sp-4)', borderTop: '1px dashed var(--line-2)', display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="row mt-4 gap-3 wrap items-center" style={{ paddingTop: 'var(--sp-4)', borderTop: '1px dashed var(--line-2)' }}>
           <input aria-label={t('us.newname', lang)} value={name} onChange={e => setName(e.target.value)} className="field" style={{ flex: '1 1 160px' }} />
           <input aria-label={t('us.newemail', lang)} placeholder={t('us.email', lang)} value={email} onChange={e => setEmail(e.target.value)} className="field" style={{ flex: '1 1 160px' }} />
           <input aria-label={t('us.newbranch', lang)} placeholder={t('us.branch', lang)} value={branch} onChange={e => setBranch(e.target.value)} className="field" style={{ flex: '1 1 120px' }} />
