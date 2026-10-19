@@ -46,7 +46,6 @@
   --overlay:        rgba(22,19,16,.85);   /* sticky screen header */
   --overlay-strong: rgba(22,19,16,.92);   /* mobile tab bar — sits over content */
   --overlay-arena:  rgba(22,19,16,.88);   /* exam/boss chrome */
-  --overlay-well:   rgba(22,19,16,.80);   /* inset answer surfaces in the arena */
 
   /* Hairlines are the same material at higher lightness, not white at low
      alpha: white over brown reads cold and turns every edge slightly grey. */
@@ -231,6 +230,10 @@ body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--fon
 /* A key figure: NUMERAL.md. Read as an object, so it sits outside the reading
    scale like the day ring's numeral. */
 .t-metric { font-size:2rem; font-weight:600; line-height:1.1; letter-spacing:-.02em; color:var(--tx0);
+  font-variant-numeric:tabular-nums lining-nums; unicode-bidi:isolate; }
+/* A display figure: NUMERAL.lg — the day on the ring, the score of an exam.
+   One per screen at most. */
+.t-score { font-size:3rem; font-weight:600; line-height:1; letter-spacing:-.03em; color:var(--tx0);
   font-variant-numeric:tabular-nums lining-nums; unicode-bidi:isolate; }
 
 /* The name line inside a row or card. Colour only; size comes from context. */
@@ -551,6 +554,44 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   min-height:44px; border-bottom:1px solid var(--line); }
 .kv dd { margin:0; }
 
+/* The lesson's current stage, at the end of its bar. On a phone the bar and
+   the lesson title already fill the row; the stage stays for screen readers. */
+.lesson-stage { white-space:nowrap; }
+@media (max-width: 559px) { .lesson-stage { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } }
+
+/* ASSESSMENT MODE — the room an exam or a boss battle opens into. The void,
+   no shell, one column; the bar names the mode and the unit and holds the one
+   way out. No glow and no gradient: quiet is what makes it read as a test. */
+.assess { display:flex; flex-direction:column; min-height:100vh; background:var(--void); }
+.assess-bar { position:sticky; top:0; z-index:10; background:var(--overlay-arena);
+  backdrop-filter:blur(12px); border-bottom:1px solid var(--line-2); }
+.assess-bar-row { display:flex; align-items:center; gap:var(--sp-4);
+  max-width:var(--w-focus); margin:0 auto; padding:var(--sp-3) var(--sp-5); }
+.assess-mode { display:flex; flex-direction:column; min-width:0; flex:0 1 auto; }
+.assess-title { font-size:0.9rem; font-weight:600; color:var(--tx1);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.assess-mode .t-eyebrow { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.assess-rail { flex:1 1 96px; min-width:64px; }
+/* On a phone the unit's name needs the row: progress drops to a line of its own. */
+@media (max-width: 559px) {
+  .assess-bar-row { flex-wrap:wrap; row-gap:var(--sp-2); justify-content:space-between; }
+  .assess-mode { flex:1 1 0; }
+  .assess-rail { order:3; flex-basis:100%; }
+}
+.assess-body { flex:1; }
+/* The facts of a result or a brief: ruled rows, figures at the end. */
+.assess-facts { margin:var(--sp-6) 0 0; border-top:1px solid var(--line); }
+.assess-facts > div { display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-4);
+  padding:var(--sp-3) 0; border-bottom:1px solid var(--line); }
+.assess-facts dt { font-size:0.9rem; color:var(--tx2); }
+.assess-facts dd { margin:0; color:var(--tx0); font-weight:500; text-align:end; }
+/* Lessons to review after a missed exam: a numbered list, not a stack of boxes. */
+.review-list { list-style:none; margin:0; padding:0; counter-reset:review; border-top:1px solid var(--line); }
+.review-list li { counter-increment:review; display:flex; align-items:baseline; gap:var(--sp-3);
+  padding:var(--sp-3) 0; border-bottom:1px solid var(--line); color:var(--tx1); }
+.review-list li::before { content:counter(review); min-inline-size:1.5em; color:var(--attn);
+  font-weight:600; font-variant-numeric:tabular-nums; }
+
 /* -- Answer option -- */
 .option { display:flex; align-items:center; gap:var(--sp-3); width:100%; text-align:right;
   padding:var(--sp-4) var(--sp-5); border-radius:var(--r-md); min-height:52px;
@@ -559,7 +600,6 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   transition:background .15s var(--ease), border-color .15s var(--ease); }
 .option-idle { cursor:pointer; }
 .option-idle:hover { border-color:var(--line-3); background:var(--s0); }
-.option-arena { background:var(--overlay-well); }
 .option-correct { background:var(--ready-bg); border-color:var(--ready); }
 .option-wrong { background:var(--risk-bg); border-color:var(--risk); }
 

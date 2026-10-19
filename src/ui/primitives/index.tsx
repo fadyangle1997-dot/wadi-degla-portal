@@ -5,10 +5,10 @@
  * is consumed by Academy today and Trainer/Manager/Admin tomorrow.
  * Rule: Arabic text never receives letter-spacing or uppercase.
  */
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Check, X, ChevronLeft, Info } from 'lucide-react';
 import { WIDTH } from '../designSystem';
-import { t, langStore } from '../../app/i18n';
+import { t, langStore, useLang } from '../../app/i18n';
 
 /* ---------------- surfaces ---------------- */
 /**
@@ -142,13 +142,12 @@ export const OptionButton: React.FC<{
   text: string;
   state: 'idle' | 'correct' | 'wrong' | 'dim';
   onPick: () => void;
-  arena?: boolean;
-}> = ({ text, state, onPick, arena }) => (
+}> = ({ text, state, onPick }) => (
   <button
     disabled={state !== 'idle'}
     onClick={onPick}
     aria-pressed={state !== 'idle' && state !== 'dim'}
-    className={`option ${state === 'idle' ? 'option-idle' : ''} ${arena && (state === 'idle' || state === 'dim') ? 'option-arena' : ''} ${state === 'correct' ? 'option-correct' : ''} ${state === 'wrong' ? 'option-wrong' : ''}`}>
+    className={`option ${state === 'idle' ? 'option-idle' : ''} ${state === 'correct' ? 'option-correct' : ''} ${state === 'wrong' ? 'option-wrong' : ''}`}>
     {state === 'correct' ? <Check size={16} className="c-ready no-shrink" />
       : state === 'wrong' ? <X size={16} className="c-risk no-shrink" />
       : state === 'dim' ? <span style={{ width: 17 }} /> : null}
@@ -179,7 +178,6 @@ export const ScreenHeader: React.FC<{
   leading?: React.ReactNode;
   rail?: React.ReactNode;
   trailing?: React.ReactNode;
-  tone?: 'default' | 'arena';
   maxWidth?: number;
   /** Defaults to the trainee's reading column — the header column is the page
    *  column; a header that centres on a different width than the content under
@@ -188,10 +186,10 @@ export const ScreenHeader: React.FC<{
      * Tab routes collapse to a plain, scrolling line on phones: the shell header
      * plus this bar plus the tab bar took a quarter of the screen, and the bottom
      * tab bar already names the screen and offers the way back. Screens without a
-     * tab (lesson, exam, profile, arena) keep the sticky bar and back button.
+     * tab (lesson, profile, review) keep the sticky bar and back button.
      */
   tabRoute?: boolean;
-}> = ({ onBack, leading, rail, trailing, tone = 'default', maxWidth = WIDTH.read, tabRoute }) => (
+}> = ({ onBack, leading, rail, trailing, maxWidth = WIDTH.read, tabRoute }) => (
   /* A <div>, not <header>: the shell owns the page's one banner landmark. */
   /* …and a <nav>, not a bare <div>: everything interactive in this bar is
      navigation — the back control, and on the admin screens the section tabs —
@@ -205,10 +203,7 @@ export const ScreenHeader: React.FC<{
        headers with work in them keep the work and drop only the back button
        and the label the tab bar already shows. */
     className={tabRoute ? `screen-header screen-header--tab${trailing || rail ? '' : ' screen-header--bare'}` : 'screen-header'}
-    style={{
-      background: tone === 'arena' ? 'var(--overlay-arena)' : 'var(--overlay)',
-      borderBottom: `1px solid ${tone === 'arena' ? 'rgba(var(--g2-rgb),.3)' : 'var(--line)'}`,
-    }}>
+    style={{ background: 'var(--overlay)', borderBottom: '1px solid var(--line)' }}>
     <div className="row items-center gap-3 wrap" style={{ maxWidth, margin: '0 auto', padding: 'var(--sp-3) var(--sp-5)' }}>
       {onBack && (
         <button onClick={onBack} aria-label={t('ex.backtopath', langStore.get())} className="back-btn">
@@ -224,10 +219,10 @@ export const ScreenHeader: React.FC<{
 );
 
 /* ---------------- progress rail ---------------- */
-export const ProgressRail: React.FC<{ total: number; current: number; emphasis?: boolean }> = ({ total, current, emphasis }) => (
+export const ProgressRail: React.FC<{ total: number; current: number }> = ({ total, current }) => (
   <div className="row gap-1" aria-hidden>
     {Array.from({ length: total }, (_, i) => (
-      <div key={i} className="grow" style={{ height: 4, borderRadius: 'var(--r-full)', background: i < current ? 'var(--g3)' : i === current ? (emphasis ? 'var(--g1)' : 'var(--g2)') : 'var(--line-2)', transition: 'background .3s var(--ease)' }} />
+      <div key={i} className="grow" style={{ height: 4, borderRadius: 'var(--r-full)', background: i < current ? 'var(--g3)' : i === current ? 'var(--g2)' : 'var(--line-2)', transition: 'background .3s var(--ease)' }} />
     ))}
   </div>
 );
@@ -252,34 +247,102 @@ export const StatusBadge: React.FC<{ tone: keyof typeof BADGE; children: React.R
   );
 };
 
-/* ---------------- confirm dialog ---------------- */
+/* ---------------- confirm dialog ----------------
+   A modal: focus moves in, Tab stays in, Escape cancels, and focus goes back
+   to whatever opened it when it closes. A dialog guarding something the user
+   is in the middle of (an exam) starts on the safe button, so a stray Enter
+   keeps them where they were. */
 export const ConfirmDialog: React.FC<{
   open: boolean; title: string; body: string;
   confirmLabel: string; danger?: boolean;
+  cancelLabel?: string;
+  /** Which button holds focus when the dialog opens. */
+  initialFocus?: 'confirm' | 'cancel';
   onConfirm: () => void; onCancel: () => void;
-}> = ({ open, title, body, confirmLabel, danger, onConfirm, onCancel }) => {
-  const ref = useRef<HTMLButtonElement>(null);
+}> = ({ open, title, body, confirmLabel, danger, cancelLabel, initialFocus = 'confirm', onConfirm, onCancel }) => {
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  // Callers pass inline handlers; reading the latest through a ref keeps the
+  // effect below from re-running (and re-focusing) on every parent render.
+  const onCancelRef = useRef(onCancel);
+  useEffect(() => { onCancelRef.current = onCancel; });
   useEffect(() => {
     if (!open) return;
-    ref.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    (initialFocus === 'cancel' ? cancelRef : confirmRef).current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onCancelRef.current(); return; }
+      if (e.key !== 'Tab' || !boxRef.current) return;
+      const items = boxRef.current.querySelectorAll<HTMLElement>('button:not(:disabled)');
+      const first = items[0], last = items[items.length - 1];
+      if (!first || !last) return;
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onCancel]);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (opener?.isConnected) opener.focus();
+    };
+  }, [open, initialFocus]);
   if (!open) return null;
   return (
     <div className="dialog-scrim" onClick={onCancel}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()}>
+      <div ref={boxRef} className="dialog" role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()}>
         <h2 className="t-h3 m-0">{title}</h2>
         <p className="t-sm" style={{ margin: 'var(--sp-3) 0 var(--sp-5)' }}>{body}</p>
         <div className="row gap-3 justify-start">
-          <Button ref={ref} onClick={onConfirm}
+          <Button ref={confirmRef} onClick={onConfirm}
             style={danger ? { background: 'var(--risk)', borderColor: 'var(--risk)', color: '#fff' } : undefined}>
             {confirmLabel}
           </Button>
-          <Button variant="ghost" onClick={onCancel}>إلغاء</Button>
+          <Button ref={cancelRef} variant="ghost" onClick={onCancel}>{cancelLabel ?? 'إلغاء'}</Button>
         </div>
       </div>
+    </div>
+  );
+};
+
+/* ---------------- assessment mode ----------------
+   An exam or a boss battle opens into a different room: the void instead of
+   the page, no shell, one column, and a bar that names the mode and the unit,
+   shows how far along the attempt is, and offers one way out. Leaving after
+   an answer asks first. Nothing glows: a test reads as serious because the
+   room goes quiet, not because it is lit. */
+export const AssessmentMode: React.FC<{
+  /** What kind of test this is: «امتحان الوحدة», «محاكاة تشغيلية». */
+  mode: string;
+  /** The unit or scenario under test. */
+  title: string;
+  progress?: { total: number; current: number };
+  /** Present while leaving would lose something; then exit asks first. */
+  leaveWarning?: { title: string; body: string };
+  onExit: () => void;
+  children: React.ReactNode;
+}> = ({ mode, title, progress, leaveWarning, onExit, children }) => {
+  const [asking, setAsking] = useState(false);
+  const lang = useLang();
+  return (
+    <div className="assess">
+      <nav className="assess-bar" aria-label={t('as.bar', lang)}>
+        <div className="assess-bar-row">
+          <div className="assess-mode">
+            <span className="t-eyebrow">{mode}</span>
+            <span className="assess-title">{title}</span>
+          </div>
+          <div className="assess-rail">{progress && <ProgressRail total={progress.total} current={progress.current} />}</div>
+          <button type="button" className="icon-btn" onClick={() => (leaveWarning ? setAsking(true) : onExit())}>
+            <X size={16} aria-hidden />{t('as.exit', lang)}
+          </button>
+        </div>
+      </nav>
+      <main className="assess-body">{children}</main>
+      {leaveWarning && (
+        <ConfirmDialog open={asking} title={leaveWarning.title} body={leaveWarning.body}
+          confirmLabel={t('as.leave', lang)} cancelLabel={t('as.stay', lang)} initialFocus="cancel"
+          onConfirm={onExit} onCancel={() => setAsking(false)} />
+      )}
     </div>
   );
 };
@@ -378,9 +441,7 @@ export const DayRing: React.FC<{ day: number; total: number; pct: number }> = ({
       </svg>
 
       <div className="stack items-center justify-center" style={{ position: 'absolute', inset: 0 }}>
-        <span className="t-num c-tx0" style={{ fontSize: '3rem', fontWeight: 600, lineHeight: 1, letterSpacing: '-.03em' }}>
-          {day}
-        </span>
+        <span className="t-score">{day}</span>
         <span className="t-label c-tx3 mt-1">من {total} يوم</span>
       </div>
 

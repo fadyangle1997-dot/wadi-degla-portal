@@ -266,7 +266,7 @@ describe('🔴 the material is warm all the way down — including where it is t
   });
 
   it('overlays are tokens, so the next sticky surface cannot invent its own black', () => {
-    for (const token of ['--overlay:', '--overlay-strong:', '--overlay-arena:', '--overlay-well:']) {
+    for (const token of ['--overlay:', '--overlay-strong:', '--overlay-arena:']) {
       expect(root, `${token} missing from the root`).toContain(token);
     }
   });
@@ -414,19 +414,20 @@ describe('🔴 the two declared roles outside the reading scale', () => {
     expect(leaked).toEqual([]);
   });
 
-  it('numerals are declared, and only numerals use them', () => {
+  it('numerals are classes, never inline sizes', () => {
     const sizes = new Set<string>();
     for (const f of componentSources()) {
       if (f === signin) continue;
       for (const m of f.matchAll(/fontSize:\s*'([\d.]+rem)'/g)) if (parseFloat(m[1]!) >= 2) sizes.add(m[1]!);
     }
-    expect([...sizes].sort()).toEqual([NUMERAL.lg, NUMERAL.xl].sort());
+    expect([...sizes]).toEqual([]);
+    expect(css).toContain(`.t-score { font-size:${NUMERAL.lg};`);
   });
 
   it('a key figure is NUMERAL.md, and every figure is isolated tabular digits', () => {
     expect(css).toContain(`.t-metric { font-size:${NUMERAL.md};`);
     // Without isolation a percentage at the end of an Arabic line renders «%73».
-    for (const cls of ['.t-num', '.t-metric']) {
+    for (const cls of ['.t-num', '.t-metric', '.t-score']) {
       const rule = css.slice(css.indexOf(`${cls} {`), css.indexOf('}', css.indexOf(`${cls} {`)));
       expect(rule, cls).toContain('unicode-bidi:isolate');
       expect(rule, cls).toContain('tabular-nums');

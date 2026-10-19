@@ -1,4 +1,4 @@
-import { test, expect, signIn, finishLesson, settle, openTodaysLesson, toAcademy } from './fixtures';
+import { test, expect, signIn, finishLesson, settle, openTodaysLesson, toAcademy, expectAccessible } from './fixtures';
 
 test.describe('trainee', () => {
   test('a new trainee is welcomed first, then has today\'s task on the academy', async ({ page }) => {
@@ -44,6 +44,18 @@ test('finishes a whole unit, sits the exam, and sees the result', async ({ page 
   await page.goto('/#/exam/m1');
   await expect(page).toHaveURL(/#\/exam\/m1/);
   const main = page.locator('main');
+  await expectAccessible(page, 'exam question');
+
+  // Assessment Mode: once an answer is given, leaving asks first, the safe
+  // button holds focus, and staying keeps the question where it was.
+  await main.locator('button.option-idle:enabled').first().click();
+  await page.getByRole('button', { name: 'خروج' }).click();
+  const leave = page.getByRole('dialog', { name: 'تخرج من الامتحان؟' });
+  await expect(leave).toBeVisible();
+  await expect(leave.getByRole('button', { name: 'كمّل' })).toBeFocused();
+  await leave.getByRole('button', { name: 'كمّل' }).click();
+  await expect(leave).toBeHidden();
+  await expect(page).toHaveURL(/#\/exam\/m1/);
   for (let i = 0; i < 60; i++) {
     await settle(page);
     if (await main.getByRole('button', { name: /ارجع للمسار/ }).isVisible()) break;
@@ -56,4 +68,5 @@ test('finishes a whole unit, sits the exam, and sees the result', async ({ page 
   // The result screen: a score and a way back, not the crash screen.
   await expect(page.getByText(/%/).first()).toBeVisible();
   await expect(page.getByText('حصلت مشكلة')).toHaveCount(0);
+  await expectAccessible(page, 'exam result');
 });

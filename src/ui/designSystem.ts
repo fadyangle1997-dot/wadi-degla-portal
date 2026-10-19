@@ -227,7 +227,8 @@ export const ICON = { sm: 13, md: 16, lg: 22, hero: 32, stroke: 1.75 } as const;
  * complete, and so nobody "tidies" them into the body scale by mistake.
  *
  * NUMERAL — a figure read as an object, not as text: a key figure in a metric
- * strip (md, `.t-metric`), the day ring (lg) and the exam result (xl). Forcing
+ * strip (md, `.t-metric`) and a display figure, the day on the ring or an
+ * exam's score (lg, `.t-score`). Both are classes, never inline sizes. Forcing
  * it onto a type step meant for sentences would make it a heading instead of a
  * number.
  *
@@ -238,7 +239,7 @@ export const ICON = { sm: 13, md: 16, lg: 22, hero: 32, stroke: 1.75 } as const;
  * approved as it is — a cost with no user on the other side of it. Declared,
  * not adopted: nothing outside the sign-in screen may use these.
  */
-export const NUMERAL = { md: '2rem', lg: '3rem', xl: '3.4rem' } as const;
+export const NUMERAL = { md: '2rem', lg: '3rem' } as const;
 
 export const SIGNIN_TYPE = {
   title:  'clamp(1.5rem, 4vw, 1.85rem)',

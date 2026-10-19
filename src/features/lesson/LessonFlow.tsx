@@ -27,6 +27,15 @@ import { WIDTH } from '../../ui/designSystem';
 
 type Stage = 'challenge' | 'ask' | 'predict' | 'learn' | 'reflect' | 'office' | 'coach' | 'mistakes' | 'dialogue' | 'comms' | 'produce' | 'practice' | 'quiz' | 'commit' | 'done';
 
+/** What the trainee is doing on each screen, named in the chrome so the bar of
+ *  segments is never the only answer to «where am I in this lesson». */
+const STAGE_LABEL: Record<Stage, string> = {
+  challenge: 'الموقف', ask: 'السؤال', predict: 'توقّعك', learn: 'القاعدة', reflect: 'وقفة',
+  office: 'في المكتب', coach: 'طريقة المحترف', mistakes: 'أخطاء شائعة', dialogue: 'الحوار',
+  comms: 'إزاي تقولها', produce: 'قولها بنفسك', practice: 'تطبيق', quiz: 'اختبار سريع',
+  commit: 'التزام بكرة', done: 'الخلاصة',
+};
+
 interface Props {
   lesson: Lesson;
   unitCode: string;
@@ -114,6 +123,12 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
           chrome; the bar shows progress within this lesson. */}
       <ScreenHeader onBack={onExit} maxWidth={WIDTH.focus}
         rail={<ProgressRail total={stages.length - 1} current={idx} />}
+        trailing={
+          <span className="t-label lesson-stage">
+            {STAGE_LABEL[stage]}
+            <span className="sr-only"> · خطوة {Math.min(idx + 1, stages.length - 1)} من {stages.length - 1}</span>
+          </span>
+        }
         leading={
           <span className="stack" style={{ minWidth: 0 }}>
             <span className="t-label">{unitCode} · درس {lessonIndex + 1} من {lessonCount}</span>
