@@ -8,7 +8,8 @@
 import React from 'react';
 import { TrendingUp, GraduationCap, Route, ClipboardList, LayoutDashboard, ShieldCheck, User2, Bell } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
-import { LogOut, Languages } from 'lucide-react';
+import { LogOut, Languages, Type } from 'lucide-react';
+import { textSizeStore, useTextSize, TEXT_SIZES } from '../app/textSize';
 import { initialsOf } from '../domain/identity/display';
 const IdentityCenter = React.lazy(() => import('../features/profile/IdentityCenter').then(m => ({ default: m.IdentityCenter })));
 import { useCan, useIdentity, identityStore } from '../app/identity/identityStore';
@@ -175,7 +176,7 @@ export const AppShell: React.FC<{
 const Avatar: React.FC<{ name: string; size?: 34 | 48 }> = ({ name, size = 34 }) => (
   <span
     aria-hidden
-    className="no-shrink items-center justify-center c-g1" style={{ width: size, height: size, borderRadius: '50%', display: 'inline-flex', background: 'var(--s0)', border: '1px solid var(--g3)', fontSize: size === 48 ? '.9rem' : '.72rem', fontWeight: 600, letterSpacing: '.02em' }}
+    className="no-shrink items-center justify-center c-g1" style={{ width: size, height: size, borderRadius: '50%', display: 'inline-flex', background: 'var(--s0)', border: '1px solid var(--g3)', fontSize: size === 48 ? '1rem' : '.875rem', fontWeight: 600, letterSpacing: '.02em' }}
   >
     {initialsOf(name)}
   </span>
@@ -417,6 +418,7 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
             <Languages size={16} aria-hidden />
             <span className="t-sm">{t('lang.switch', langStore.get())}</span>
           </button>
+          <TextSizeChoice />
           <button
             role="menuitem"
             onClick={() => { setOpen(false); identityStore.signOut(); }}
@@ -428,6 +430,28 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
           </button>
         </div>
       )}
+    </div>
+  );
+};
+
+/** Text size, three steps, inside the personal menu. Radio items: the menu stays
+ *  open, so the change can be seen and corrected on the spot. */
+const TextSizeChoice: React.FC = () => {
+  const lang = useLang();
+  const current = useTextSize();
+  return (
+    <div role="group" aria-label={t('ts.label', lang)} className="row items-center gap-3 wrap"
+      style={{ padding: 'var(--sp-2) var(--sp-4)', minHeight: 48 }}>
+      <Type size={16} aria-hidden className="c-tx2" />
+      <span className="t-sm c-tx1 grow">{t('ts.label', lang)}</span>
+      <span className="row gap-1">
+        {TEXT_SIZES.map(s => (
+          <button key={s} type="button" role="menuitemradio" aria-checked={current === s}
+            className="ts-choice" data-size={s} onClick={() => textSizeStore.set(s)}>
+            {t(`ts.${s}` as Key, lang)}
+          </button>
+        ))}
+      </span>
     </div>
   );
 };

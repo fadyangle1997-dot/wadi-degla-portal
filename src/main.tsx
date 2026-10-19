@@ -11,6 +11,7 @@
  * MotionConfig makes every JS-driven animation honour reduced motion;
  * theme.css does the same for CSS ones.
  */
+import './app/textSize'; // applies the saved text size before the first paint
 import { createRoot } from 'react-dom/client';
 import { lazy, Suspense, useEffect } from 'react';
 import { LazyMotion, MotionConfig } from 'motion/react';

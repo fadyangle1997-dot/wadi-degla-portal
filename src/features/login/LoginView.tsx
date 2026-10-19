@@ -84,7 +84,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
         <h1 className="text-center" style={{ margin: 'var(--sp-6) 0 var(--sp-2)', fontSize: 'clamp(1.5rem, 4vw, 1.85rem)', fontWeight: 600, letterSpacing: '-.015em', color: 'var(--sg-tx)', lineHeight: 1.25 }}>
           Wadi Degla Academy
         </h1>
-        <p className="m-0 text-center" style={{ fontSize: '.78rem', fontWeight: 500, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--sg-gold-soft)' }}>
+        <p className="m-0 text-center" style={{ fontSize: '.875rem', fontWeight: 500, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--sg-gold-soft)' }}>
           Membership Training Platform
         </p>
 
@@ -129,7 +129,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
             </div>
 
             <div className="row items-center justify-between gap-3 wrap">
-              <label className="row items-center gap-2" style={{ cursor: 'pointer', minHeight: 44, fontSize: '.84rem', color: 'var(--sg-tx-dim)' }}>
+              <label className="row items-center gap-2" style={{ cursor: 'pointer', minHeight: 44, fontSize: '.9375rem', color: 'var(--sg-tx-dim)' }}>
                 <input
                   type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}
                   style={{ width: 17, height: 17, accentColor: 'var(--sg-gold)', cursor: 'pointer' }}
@@ -144,7 +144,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
             {/* Announced, never a colour-only signal. */}
             <div aria-live="polite" style={{ minHeight: error ? 'auto' : 0 }}>
               {error && (
-                <p className="m-0" style={{ fontSize: '.82rem', color: 'var(--sg-gold-light)', lineHeight: 1.6 }}>
+                <p className="m-0" style={{ fontSize: '.9375rem', color: 'var(--sg-gold-light)', lineHeight: 1.6 }}>
                   {error}
                 </p>
               )}
@@ -159,7 +159,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
           </div>
         </section>
 
-        <p className="mt-6 text-center" style={{ fontSize: '.75rem', color: 'var(--sg-tx-dim)', letterSpacing: '.02em' }}>
+        <p className="mt-6 text-center" style={{ fontSize: '.875rem', color: 'var(--sg-tx-dim)', letterSpacing: '.02em' }}>
           Official Membership Operations Academy · Internal use only
         </p>
 
@@ -171,7 +171,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: '.72rem', fontWeight: 500, letterSpacing: '.1em',
+  fontSize: '.8125rem', fontWeight: 500, letterSpacing: '.1em',
   textTransform: 'uppercase', color: 'var(--sg-tx-dim)',
 };
 
@@ -185,7 +185,7 @@ const DevPanel: React.FC<{ onFill: (u: string, p: string) => void }> = ({ onFill
       ['admin', 'Admin@2026', 'admin'],
     ].map(([u, pw, label]) => (
       <button key={u} type="button" className="signin-link" onClick={() => onFill(u!, pw!)}
-        style={{ fontSize: '.68rem', opacity: .45 }}>
+        style={{ fontSize: '.8125rem', opacity: .45 }}>
         dev · {label}
       </button>
     ))}

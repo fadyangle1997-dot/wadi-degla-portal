@@ -408,7 +408,8 @@ describe('🔴 the two declared roles outside the reading scale', () => {
       if (f === signin) continue;
       for (const m of f.matchAll(/fontSize:\s*'([^']+)'/g)) {
         const v = m[1]!.replace(/\s/g, '');
-        if (Object.values(SIGNIN_TYPE).map(x => x.replace(/\s/g, '')).includes(v) && v !== '.78rem') leaked.push(v);
+        // The label step is shared by design: the floor is the same everywhere.
+        if (Object.values(SIGNIN_TYPE).map(x => x.replace(/\s/g, '')).includes(v) && parseFloat(v) !== parseFloat(TYPE.label.size)) leaked.push(v);
       }
     }
     expect(leaked).toEqual([]);
@@ -612,5 +613,48 @@ describe('🔴 accessibility contracts (sprint 07)', () => {
         }
       }
     }
+  });
+});
+
+describe('🔴 low vision: the type floor and the paper sheet', () => {
+  const token = (name: string) => {
+    const m = root.match(new RegExp(`${name}:\\s*(#[0-9A-Fa-f]{6})`));
+    if (!m) throw new Error(`${name} missing`);
+    return m[1]!;
+  };
+  const lum = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)) as [number, number, number];
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a: string, b: string) => {
+    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p) as [number, number];
+    return (x + 0.05) / (y + 0.05);
+  };
+
+  it('no text in the stylesheet is set below 14px', () => {
+    // Arabic at 12.5px loses its dots first. The one exception is the collapsed
+    // rail's two-letter language marker, which is a marker, not reading text.
+    const small = [...css.matchAll(/font-size:\s*([0-9]*\.?[0-9]+)rem/g)]
+      .map(m => parseFloat(m[1]!)).filter(v => v > 0 && v < 0.875);
+    expect(small.filter(v => v !== 0.8125)).toEqual([]);
+    expect(small.length).toBeLessThanOrEqual(1);
+  });
+
+  it('the paper sheet\'s inks clear AA, and its body text clears AAA', () => {
+    const paper = token('--paper');
+    expect(ratio(token('--ink'), paper)).toBeGreaterThanOrEqual(7);
+    expect(ratio(token('--ink-2'), paper)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(token('--gold-ink'), paper)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(token('--on-ink'), token('--ink'))).toBeGreaterThanOrEqual(7);
+    for (const status of ['#3F6B4A', '#9A4F1E', '#9B4A40', '#4F5963']) {
+      expect(ratio(status, paper), status).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('the text-size choice scales the root, so every rem follows', () => {
+    expect(css).toContain('html[data-text="lg"] { font-size:112.5%; }');
+    expect(css).toContain('html[data-text="xl"] { font-size:125%; }');
+    expect(css).toMatch(/body \{[^}]*font-size:1\.0625rem/);
   });
 });

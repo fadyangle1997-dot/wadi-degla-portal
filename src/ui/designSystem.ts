@@ -124,15 +124,17 @@ export const TYPE = {
      * The shipped values: designSystem.test.ts reads them back out of theme.css,
      * so this table and the CSS cannot disagree.
      */
-  display: { size: 'clamp(2.1rem,5vw,3rem)',    weight: 700, leading: 1.15 },
-  h1:      { size: 'clamp(1.7rem,4vw,2.25rem)', weight: 700, leading: 1.22 },
-  h2:      { size: '1.5rem',                    weight: 700, leading: 1.25 },
-  h3:      { size: '1.2rem',                    weight: 600, leading: 1.35 },
-  lead:    { size: '1.1rem',                    weight: 400, leading: 1.75 },
-  body:    { size: '1rem',                      weight: 400, leading: 1.8 },
-  sm:      { size: '0.9rem',                    weight: 400, leading: 1.65 },
-  /** Metadata and eyebrows — same size, different colour and job. */
-  label:   { size: '0.78rem',                   weight: 600 },
+  display: { size: 'clamp(2.25rem,5vw,3.25rem)', weight: 700, leading: 1.15 },
+  h1:      { size: 'clamp(1.875rem,4vw,2.5rem)', weight: 700, leading: 1.22 },
+  h2:      { size: '1.625rem',                    weight: 700, leading: 1.25 },
+  h3:      { size: '1.3125rem',                   weight: 600, leading: 1.35 },
+  lead:    { size: '1.1875rem',                   weight: 400, leading: 1.75 },
+  body:    { size: '1.0625rem',                   weight: 400, leading: 1.85 },
+  sm:      { size: '1rem',                        weight: 400, leading: 1.7 },
+  /** Metadata and eyebrows — same size, different colour and job. 14px is the
+   *  floor for any text in the product: Arabic at 12.5px loses its dots and
+   *  counters first, and this platform is read for hours, by every age. */
+  label:   { size: '0.875rem',                    weight: 600 },
 } as const;
 
 /**
@@ -239,16 +241,17 @@ export const ICON = { sm: 13, md: 16, lg: 22, hero: 32, stroke: 1.75 } as const;
  * approved as it is — a cost with no user on the other side of it. Declared,
  * not adopted: nothing outside the sign-in screen may use these.
  */
-export const NUMERAL = { md: '2rem', lg: '3rem' } as const;
+export const NUMERAL = { md: '2.25rem', lg: '3.25rem' } as const;
 
 export const SIGNIN_TYPE = {
   title:  'clamp(1.5rem, 4vw, 1.85rem)',
-  label:  '.78rem',
-  caps:   '.72rem',   /* the uppercase field labels */
-  field:  '.84rem',
-  hint:   '.82rem',
-  legal:  '.75rem',
-  micro:  '.68rem',
+  /* Raised to the product's 14px floor with everything else. */
+  label:  '.875rem',
+  caps:   '.8125rem',  /* the uppercase field labels: Latin capitals, letter-spaced */
+  field:  '.9375rem',
+  hint:   '.9375rem',
+  legal:  '.875rem',
+  micro:  '.8125rem',
 } as const;
 
 /**

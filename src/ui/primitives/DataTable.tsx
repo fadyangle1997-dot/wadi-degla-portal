@@ -10,7 +10,7 @@
  * can hit anywhere and a keyboard has exactly one stop per row.
  */
 import React, { useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown, Search } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUpDown, Search, X } from 'lucide-react';
 import { useLang, t } from '../../app/i18n';
 
 type Tone = 'ready' | 'attn' | 'risk' | 'info' | 'gold';
@@ -91,14 +91,28 @@ export function DataTable<R>({
               <Search size={16} aria-hidden className="c-tx3 no-shrink" />
               <input type="search" className="dt-search-input" value={q} onChange={e => setQ(e.target.value)}
                 placeholder={search.placeholder} aria-label={search.placeholder} />
+              {q && (
+                <button type="button" className="dt-clear" aria-label={t('dt.clear', lang)} onClick={() => setQ('')}>
+                  <X size={16} aria-hidden />
+                </button>
+              )}
             </label>
           )}
           {filters && (
             <div className="dt-filters" role="group" aria-label={t('dt.filter', lang)}>
-              {[{ id: 'all', label: t('dt.all', lang) }, ...filters].map(f => (
-                <button key={f.id} type="button" className="dt-filter" aria-pressed={filter === f.id}
-                  onClick={() => setFilter(f.id)}>{f.label}</button>
-              ))}
+              {/* A chip that is on carries an ×, and pressing it again takes the
+                  filter off, so «all» is never more than one press away. */}
+              {[{ id: 'all', label: t('dt.all', lang) }, ...filters].map(f => {
+                const on = filter === f.id;
+                const removable = on && f.id !== 'all';
+                return (
+                  <button key={f.id} type="button" className="dt-filter" aria-pressed={on}
+                    title={removable ? t('dt.clearfilter', lang) : undefined}
+                    onClick={() => setFilter(removable ? 'all' : f.id)}>
+                    {f.label}{removable && <X size={13} aria-hidden />}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -159,7 +173,12 @@ export function DataTable<R>({
         </tbody>
       </table>
       {shown.length === 0 && (
-        <p className="t-sm dt-none" role="status">{t('dt.nomatch', lang)}</p>
+        <div className="row items-center gap-3 wrap dt-none" role="status">
+          <p className="t-sm m-0">{t('dt.nomatch', lang)}</p>
+          {(q || filter !== 'all') && (
+            <button type="button" className="icon-btn" onClick={() => { setQ(''); setFilter('all'); }}>{t('dt.reset', lang)}</button>
+          )}
+        </div>
       )}
     </div>
   );

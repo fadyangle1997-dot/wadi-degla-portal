@@ -27,7 +27,7 @@ export const Capsule: React.FC<{ children: React.ReactNode; label?: string; styl
     style={{
       background: 'var(--s0)', border: '1px solid var(--line-2)',
       borderRadius: 'var(--r-full)', padding: 'var(--sp-1) var(--sp-3)',
-      fontSize: '.7rem', fontWeight: 600, color: 'var(--g1)',
+      fontSize: '.875rem', fontWeight: 600, color: 'var(--g1)',
       boxShadow: 'var(--e-raised)', whiteSpace: 'nowrap',
       ...style,
     }}
@@ -50,8 +50,10 @@ export const Capsule: React.FC<{ children: React.ReactNode; label?: string; styl
 type CardTone = 'default' | 'raised' | 'accent' | 'quiet';
 
 const CARD_TONE: Record<CardTone, React.CSSProperties> = {
-  default: { background: 'var(--s-1)', border: '1px solid var(--line)' },
-  raised:  { background: 'var(--s0)',  border: '1px solid var(--line-2)', boxShadow: 'var(--e-raised)' },
+  /* Filled, not outlined: a surface is told apart by its fill, the way the
+     reference's tiles are. Hairlines stay for tables and ledgers. */
+  default: { background: 'var(--s-1)', border: '1px solid transparent' },
+  raised:  { background: 'var(--s0)',  border: '1px solid transparent', boxShadow: 'var(--e-raised)' },
   accent:  { background: 'var(--s0)',  border: '1px solid var(--g3)',     boxShadow: 'var(--e-raised)' },
   quiet:   { background: 'transparent', border: '1px solid var(--line)' },
 };
@@ -241,7 +243,7 @@ const BADGE = {
 export const StatusBadge: React.FC<{ tone: keyof typeof BADGE; children: React.ReactNode; icon?: React.ReactNode }> = ({ tone, children, icon }) => {
   const t = BADGE[tone];
   return (
-    <span className="items-center gap-1" style={{ display: 'inline-flex', padding: 'var(--sp-1) var(--sp-3)', borderRadius: 'var(--r-full)', border: `1px solid ${t.b}`, color: t.c, fontSize: '0.72rem', fontWeight: 600 }}>
+    <span className="items-center gap-1" style={{ display: 'inline-flex', padding: 'var(--sp-1) var(--sp-3)', borderRadius: 'var(--r-full)', border: `1px solid ${t.b}`, color: t.c, fontSize: '.875rem', fontWeight: 600 }}>
       {icon}{children}
     </span>
   );
