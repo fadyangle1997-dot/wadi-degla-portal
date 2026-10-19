@@ -20,7 +20,7 @@ describe('🔴 exam scoring reads the shuffled array the trainee saw', () => {
 
   it('the shuffle is deterministic — same seed, same order', () => {
     const m = MODULES.find(x => (x.unitExam?.length ?? 0) > 0)!;
-    const q = m.unitExam![0]!;
+    const q = m.unitExam[0]!;
     const a = shuffleOptions(q.options, q.id + q.prompt).map(o => o.text);
     const b = shuffleOptions(q.options, q.id + q.prompt).map(o => o.text);
     expect(a).toEqual(b);

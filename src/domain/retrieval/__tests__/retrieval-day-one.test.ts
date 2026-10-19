@@ -56,7 +56,7 @@ describe('3–4 · the first attempt is the measurement', () => {
   it('3 · a first attempt is recorded and schedules the item', () => {
     const states = itemStates([answer(l1, true, day(1))]);
     expect(states.get(l1.id)?.step).toBe(0);
-    expect(states.get(l1.id)?.dueAt).toBe(Math.floor(day(1) / DAY) * DAY + INTERVALS_DAYS[0]! * DAY);
+    expect(states.get(l1.id)?.dueAt).toBe(Math.floor(day(1) / DAY) * DAY + INTERVALS_DAYS[0] * DAY);
   });
 
   it('4 · the correction round is NOT a second measurement', () => {

@@ -483,7 +483,7 @@ describe('🔴 direction comes from the language, not from patches', () => {
     const primitives = readFileSync(new URL('../primitives/index.tsx', import.meta.url), 'utf-8');
     const login = readFileSync(new URL('../../features/login/LoginView.tsx', import.meta.url), 'utf-8');
     expect(primitives).toMatch(/<Tag lang="ar" dir="rtl"/);        // Arabic content island
-    expect(login).toMatch(/lang="en"\n      dir="ltr"/);            // English sign-in island
+    expect(login).toMatch(/lang="en"\n {6}dir="ltr"/);            // English sign-in island
   });
 
   it('the Arabic island declares language, direction and isolation', () => {
@@ -568,7 +568,7 @@ describe('🔴 accessibility contracts (sprint 07)', () => {
       // Decorative, aria-hidden surfaces carry no text: the sign-in orbs are
       // background light, not content, and the rule is about readability.
       for (const m of src.matchAll(/opacity:\s*(0?\.\d+)/g)) {
-        const line = src.slice(Math.max(0, m.index! - 220), m.index!);
+        const line = src.slice(Math.max(0, m.index - 220), m.index);
         if (/aria-hidden/.test(line)) continue;
         expect(parseFloat(m[1]!), `opacity ${m[1]} on a text surface`).toBeGreaterThanOrEqual(0.75);
       }

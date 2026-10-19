@@ -72,7 +72,7 @@ export const BossView: React.FC<Props> = ({ battle, onExit, onFinish }) => {
 
   const step = battle.steps[si]!;
   const answered = picked !== null;
-  const correct = answered && step.options[picked!]?.correct;
+  const correct = answered && step.options[picked]?.correct;
 
   return (
     <div style={arena}>

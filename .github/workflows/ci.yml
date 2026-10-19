@@ -22,6 +22,9 @@ jobs:
           cache: 'npm'
       - run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
       - name: Typecheck (app)
         run: npx tsc --noEmit
 

@@ -4,7 +4,7 @@
  * from a LocalStorageBackend — that's the whole point of the adapter pattern.
  * Selected by one flag (see config); production = flip flag + server URL.
  */
-import type { Transport, LogName } from './transport';
+import type { Transport, LogName, EventEnvelope } from './transport';
 import { SyncEngine } from './syncEngine';
 import { reduce as reduceProgress, EMPTY_PROGRESS, type Progress, type ProgressEvent, type ProgressBackend } from '../backend';
 import { reduceTraining, EMPTY_TRAINING, type TrainingState, type TrainingEvent, type TrainingBackend } from '../training/trainingBackend';
@@ -46,11 +46,11 @@ export class RestTransport implements Transport {
   async append<E>(log: LogName, events: readonly E[]) {
     const res = await fetch(`${this.baseUrl}/events/${log}`, { method: 'POST', headers: this.headers(), body: JSON.stringify({ events }) });
     if (!res.ok) throw new Error(`append ${log} failed: ${res.status}`);
-    return (await res.json()).envelopes;
+    return ((await res.json()) as { envelopes: readonly EventEnvelope<E>[] }).envelopes;
   }
   async pull<E>(log: LogName, sinceSeq: number) {
     const res = await fetch(`${this.baseUrl}/events/${log}?since=${sinceSeq}`, { headers: this.headers() });
     if (!res.ok) throw new Error(`pull ${log} failed: ${res.status}`);
-    return (await res.json()).envelopes as readonly import('./transport').EventEnvelope<E>[];
+    return ((await res.json()) as { envelopes: readonly EventEnvelope<E>[] }).envelopes;
   }
 }

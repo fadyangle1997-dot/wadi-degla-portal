@@ -184,9 +184,9 @@ const Coverage: React.FC<{ label: string; pct: number }> = ({ label, pct }) => (
 
 /* ---------------- operational inbox ---------------- */
 const SEV_META: Record<Severity, { icon: React.ReactNode; tone: 'risk' | 'attn' | 'info'; labelKey: Key }> = {
-  critical: { icon: <AlertOctagon size={16} />, tone: 'risk', labelKey: 'ad.sevcritical' as Key },
-  warning: { icon: <AlertTriangle size={16} />, tone: 'attn', labelKey: 'ad.sevwarning' as Key },
-  info: { icon: <Info size={16} />, tone: 'info', labelKey: 'ad.sevinfo' as Key },
+  critical: { icon: <AlertOctagon size={16} />, tone: 'risk', labelKey: 'ad.sevcritical' },
+  warning: { icon: <AlertTriangle size={16} />, tone: 'attn', labelKey: 'ad.sevwarning' },
+  info: { icon: <Info size={16} />, tone: 'info', labelKey: 'ad.sevinfo' },
 };
 
 const OperationalInbox: React.FC<{ onGoToUsers: () => void }> = ({ onGoToUsers }) => {

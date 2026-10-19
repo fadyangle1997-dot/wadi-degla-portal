@@ -31,7 +31,7 @@ describe('deployment queue — buckets trainees by verdict', () => {
   });
 
   it('every trainee appears in exactly one bucket', () => {
-    let t = approveAll(EMPTY_TRAINING, 'ahmed.m', strong);
+    const t = approveAll(EMPTY_TRAINING, 'ahmed.m', strong);
     const ids = ['ahmed.m', 'omar.h', 'sara.m'];
     const q = deploymentQueue(t, ids, id => id === 'ahmed.m' ? evalsOf(strong) : []);
     const total = q.ready.length + q.readyWithConditions.length + q.needsExtension.length + q.notReady.length;

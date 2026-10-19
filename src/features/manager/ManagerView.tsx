@@ -31,10 +31,10 @@ import { WIDTH } from '../../ui/designSystem';
 import { useLang, t as tr, type Key, type Lang } from '../../app/i18n';
 
 const HEALTH_META: Record<HealthState, { labelKey: Key; tone: 'ready' | 'info' | 'attn' | 'risk' }> = {
-  ready: { labelKey: 'mg.stready' as Key, tone: 'ready' },
-  on_track: { labelKey: 'mg.stontrack' as Key, tone: 'info' },
-  needs_attention: { labelKey: 'mg.stattention' as Key, tone: 'attn' },
-  needs_immediate_attention: { labelKey: 'mg.stimmediate' as Key, tone: 'risk' },
+  ready: { labelKey: 'mg.stready', tone: 'ready' },
+  on_track: { labelKey: 'mg.stontrack', tone: 'info' },
+  needs_attention: { labelKey: 'mg.stattention', tone: 'attn' },
+  needs_immediate_attention: { labelKey: 'mg.stimmediate', tone: 'risk' },
 };
 
 const moduleName = (id: string) => moduleById(id)?.title ?? id;
@@ -65,7 +65,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
       byBranch.set(b, [...(byBranch.get(b) ?? []), id]);
     }
     return [...byBranch.entries()].sort((a, b) => b[1].length - a[1].length);
-  }, [scope, d.employeeIds, users]);
+  }, [scope, d.employeeIds, users, lang]);
 
   // 🔴 PERF — orgSummary() runs groupByEmployee(), a FULL scan of the event
   // log. Calling it inside .map() meant one full scan PER BRANCH on EVERY
@@ -87,6 +87,8 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
       .sort((a, b) =>
         (b.s.needsAttention + b.s.needsImmediate) - (a.s.needsAttention + a.s.needsImmediate)
         || b.s.waitingForTrainer - a.s.waitingForTrainer);
+    // `t` (the training snapshot) is the change signal for trainingStore.events().
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchGroups, t]);
 
   const scopeTitle = scope.kind === 'organization' ? tr('mg.orgtoday', lang)
@@ -410,7 +412,7 @@ const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: string) =
         lastAt: last?.at,
       };
     }).sort((a, b) => rank(b.r.health) - rank(a.r.health));
-  }, [ids, users, events, t]);
+  }, [ids, users, events, t, lang]);
 
   if (rows.length === 0) return <p className="t-sm" style={{ color: 'var(--tx3)' }}>{tr('mg.nostaff', lang)}</p>;
   return (

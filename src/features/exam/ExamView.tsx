@@ -27,6 +27,14 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
   const [wrongIds, setWrongIds] = useState<string[]>([]);
   const [finalScore, setFinalScore] = useState<number | null>(null);
 
+  // Hooks run before any early return: the result screen below renders with
+  // the same hooks as a question, or React throws (#300, «Rendered fewer hooks
+  // than expected») the moment the exam is finished.
+  const q = qs[Math.min(qi, qs.length - 1)]!;
+  // Shuffle once per question, and read correctness from the SAME shuffled list
+  // the trainee actually clicked — never from the original order.
+  const shuffledOptions = useMemo(() => shuffleOptions(q.options, q.id + q.prompt), [q]);
+
   const finished = finalScore !== null;
 
   if (finished) {
@@ -78,12 +86,8 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
     );
   }
 
-  const q = qs[qi]!;
-  // Shuffle once per question, and read correctness from the SAME shuffled list
-  // the trainee actually clicked — never from the original order.
-  const shuffledOptions = useMemo(() => shuffleOptions(q.options, q.id + q.prompt), [q.id, q.prompt]);
   const answered = picked !== null;
-  const correct = answered && shuffledOptions[picked!]?.correct;
+  const correct = answered && shuffledOptions[picked]?.correct;
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

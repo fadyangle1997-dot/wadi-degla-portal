@@ -21,14 +21,14 @@ describe('unified progress — two metrics, one source each', () => {
   it('approval can be 0 while learning is positive — they must not be merged', () => {
     // approvalProgress reads the training store; with no approvals it stays 0
     // regardless of how much learning happened. That separation is the whole point.
-    let t = reduceTraining(EMPTY_TRAINING, {
+    const t = reduceTraining(EMPTY_TRAINING, {
       type: 'UNIT_SUBMITTED_FOR_REVIEW', employeeId: 'ahmed.m', moduleId: 'm1', at: 0,
     });
     expect(approvalProgress(t, 'ahmed.m')).toBe(0);  // submitted ≠ approved
   });
 
   it('an approval raises ONLY approvalProgress', () => {
-    let t = reduceTraining(EMPTY_TRAINING, {
+    const t = reduceTraining(EMPTY_TRAINING, {
       type: 'EVALUATION_RECORDED', employeeId: 'ahmed.m', moduleId: 'm1',
       trainerId: 'trainer.adel', scores: {} as any, decision: 'ready',
       weakSkills: [], weakRules: [], at: 0,
@@ -43,7 +43,7 @@ describe('unified progress — two metrics, one source each', () => {
   });
 
   it('per-trainee isolation: approving ahmed does not move mariam', () => {
-    let t = reduceTraining(EMPTY_TRAINING, {
+    const t = reduceTraining(EMPTY_TRAINING, {
       type: 'EVALUATION_RECORDED', employeeId: 'ahmed.m', moduleId: 'm1',
       trainerId: 'trainer.adel', scores: {} as any, decision: 'ready',
       weakSkills: [], weakRules: [], at: 0,

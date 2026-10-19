@@ -17,6 +17,7 @@ import { progressOf, learningProgress } from '../../app/progress';
 import { recommendFor } from '../../app/training/recommend';
 import { readinessScore, EVALUATION_DIMENSIONS, ALL_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS, conductPassed, type ConductObservations, type Scores, type EvaluationDecision } from '../../domain/evaluation';
 import { MODULES, moduleById } from '../../content/registry';
+import type { Lesson } from '../../domain/types/content';
 import { RULE_META } from '../../domain/rules/meta';
 import { Button, Card, Eyebrow, EmptyState, ScreenHeader, StatusBadge, Toast, Callout, ArabicContent } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
@@ -197,7 +198,7 @@ const RosterRow: React.FC<{ name: string; branch?: string; progress: number; onN
  * saw, not a taxonomy. Zero new content: reads lesson.pro + lesson.skills.
  */
 const LessonCoachingCard: React.FC<{
-  lesson: { id: string; title: string; skills: readonly { skill: string }[]; pro?: any };
+  lesson: Pick<Lesson, 'id' | 'title' | 'skills' | 'pro'>;
   pick: 'strength' | 'weak' | null;
   onPick: (v: 'strength' | 'weak' | null) => void;
 }> = ({ lesson, pick, onPick }) => {

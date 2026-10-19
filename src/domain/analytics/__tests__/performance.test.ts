@@ -19,8 +19,8 @@ function makeEvents(emp: number): TrainingEventLike[] {
   for (let i = 0; i < emp; i++) {
     const id = `e${i}`;
     out.push({ type: 'UNIT_SUBMITTED_FOR_REVIEW', employeeId: id, moduleId: 'm2_1', at: i * 10 });
-    out.push({ type: 'EVALUATION_RECORDED', employeeId: id, moduleId: 'm2_1', decision: i % 3 === 0 ? 'not_ready' : 'ready', scores: s(60 + (i % 40)), at: i * 10 + 1 } as TrainingEventLike);
-    if (i % 4 === 0) out.push({ type: 'TRAINING_EXTENDED', employeeId: id, at: i * 10 + 2 } as TrainingEventLike);
+    out.push({ type: 'EVALUATION_RECORDED', employeeId: id, moduleId: 'm2_1', decision: i % 3 === 0 ? 'not_ready' : 'ready', scores: s(60 + (i % 40)), at: i * 10 + 1 });
+    if (i % 4 === 0) out.push({ type: 'TRAINING_EXTENDED', employeeId: id, at: i * 10 + 2 });
   }
   return out;
 }

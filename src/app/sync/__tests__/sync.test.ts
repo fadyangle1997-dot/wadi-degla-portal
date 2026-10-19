@@ -91,7 +91,7 @@ describe('SyncEngine — offline-first, append-only', () => {
 
     // A approves a unit; B resubmits the same unit — approval must not regress.
     A.dispatch({ type: 'EVALUATION_RECORDED', employeeId: 'e1', moduleId: 'm2_1', trainerId: 't1',
-      scores: { accuracy: 90, docReview: 90, ruleCompliance: 90, problemSolving: 90, memberService: 90, systemUsage: 90, teamwork: 90 } as any,
+      scores: { accuracy: 90, docReview: 90, ruleCompliance: 90, problemSolving: 90, memberService: 90, systemUsage: 90, teamwork: 90 },
       decision: 'ready', weakSkills: [], weakRules: [], at: 1 });
     await A.flush();
     B.dispatch(submit('e1', 'm2_1')); // resubmission after approval

@@ -130,7 +130,7 @@ export const TrainingJourney: React.FC<{
       open: onOpenReview,
     },
   ].filter(Boolean) as { gate: boolean; title: string; blurb: string; cta: string; open: () => void }[]),
-  [day, onOpenReadiness, onOpenReview]);
+  [day, onOpenReadiness, onOpenReview, lang]);
 
   const primary = acts[0];
   const secondary = acts.slice(1);

@@ -294,7 +294,7 @@ const BADGE = {
   neutral: { c: 'var(--tx2)', b: 'var(--line-2)' },
 };
 export const StatusBadge: React.FC<{ tone: keyof typeof BADGE; children: React.ReactNode; icon?: React.ReactNode }> = ({ tone, children, icon }) => {
-  const t = BADGE[tone]!;
+  const t = BADGE[tone];
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-1)', padding: 'var(--sp-1) var(--sp-3)', borderRadius: 'var(--r-full)', border: `1px solid ${t.b}`, color: t.c, fontSize: '0.72rem', fontWeight: 600 }}>
       {icon}{children}

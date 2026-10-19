@@ -622,7 +622,7 @@ const QuizStage: React.FC<{
   const q = pool[qi]!; // stage only mounts when questions.length > 0
   const isLast = qi >= pool.length - 1;
   const answered = picked !== null;
-  const correct = answered && q.options[picked!]?.correct;
+  const correct = answered && q.options[picked]?.correct;
 
   const advance = () => {
     if (!isLast) { setQi(qi + 1); setPicked(null); return; }

@@ -72,8 +72,8 @@ describe('orgSummary — the executive overview', () => {
   const events: TrainingEventLike[] = [
     evalEvt('e1', 'm2_1', 90, 'ready'),
     evalEvt('e2', 'm2_1', 55, 'not_ready'),
-    { type: 'TRAINING_EXTENDED', employeeId: 'e2', at: 2 } as TrainingEventLike,
-    { type: 'UNIT_SUBMITTED_FOR_REVIEW', employeeId: 'e3', moduleId: 'm2_1', at: 3 } as TrainingEventLike,
+    { type: 'TRAINING_EXTENDED', employeeId: 'e2', at: 2 },
+    { type: 'UNIT_SUBMITTED_FOR_REVIEW', employeeId: 'e3', moduleId: 'm2_1', at: 3 },
   ];
   it('counts health buckets, waiting, and rates', () => {
     const sum = orgSummary(events, ['e1', 'e2', 'e3']);

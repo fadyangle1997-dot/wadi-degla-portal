@@ -19,7 +19,7 @@ describe('🔴 complete learning workflow — traced end to end', () => {
   const trainer = 'trainer.adel';
 
   it('a trainee submission lands in THEIR trainer’s queue, attributed to them', () => {
-    let t = reduceTraining(EMPTY_TRAINING, {
+    const t = reduceTraining(EMPTY_TRAINING, {
       type: 'UNIT_SUBMITTED_FOR_REVIEW', employeeId: trainee, moduleId: 'm2_1', at: 0,
     });
     expect(reviewStatus(t, trainee, 'm2_1')).toBe('waiting');
@@ -57,7 +57,7 @@ describe('🔴 complete learning workflow — traced end to end', () => {
 
   it('🔴 a DIFFERENT trainee’s approval does NOT unlock for this trainee', () => {
     // The C1 regression in miniature: attribution must be per-trainee.
-    let t = reduceTraining(EMPTY_TRAINING, {
+    const t = reduceTraining(EMPTY_TRAINING, {
       type: 'EVALUATION_RECORDED', employeeId: 'mariam.a', moduleId: 'm2_1',
       trainerId: trainer, scores: {} as any, decision: 'ready',
       weakSkills: [], weakRules: [], at: 0,

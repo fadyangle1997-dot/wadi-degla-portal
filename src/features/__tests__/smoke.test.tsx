@@ -275,7 +275,7 @@ describe('show-password toggle', () => {
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Welcome@123' } });
     fireEvent.click(screen.getByLabelText('Show password'));
     expect(screen.getByLabelText('Password').getAttribute('type')).toBe('text');
-    expect((screen.getByLabelText('Password') as HTMLInputElement).value).toBe('Welcome@123');
+    expect(screen.getByLabelText<HTMLInputElement>('Password').value).toBe('Welcome@123');
     fireEvent.click(screen.getByLabelText('Hide password'));
     expect(screen.getByLabelText('Password').getAttribute('type')).toBe('password');
   });

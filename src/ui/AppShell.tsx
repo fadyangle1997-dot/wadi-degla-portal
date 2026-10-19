@@ -98,10 +98,10 @@ export const AppShell: React.FC<{
             <span className="t-title shell-brand-name" style={{ color: 'var(--tx0)' }}>{t('brand.name', lang)}</span>
           </div>
 
-          {/* global navigation */}
+          {/* site-wide navigation */}
           <nav className="shell-nav" aria-label={t('a11y.mainnav', lang)}>
             {items.map(n => (
-              <button key={n.view} onClick={() => onNavigate(n.view as View['kind'])} aria-current={active === n.view}
+              <button key={n.view} onClick={() => onNavigate(n.view)} aria-current={active === n.view}
                 className="pill"
                 style={active === n.view ? { borderColor: 'var(--g2)', color: 'var(--g1)' } : undefined}>
                 {ICONS[n.view]}{t(n.label as Key, lang)}
