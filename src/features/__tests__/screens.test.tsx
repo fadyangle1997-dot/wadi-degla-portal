@@ -7,7 +7,6 @@
  * Escape and focus. Playwright covers the same journeys in a real browser;
  * these keep the logic honest on every unit run.
  */
-import React from 'react';
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, within } from '@testing-library/react';
 import { identityStore } from '../../app/identity/identityStore';
@@ -27,8 +26,14 @@ import { textSizeStore } from '../../app/textSize';
 beforeAll(() => {
   // jsdom has neither; the screens only use them for comfort (scrolling,
   // reduced-motion checks), never for behaviour under test.
-  window.matchMedia ??= ((q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia;
-  Element.prototype.scrollIntoView ??= function () {};
+  if (!('matchMedia' in window)) {
+    Object.defineProperty(window, 'matchMedia', {
+      value: (q: string) => ({ matches: false, media: q, addEventListener: () => undefined, removeEventListener: () => undefined }),
+    });
+  }
+  if (!('scrollIntoView' in Element.prototype)) {
+    Object.defineProperty(Element.prototype, 'scrollIntoView', { value: () => undefined });
+  }
 });
 afterEach(cleanup);
 
@@ -158,7 +163,7 @@ describe('AdminView — users', () => {
     fireEvent.click(within(table).getByRole('button', { name: /System Administrator/ }));
     const own = screen.getByRole('dialog', { name: 'System Administrator' });
     expect(within(own).queryByRole('button', { name: 'تعطيل' })).toBeNull();
-    expect((within(own).getByRole('combobox', { name: 'الدور' }) as HTMLSelectElement).disabled).toBe(true);
+    expect(within(own).getByRole<HTMLSelectElement>('combobox', { name: 'الدور' }).disabled).toBe(true);
   });
 
   it('creates a user only once the name and email are right', () => {
@@ -261,7 +266,7 @@ describe('DecisionReview and ReadinessResult', () => {
     fireEvent.click(screen.getByRole('button', { name: /كمّل/ }));
     expect(screen.getByRole('button', { name: /السابق/ })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /السابق/ }));
-    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('عضو جه بصورة البطاقة');
+    expect(screen.getByRole<HTMLTextAreaElement>('textbox').value).toBe('عضو جه بصورة البطاقة');
   });
 
   it('readiness before the phase opens says the assessment has not started — not «not ready»', () => {
