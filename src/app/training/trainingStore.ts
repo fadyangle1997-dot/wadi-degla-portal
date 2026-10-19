@@ -6,10 +6,12 @@
 import { useSyncExternalStore } from 'react';
 import { reviewOf, assignedLessonsOf, finalDecisionOf } from '../../domain/training/selectors';
 import { identityStore } from '../identity/identityStore';
-import type { Scores, EvaluationDecision } from '../../domain/evaluation';
+import type { Scores, EvaluationDecision, EvaluationDimension, ConductObservations } from '../../domain/evaluation';
+import { STATIONS } from '../../domain/readiness';
+import { stationAssessmentProblem } from '../../domain/readiness/evidence';
 import {
   LocalStorageTrainingBackend, EMPTY_TRAINING,
-  type TrainingBackend, type TrainingState, type ModuleReview, type FinalDecision,
+  type TrainingBackend, type TrainingState, type ModuleReview, type FinalDecision, type TrainingEvent,
 } from './trainingBackend';
 
 /**
@@ -116,6 +118,29 @@ export const trainingStore = {
   addCoachingNote: (employeeId: string, note: string) =>
     apply(() => backend.record({ type: 'COACHING_NOTE_ADDED', employeeId, note, trainerId: trainerId(), at: now() })),
 
+  /**
+   * Records one readiness station. Only the KPIs that station measures are
+   * kept, and an assessment without an observation is refused — an
+   * unexplainable score cannot support a readiness decision.
+   */
+  assessStation: (input: {
+    employeeId: string; stationId: string;
+    scores: Readonly<Partial<Record<EvaluationDimension, number>>>; observation: string;
+  }) => {
+    const station = STATIONS.find(s => s.id === input.stationId);
+    const problem = stationAssessmentProblem(station, input.scores, input.observation);
+    if (problem || !station) throw new Error(`readiness station not recorded: ${problem}`);
+    const scores = Object.fromEntries(station.measures.map(d => [d, input.scores[d]]));
+    apply(() => backend.record({
+      type: 'STATION_ASSESSED', employeeId: input.employeeId, stationId: station.id,
+      assessorId: trainerId(), scores, observation: input.observation.trim(), at: now(),
+    }));
+  },
+
+  /** Records which of the four observable conduct behaviours were seen. */
+  observeConduct: (employeeId: string, conduct: ConductObservations) =>
+    apply(() => backend.record({ type: 'CONDUCT_OBSERVED', employeeId, observerId: trainerId(), conduct, at: now() })),
+
   /** Clears every training record on this device. Used only by the demo reset. */
   reset: () => apply(() => { backend.reset(); return backend.load(); }),
 
@@ -127,6 +152,14 @@ export const trainingStore = {
 
 export const useTraining = (): TrainingState =>
   useSyncExternalStore(trainingStore.subscribe, trainingStore.get);
+
+/**
+ * The event log itself. Some events (readiness stations, conduct, coaching
+ * notes) leave the snapshot untouched, so a screen that reads them must
+ * subscribe to the log, whose reference changes on every append.
+ */
+export const useTrainingEvents = (): readonly TrainingEvent[] =>
+  useSyncExternalStore(trainingStore.subscribe, trainingStore.events);
 
 /* ---------- pure reads ----------
    🔴 These now LIVE in `domain/training/selectors.ts` and are re-exported here.

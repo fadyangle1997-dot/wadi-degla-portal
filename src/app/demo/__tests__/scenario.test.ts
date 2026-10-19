@@ -47,3 +47,16 @@ describe('demo scenario', () => {
     expect(learningProgress(progressOf('karim.s'))).toBe(0);
   });
 });
+
+describe('demo scenario — readiness', () => {
+  beforeEach(() => { localStorage.clear(); identityStore.signIn('admin'); });
+
+  it('the graduate has the trainer stations and conduct recorded, the manager interview open', async () => {
+    const { readinessInputOf } = await import('../../../domain/readiness/evidence');
+    const { assessReadiness } = await import('../../../domain/readiness');
+    loadDemoScenario();
+    const outcome = assessReadiness(readinessInputOf(trainingStore.events(), 'menna.k'));
+    expect(outcome.stationsMissing).toEqual(['st6-manager-review']);
+    expect(outcome.decision).toBe('not_ready');
+  });
+});

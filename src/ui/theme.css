@@ -95,10 +95,10 @@
      Desaturated on purpose. A saturated colour next to #B38922 wins, and then
      the brand is whatever the last alert happened to be. Never the only
      signal — always with an icon or a word. */
-  --ready: #6FA37A;    --ready-bg: rgba(111,163,122,.12);  --ready-line: rgba(111,163,122,.28);
-  --attn:  #C2703A;    --attn-bg:  rgba(194,112,58,.12);   --attn-line:  rgba(194,112,58,.28);
-  --risk:  #B5675E;    --risk-bg:  rgba(181,103,94,.12);   --risk-line:  rgba(181,103,94,.28);
-  --info:  #7E8A96;    --info-bg:  rgba(126,138,150,.12);  --info-line:  rgba(126,138,150,.28);
+  --ready: #74A67E;    --ready-bg: rgba(116,166,126,.12);  --ready-line: rgba(116,166,126,.28);
+  --attn: #D98650;    --attn-bg: rgba(217,134,80,.12);   --attn-line: rgba(217,134,80,.28);
+  --risk: #D1887F;    --risk-bg: rgba(209,136,127,.12);   --risk-line: rgba(209,136,127,.28);
+  --info: #929CA6;    --info-bg: rgba(146,156,166,.12);  --info-line: rgba(146,156,166,.28);
   --escalate: #8A847D; --escalate-line: rgba(138,132,125,.3);
 
   /* ── Radius ──────────────────────────────────────────────────────────────

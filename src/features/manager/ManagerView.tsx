@@ -13,7 +13,7 @@ import { useCan, useIdentity, identityStore } from '../../app/identity/identityS
 import { scopeOf } from '../../domain/identity/scope';
 import { useDashboard, readinessFromOwnEvents, groupByEmployee } from '../../app/analytics/dashboardStore';
 import { orgSummary } from '../../domain/analytics/organization';
-import { trainingStore, useTraining, finalDecisionOf } from '../../app/training/trainingStore';
+import { trainingStore, useTraining, finalDecisionOf, useTrainingEvents } from '../../app/training/trainingStore';
 import { isProgramComplete, approvedModuleCount } from '../../domain/journey/programCompletion';
 import { currentPhase, type PhaseContext } from '../../domain/journey/program';
 import { initialsOf } from '../../domain/identity/display';
@@ -25,6 +25,7 @@ import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import type { HealthState } from '../../domain/analytics/employee';
 import { Button, Eyebrow, EmptyState, ScreenHeader, StatusBadge, Card, ArabicContent } from '../../ui/primitives';
+import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
@@ -480,7 +481,23 @@ const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => void }> = 
   const lang = useLang();
   const { users } = useIdentity();
   const t = useTraining();
+  // Readiness stations and coaching notes change the log but not the snapshot.
+  useTrainingEvents();
   const canDo = useCan();
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+
+  // A modal dialog takes focus when it opens, closes on Escape, and hands
+  // focus back to whatever opened it.
+  // onClose is read through a ref so a parent re-render does not re-run this.
+  const onCloseRef = React.useRef(onClose);
+  onCloseRef.current = onClose;
+  React.useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
+    window.addEventListener('keydown', onKey);
+    return () => { window.removeEventListener('keydown', onKey); opener?.focus(); };
+  }, []);
   const user = users.find(u => u.id === employeeId);
   const name = user?.name ?? employeeId;
   const trainer = user?.trainerId ? users.find(u => u.id === user.trainerId) : undefined;
@@ -525,7 +542,7 @@ const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => void }> = 
 
   return (
     <div className="dialog-scrim" onClick={onClose}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-label={`${tr('mg.filetitle', lang)} ${name}`} onClick={e => e.stopPropagation()} style={{ maxWidth: 560 }}>
+      <div ref={dialogRef} tabIndex={-1} className="dialog" role="dialog" aria-modal="true" aria-label={`${tr('mg.filetitle', lang)} ${name}`} onClick={e => e.stopPropagation()} style={{ maxWidth: 560, outline: 'none' }}>
 
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
@@ -635,6 +652,14 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
             return <StatusBadge tone={meta?.tone ?? 'info'}>{meta?.label ?? existing.decision}</StatusBadge>;
           })()}
           {existing.rationale && <span className="t-sm" style={{ color: 'var(--tx2)' }}>{existing.rationale}</span>}
+        </div>
+      )}
+
+      {complete && (
+        <div style={{ marginTop: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          <ReadinessOutcomeSummary employeeId={employeeId} />
+          {/* Station 6 — the readiness interview — is the manager's own evidence. */}
+          {canDecide && <StationAssessment employeeId={employeeId} assessor="manager" onSaved={() => undefined} />}
         </div>
       )}
 

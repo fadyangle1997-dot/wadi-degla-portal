@@ -8,7 +8,7 @@
  * NOTE (honest limit): cross-device sync arrives with the real backend
  * (Phase 7). Until then the model is fully real; visibility is per-device.
  */
-import type { Scores, EvaluationDecision } from '../../domain/evaluation';
+import type { Scores, EvaluationDecision, EvaluationDimension, ConductObservations } from '../../domain/evaluation';
 
 /* ---------------- events (the training truth) ---------------- */
 export type TrainingEvent =
@@ -41,7 +41,17 @@ export type TrainingEvent =
   // The manager's final, evidence-based readiness call — closes the operational
   // loop after every unit is trainer-approved. One decision per trainee; a later
   // one supersedes (the reducer keeps the latest).
-  | { readonly type: 'FINAL_READINESS_DECIDED'; readonly employeeId: string; readonly managerId: string; readonly decision: 'ready' | 'extend' | 'reject'; readonly rationale: string; readonly at: number };
+  | { readonly type: 'FINAL_READINESS_DECIDED'; readonly employeeId: string; readonly managerId: string; readonly decision: 'ready' | 'extend' | 'reject'; readonly rationale: string; readonly at: number }
+  // Readiness assessment (day 54–60): one observed encounter, scored only on
+  // the KPIs that station measures, with the observation that justifies it.
+  // A later assessment of the same station supersedes the earlier one.
+  | {
+      readonly type: 'STATION_ASSESSED'; readonly employeeId: string; readonly stationId: string;
+      readonly assessorId: string; readonly scores: Readonly<Partial<Record<EvaluationDimension, number>>>;
+      readonly observation: string; readonly at: number;
+    }
+  // The four observable conduct behaviours, seen across the encounters.
+  | { readonly type: 'CONDUCT_OBSERVED'; readonly employeeId: string; readonly observerId: string; readonly conduct: ConductObservations; readonly at: number };
 
 /* ---------------- snapshot (derived, fast reads) ---------------- */
 /** Mirrors the trainer's four decisions — no collapsing, no lost meaning. */
@@ -126,7 +136,9 @@ export function reduceTraining(t: TrainingState, e: TrainingEvent): TrainingStat
       return t;
 
     case 'COACHING_NOTE_ADDED':
-      return t; // audit/analytics only — the event itself is the value
+    case 'STATION_ASSESSED':
+    case 'CONDUCT_OBSERVED':
+      return t; // derived from the log where needed — the event itself is the value
 
     case 'FINAL_READINESS_DECIDED':
       // Latest manager decision wins — one readiness verdict per trainee.

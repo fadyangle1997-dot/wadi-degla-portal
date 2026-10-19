@@ -29,11 +29,12 @@ const LessonFlow = lazy(() => import('../features/lesson/LessonFlow').then(m => 
 const ExamView = lazy(() => import('../features/exam/ExamView').then(m => ({ default: m.ExamView })));
 const BossView = lazy(() => import('../features/boss/BossView').then(m => ({ default: m.BossView })));
 import { assessReadiness } from '../domain/readiness';
+import { readinessInputOf } from '../domain/readiness/evidence';
 import { EmptyState, Button, Eyebrow, ScreenHeader, ArabicContent } from '../ui/primitives';
 import { moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
-import { trainingStore, currentTraineeId, traineeIdOrNull } from './training/trainingStore';
+import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents } from './training/trainingStore';
 import { TRAINING_POLICY } from '../domain/policy';
 import { useLang, t, tf } from './i18n';
 
@@ -48,6 +49,14 @@ const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     {children}
   </Suspense>
 );
+
+/** The trainee's readiness, computed from the stations their trainer and manager recorded. */
+const TraineeReadiness: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+  const events = useTrainingEvents();
+  const id = traineeIdOrNull();
+  const outcome = assessReadiness(id ? readinessInputOf(events, id) : { evidence: [], conduct: {} });
+  return <ReadinessResult outcome={outcome} onExit={onExit} />;
+};
 
 /** Redirects an unauthorised view to the identity's own landing page. */
 const Redirect: React.FC<{ to: string; onGo: (k: string) => void }> = ({ to, onGo }) => {
@@ -226,10 +235,7 @@ export const App: React.FC = () => {
   // that IS the answer to "where am I?", not a placeholder.
   if (view.kind === 'readiness') return inShell(
     <Lazy><ArabicContent>
-      <ReadinessResult
-        outcome={assessReadiness({ evidence: [], conduct: {} })}
-        onExit={() => setView({ kind: 'roadmap' })}
-      />
+      <TraineeReadiness onExit={() => setView({ kind: 'roadmap' })} />
     </ArabicContent></Lazy>,
   );
   /* Staff platforms are fully translated. Inside them, Arabic content (module

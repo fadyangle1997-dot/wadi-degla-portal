@@ -20,3 +20,25 @@ for (const [user, label] of [['trainer.adel', 'trainer'], ['manager.nabil', 'man
     await expectAccessible(page, label);
   });
 }
+
+test('readiness assessment and trainee file, with demo data', async ({ page }) => {
+  await signIn(page, 'admin');
+  await page.getByRole('button', { name: 'حمّل بيانات العرض' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'حمّل بيانات العرض' }).click();
+  await expectAccessible(page, 'admin with demo data');
+  await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
+  await page.getByRole('menuitem', { name: 'تسجيل الخروج' }).click();
+
+  await signIn(page, 'trainer.samir');
+  const block = page.getByRole('region', { name: /Menna Kamal/ });
+  await block.getByRole('button', { name: 'افتح التقييم' }).click();
+  await block.getByRole('button', { name: 'عدّل' }).first().click();
+  await expectAccessible(page, 'trainer readiness stations');
+  await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
+  await page.getByRole('menuitem', { name: 'تسجيل الخروج' }).click();
+
+  await signIn(page, 'manager.nabil');
+  await page.locator('main').getByRole('button', { name: /Menna Kamal/ }).first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expectAccessible(page, 'manager trainee file');
+});

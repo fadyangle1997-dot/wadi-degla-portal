@@ -81,7 +81,7 @@ export const COLOR = {
  * Never the only signal — always paired with text or an icon.
  */
 export const STATUS = {
-  success: '#6FA37A',
+  success: '#74A67E',
   /**
    * 🔴 This was #C9A227 — which is the brand gold with a different name: same
    * saturation, three degrees of hue apart. A warning that looks exactly like
@@ -89,9 +89,9 @@ export const STATUS = {
    * click". Pushed to burnt amber so it separates by hue while staying inside
    * the warm family. It is still never the only signal — always icon + text.
    */
-  warning: '#C2703A',
-  error: '#B5675E',
-  info: '#7E8A96',
+  warning: '#D98650',
+  error: '#D1887F',
+  info: '#929CA6',
 } as const;
 
 /* ═══ SPACE ═══════════════════════════════════════════════════════════════

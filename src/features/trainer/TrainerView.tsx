@@ -26,6 +26,8 @@ import { WIDTH } from '../../ui/designSystem';
 import { branchNameOf } from '../../domain/organization';
 import { useOrganization } from '../../app/organization/orgStore';
 import { useLang, t as tr, type Lang } from '../../app/i18n';
+import { isProgramComplete } from '../../domain/journey/programCompletion';
+import { TraineeReadinessBlock } from '../readiness/ReadinessStations';
 
 export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const lang = useLang();
@@ -110,7 +112,7 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             {queue.map(({ employee, module: m, at }) => (
               <div key={`${employee.id}:${m.id}`} className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--attn-line)', borderRadius: 'var(--r-md)' }}>
                 <div style={{ flex: '1 1 220px' }}>
-                  <span className="t-title" style={{ color: 'var(--tx0)' }}>{employee.name} · {m.title}</span>
+                  <span className="t-title" style={{ color: 'var(--tx0)' }}>{employee.name} · <ArabicContent as="span">{m.title}</ArabicContent></span>
                   <span className="t-label" style={{ display: 'block', marginTop: 'var(--sp-1)' }}>
                     {m.code} · {tr('tn.passedwait', lang)}
                   </span>
@@ -122,7 +124,7 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             {needsWork.map(({ employee, module: m }) => (
               <div key={`${employee.id}:${m.id}`} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
                 <div style={{ flex: '1 1 220px' }}>
-                  <span className="t-title" style={{ color: 'var(--tx0)' }}>{employee.name} · {m.title}</span>
+                  <span className="t-title" style={{ color: 'var(--tx0)' }}>{employee.name} · <ArabicContent as="span">{m.title}</ArabicContent></span>
                   <span className="t-label" style={{ display: 'block', marginTop: 'var(--sp-1)' }}>{tr('tn.reviewing', lang)} — {tr('tn.reassesswhen', lang)}</span>
                 </div>
                 <StatusBadge tone="risk">{tr('tn.improving', lang)}</StatusBadge>
@@ -149,6 +151,18 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             <RosterRow key={u.id} name={u.name} branch={branchNameOf(u.branchId, org.branches)} progress={learningProgress(progressOf(u.id))} onNote={note => {
               trainingStore.addCoachingNote(u.id, note); notify(tr('tn.notesaved', lang));
             }} />
+          ))}
+        </div>
+
+        {/* ---------- 3) readiness assessment (programme finished) ---------- */}
+        <h2 className="t-h3" style={{ margin: 'var(--sp-8) 0 var(--sp-2)' }}>{tr('rd.title', lang)}</h2>
+        <p className="t-sm" style={{ marginBottom: 'var(--sp-4)' }}>{tr('rd.sub', lang)}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          {employees.filter(u => isProgramComplete(t, u.id)).length === 0 && (
+            <p className="t-sm" style={{ color: 'var(--tx3)' }}>{tr('rd.none', lang)}</p>
+          )}
+          {employees.filter(u => isProgramComplete(t, u.id)).map(u => (
+            <TraineeReadinessBlock key={u.id} employeeId={u.id} name={u.name} assessor="trainer" onSaved={notify} />
           ))}
         </div>
       </m.main>
@@ -207,7 +221,7 @@ const LessonCoachingCard: React.FC<{
   if (!pro) return null;
   return (
     <div style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-      <span className="t-title">{lesson.title}</span>
+      <ArabicContent as="span" className="t-title">{lesson.title}</ArabicContent>
 
       {pro.weeklyReview?.observation?.length > 0 && (
         <ul role="list" style={{ listStyle: 'none', margin: 'var(--sp-2) 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>

@@ -25,6 +25,7 @@ async function untranslated(page: Page): Promise<string[]> {
       if (!/[؀-ۿ]/.test(text)) continue;
       const el = n.parentElement;
       if (!el || el.closest('[lang="ar"]') || el.closest('[aria-hidden="true"]')) continue;
+      if (el.closest('textarea, input')) continue; // what someone typed is their content, not UI text
       if (el.offsetParent === null && getComputedStyle(el).position !== 'fixed') continue; // not rendered
       out.push(text.slice(0, 80));
     }
@@ -72,4 +73,14 @@ test('manager trainee file with real activity: no untranslated Arabic in English
   await page.locator('main').getByRole('button', { name: /Karim Saad/ }).first().click();
   await expect(page.getByRole('dialog')).toBeVisible();
   expect(await untranslated(page), 'trainee file').toEqual([]);
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: /personal menu/ }).first().click();
+  await page.getByRole('menuitem', { name: 'Sign out' }).click();
+
+  // The trainer's readiness stations in English.
+  await signIn(page, 'trainer.samir');
+  const block = page.getByRole('region', { name: /Menna Kamal/ });
+  await block.getByRole('button', { name: 'Open assessment' }).click();
+  await block.getByRole('button', { name: 'Update' }).first().click();
+  expect(await untranslated(page), 'readiness stations').toEqual([]);
 });

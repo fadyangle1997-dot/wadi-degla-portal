@@ -16,9 +16,10 @@
 import { MODULES } from '../../content/registry';
 import { progressStore, progressOf, overallProgress } from '../progress';
 import { identityStore } from '../identity/identityStore';
-import { trainingStore } from '../training/trainingStore';
+import { trainingStore, reviewOf } from '../training/trainingStore';
 import { TRAINING_POLICY } from '../../domain/policy';
-import { ALL_DIMENSIONS, type Scores } from '../../domain/evaluation';
+import { ALL_DIMENSIONS, ALL_CONDUCT_CHECKS, type Scores } from '../../domain/evaluation';
+import { stationsFor } from '../../domain/readiness/evidence';
 import { READINESS_FLOORS } from '../../domain/readiness';
 import { sha256Hex } from '../../lib/sha256';
 
@@ -134,6 +135,15 @@ const scoresFor = (employeeId: string, moduleIndex: number): Scores => {
   })) as Scores;
 };
 
+/** What a trainer would write after watching each encounter. */
+const STATION_OBSERVATIONS: Readonly<Record<string, string>> = {
+  'st1-routine-joining': 'طلبت البطاقة وشهادة الميلاد قبل ما تفتح الملف، وشرحت للعضوة السبب بهدوء.',
+  'st2-gray-case': 'وقفت عند تعارض البطاقة والكارنيه، رجعت للقاعدة، وصعّدت الحالة بدل ما تخمّن.',
+  'st3-file-review': 'اكتشفت الورقة الناقصة والمستند المنتهي، وكتبت للمبيعات المطلوب بوضوح.',
+  'st4-refusal-encounter': 'ربطت الرفض بالقاعدة مش بنفسها، وقفلت بخطوة بديلة واضحة للعضو.',
+  'st5-compound-pressure': 'فضلت هادية مع العضو، رتّبت الطابور، وما وعدتش بحاجة بره اللائحة.',
+};
+
 const approve = (employeeId: string, moduleId: string) =>
   trainingStore.recordEvaluation({
     employeeId, moduleId, scores: scoresFor(employeeId, MODULES.findIndex(m => m.id === moduleId)),
@@ -163,27 +173,44 @@ export function seedTraineeProgress(account: DemoAccount): void {
     const pass = TRAINING_POLICY.passThreshold + 0.15;
     const reached = () => overallProgress(progressOf(account.id)) >= (account.progress ?? 0) - 0.001;
 
-    for (const m of MODULES) {
-      asTrainee();
-      for (const l of m.lessons) {
+    // Curriculum order until the target is reached; returns early by design.
+    const learn = () => {
+      for (const m of MODULES) {
+        asTrainee();
+        for (const l of m.lessons) {
+          if (reached()) return;
+          progressStore.completeLesson(l.id);
+        }
         if (reached()) return;
-        progressStore.completeLesson(l.id);
+        progressStore.recordExam(m.id, pass);
+        trainingStore.submitForReview(account.id, m.id);
+
+        // The "waiting for trainer" scenario stops with the last unit unapproved.
+        if (account.scenario === 'waiting_review' && reached()) return;
+        asTrainer();
+        approve(account.id, m.id);
+        if (reached()) return;
       }
-      if (reached()) return;
-      progressStore.recordExam(m.id, pass);
-      trainingStore.submitForReview(account.id, m.id);
+    };
+    learn();
 
-      // The "waiting for trainer" scenario stops with the last unit unapproved.
-      if (account.scenario === 'waiting_review' && reached()) return;
-      asTrainer();
-      approve(account.id, m.id);
-      if (reached()) return;
-    }
-
-    // Graduated: make sure every unit is approved.
+    // Graduated: every unit approved, and the trainer's five readiness
+    // stations recorded. Station 6, the manager's interview, is left open so
+    // the readiness decision can be shown live.
     if (account.scenario === 'graduated') {
       asTrainer();
-      for (const m of MODULES) approve(account.id, m.id);
+      for (const m of MODULES) {
+        if (reviewOf(trainingStore.get(), account.id, m.id).status !== 'ready') approve(account.id, m.id);
+      }
+      for (const st of stationsFor('trainer')) {
+        const base = scoresFor(account.id, st.order);
+        trainingStore.assessStation({
+          employeeId: account.id, stationId: st.id,
+          scores: Object.fromEntries(st.measures.map(d => [d, base[d]])),
+          observation: STATION_OBSERVATIONS[st.id] ?? 'اتصرّف صح في الموقف.',
+        });
+      }
+      trainingStore.observeConduct(account.id, Object.fromEntries(ALL_CONDUCT_CHECKS.map(c => [c, true])));
     }
   } finally {
     if (before) identityStore.signIn(before);
