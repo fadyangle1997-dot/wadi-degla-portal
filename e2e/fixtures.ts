@@ -26,6 +26,14 @@ export { expect };
 /** Waits until no animation is running, so layout and colours are final. */
 export async function settle(page: Page) {
   await page.waitForFunction(() => document.getAnimations().every(a => a.playState !== 'running'));
+  // Motion fades opacity from JS, which getAnimations() cannot see. Wait until
+  // inline opacities stop changing (some stay partial on purpose, so «all at 1»
+  // would never come).
+  await page.waitForFunction(() => new Promise<boolean>(resolve => {
+    const read = () => [...document.querySelectorAll<HTMLElement>('[style*="opacity"]')].map(el => getComputedStyle(el).opacity).join();
+    const before = read();
+    setTimeout(() => resolve(read() === before), 150);
+  }));
 }
 
 export async function signIn(page: Page, username: string, password = passwordFor(username)) {
