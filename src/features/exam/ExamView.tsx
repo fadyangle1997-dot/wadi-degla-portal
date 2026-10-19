@@ -9,7 +9,7 @@ import { ArrowRight, GraduationCap, RotateCcw, Unlock } from 'lucide-react';
 import type { Module } from '../../domain/types/content';
 import { MODULES } from '../../content/registry';
 import { shuffleOptions } from '../../content/shuffle';
-import { Button, Eyebrow, OptionButton, ScreenHeader, ProgressRail, FeedbackBlock } from '../../ui/primitives';
+import { Button, Eyebrow, OptionButton, ScreenHeader, ProgressRail, FeedbackBlock, Num } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { TRAINING_POLICY } from '../../domain/policy';
 import { useLang, t } from '../../app/i18n';
@@ -65,7 +65,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
             );
           })()}
           <p className="t-sm measure" style={{ margin: 'var(--sp-3) auto 0' }}>
-            {passed ? 'ده مش حفظ — ده فهم بيشتغل على حالات مخلوطة زي الواقع.' : `المطلوب ${Math.round(TRAINING_POLICY.passThreshold * 100)}%. المراجعة دي معمولة ليك بالظبط على اللي غلطت فيه:`}
+            {passed ? 'ده مش حفظ — ده فهم بيشتغل على حالات مخلوطة زي الواقع.' : <>المطلوب <Num>{Math.round(TRAINING_POLICY.passThreshold * 100)}%</Num>. المراجعة دي معمولة ليك بالظبط على اللي غلطت فيه:</>}
           </p>
           {!passed && reviewLessons.length > 0 && (
             <div className="stack mt-5 gap-2 text-start">

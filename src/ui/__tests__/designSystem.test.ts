@@ -422,6 +422,17 @@ describe('🔴 the two declared roles outside the reading scale', () => {
     }
     expect([...sizes].sort()).toEqual([NUMERAL.lg, NUMERAL.xl].sort());
   });
+
+  it('a key figure is NUMERAL.md, and every figure is isolated tabular digits', () => {
+    expect(css).toContain(`.t-metric { font-size:${NUMERAL.md};`);
+    // Without isolation a percentage at the end of an Arabic line renders «%73».
+    for (const cls of ['.t-num', '.t-metric']) {
+      const rule = css.slice(css.indexOf(`${cls} {`), css.indexOf('}', css.indexOf(`${cls} {`)));
+      expect(rule, cls).toContain('unicode-bidi:isolate');
+      expect(rule, cls).toContain('tabular-nums');
+      expect(rule, `${cls} reads as code in mono`).not.toContain('mono');
+    }
+  });
 });
 
 describe('🔴 phone rules can reach what they need to override', () => {

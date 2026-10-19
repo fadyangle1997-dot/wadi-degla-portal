@@ -17,7 +17,7 @@ import { orgStore } from '../../app/organization/orgStore';
 import { operationalReadinessReport, type ReadinessVerdict, type RiskLevel } from '../../domain/readiness/report';
 import { DECISION_LABEL } from '../../domain/evaluation';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent } from '../../ui/primitives';
+import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent, Num } from '../../ui/primitives';
 import { WIDTH } from '../../ui/designSystem';
 import { useLang, t as tr, type Key } from '../../app/i18n';
 
@@ -91,7 +91,7 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
             <div className="grow" />
             <StatusBadge tone={v.tone}>{tr(v.labelKey, lang)}</StatusBadge>
           </div>
-          <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{r.overall}% {tr('rr.operational', lang)}</h1>
+          <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}><Num>{r.overall}%</Num> {tr('rr.operational', lang)}</h1>
           <p className="t-sm measure mb-4">{tr(v.lineKey, lang)}</p>
           <div className="row gap-2 wrap">
             <StatusBadge tone={risk.tone}>{tr(risk.labelKey, lang)}</StatusBadge>

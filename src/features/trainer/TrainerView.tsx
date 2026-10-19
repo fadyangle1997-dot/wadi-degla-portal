@@ -9,7 +9,7 @@
 import type { User } from '../../domain/identity';
 import React, { useMemo, useState } from 'react';
 import { m } from 'motion/react';
-import { ClipboardList, UserCheck, CalendarPlus, StickyNote } from 'lucide-react';
+import { UserCheck, CalendarPlus, StickyNote } from 'lucide-react';
 import { useIdentity, useCan, identityStore } from '../../app/identity/identityStore';
 import { scopeOf, visibleLearners } from '../../domain/identity/scope';
 import { useTraining, trainingStore, reviewOf } from '../../app/training/trainingStore';
@@ -19,7 +19,7 @@ import { readinessScore, EVALUATION_DIMENSIONS, ALL_DIMENSIONS, CONDUCT_CHECKS, 
 import { MODULES, moduleById } from '../../content/registry';
 import type { Lesson } from '../../domain/types/content';
 import { RULE_META } from '../../domain/rules/meta';
-import { Button, Card, Eyebrow, EmptyState, ScreenHeader, StatusBadge, Toast, Callout, ArabicContent } from '../../ui/primitives';
+import { Button, Card, Eyebrow, EmptyState, StatusBadge, Toast, Callout, ArabicContent, PageHeader } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
@@ -83,13 +83,10 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.staff}
-        leading={<Eyebrow icon={<ClipboardList size={13} />}>{tr('tn.title', lang)}</Eyebrow>} />
-
       <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         {/* ---------- 1) who needs me TODAY ---------- */}
-        <h1 className="t-h2 mb-2">{tr('tn.needyou', lang)}</h1>
-        <p className="t-sm mb-5">{tr('tn.needyousub', lang)}</p>
+        <PageHeader crumbs={[tr('crumb.academy', lang), tr('nav.trainer', lang)]}
+          title={tr('tn.needyou', lang)} lead={tr('tn.needyousub', lang)} />
 
         {queue.length === 0 && needsWork.length === 0 ? (
           <EmptyState icon={<UserCheck />} title={tr('tn.nothing', lang)}

@@ -19,8 +19,6 @@
 @import '@fontsource/ibm-plex-sans-arabic/latin-500.css';
 @import '@fontsource/ibm-plex-sans-arabic/latin-600.css';
 @import '@fontsource/ibm-plex-sans-arabic/latin-700.css';
-@import '@fontsource/ibm-plex-mono/latin-400.css';
-@import '@fontsource/ibm-plex-mono/latin-500.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ONE MATERIAL.
@@ -134,7 +132,6 @@
   --ease: cubic-bezier(.22,.61,.36,1);
 
   --font-body:'Inter','IBM Plex Sans Arabic', system-ui, sans-serif;
-  --font-mono:'IBM Plex Mono', ui-monospace, monospace;
 }
 
 
@@ -226,7 +223,15 @@ body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--fon
 .t-lead { font-size:1.1rem; font-weight:400; line-height:1.75; color:var(--tx1); }
 .t-body { font-size:1rem; font-weight:400; line-height:1.8; color:var(--tx1); }
 .t-sm { font-size:0.9rem; font-weight:400; line-height:1.65; color:var(--tx2); }
-.t-num { font-family:var(--font-mono); font-weight:500; font-variant-numeric:tabular-nums; }
+/* Figures: the body face with tabular lining digits, isolated so a figure at
+   the end of an Arabic line keeps its order («73%», never «%73»). Mono read as
+   code, and its wide digits broke the rhythm of the Arabic around them. */
+.t-num { font-family:var(--font-body); font-weight:500; font-variant-numeric:tabular-nums lining-nums; unicode-bidi:isolate; }
+.num { font-variant-numeric:tabular-nums lining-nums; }
+/* A key figure: NUMERAL.md. Read as an object, so it sits outside the reading
+   scale like the day ring's numeral. */
+.t-metric { font-size:2rem; font-weight:600; line-height:1.1; letter-spacing:-.02em; color:var(--tx0);
+  font-variant-numeric:tabular-nums lining-nums; unicode-bidi:isolate; }
 
 /* The name line inside a row or card. Colour only; size comes from context. */
 .t-title { color: var(--tx0); }
@@ -372,17 +377,74 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 /* The primary button matches the sign-in button: one primary action, one look. */
 .btn-primary {
   border: 0;
-  border-radius: var(--r-full);
-  color: #241B05;
-  background: linear-gradient(100deg, var(--g2) 0%, var(--g1) 52%, var(--g0) 100%);
-  /* A contact shadow, not a glow: the button lifts off the page without
-     broadcasting light. */
-  box-shadow: 0 6px 18px -12px rgba(var(--g2-rgb), .45);
+  border-radius: var(--r-sm);
+  color: var(--on-gold);
+  /* Solid gold, the control's radius: the primary action is the one gold
+     object on the screen, and it does not need a gradient or a glow to be it. */
+  background: var(--g2);
 }
-.btn-primary:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 8px 22px -12px rgba(var(--g2-rgb), .6); }
-.btn-primary:active:not(:disabled) { transform: translateY(1px); }
+.btn-primary:hover:not(:disabled) { background: var(--g1); }
 .btn-ghost { background:transparent; color:var(--tx1); border:1px solid var(--line-2); }
 .btn-ghost:hover:not(:disabled) { border-color:var(--line-3); color:var(--tx0); background:var(--s0); }
+
+/* ============================================================
+   PAGE STRUCTURE — where am I, what matters, what next.
+   A page opens with its header (context path, title, one line of state, the
+   primary action); regions follow, introduced by a section header and a
+   hairline rather than boxed into cards.
+   ============================================================ */
+.page-header { display:flex; flex-direction:column; gap:var(--sp-3); padding-block:var(--sp-2) var(--sp-6); }
+.crumbs ol { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin:0; padding:0; list-style:none; }
+.crumbs li { font-size:0.78rem; font-weight:600; color:var(--tx2); }
+.crumbs li + li::before { content:"/"; margin-inline-end:var(--sp-2); color:var(--tx3); font-weight:400; }
+.crumbs li[aria-current="page"] { color:var(--g1); }
+.page-header-row { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:var(--sp-4); }
+.page-header-text { display:flex; flex-direction:column; gap:var(--sp-2); min-width:0; flex:1 1 320px; }
+.page-lead { max-width:var(--measure); }
+.page-header-actions { display:flex; align-items:center; gap:var(--sp-2); flex-shrink:0; }
+
+/* Section navigation: the sections of one page, the current one underlined by
+   the gold spine. */
+.section-nav { display:flex; gap:var(--sp-1); overflow-x:auto; scrollbar-width:none;
+  margin-top:var(--sp-2); border-bottom:1px solid var(--line); }
+.section-nav-item { position:relative; display:inline-flex; align-items:center; gap:var(--sp-2);
+  min-height:44px; padding:0 var(--sp-3); background:none; border:0; cursor:pointer; white-space:nowrap;
+  color:var(--tx2); font-family:var(--font-body); font-size:0.9rem; font-weight:600;
+  transition:color var(--t-fast) var(--ease); }
+.section-nav-item:hover { color:var(--tx0); }
+.section-nav-item[aria-current="page"] { color:var(--g1); }
+.section-nav-item[aria-current="page"]::after { content:""; position:absolute; inset-inline:var(--sp-3);
+  bottom:-1px; height:2px; border-radius:2px; background:var(--g2); }
+
+.section-header { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between;
+  gap:var(--sp-3); padding-bottom:var(--sp-3); margin-bottom:var(--sp-4); border-bottom:1px solid var(--line); }
+.section-header-text { display:flex; flex-direction:column; gap:var(--sp-1); min-width:0; }
+.section-count { font-size:0.78rem; font-weight:600; color:var(--tx2); background:var(--s-1);
+  padding:2px var(--sp-2); border-radius:var(--r-full); }
+
+/* Key figures ruled by hairlines, not boxed into tiles. Each cell draws its
+   own top and start rule; the container clips the ones on its outer edges, so
+   the grid stays ruled however many cells wrap onto the last row. */
+.metric-strip { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); margin:0;
+  overflow:hidden; border-block:1px solid var(--line); }
+.metric { display:flex; flex-direction:column; gap:var(--sp-2); padding:var(--sp-4) var(--sp-5);
+  box-shadow:-1px 0 0 var(--line), 1px 0 0 var(--line), 0 -1px 0 var(--line); }
+.metric-context { color:var(--tx2); }
+.metric--ready .t-metric { color:var(--ready); }
+.metric--attn .t-metric { color:var(--attn); }
+.metric--risk .t-metric { color:var(--risk); }
+.metric--info .t-metric { color:var(--info); }
+.metric--gold .t-metric { color:var(--g1); }
+
+/* Row state: a dot and a word, in the text colour; the dot carries the hue. */
+.status { display:inline-flex; align-items:center; gap:var(--sp-2); white-space:nowrap;
+  font-size:0.9rem; font-weight:500; color:var(--tx1); }
+.status-dot { width:8px; height:8px; border-radius:var(--r-full); flex-shrink:0; background:var(--tx3); }
+.status--ready .status-dot { background:var(--ready); }
+.status--attn .status-dot { background:var(--attn); }
+.status--risk .status-dot { background:var(--risk); }
+.status--info .status-dot { background:var(--info); }
+.status--gold .status-dot { background:var(--g2); }
 
 /* -- Answer option -- */
 .option { display:flex; align-items:center; gap:var(--sp-3); width:100%; text-align:right;
@@ -655,6 +717,7 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
    Scoped to .shell-nav on purpose: `.pill` is used in 12 other places (admin
    filters, trainer chips) that are NOT header navigation and must not shift. */
 .shell-nav .pill { font-weight: 600; }
+.shell-nav .pill[aria-current="page"] { border-color: var(--g2); color: var(--g1); }
 /* Base display lives here, not inline — an inline `display: flex` made the
    mobile `display: none` unreachable (third time this trap cost a fix). */
 .shell-nav { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
@@ -1005,8 +1068,11 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
     border-color: transparent; border-radius: var(--r-md);
     padding-inline: var(--sp-3); gap: var(--sp-3);
   }
-  .shell-nav .pill[aria-current="page"],
-  .shell-nav .pill:hover { border-color: var(--line-2); background: var(--s-1); }
+  .shell-nav .pill:hover { border-color: transparent; background: var(--s-1); color: var(--tx0); }
+  /* The current place carries the spine, on the reading edge like SpineWell. */
+  .shell-nav .pill[aria-current="page"] { position: relative; border-color: transparent; background: var(--s-1); color: var(--g1); }
+  .shell-nav .pill[aria-current="page"]::before { content: ""; position: absolute; inset-inline-start: 0;
+    top: var(--sp-2); bottom: var(--sp-2); width: 2px; border-radius: 2px; background: var(--g2); }
 
   /* The rail is padding on the root, so the content column re-centres in the
      space left when the rail collapses (a margin left dead space instead). */

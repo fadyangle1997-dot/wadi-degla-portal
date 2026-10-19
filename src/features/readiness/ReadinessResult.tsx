@@ -27,7 +27,7 @@ import { ShieldCheck, Clock, AlertTriangle, ArrowUpRight } from 'lucide-react';
 import type { ReadinessOutcome } from '../../domain/readiness';
 import { READINESS_FLOORS } from '../../domain/readiness';
 import { EVALUATION_DIMENSIONS, DECISION_LABEL, type EvaluationDecision } from '../../domain/evaluation';
-import { Eyebrow, ScreenHeader, StatusBadge, Button } from '../../ui/primitives';
+import { Eyebrow, ScreenHeader, StatusBadge, Button, Num } from '../../ui/primitives';
 import { fade, stagger } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 
@@ -99,7 +99,7 @@ export const ReadinessResult: React.FC<{ outcome: ReadinessOutcome; onExit: () =
         {/* Named, per-KPI evidence — never a single opaque number. */}
         <m.section {...stagger(1)} className="mb-6">
           <div className="t-label mb-3">
-            الأدلة حسب المحاور الرسمية · الإجمالي {outcome.overall}%
+            الأدلة حسب المحاور الرسمية · الإجمالي <Num>{outcome.overall}%</Num>
           </div>
           <div className="stack gap-2">
             {(Object.keys(EVALUATION_DIMENSIONS) as (keyof typeof EVALUATION_DIMENSIONS)[]).map(d => {

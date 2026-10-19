@@ -22,7 +22,7 @@ import { useTraining, reviewOf, traineeIdOrNull } from '../../app/training/train
 import { identityStore } from '../../app/identity/identityStore';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { moduleById, bossBattlesAfter } from '../../content/registry';
-import { ScreenHeader, Eyebrow, StatusBadge, Button, Card, DayRing, ArabicContent } from '../../ui/primitives';
+import { Eyebrow, StatusBadge, Button, Card, DayRing, ArabicContent, Num, Crumbs } from '../../ui/primitives';
 import { useLang, t as tr, type Key } from '../../app/i18n';
 import { fade, stagger } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
@@ -40,12 +40,11 @@ const STATUS_META: Record<PhaseStatus, { labelKey: Key; tone: 'ready' | 'attn' |
 };
 
 export const TrainingJourney: React.FC<{
-  onExit: () => void;
   onOpenModule: (moduleId: string) => void;
   onOpenBoss: (bossId: string) => void;
   onOpenReview: () => void;
   onOpenReadiness: () => void;
-}> = ({ onExit, onOpenModule, onOpenBoss, onOpenReview, onOpenReadiness }) => {
+}> = ({ onOpenModule, onOpenBoss, onOpenReview, onOpenReadiness }) => {
   const lang = useLang();
   const p = useProgress();
 
@@ -123,11 +122,10 @@ export const TrainingJourney: React.FC<{
 
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.journey} leading={<Eyebrow>{tr('jr.header', lang)}</Eyebrow>} />
-
       {/* Same width as the app shell, so the route and its ledger have room;
           the route column's reading width is capped by the grid. */}
-      <main style={{ maxWidth: WIDTH.journey, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)' }}>
+      <main style={{ maxWidth: WIDTH.journey, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+        <Crumbs items={[tr('crumb.academy', lang), tr('nav.journey', lang)]} />
         {/* ── THE HERO ─────────────────────────────────────────────────────
             An editorial spread has one focal point and everything defers to it.
             Here it is the day — the single number a trainee carries in their head.
@@ -150,7 +148,7 @@ export const TrainingJourney: React.FC<{
               {current ? <ArabicContent as="span">{current.title}</ArabicContent> : tr('jr.allapproved', lang)}
             </h1>
             <p className="t-sm m-0 c-tx2">
-              {tr('jr.daysleft', lang)} {remaining} {tr('jr.days', lang)} · {pct}% {tr('jr.unitsapp', lang)}
+              {tr('jr.daysleft', lang)} {remaining} {tr('jr.days', lang)} · <Num>{pct}%</Num> {tr('jr.unitsapp', lang)}
             </p>
           </div>
         </m.header>

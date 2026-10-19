@@ -16,7 +16,7 @@ import { detectOperationalIssues, summarizeIssues, type OperationalIssue, type S
 import { adminStats } from '../../domain/operations/adminStats';
 import { filterAudit, latestAudit, describeAudit, auditActions, type AuditFilter } from '../../domain/operations/audit';
 import { PERMISSIONS } from '../../domain/identity';
-import { Button, Eyebrow, EmptyState, ScreenHeader, StatusBadge, Card, Toast, ArabicContent, ConfirmDialog } from '../../ui/primitives';
+import { Button, Eyebrow, EmptyState, StatusBadge, Card, Toast, ArabicContent, ConfirmDialog, PageHeader, SectionNav } from '../../ui/primitives';
 import { loadDemoScenario, clearDemoTraining } from '../../app/demo/demoScenario';
 import { fade } from '../../ui/motion';
 import { AdminView } from './AdminView';
@@ -24,7 +24,7 @@ import { OrganizationPanel } from './OrganizationPanel';
 import { WIDTH } from '../../ui/designSystem';
 import { useOrganization } from '../../app/organization/orgStore';
 import { branchNameOf } from '../../domain/organization';
-import { useLang, t, t as tr, type Key } from '../../app/i18n';
+import { useLang, t, type Key } from '../../app/i18n';
 
 type Tab = 'dashboard' | 'inbox' | 'org' | 'audit' | 'users';
 
@@ -50,49 +50,28 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   ];
   const visibleTabs = tabs.filter(t => t.show);
 
-  if (tab === 'users') {
-    // Reuse the existing user-management screen verbatim (no duplication),
-    // with the platform tab bar on top.
-    return (
-      <div>
-        <TabBar tabs={visibleTabs} active={tab} onChange={setTab} onExit={onExit} />
-        <AdminView onExit={onExit} embedded />
-      </div>
-    );
-  }
+  const current = visibleTabs.find(v => v.id === tab) ?? visibleTabs[0]!;
+  const header = (
+    <PageHeader crumbs={[t('crumb.academy', lang), t('nav.admin', lang)]} title={t('ad.platform', lang)}
+      nav={<SectionNav label={t('ad.sections', lang)} items={visibleTabs} active={current.id}
+        onChange={(id: string) => setTab(id as Tab)} />} />
+  );
 
   return (
     <div className="min-h-screen">
-      <TabBar tabs={visibleTabs} active={tab} onChange={setTab} onExit={onExit} />
-      <m.main key={tab} {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
-        {tab === 'dashboard' && <OperationalDashboard />}
-        {tab === 'inbox' && <OperationalInbox onGoToUsers={() => setTab('users')} />}
-        {tab === 'org' && <OrganizationPanel />}
-        {tab === 'audit' && <AuditPanel canExport={canDo('audit.export')} />}
-      </m.main>
+      <div style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) 0' }}>{header}</div>
+      {tab === 'users'
+        // The user-management screen, reused as it is.
+        ? <AdminView onExit={onExit} embedded />
+        : (
+          <m.main key={tab} {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)' }}>
+            {tab === 'dashboard' && <OperationalDashboard />}
+            {tab === 'inbox' && <OperationalInbox onGoToUsers={() => setTab('users')} />}
+            {tab === 'org' && <OrganizationPanel />}
+            {tab === 'audit' && <AuditPanel canExport={canDo('audit.export')} />}
+          </m.main>
+        )}
     </div>
-  );
-};
-
-/* ---------------- tab bar ---------------- */
-const TabBar: React.FC<{ tabs: { id: Tab; label: string; icon: React.ReactNode }[]; active: Tab; onChange: (t: Tab) => void; onExit: () => void }> =
-  ({ tabs, active, onChange, onExit }) => {
-  /* `t` is taken here by the tab being mapped, so the translator comes in
-     aliased — an alias, not a rename of the map variable. */
-  const lang = useLang();
-  return (
-    <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.staff}
-      leading={<Eyebrow icon={<ShieldCheck size={13} />}>{tr('ad.platform', lang)}</Eyebrow>}
-      trailing={
-        <nav className="row gap-1 wrap" aria-label={tr('ad.sections', lang)}>
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => onChange(t.id)} aria-current={active === t.id}
-              className="pill" style={active === t.id ? { borderColor: 'var(--g2)', color: 'var(--g1)' } : undefined}>
-              {t.icon}{t.label}
-            </button>
-          ))}
-        </nav>
-      } />
   );
 };
 
@@ -108,7 +87,7 @@ const OperationalDashboard: React.FC = () => {
 
   return (
     <>
-      <h1 className="t-h2 mb-2">{t('ad.dirhealth', lang)}</h1>
+      <h2 className="t-h2 mb-2">{t('ad.dirhealth', lang)}</h2>
       <p className="t-sm mb-5">{t('ad.dirhealthsub', lang)}</p>
 
       <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
@@ -235,7 +214,7 @@ const OperationalInbox: React.FC<{ onGoToUsers: () => void }> = ({ onGoToUsers }
   return (
     <>
       <div className="row items-baseline gap-3 wrap mb-2">
-        <h1 className="t-h2 m-0">{t('ad.needsyou', lang)}</h1>
+        <h2 className="t-h2 m-0">{t('ad.needsyou', lang)}</h2>
         {issues.length > 0 && <span className="t-num t-label c-tx2">{issues.length} {t('ad.issuecount', lang)}</span>}
       </div>
       <p className="t-sm mb-5">{t('ad.autodetect', lang)}</p>
@@ -291,7 +270,7 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
 
   return (
     <>
-      <h1 className="t-h2 mb-2">{t('ad.audittitle', lang)}</h1>
+      <h2 className="t-h2 mb-2">{t('ad.audittitle', lang)}</h2>
       <p className="t-sm mb-5">{t('ad.auditsub', lang)}</p>
 
       <div className="row gap-3 wrap mb-4">

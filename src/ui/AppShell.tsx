@@ -91,9 +91,8 @@ export const AppShell: React.FC<{
           {/* site-wide navigation */}
           <nav className="shell-nav" aria-label={t('a11y.mainnav', lang)}>
             {items.map(n => (
-              <button key={n.view} onClick={() => onNavigate(n.view)} aria-current={active === n.view}
-                className="pill"
-                style={active === n.view ? { borderColor: 'var(--g2)', color: 'var(--g1)' } : undefined}>
+              <button key={n.view} onClick={() => onNavigate(n.view)} aria-current={active === n.view ? 'page' : undefined}
+                className="pill">
                 {ICONS[n.view]}{t(n.label as Key, lang)}
               </button>
             ))}

@@ -51,7 +51,7 @@ test.describe('admin', () => {
     await expect(page.getByText('صحة دفتر المستخدمين')).toBeVisible();
     for (const tab of ['الوارد', 'المنظمة', 'المستخدمون', 'سجل التدقيق']) {
       await page.getByRole('button', { name: tab }).click();
-      await expect(page.getByRole('button', { name: tab })).toHaveAttribute('aria-current', 'true');
+      await expect(page.getByRole('button', { name: tab })).toHaveAttribute('aria-current', 'page');
     }
   });
 });

@@ -5,10 +5,9 @@
  */
 import React from 'react';
 import { m } from 'motion/react';
-import { TrendingUp } from 'lucide-react';
 import { useProgress } from '../../app/progress';
 import { skillProgress, skillState, SKILL_STATE_LABEL } from '../../app/skills';
-import { Eyebrow, SkillBar, EmptyState, Button, ScreenHeader } from '../../ui/primitives';
+import { SkillBar, EmptyState, Button, Crumbs } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { useLang, t } from '../../app/i18n';
 import { WIDTH } from '../../ui/designSystem';
@@ -21,10 +20,9 @@ export const SkillsView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={onExit} tabRoute leading={<Eyebrow icon={<TrendingUp size={13} />}>{t('sk.title', lang)}</Eyebrow>} />
-
       <m.main {...fade} aria-label={t('sk.aria', lang)} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
-        <h1 className="t-h1">{t('sk.headline', lang)}</h1>
+        <Crumbs items={[t('crumb.academy', lang), t('nav.skills', lang)]} />
+        <h1 className="t-h1 mt-3">{t('sk.headline', lang)}</h1>
         <p className="t-sm measure mt-2 mb-7">
           {t('sk.sub', lang)}
         </p>

@@ -200,7 +200,6 @@ export const App: React.FC = () => {
   if (view.kind === 'journey') return inShell(<Lazy><ArabicContent><JourneyView onExit={toPath} /></ArabicContent></Lazy>);
   if (view.kind === 'roadmap') return inShell(
     <Lazy><TrainingJourney
-      onExit={toPath}
       onOpenReview={() => setView({ kind: 'review' })}
       onOpenReadiness={() => setView({ kind: 'readiness' })}
       onOpenBoss={bossId => setView({ kind: 'boss', bossId })}

@@ -8,7 +8,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { m } from 'motion/react';
-import { LayoutDashboard, ShieldCheck, GraduationCap, TrendingUp, AlertTriangle, Users2, Gavel } from 'lucide-react';
+import { ShieldCheck, GraduationCap, TrendingUp, AlertTriangle, Users2, Gavel } from 'lucide-react';
 import { useCan, useIdentity, identityStore } from '../../app/identity/identityStore';
 import { scopeOf } from '../../domain/identity/scope';
 import { useDashboard } from '../../app/analytics/dashboardStore';
@@ -16,7 +16,7 @@ import { orgSummary } from '../../domain/analytics/organization';
 import { trainingStore, useTraining, finalDecisionOf } from '../../app/training/trainingStore';
 import { isProgramComplete } from '../../domain/journey/programCompletion';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, Eyebrow, EmptyState, ScreenHeader } from '../../ui/primitives';
+import { Button, EmptyState, PageHeader } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
@@ -94,12 +94,9 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.staff}
-        leading={<Eyebrow icon={<LayoutDashboard size={13} />}>{tr('mg.title', lang)}</Eyebrow>} />
-
       <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
-        <h1 className="t-h2 mb-2">{scopeTitle}</h1>
-        <p className="t-sm mb-6">{tr('mg.sub', lang)}</p>
+        <PageHeader crumbs={[tr('crumb.academy', lang), tr('nav.manager', lang)]}
+          title={scopeTitle} lead={tr('mg.sub', lang)} />
 
         {noData ? (
           <EmptyState icon={<Users2 />} title={tr('mg.nodata', lang)}

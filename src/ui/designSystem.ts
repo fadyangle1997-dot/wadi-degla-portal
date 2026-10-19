@@ -226,9 +226,10 @@ export const ICON = { sm: 13, md: 16, lg: 22, hero: 32, stroke: 1.75 } as const;
  * TWO DECLARED ROLES OUTSIDE THE READING SCALE — named here so the spec stays
  * complete, and so nobody "tidies" them into the body scale by mistake.
  *
- * NUMERAL — a figure read as an object, not as text: the exam result and the
- * day ring. At 3rem+ it is a piece of the layout, and forcing it onto a type
- * step meant for sentences would make it a large heading instead of a number.
+ * NUMERAL — a figure read as an object, not as text: a key figure in a metric
+ * strip (md, `.t-metric`), the day ring (lg) and the exam result (xl). Forcing
+ * it onto a type step meant for sentences would make it a heading instead of a
+ * number.
  *
  * SIGNIN — the door has its own micro-scale, and it stays. It is the one screen
  * with no navigation, no content column and no reading task: a single centred
@@ -237,7 +238,7 @@ export const ICON = { sm: 13, md: 16, lg: 22, hero: 32, stroke: 1.75 } as const;
  * approved as it is — a cost with no user on the other side of it. Declared,
  * not adopted: nothing outside the sign-in screen may use these.
  */
-export const NUMERAL = { lg: '3rem', xl: '3.4rem' } as const;
+export const NUMERAL = { md: '2rem', lg: '3rem', xl: '3.4rem' } as const;
 
 export const SIGNIN_TYPE = {
   title:  'clamp(1.5rem, 4vw, 1.85rem)',

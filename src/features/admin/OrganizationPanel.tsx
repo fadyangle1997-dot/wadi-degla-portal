@@ -38,7 +38,7 @@ export const OrganizationPanel: React.FC = () => {
   return (
     <section aria-label={t('og.title', lang)}>
       <div className="row items-center gap-3 mb-2">
-        <h1 className="t-h2 m-0">{t('og.title', lang)}</h1>
+        <h2 className="t-h2 m-0">{t('og.title', lang)}</h2>
         <div className="grow" />
         {creating ? (
           <span className="row gap-2 items-center">

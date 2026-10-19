@@ -632,6 +632,8 @@ const DICT = {
   'a11y.doctitle':  { ar: 'أكاديمية عمليات العضويات — وادي دجلة', en: 'Membership Operations Academy — Wadi Degla' },
   'a11y.mainnav':   { ar: 'التنقّل الرئيسي',       en: 'Main navigation' },
   'a11y.tabnav':    { ar: 'تبويبات المنصة',       en: 'Primary tabs' },
+  'a11y.crumbs':    { ar: 'إنت فين',               en: 'Where you are' },
+  'crumb.academy':  { ar: 'الأكاديمية',            en: 'Academy' },
 
 } as const;
 
