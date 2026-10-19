@@ -58,8 +58,12 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
     body: 'اللي كتبته في المراجعة دي مش هيتحفظ. لو كمّلت، تقدر تسجّلها في دقيقتين.',
   });
 
+  const [empty, setEmpty] = useState(false);
   const advance = () => {
-    if (!canAdvance) return;
+    // The button stays live: pressing it with nothing written says so, next
+    // to the box, instead of a greyed button that explains nothing.
+    if (!canAdvance) { setEmpty(true); document.getElementById('rv-answer')?.focus(); return; }
+    setEmpty(false);
     if (!isLast) { setIdx(i => i + 1); return; }
     const full = { employeeId: currentTraineeId(), ...answers } as Record<string, string>;
     if (!isComplete(full)) return;
@@ -121,21 +125,25 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
           <p className="t-sm c-tx3" style={{ margin: 'var(--sp-2) 0 var(--sp-5)' }}>{RATIONALE[field]}</p>
 
           <textarea
+            id="rv-answer"
             value={value}
-            onChange={e => setAnswers(a => ({ ...a, [field]: e.target.value }))}
+            onChange={e => { setAnswers(a => ({ ...a, [field]: e.target.value })); setEmpty(false); }}
             className="field w-full"
             aria-label={REVIEW_LABELS[field]}
+            aria-invalid={empty || undefined}
+            aria-describedby={empty ? 'rv-empty' : undefined}
             rows={4}
             autoFocus
             style={{ resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.7 }}
           />
 
+          {empty && <p id="rv-empty" className="form-error mt-2">اكتب إجابتك الأول — جملة واحدة كفاية.</p>}
           <div className="mt-3"><InlineError message={failed} /></div>
           <div className="row gap-2 mt-5 items-center">
             {/* «السابق» steps inside the debrief; «رجوع» was also the word for leaving it. */}
             {idx > 0 && <Button variant="ghost" onClick={() => setIdx(i => i - 1)}><ChevronLeft size={16} className="icon-dir" aria-hidden /> السابق</Button>}
             <div className="grow" />
-            <Button onClick={advance} disabled={!canAdvance}>
+            <Button onClick={advance}>
               {isLast ? 'سجّل المراجعة' : <>كمّل <ArrowRight size={16} className="icon-dir" /></>}
             </Button>
           </div>

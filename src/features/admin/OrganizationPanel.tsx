@@ -188,7 +188,11 @@ const NameForm: React.FC<{
   const [error, setError] = useState<string | null>(null);
   return (
     <form noValidate className="row items-end gap-3 wrap"
-      onSubmit={e => { e.preventDefault(); if (!value.trim()) { setError(t('og.err.name', lang)); return; } onSubmit(value.trim()); }}
+      onSubmit={e => {
+        e.preventDefault();
+        if (!value.trim()) { setError(t('og.err.name', lang)); document.getElementById(id)?.focus(); return; }
+        onSubmit(value.trim());
+      }}
       onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); onCancel(); } }}>
       <div className="grow" style={{ minWidth: 220 }}>
         <FormField id={id} label={label} required error={error}>

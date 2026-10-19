@@ -54,7 +54,9 @@ export const StationAssessment: React.FC<{
   employeeId: string;
   assessor: Station['assessor'];
   onSaved: (message: string) => void;
-}> = ({ employeeId, assessor, onSaved }) => {
+  /** The caller knows the outline: station titles sit one level below it. */
+  headingLevel?: 3 | 4;
+}> = ({ employeeId, assessor, onSaved, headingLevel = 4 }) => {
   const lang = useLang();
   const events = useTrainingEvents();
   const { track } = useStanding(employeeId);
@@ -62,7 +64,7 @@ export const StationAssessment: React.FC<{
 
   return (
     <div className="stack gap-6">
-      <ReadinessTrack label={tr('tr.stations', lang)} headingLevel={4}
+      <ReadinessTrack label={tr('tr.stations', lang)} headingLevel={headingLevel}
         standings={track.filter(s => s.station.assessor === assessor)}
         action={s => {
           const isOpen = open === s.station.id;
@@ -107,11 +109,13 @@ const StationForm: React.FC<{
   const [observation, setObservation] = useState(initialObservation);
   const problem = stationAssessmentProblem(station, scores, observation);
   const obsId = `obs-${station.id}`;
+  const [tried, setTried] = useState(false);
+  const showObs = tried && problem === 'missing_observation';
 
   return (
     <div className="station-form stack gap-3">
       <ArabicContent as="div" className="t-sm measure c-tx2">{station.situation}</ArabicContent>
-      <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))' }}>
         {station.measures.map(d => (
           <label key={d} className="stack gap-1">
             <ArabicContent as="span" className="t-sm">{EVALUATION_DIMENSIONS[d]}</ArabicContent>
@@ -124,11 +128,16 @@ const StationForm: React.FC<{
           </label>
         ))}
       </div>
-      <label htmlFor={obsId} className="t-label">{tr('rd.observation', lang)}</label>
+      <label htmlFor={obsId} className="form-label">{tr('rd.observation', lang)}</label>
       <textarea id={obsId} className="field w-full" rows={2} dir="auto" value={observation} onChange={e => setObservation(e.target.value)}
+        aria-invalid={showObs || undefined} aria-describedby={showObs ? `${obsId}-err` : undefined} aria-required
         style={{ resize: 'vertical' }} />
+      {showObs && <p id={`${obsId}-err`} className="form-error">{tr('rd.err.obs', lang)}</p>}
       <div>
-        <Button disabled={problem !== null} onClick={() => onSave(scores, observation)}>
+        <Button onClick={() => {
+          if (problem !== null) { setTried(true); document.getElementById(obsId)?.focus(); return; }
+          onSave(scores, observation);
+        }}>
           <ClipboardCheck size={16} /> {tr('rd.save', lang)}
         </Button>
       </div>

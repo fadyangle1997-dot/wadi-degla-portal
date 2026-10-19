@@ -48,3 +48,27 @@ test('readiness assessment and trainee file, with demo data', async ({ page }) =
   await expect(page.getByRole('dialog')).toBeVisible();
   await expectAccessible(page, 'manager trainee file');
 });
+
+test('admin: the users ledger, an account panel, and a form showing its errors', async ({ page }) => {
+  await signIn(page, 'admin');
+  await page.getByRole('button', { name: 'المستخدمون' }).click();
+  await expectAccessible(page, 'users ledger');
+  await page.getByRole('table', { name: 'المستخدمون' }).getByRole('button', { name: /Nabil Sherif/ }).click();
+  await expectAccessible(page, 'account panel');
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'إضافة مستخدم' }).click();
+  await page.getByRole('dialog', { name: 'مستخدم جديد' }).getByRole('button', { name: 'إنشاء' }).click();
+  await expectAccessible(page, 'new user with errors');
+});
+
+test('profile overlay and the trainee readiness page', async ({ page }) => {
+  await signIn(page, 'ahmed.m');
+  await toAcademy(page);
+  await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
+  await expectAccessible(page, 'personal menu');
+  await page.getByRole('menuitem', { name: /مركز الهوية/ }).click();
+  await expectAccessible(page, 'profile');
+  await page.keyboard.press('Escape');
+  await page.goto('/#/readiness');
+  await expectAccessible(page, 'readiness');
+});

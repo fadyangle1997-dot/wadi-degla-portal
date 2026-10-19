@@ -19,7 +19,7 @@ import { readinessScore, EVALUATION_DIMENSIONS, ALL_DIMENSIONS, CONDUCT_CHECKS, 
 import { MODULES, moduleById } from '../../content/registry';
 import type { Lesson } from '../../domain/types/content';
 import { RULE_META } from '../../domain/rules/meta';
-import { Button, Card, ConfirmDialog, InlineError, Eyebrow, EmptyState, Toast, Callout, ArabicContent, PageHeader, SectionHeader, MetricStrip, Metric, Status, Meter, Initials, DataTable, type Column } from '../../ui/primitives';
+import { Button, Card, ConfirmDialog, InlineError, FormField, Eyebrow, EmptyState, Toast, Callout, ArabicContent, PageHeader, SectionHeader, MetricStrip, Metric, Status, Meter, Initials, DataTable, type Column } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
@@ -243,12 +243,23 @@ const waitLabel = (submittedAtMs: number, lang: Lang): string => {
 const NoteForm: React.FC<{ name: string; onSave: (note: string) => void }> = ({ name, onSave }) => {
   const lang = useLang();
   const [note, setNote] = useState('');
+  const [empty, setEmpty] = useState(false);
+  const id = `note-${name.replace(/\s+/g, '-')}`;
   return (
-    <div className="row gap-2 wrap" style={{ paddingTop: 'var(--sp-3)' }}>
-      <input className="field" style={{ flex: '1 1 220px' }} placeholder={tr('tn.noteph', lang)} value={note} onChange={e => setNote(e.target.value)}
-        aria-label={`${tr('tn.noteabout', lang)} ${name}`} autoFocus />
-      <Button disabled={!note.trim()} onClick={() => onSave(note.trim())}>{tr('tn.save', lang)}</Button>
-    </div>
+    <form noValidate className="row gap-3 wrap items-end" style={{ paddingTop: 'var(--sp-3)' }}
+      onSubmit={e => {
+        e.preventDefault();
+        if (!note.trim()) { setEmpty(true); document.getElementById(id)?.focus(); return; }
+        onSave(note.trim());
+      }}>
+      <div className="grow" style={{ minWidth: 'min(100%, 220px)' }}>
+        <FormField id={id} label={`${tr('tn.noteabout', lang)} ${name}`} required hint={tr('tn.noteph', lang)}
+          error={empty ? tr('tn.err.note', lang) : null}>
+          {p => <input {...p} className="field w-full" value={note} autoFocus onChange={e => { setNote(e.target.value); setEmpty(false); }} />}
+        </FormField>
+      </div>
+      <Button type="submit">{tr('tn.save', lang)}</Button>
+    </form>
   );
 };
 
@@ -352,7 +363,8 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
   // the eye and the keyboard to it.
   const panelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    panelRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    panelRef.current?.scrollIntoView({ block: 'start', behavior: still ? 'auto' : 'smooth' });
     panelRef.current?.focus({ preventScroll: true });
   }, []);
   const recs = useMemo(() => recommendFor(weakRules, weakSkills), [weakRules, weakSkills]);
@@ -395,7 +407,7 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
       </div>
 
       {/* six measurable dimensions */}
-      <div className="gap-4 mt-5" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <div className="gap-4 mt-5" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))' }}>
         {ALL_DIMENSIONS.map(d => (
           <label key={d} className="stack gap-2">
             <span className="t-sm">{EVALUATION_DIMENSIONS[d]}</span>
@@ -485,7 +497,9 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
           {tr('tn.notready', lang)}
         </Button>
         <Button variant="ghost" onClick={() => setPending('extend')}>{tr('tn.extend', lang)}</Button>
-        <Button onClick={() => setPending('ready')} disabled={!conductOk}
+        {/* aria-disabled, not disabled: it stays reachable, so the reason it
+            is unavailable (the note above) can be found by keyboard too. */}
+        <Button onClick={() => { if (conductOk) setPending('ready'); }} aria-disabled={!conductOk || undefined}
           title={conductOk ? undefined : tr('tn.conductmiss', lang)}>
           {tr('tn.ready', lang)}
         </Button>

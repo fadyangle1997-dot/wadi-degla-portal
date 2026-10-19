@@ -150,12 +150,14 @@ export const OptionButton: React.FC<{
   <button
     disabled={state !== 'idle'}
     onClick={onPick}
-    aria-pressed={state !== 'idle' && state !== 'dim'}
     className={`option ${state === 'idle' ? 'option-idle' : ''} ${state === 'correct' ? 'option-correct' : ''} ${state === 'wrong' ? 'option-wrong' : ''}`}>
-    {state === 'correct' ? <Check size={16} className="c-ready no-shrink" />
-      : state === 'wrong' ? <X size={16} className="c-risk no-shrink" />
+    {state === 'correct' ? <Check size={16} className="c-ready no-shrink" aria-hidden />
+      : state === 'wrong' ? <X size={16} className="c-risk no-shrink" aria-hidden />
       : state === 'dim' ? <span style={{ width: 17 }} /> : null}
     {text}
+    {/* The mark is said, not only shown: green and red are not an answer. */}
+    {state === 'correct' && <span className="sr-only"> — {t('opt.correct', langStore.get())}</span>}
+    {state === 'wrong' && <span className="sr-only"> — {t('opt.wrong', langStore.get())}</span>}
   </button>
 );
 
@@ -317,7 +319,8 @@ export const FormField: React.FC<{
         {label}{!required && <span className="form-optional"> · {t('form.optional', lang)}</span>}
       </label>
       {children({ id, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy, 'aria-required': required ? true : undefined })}
-      {error && <p id={errId} className="form-error" role="alert"><X size={13} aria-hidden /> {error}</p>}
+      {/* Not an alert: focus is moved to the field, and the field's description reads it. */}
+      {error && <p id={errId} className="form-error"><X size={13} aria-hidden /> {error}</p>}
       {hint && <p id={hintId} className="form-hint">{hint}</p>}
     </div>
   );

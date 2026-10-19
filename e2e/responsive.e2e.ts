@@ -1,4 +1,4 @@
-import { test, signIn, signOut, toAcademy, expect } from './fixtures';
+import { test, signIn, signOut, toAcademy, expect, expectAccessible } from './fixtures';
 
 const noSidewaysScroll = async (page: import('@playwright/test').Page) =>
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
@@ -42,4 +42,16 @@ test('the tab bar moves between screens and marks where you are', async ({ page 
   await expect(tabs.getByRole('button', { name: 'رحلتي' })).toHaveAttribute('aria-current', 'page');
   await tabs.getByRole('button', { name: 'الأكاديمية' }).click();
   await expect(page).toHaveURL(/#\/$|#\/path/);
+});
+
+test.describe('at 320px — the narrowest phone WCAG reflow asks for', () => {
+  test.use({ viewport: { width: 320, height: 720 } });
+  test('admin users, an account, and the manager file fit without sideways scroll', async ({ page }) => {
+    await signIn(page, 'admin');
+    await page.getByRole('button', { name: 'المستخدمون' }).click();
+    await noSidewaysScroll(page);
+    await page.getByRole('table', { name: 'المستخدمون' }).getByRole('button', { name: /Nabil Sherif/ }).click();
+    await noSidewaysScroll(page);
+    await expectAccessible(page, 'account panel at 320');
+  });
 });

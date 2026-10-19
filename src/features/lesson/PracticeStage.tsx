@@ -28,10 +28,10 @@ export const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }>
               border: `1px solid ${showResult ? (isRight ? 'var(--ready)' : 'var(--risk)') : 'var(--line-2)'}`,
             }}>
               <div className="row items-center gap-3 wrap">
-                <span className="t-body grow" style={{ minWidth: 200 }}>{it.text}</span>
+                <span className="t-body grow" style={{ minWidth: 'min(100%, 200px)' }}>{it.text}</span>
                 <div className="row gap-2">
                   {[{ v: true, label: 'مطلوب' }, { v: false, label: 'مش مطلوب' }].map(b => (
-                    <button key={String(b.v)} type="button" disabled={checked} aria-pressed={mark === b.v}
+                    <button key={String(b.v)} type="button" disabled={checked} aria-current={mark === b.v ? 'true' : undefined}
                       onClick={() => setMarks(m => ({ ...m, [i]: b.v }))}
                       style={{
                         padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--r-full)', fontWeight: 600,

@@ -129,3 +129,35 @@ test('a lesson opened from the roadmap goes back to the roadmap, and says so', a
   await page.getByRole('button', { name: 'ارجع لرحلتي' }).first().click();
   await expect(page).toHaveURL(/#\/roadmap/);
 });
+
+test('a menu takes focus, moves with the arrow keys, and Tab leaves it', async ({ page }) => {
+  await signIn(page, 'ahmed.m');
+  await toAcademy(page);
+  const trigger = page.getByRole('button', { name: /القائمة الشخصية/ }).first();
+  await trigger.focus();
+  await page.keyboard.press('Enter');
+  const items = page.getByRole('menu').locator('[role^="menuitem"]:visible');
+  await expect(items.first()).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(items.nth(1)).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(items.last()).toBeFocused();
+  await page.keyboard.press('Home');
+  await expect(items.first()).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu')).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
+test('a decision without its reason asks for the reason, next to the box', async ({ page }) => {
+  await signIn(page, 'admin');
+  await page.getByRole('button', { name: 'حمّل بيانات العرض' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'حمّل بيانات العرض' }).click();
+  await signOut(page);
+  await signIn(page, 'manager.nabil');
+  await page.locator('main').getByRole('button', { name: /Menna Kamal/ }).first().click();
+  const file = page.getByRole('dialog');
+  await file.getByRole('button', { name: 'جاهز للعمل' }).click();
+  await expect(file.getByText(/اكتب سبب القرار الأول/)).toBeVisible();
+  await expect(file.getByLabel('مبرر قرار الجاهزية')).toBeFocused();
+});

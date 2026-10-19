@@ -259,27 +259,49 @@ const useActionCenter = (): readonly { key: string; label: string; view: View['k
  * It mirrors state the screens compute anyway, so it can never drift out of
  * sync with them, and it can never show a notification that isn't real.
  */
+/**
+ * A menu button's behaviour, shared by the shell's two menus: focus moves to
+ * the first item when it opens; Up/Down move through the items (wrapping),
+ * Home/End jump; Escape closes and returns focus to the button; Tab closes and
+ * lets focus move on; a click outside closes.
+ */
+function useMenu() {
+  const [open, setOpen] = React.useState(false);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const items = () => [...(rootRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [])]
+      .filter(el => el.getClientRects().length > 0);
+    const frame = requestAnimationFrame(() => items()[0]?.focus());
+    const onDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setOpen(false); triggerRef.current?.focus(); return; }
+      if (e.key === 'Tab') { setOpen(false); return; }
+      const list = items();
+      if (!list.length) return;
+      const at = list.indexOf(document.activeElement as HTMLElement);
+      const go = (i: number) => { e.preventDefault(); list[(i + list.length) % list.length]?.focus(); };
+      if (e.key === 'ArrowDown') go(at + 1);
+      else if (e.key === 'ArrowUp') go(at < 0 ? list.length - 1 : at - 1);
+      else if (e.key === 'Home') go(0);
+      else if (e.key === 'End') go(list.length - 1);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { cancelAnimationFrame(frame); document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+  return { open, setOpen, rootRef, triggerRef };
+}
+
 const ActionCenter: React.FC<{
   items: readonly { key: string; label: string; view: View['kind'] }[];
   onNavigate: (v: View['kind']) => void;
 }> = ({ items, onNavigate }) => {
   const lang = useLang();
-  const [open, setOpen] = React.useState(false);
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-
-  React.useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setOpen(false); triggerRef.current?.focus(); }
-    };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
-  }, [open]);
+  const { open, setOpen, rootRef, triggerRef } = useMenu();
 
   const n = items.length;
   return (
@@ -311,7 +333,7 @@ const ActionCenter: React.FC<{
       </button>
 
       {open && (
-        <div role="menu" className="ac-panel" style={{
+        <div role={n === 0 ? 'status' : 'menu'} className="ac-panel" style={{
           position: 'absolute', insetInlineEnd: 0, top: 'calc(100% + var(--sp-2))',
           minWidth: 260, background: 'var(--s-1)', border: '1px solid var(--line-2)',
           borderRadius: 'var(--r-md)', boxShadow: 'var(--e-floating)', overflow: 'hidden', zIndex: 30,
@@ -339,22 +361,7 @@ const ActionCenter: React.FC<{
 };
 
 const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => void }> = ({ name, role, onOpenProfile }) => {
-  const [open, setOpen] = React.useState(false);
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-
-  React.useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setOpen(false); triggerRef.current?.focus(); }
-    };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
-  }, [open]);
+  const { open, setOpen, rootRef, triggerRef } = useMenu();
 
   return (
     <div ref={rootRef} className="relative">

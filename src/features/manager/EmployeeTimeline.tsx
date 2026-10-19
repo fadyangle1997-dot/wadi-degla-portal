@@ -8,7 +8,7 @@ import { moduleById } from '../../content/registry';
 import { DECISION_LABEL, readinessScore } from '../../domain/evaluation';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, Eyebrow, StatusBadge, ArabicContent, CloseButton, ConfirmDialog, Toast, InlineError, useModal } from '../../ui/primitives';
+import { Button, Eyebrow, StatusBadge, ArabicContent, CloseButton, ConfirmDialog, Toast, InlineError, FormField, useModal } from '../../ui/primitives';
 import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
 import { useLang, t as tr, tf, type Key } from '../../app/i18n';
 
@@ -172,6 +172,12 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
   // The final word on someone's readiness is said back, with what it does,
   // before it is written — the rationale alone did not stop a mis-click.
   const [pending, setPending] = React.useState<'ready' | 'extend' | 'reject' | null>(null);
+  // A decision needs its reason first; the buttons stay live and ask for it.
+  const [needWhy, setNeedWhy] = React.useState(false);
+  const ask = (d: 'ready' | 'extend' | 'reject') => {
+    if (!rationale.trim()) { setNeedWhy(true); document.getElementById(`mg-why-${employeeId}`)?.focus(); return; }
+    setPending(d);
+  };
   const [saved, setSaved] = React.useState<string | null>(null);
   const flash = (msg: string) => { setSaved(msg); window.setTimeout(() => setSaved(null), 2600); };
 
@@ -197,7 +203,7 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
         <div className="stack mt-3 gap-3">
           <ReadinessOutcomeSummary employeeId={employeeId} />
           {/* Station 6 — the readiness interview — is the manager's own evidence. */}
-          {canDecide && <StationAssessment employeeId={employeeId} assessor="manager" onSaved={flash} />}
+          {canDecide && <StationAssessment employeeId={employeeId} assessor="manager" onSaved={flash} headingLevel={3} />}
         </div>
       )}
 
@@ -211,19 +217,15 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
         </p>
       ) : (
         <div className="stack mt-3 gap-3">
-          <textarea
-            value={rationale}
-            onChange={e => setRationale(e.target.value)}
-            placeholder={tr('mg.rationaleph', lang)}
-            aria-label={tr('mg.rationale', lang)}
-            rows={2}
-            className="t-sm w-full c-tx0"
-            style={{ background: 'var(--s-1)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)', padding: 'var(--sp-3)', resize: 'vertical', fontFamily: 'inherit' }}
-          />
+          <FormField id={`mg-why-${employeeId}`} label={tr('mg.rationale', lang)} required hint={tr('mg.rationaleph', lang)}
+            error={needWhy ? tr('mg.err.rationale', lang) : null}>
+            {p => <textarea {...p} value={rationale} rows={2} className="field w-full" style={{ resize: 'vertical' }}
+              onChange={e => { setRationale(e.target.value); setNeedWhy(false); }} />}
+          </FormField>
           <div className="row gap-2 wrap">
-            <Button onClick={() => setPending('ready')} disabled={!rationale.trim()}>{tr('mg.decready', lang)}</Button>
-            <Button variant="ghost" onClick={() => setPending('extend')} disabled={!rationale.trim()}>{tr('mg.decextend', lang)}</Button>
-            <Button variant="ghost" onClick={() => setPending('reject')} disabled={!rationale.trim()} style={{ color: 'var(--risk)', borderColor: 'var(--risk)' }}>{tr('mg.decreject', lang)}</Button>
+            <Button onClick={() => ask('ready')}>{tr('mg.decready', lang)}</Button>
+            <Button variant="ghost" onClick={() => ask('extend')}>{tr('mg.decextend', lang)}</Button>
+            <Button variant="ghost" className="btn-danger" onClick={() => ask('reject')}>{tr('mg.decreject', lang)}</Button>
           </div>
           <InlineError message={failed} />
         </div>

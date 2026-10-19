@@ -106,7 +106,9 @@ export function DataTable<R>({
                 const on = filter === f.id;
                 const removable = on && f.id !== 'all';
                 return (
-                  <button key={f.id} type="button" className="dt-filter" aria-pressed={on}
+                  /* One filter at a time: the chips are a choice, not toggles, so the
+                     active one is marked current rather than «pressed». */
+                  <button key={f.id} type="button" className="dt-filter" aria-current={on ? 'true' : undefined}
                     title={removable ? t('dt.clearfilter', lang) : undefined}
                     onClick={() => setFilter(removable ? 'all' : f.id)}>
                     {f.label}{removable && <X size={13} aria-hidden />}
@@ -117,7 +119,8 @@ export function DataTable<R>({
           )}
         </div>
       )}
-      <table role="table" aria-label={caption}>
+      <table role="table">
+        <caption className="sr-only">{caption}</caption>
         <thead role="rowgroup">
           <tr role="row">
             {columns.map(c => {
