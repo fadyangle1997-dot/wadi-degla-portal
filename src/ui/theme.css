@@ -405,8 +405,10 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   background: var(--g2);
 }
 .btn-primary:hover:not(:disabled) { background: var(--g1); }
-.btn-ghost { background:var(--s-1); color:var(--tx0); border:1px solid transparent; }
-.btn-ghost:hover:not(:disabled) { background:var(--s0); }
+/* Secondary: an outlined pill. A fill would vanish on a card or a dialog of
+   the same surface; an outline reads on every surface. */
+.btn-ghost { background:transparent; color:var(--tx0); border:1px solid var(--line-3); }
+.btn-ghost:hover:not(:disabled) { background:rgba(255,255,255,.06); }
 
 /* ============================================================
    PAGE STRUCTURE — where am I, what matters, what next.
@@ -729,15 +731,15 @@ details > summary { min-block-size:44px; cursor:pointer; }
   font-size:.875rem; font-family:var(--font-body); padding:10px 16px; min-height:44px;
   cursor:pointer; transition:border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
 .pill:hover { border-color:var(--line-3); color:var(--tx0); background:var(--s0); }
-.icon-btn { display:inline-flex; align-items:center; gap:6px; background:var(--s-1);
+.icon-btn { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.06);
   border:1px solid transparent; border-radius:var(--r-full); color:var(--tx1);
   font-size:.875rem; font-family:var(--font-body); padding:10px 14px; min-height:44px;
   cursor:pointer; transition:border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
-.icon-btn:hover { border-color:var(--line-3); color:var(--tx0); background:var(--s0); }
-.back-btn { display:flex; align-items:center; justify-content:center; background:var(--s-1); border:none;
+.icon-btn:hover { color:var(--tx0); background:rgba(255,255,255,.1); }
+.back-btn { display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06); border:none;
   color:var(--tx1); cursor:pointer; min-height:44px; min-width:44px; border-radius:var(--r-full);
   transition:color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
-.back-btn:hover { color:var(--tx0); background:var(--s0); }
+.back-btn:hover { color:var(--tx0); background:rgba(255,255,255,.1); }
 
 /*
  * Press feedback for touch (where :hover is invisible): pills, choices, the
