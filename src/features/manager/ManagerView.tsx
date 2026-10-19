@@ -512,10 +512,12 @@ const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => void }> = 
   }[report.verdict];
   const riskMeta = { low: { label: tr('mg.risklow', lang), tone: 'ready' as const }, medium: { label: tr('mg.riskmed', lang), tone: 'attn' as const }, high: { label: tr('mg.riskhigh', lang), tone: 'risk' as const } }[report.risk];
 
-  const label = (e: OrgEvent) =>
-    e.type === 'UNIT_SUBMITTED_FOR_REVIEW' ? `${tr('mg.submitted', lang)} «${moduleName(e.moduleId!)}» ${tr('mg.forreview', lang)}`
-      : e.type === 'EVALUATION_RECORDED' ? `${tr('mg.evaluation', lang)} ${moduleName(e.moduleId!)} — ${DECISION_LABEL[e.decision!] ?? e.decision}`
-      : e.type === 'TRAINING_EXTENDED' ? `${tr('mg.extended', lang)} ${e.reason ?? ''}`
+  // Module names, decision labels and free-text reasons are Arabic content
+  // inside a translated sentence, so each is declared as Arabic.
+  const label = (e: OrgEvent): React.ReactNode =>
+    e.type === 'UNIT_SUBMITTED_FOR_REVIEW' ? <>{tr('mg.submitted', lang)} <ArabicContent as="span">«{moduleName(e.moduleId!)}»</ArabicContent> {tr('mg.forreview', lang)}</>
+      : e.type === 'EVALUATION_RECORDED' ? <>{tr('mg.evaluation', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)} — {DECISION_LABEL[e.decision!] ?? e.decision}</ArabicContent></>
+      : e.type === 'TRAINING_EXTENDED' ? <>{tr('mg.extended', lang)} <ArabicContent as="span">{e.reason ?? ''}</ArabicContent></>
       : e.type === 'LESSON_REOPENED' ? tr('mg.reopened', lang)
       : tr('mg.coachnote', lang);
 

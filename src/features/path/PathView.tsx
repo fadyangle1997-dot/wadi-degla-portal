@@ -21,7 +21,7 @@ import { identityStore } from '../../app/identity/identityStore';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { homeContext } from '../../domain/journey/nextAction';
 import { Card, Button, Eyebrow, StatusBadge, ProgressRail, ArabicContent } from '../../ui/primitives';
-import { useLang, t as tr } from '../../app/i18n';
+import { useLang, t as tr, tf } from '../../app/i18n';
 import { WIDTH } from '../../ui/designSystem';
 import { TodayRetrieval, dueToday } from '../journey/TodayRetrieval';
 
@@ -196,7 +196,7 @@ const TodaysMission: React.FC<{
       <Card tone="accent" pad={6}>
         <Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>
         <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)', color: 'var(--risk)' }}>{tr('path.needswork', lang)}</h1>
-        <p className="t-sm measure" style={{ marginBottom: 'var(--sp-5)' }}>مدربك راجع «{m?.title}» وطلب تحسين قبل الاعتماد. ابدأ من الدروس اللي حدّدها.</p>
+        <p className="t-sm measure" style={{ marginBottom: 'var(--sp-5)' }}>{tf('pv.rejectedbody', { m: m?.title ?? '' }, lang)}</p>
         <Button onClick={() => { if (m?.lessons[0]) onOpenLesson(m.id, m.lessons[0].id); }}>
           {tr('db.reviewunit', lang)} <ArrowRight size={16} className="icon-dir" />
         </Button>
@@ -209,7 +209,7 @@ const TodaysMission: React.FC<{
       <Card tone="accent" pad={6}>
         <Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>
         <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{waitingForTrainer(trainerName)}</h1>
-        <p className="t-sm measure">خلّصت «{m?.title}» وعدّيت امتحانها. مدربك بيراجع شغلك قبل ما اللي بعده يتفتح.</p>
+        <p className="t-sm measure">{tf('pv.waitingbody', { m: m?.title ?? '' }, lang)}</p>
         {/* 🔴 P2 (Sprint 5.0) — waiting is correctly a dead end (the trainee's
             job right now IS to wait), but silence reads as "stuck". These two
             lines remove the uncertainty without adding an action: what already
@@ -235,7 +235,7 @@ const TodaysMission: React.FC<{
     return (
       <Card tone="accent" pad={6}>
         <Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>
-        <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>خلّصت «{m?.title}» — محتاجة تقديم</h1>
+        <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{tf('pv.submittitle', { m: m?.title ?? '' }, lang)}</h1>
         <p className="t-sm measure" style={{ marginBottom: 'var(--sp-5)' }}>
           {tr('db.retrysubmit', lang)}
         </p>
@@ -291,7 +291,7 @@ const CurrentModuleCard: React.FC<{
   return (
     <Card>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-        <Eyebrow>{m.code} · {m.timeline}</Eyebrow>
+        <Eyebrow>{m.code} · <ArabicContent as="span">{m.timeline}</ArabicContent></Eyebrow>
         <div style={{ flex: 1 }} />
         {waiting && <StatusBadge tone="attn">{waitingForTrainer(trainerName)}</StatusBadge>}
       </div>

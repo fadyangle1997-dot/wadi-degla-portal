@@ -23,7 +23,7 @@ import { currentPhase, dayPosition, PROGRAM, type PhaseContext } from '../../dom
 import { nextAction } from '../../domain/journey/nextAction';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent } from '../../ui/primitives';
-import { useLang, t as tr } from '../../app/i18n';
+import { useLang, t as tr, tf } from '../../app/i18n';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 import { branchNameOf } from '../../domain/organization';
@@ -58,13 +58,17 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
   // Next step — derived from the SAME nextAction the home screen resolves, so
   // the profile can never disagree with the path about what comes next.
   const next = useMemo(() => nextAction(p, t, traineeId), [p, t, traineeId]);
-  const nextLine = ((): string | null => {
+  // The module title is Arabic content, so it is declared as such inside the
+  // translated sentence.
+  const withTitle = (key: 'pf.resume' | 'pf.exam' | 'pf.submit' | 'pf.improve') =>
+    next.module ? <>{tr(key, lang)} <ArabicContent as="span">«{next.module.title}»</ArabicContent></> : null;
+  const nextLine = ((): React.ReactNode => {
     switch (next.kind) {
-      case 'resume_lesson': return next.module ? `${tr('pf.resume', lang)} «${next.module.title}»` : null;
-      case 'take_exam': return next.module ? `${tr('pf.exam', lang)} «${next.module.title}»` : null;
+      case 'resume_lesson': return withTitle('pf.resume');
+      case 'take_exam': return withTitle('pf.exam');
       case 'waiting_review': return tr('pf.underreview', lang);
-      case 'needs_submission': return next.module ? `${tr('pf.submit', lang)} «${next.module.title}»` : null;
-      case 'rejected_review': return next.module ? `${tr('pf.improve', lang)} «${next.module.title}»` : null;
+      case 'needs_submission': return withTitle('pf.submit');
+      case 'rejected_review': return withTitle('pf.improve');
       case 'all_done': return tr('pf.alldone', lang);
       default: return null;
     }
@@ -123,7 +127,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
               screen opened with EIGHT equally-weighted stat cards, which gave
               the eye no entry point — the trainee had to read all eight to
               learn their own state. One hero, then quiet evidence. ── */}
-        <section aria-label="حالتك دلوقتي" className="pf-state">
+        <section aria-label={tr('pf.status', lang)} className="pf-state">
           <Eyebrow icon={<GraduationCap size={13} />}>{tr('pf.status', lang)}</Eyebrow>
           <div className="pf-state-row">
             <span className="pf-phase t-num" aria-hidden>{phase ? phase.order : '—'}</span>
@@ -132,11 +136,11 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
                 {phase ? <ArabicContent as="span">{phase.title}</ArabicContent> : tr('pf.programdone', lang)}
               </h2>
               <p className="pf-state-sub">
-                المرحلة {phase ? phase.order : PROGRAM.length} من {PROGRAM.length}
+                {tf('pf.phaseof', { a: phase ? phase.order : PROGRAM.length, b: PROGRAM.length }, lang)}
                 <span className="pf-dot" aria-hidden>·</span>
-                اليوم {day} من 60
+                {tf('pf.dayof', { d: day }, lang)}
                 <span className="pf-dot" aria-hidden>·</span>
-                فاضل {remaining} يوم
+                {tf('pf.daysleft', { n: remaining }, lang)}
               </p>
             </div>
           </div>
@@ -154,7 +158,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
               trainer-facing confidence-in-the-evidence measure, not something
               a trainee acts on; «الشهادة» rendered a hardcoded '—' with no
               backing data at all, so it was a fake affordance and is gone. ── */}
-        <section aria-label="الدليل">
+        <section aria-label={tr('pf.evidence', lang)}>
           <div className="pf-stats">
             {/* 🔴 TWO OF THESE FOUR WERE THE SAME FACT. «المعتمد 0%» and «وحدات
                 معتمدة 0» are one number in two units, printed side by side, so
@@ -168,7 +172,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </div>
         </section>
 
-        <section aria-label="المدرب">
+        <section aria-label={tr('pf.trainer', lang)}>
           <Eyebrow icon={<BadgeCheck size={13} />}>{tr('pf.assigned', lang)}</Eyebrow>
           <div style={{ marginTop: 'var(--sp-3)' }}>
             {trainer ? (
@@ -188,14 +192,14 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
                 </div>
               </Card>
             ) : (
-              <EmptyState icon={<Clock size={22} />} title="لسه مفيش مdرب معيّن"
-                body="أول ما الإدارة تعيّنلك مدرب، هيظهر هنا مع حالة متابعتك." />
+              <EmptyState icon={<Clock size={22} />} title={tr('pf.notrainer', lang)}
+                body={tr('pf.notrainerbody', lang)} />
             )}
           </div>
         </section>
 
         {/* ── 6 · Personal Information ── */}
-        <section aria-label="البيانات الشخصية">
+        <section aria-label={tr('pf.personal', lang)}>
           <Eyebrow icon={<User2 size={13} />}>{tr('pf.personal', lang)}</Eyebrow>
           <div style={{ marginTop: 'var(--sp-3)' }}>
           <Card tone="quiet" pad={5}>
@@ -212,11 +216,11 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
         </section>
 
         {/* ── 7 · Certificates — honest empty state, never a faked cert ── */}
-        <section aria-label="الشهادات">
+        <section aria-label={tr('pf.certs', lang)}>
           <Eyebrow icon={<Award size={13} />}>{tr('pf.certs', lang)}</Eyebrow>
           <div style={{ marginTop: 'var(--sp-3)' }}>
-            <EmptyState icon={<Award size={22} />} title="لسه مفيش شهادة"
-              body="الشهادة بتصدر بعد ما تكمّل البرنامج ويعتمد المدير جاهزيتك." />
+            <EmptyState icon={<Award size={22} />} title={tr('pf.nocert', lang)}
+              body={tr('pf.nocertbody', lang)} />
           </div>
         </section>
       </m.main>

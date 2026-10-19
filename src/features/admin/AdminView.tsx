@@ -14,7 +14,7 @@ import { usersWhoCan } from '../../domain/identity/scope';
 import { Button, Card, Eyebrow, EmptyState, ScreenHeader, ConfirmDialog, Toast, StatusBadge } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
-import { useLang, t, t as tr } from '../../app/i18n';
+import { useLang, t, t as tr, roleName as roleDisplayName } from '../../app/i18n';
 
 export const AdminView: React.FC<{ onExit: () => void; embedded?: boolean }> = ({ onExit, embedded }) => {
   const lang = useLang();
@@ -38,7 +38,7 @@ export const AdminView: React.FC<{ onExit: () => void; embedded?: boolean }> = (
   // appears here automatically, with no component change.
   const trainers = useMemo(() => usersWhoCan(active, roles, 'training.review'), [active, roles]);
   const managers = useMemo(() => usersWhoCan(active, roles, 'reports.view'), [active, roles]);
-  const roleName = (id: string) => roles.find(r => r.id === id)?.name ?? id;
+  const roleName = (id: string) => roleDisplayName(roles.find(r => r.id === id), lang) ?? id;
 
   if (!canDo('users.view')) {
     return (
@@ -127,7 +127,7 @@ const CreateUserForm: React.FC<{ onDone: (created: boolean) => void }> = ({ onDo
         <input aria-label={t('us.email', lang)} placeholder={t('us.emailopt', lang)} value={email} onChange={e => setEmail(e.target.value)} className="field" style={{ flex: '1 1 180px' }} />
         <input aria-label={t('us.branch', lang)} placeholder={t('us.branchopt', lang)} value={branchId} onChange={e => setBranchId(e.target.value)} className="field" style={{ flex: '1 1 140px' }} />
         <select aria-label={t('us.role', lang)} value={roleId} onChange={e => setRoleId(e.target.value)} className="field" style={{ flex: '1 1 140px' }}>
-          {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+          {roles.map(r => <option key={r.id} value={r.id}>{roleDisplayName(r, lang)}</option>)}
         </select>
       </div>
       <div style={{ marginTop: 'var(--sp-4)', display: 'flex', gap: 'var(--sp-3)' }}>
@@ -179,7 +179,7 @@ const UserRow: React.FC<{
         {canDo('users.assignRole') ? (
           <select aria-label={`${t('us.roleof', lang)} ${u.name}`} value={u.roleId} className="field t-sm"
             onChange={e => { identityStore.changeRole(u.id, e.target.value); notify(t('us.rolechanged', lang)); }}>
-            {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            {roles.map(r => <option key={r.id} value={r.id}>{roleDisplayName(r, lang)}</option>)}
           </select>
         ) : <span aria-hidden />}
 

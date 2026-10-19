@@ -73,7 +73,7 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
       <div style={{ minHeight: '100vh' }}>
         <ScreenHeader onBack={onExit} leading={<span className="t-title" style={{ color: 'var(--g1)' }}>{tr('rr.title', lang)}</span>} />
         <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-9) var(--sp-5)' }}>
-          <EmptyState icon={<Lock size={22} />} title={tr('rr.noaccess', lang)} body={tr("rr.noaccessbody", lang)} data-unused="كلّم مديرك." />
+          <EmptyState icon={<Lock size={22} />} title={tr('rr.noaccess', lang)} body={tr("rr.noaccessbody", lang)} />
         </main>
       </div>
     );

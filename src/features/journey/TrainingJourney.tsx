@@ -31,13 +31,13 @@ import { WIDTH } from '../../ui/designSystem';
 // 🔴 `labelKey` NOT a translated string: this object is module-level, where no
 // translation context exists. The visible label is resolved inside the
 // component, which is the only place `lang` is valid.
-const STATUS_META: Record<PhaseStatus, { label: string; labelKey: Key; tone: 'ready' | 'attn' | 'gold' | 'neutral'; color: string; icon: React.ReactNode }> = {
-  completed:       { label: 'مكتملة', labelKey: 'ps.completed',            tone: 'ready',   color: 'var(--ready)', icon: <Check size={13} /> },
-  waiting_trainer: { label: 'في انتظار مدربك', labelKey: 'ps.waiting',   tone: 'attn',    color: 'var(--attn)',  icon: <Clock size={13} /> },  // label overridden per-trainee via waitingForTrainer()
-  in_progress:     { label: 'شغّال فيها دلوقتي', labelKey: 'ps.inprogress', tone: 'gold',    color: 'var(--g2)',    icon: <CircleDot size={13} /> },
-  available:       { label: 'جاهزة تبدأ', labelKey: 'ps.available',        tone: 'gold',    color: 'var(--g2)',    icon: <PlayCircle size={13} /> },
-  locked:          { label: 'مقفولة', labelKey: 'ps.locked',            tone: 'neutral', color: 'var(--line-3)', icon: <Lock size={13} /> },
-  planned:         { label: 'في البرنامج', labelKey: 'ps.planned',       tone: 'neutral', color: 'var(--line-3)', icon: <Flag size={13} /> },
+const STATUS_META: Record<PhaseStatus, { labelKey: Key; tone: 'ready' | 'attn' | 'gold' | 'neutral'; color: string; icon: React.ReactNode }> = {
+  completed:       { labelKey: 'ps.completed',            tone: 'ready',   color: 'var(--ready)', icon: <Check size={13} /> },
+  waiting_trainer: { labelKey: 'ps.waiting',   tone: 'attn',    color: 'var(--attn)',  icon: <Clock size={13} /> },  // label overridden per-trainee via waitingForTrainer()
+  in_progress:     { labelKey: 'ps.inprogress', tone: 'gold',    color: 'var(--g2)',    icon: <CircleDot size={13} /> },
+  available:       { labelKey: 'ps.available',        tone: 'gold',    color: 'var(--g2)',    icon: <PlayCircle size={13} /> },
+  locked:          { labelKey: 'ps.locked',            tone: 'neutral', color: 'var(--line-3)', icon: <Lock size={13} /> },
+  planned:         { labelKey: 'ps.planned',       tone: 'neutral', color: 'var(--line-3)', icon: <Flag size={13} /> },
 };
 
 export const TrainingJourney: React.FC<{
@@ -263,7 +263,7 @@ export const TrainingJourney: React.FC<{
             header's "days left / % approved": duplicating those would make the
             column decoration. It answers a different question — how much of
             the ROUTE is behind me, and what is the next gate I have to pass. */}
-        <aside className="journey-ledger" aria-label="ملخّص الرحلة">
+        <aside className="journey-ledger" aria-label={tr('jr.ledger', lang)}>
           <Card pad={5}>
             <Eyebrow>{tr('jr.distance', lang)}</Eyebrow>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-2)', margin: 'var(--sp-3) 0 var(--sp-1)' }}>

@@ -20,7 +20,7 @@ import { orgStore } from '../app/organization/orgStore';
 import { MODULES } from '../content/registry';
 import type { View } from '../app/router';
 import { navFor } from '../domain/identity/access';
-import { useLang, langStore, t, type Key } from '../app/i18n';
+import { useLang, langStore, t, tf, roleName as roleDisplayName, type Key } from '../app/i18n';
 import { WIDTH } from './designSystem';
 
 /** Icons are presentation only — the nav itself is built from permissions. */
@@ -41,17 +41,16 @@ export const AppShell: React.FC<{
   const canDo = useCan();
   const state = useIdentity(); // subscribe so the role indicator stays current
   const actor = identityStore.currentUser();
-  // The role's display name comes from the role catalogue — never hardcoded
-  // per component, so renaming a role is a one-place change.
-  const roleName = state.roles.find(r => r.id === actor?.roleId)?.name ?? '—';
 
   // The Identity Center is a workspace overlay owned by the shell — not a route,
   // not a ViewKind. It opens from the profile menu and dismisses back to the
   // current page, leaving navigation state untouched.
   const [identityOpen, setIdentityOpen] = React.useState(false);
 
-  // Built from permissions — a role can never see a tab it cannot open.
   const lang = useLang();
+  // Built-in roles are translated; a custom role shows the name the admin gave it.
+  const roleName = roleDisplayName(state.roles.find(r => r.id === actor?.roleId), lang);
+
   // Rail collapse — a desktop preference, persisted like the language choice.
   const [railCollapsed, setRailCollapsed] = React.useState(() => {
     try { return localStorage.getItem('wda.rail.v1') === '1'; } catch { return false; }
@@ -61,6 +60,7 @@ export const AppShell: React.FC<{
     try { localStorage.setItem('wda.rail.v1', next ? '1' : '0'); } catch { /* best effort */ }
     return next;
   });
+  // Built from permissions — a role can never see a tab it cannot open.
   const items = navFor(canDo);
   const actions = useActionCenter();
 
@@ -126,7 +126,8 @@ export const AppShell: React.FC<{
                 no space pressure and keeps it in reach. */}
             <button className="pill lang-pill" onClick={() => langStore.toggle()}
               aria-label={t('lang.aria', lang)} style={{ minWidth: 72, justifyContent: 'center' }}>
-              <span className="lang-label">{t('lang.switch', lang)}</span>
+              {/* The other language, written in that language and declared as such. */}
+              <span className="lang-label" lang={lang === 'ar' ? 'en' : 'ar'}>{t('lang.switch', lang)}</span>
             </button>
             <ActionCenter items={actions} onNavigate={onNavigate} />
           </div>
@@ -165,7 +166,7 @@ export const AppShell: React.FC<{
       </div>
 
       {identityOpen && (
-        <div role="dialog" aria-modal="true" aria-label="مركز الهوية"
+        <div role="dialog" aria-modal="true" aria-label={t('pf.title', lang)}
           style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'var(--void)', overflowY: 'auto' }}>
           <React.Suspense fallback={null}>
             <IdentityCenter onClose={() => setIdentityOpen(false)} />
@@ -243,6 +244,7 @@ const useActionCenter = (): readonly { key: string; label: string; view: View['k
   const t = useTraining();
   const p = useProgress();
   const { users, roles } = useIdentity();
+  const lang = useLang();
 
   return React.useMemo(() => {
     const out: { key: string; label: string; view: View['kind'] }[] = [];
@@ -254,8 +256,8 @@ const useActionCenter = (): readonly { key: string; label: string; view: View['k
       const id = traineeIdOrNull();
       if (id) {
         const a = nextAction(p, t, id);
-        if (a.kind === 'rejected_review') out.push({ key: 'rejected', label: 'مدربك طلب تحسين في وحدة', view: 'path' });
-        if (a.kind === 'needs_submission') out.push({ key: 'submit', label: 'وحدة خلصت ومحتاجة تقديم', view: 'path' });
+        if (a.kind === 'rejected_review') out.push({ key: 'rejected', label: tf('ac.rejected', {}, lang), view: 'path' });
+        if (a.kind === 'needs_submission') out.push({ key: 'submit', label: tf('ac.submit', {}, lang), view: 'path' });
       }
     }
 
@@ -265,11 +267,11 @@ const useActionCenter = (): readonly { key: string; label: string; view: View['k
       const learners = visibleLearners(users, roles, scope);
       const waiting = learners.reduce(
         (n, e) => n + MODULES.filter(m => reviewOf(t, e.id, m.id).status === 'waiting').length, 0);
-      if (waiting > 0) out.push({ key: 'queue', label: `${waiting} وحدة مستنية تقييمك`, view: 'trainer' });
+      if (waiting > 0) out.push({ key: 'queue', label: tf('ac.queue', { n: waiting }, lang), view: 'trainer' });
     }
 
     return out;
-  }, [canDo, t, p, users, roles]);
+  }, [canDo, t, p, users, roles, lang]);
 };
 
 
@@ -283,6 +285,7 @@ const ActionCenter: React.FC<{
   items: readonly { key: string; label: string; view: View['kind'] }[];
   onNavigate: (v: View['kind']) => void;
 }> = ({ items, onNavigate }) => {
+  const lang = useLang();
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
@@ -308,7 +311,7 @@ const ActionCenter: React.FC<{
         onClick={() => setOpen(v => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={n === 0 ? 'مفيش حاجة محتاجة انتباهك' : `${n} حاجة محتاجة انتباهك`}
+        aria-label={n === 0 ? t('ac.label.none', lang) : tf('ac.count', { n }, lang)}
         style={{
           // 🔴 P0 — was 40×40, 4px under this platform's OWN touch standard
           // (`.icon-btn`/`.pill` both bake in `min-height:44px` — the Apple
@@ -344,7 +347,7 @@ const ActionCenter: React.FC<{
         }}>
           {n === 0 ? (
             <p className="t-sm" style={{ margin: 0, padding: 'var(--sp-4)', color: 'var(--tx3)' }}>
-              مفيش حاجة محتاجة انتباهك دلوقتي.
+              {t('ac.none', lang)}
             </p>
           ) : items.map(it => (
             <button
@@ -416,7 +419,7 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
         </div>
         {/* The accessible name is the visible text plus this, so speech users
             can say what they see (WCAG 2.5.3) and screen readers hear the role. */}
-        <span className="sr-only"> — {role}. القائمة الشخصية</span>
+        <span className="sr-only"> — {role}. {t('sh.menu', langStore.get())}</span>
       </button>
 
       {open && (

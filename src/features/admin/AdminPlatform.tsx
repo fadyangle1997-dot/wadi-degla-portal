@@ -296,7 +296,7 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
   return (
     <>
       <h1 className="t-h2" style={{ marginBottom: 'var(--sp-2)' }}>{t('ad.audittitle', lang)}</h1>
-      <p className="t-sm" style={{ marginBottom: 'var(--sp-5)' }}>{t('ad.auditsub', lang)} {''}، مش تخزين جديد.</p>
+      <p className="t-sm" style={{ marginBottom: 'var(--sp-5)' }}>{t('ad.auditsub', lang)}</p>
 
       <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginBottom: 'var(--sp-4)' }}>
         <input className="field" style={{ flex: '1 1 220px' }} placeholder={t('ad.searchlog', lang)} aria-label={t('ad.searcharia', lang)}

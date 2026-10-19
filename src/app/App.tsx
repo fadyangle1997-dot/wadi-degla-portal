@@ -35,6 +35,7 @@ import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLesso
 import { parseHash, toHash, type View } from './router';
 import { trainingStore, currentTraineeId, traineeIdOrNull } from './training/trainingStore';
 import { TRAINING_POLICY } from '../domain/policy';
+import { useLang, t, tf } from './i18n';
 
 const initialView = (): View => {
   const v = parseHash(location.hash);
@@ -43,7 +44,7 @@ const initialView = (): View => {
 };
 
 const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>جاري التحميل…</div>}>
+  <Suspense fallback={<div role="status" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>{t('sh.loading')}</div>}>
     {children}
   </Suspense>
 );
@@ -55,27 +56,29 @@ const Redirect: React.FC<{ to: string; onGo: (k: string) => void }> = ({ to, onG
 };
 
 /** No platform is open to this identity — closed by default, never a blank app. */
-const NoAccess: React.FC = () => (
-  <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 'var(--sp-6)' }}>
-    <div style={{ textAlign: 'center', maxWidth: 380 }}>
-      <h1 className="t-h3">مفيش صلاحية</h1>
-      <p className="t-body" style={{ color: 'var(--tx2)', marginTop: 'var(--sp-2)' }}>
-        الحساب ده مش متسند له أي منصة. كلّم مسؤول النظام.
-      </p>
+const NoAccess: React.FC = () => {
+  const lang = useLang();
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 'var(--sp-6)' }}>
+      <div style={{ textAlign: 'center', maxWidth: 380 }}>
+        <h1 className="t-h3">{t('sh.noaccess', lang)}</h1>
+        <p className="t-body" style={{ color: 'var(--tx2)', marginTop: 'var(--sp-2)' }}>{t('sh.noaccessbody', lang)}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ExamCooldown: React.FC<{ retryAt: number; onExit: () => void }> = ({ retryAt, onExit }) => {
-  const when = new Date(retryAt).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+  const lang = useLang();
+  const when = new Date(retryAt).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
   return (
     <div style={{ minHeight: '100vh' }}>
-      <ScreenHeader onBack={onExit} maxWidth={680} leading={<Eyebrow>امتحان الوحدة</Eyebrow>} />
+      <ScreenHeader onBack={onExit} maxWidth={680} leading={<Eyebrow>{t('sh.unitexam', lang)}</Eyebrow>} />
       <main style={{ maxWidth: 680, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5)' }}>
         <EmptyState
-          title="خُد وقتك للمراجعة الأول"
-          body={`جرّبت الامتحان كذا مرة ورا بعض. راجع الدروس كويس، وهتقدر تجرّب تاني بعد ${when}. لو محتاج تجرّب أبدر، كلّم مدربك.`}
-          action={<Button onClick={onExit}>ارجع للمسار وراجع</Button>}
+          title={t('sh.cooldowntitle', lang)}
+          body={tf('sh.cooldownbody', { when }, lang)}
+          action={<Button onClick={onExit}>{t('sh.cooldowncta', lang)}</Button>}
         />
       </main>
     </div>
@@ -229,18 +232,11 @@ export const App: React.FC = () => {
       />
     </ArabicContent></Lazy>,
   );
-  /* 🔴 ISLANDS, DECLARED — NOT A DOCUMENT PINNED TO ONE DIRECTION.
-     Two different reasons sit behind these wrappers, and the difference matters
-     for what happens next:
-       · the four immersive learning screens below are Arabic BY DESIGN and stay
-         islands forever — the lesson is the content, and the content is Arabic;
-       · the staff screens here are Arabic because they have not been translated
-         yet (≈290 strings, sprint 06 phase 2). Wrapping them keeps every one of
-         those strings reading correctly inside an English document instead of
-         Arabic sentences flowing left-to-right; each wrapper comes OFF the day
-         its screen is translated.
-     Either way the block declares `lang` and `dir` itself, which is what makes
-     a screen reader switch voice at the boundary. */
+  /* Staff platforms are fully translated. Inside them, Arabic content (module
+     titles, lesson text, free-text notes) sits in <ArabicContent>, which
+     declares lang and dir so a screen reader switches voice at the boundary.
+     The immersive learning screens above are Arabic by design. e2e/i18n.e2e.ts
+     fails if untranslated Arabic appears in English mode. */
   if (view.kind === 'admin') return inShell(<Lazy><AdminPlatform onExit={toPath} /></Lazy>);
   if (view.kind === 'trainer') return inShell(<Lazy><TrainerView onExit={toPath} /></Lazy>);
   if (view.kind === 'manager') return inShell(<Lazy><ManagerView onExit={toPath} /></Lazy>);

@@ -116,6 +116,46 @@ const DICT = {
   'pf.trainer':     { ar: 'المدرب',               en: 'Trainer' },
   'pf.assigned':    { ar: 'المدرب المسؤول',       en: 'Assigned trainer' },
   'pf.certs':       { ar: 'الشهادات',             en: 'Certificates' },
+  'pf.phaseof':     { ar: 'المرحلة {a} من {b}',   en: 'Phase {a} of {b}' },
+  'pf.dayof':       { ar: 'اليوم {d} من 60',      en: 'Day {d} of 60' },
+  'pf.daysleft':    { ar: 'فاضل {n} يوم',         en: '{n} days left' },
+  'pf.notrainer':   { ar: 'لسه مفيش مدرب معيّن',  en: 'No trainer assigned yet' },
+  'pf.notrainerbody':{ ar: 'أول ما الإدارة تعيّنلك مدرب، هيظهر هنا مع حالة متابعتك.',
+                      en: 'Once an administrator assigns your trainer, they appear here with your follow-up status.' },
+  'pf.nocert':      { ar: 'لسه مفيش شهادة',       en: 'No certificate yet' },
+  'pf.nocertbody':  { ar: 'الشهادة بتصدر بعد ما تكمّل البرنامج ويعتمد المدير جاهزيتك.',
+                      en: 'The certificate is issued once you finish the programme and your manager confirms your readiness.' },
+  // built-in role names (custom roles show the name the admin gave them)
+  'role.admin':           { ar: 'مسؤول النظام', en: 'System administrator' },
+  'role.manager':         { ar: 'مدير فرع',     en: 'Branch manager' },
+  'role.area_manager':    { ar: 'مدير منطقة',   en: 'Area manager' },
+  'role.general_manager': { ar: 'مدير عام',     en: 'General manager' },
+  'role.trainer':         { ar: 'مدرب',         en: 'Trainer' },
+  'role.employee':        { ar: 'موظف',         en: 'Employee' },
+  // shell — action centre, menus, access
+  'ac.rejected':    { ar: 'مدربك طلب تحسين في وحدة', en: 'Your trainer asked for improvements in a unit' },
+  'ac.submit':      { ar: 'وحدة خلصت ومحتاجة تقديم', en: 'A finished unit needs submitting' },
+  'ac.queue':       { ar: '{n} وحدة مستنية تقييمك',  en: 'Units waiting for your assessment: {n}' },
+  'ac.count':       { ar: '{n} حاجة محتاجة انتباهك',  en: 'Items needing your attention: {n}' },
+  'sh.menu':        { ar: 'القائمة الشخصية',       en: 'personal menu' },
+  'sh.loading':     { ar: 'جاري التحميل…',         en: 'Loading…' },
+  'sh.noaccess':    { ar: 'مفيش صلاحية',           en: 'No access' },
+  'sh.noaccessbody':{ ar: 'الحساب ده مش متسند له أي منصة. كلّم مسؤول النظام.',
+                      en: 'This account has no platform assigned. Contact your administrator.' },
+  'sh.cooldowntitle':{ ar: 'خُد وقتك للمراجعة الأول', en: 'Take time to review first' },
+  'sh.cooldownbody':{ ar: 'جرّبت الامتحان كذا مرة ورا بعض. راجع الدروس كويس، وهتقدر تجرّب تاني بعد {when}. لو محتاج تجرّب أبدر، كلّم مدربك.',
+                      en: 'You tried the exam several times in a row. Review the lessons, and you can try again after {when}. If you need to try sooner, talk to your trainer.' },
+  'sh.cooldowncta': { ar: 'ارجع للمسار وراجع',     en: 'Back to the path to review' },
+  'sh.unitexam':    { ar: 'امتحان الوحدة',         en: 'Unit exam' },
+  'pv.rejectedbody':{ ar: 'مدربك راجع «{m}» وطلب تحسين قبل الاعتماد. ابدأ من الدروس اللي حدّدها.',
+                      en: 'Your trainer reviewed “{m}” and asked for improvements before approving it. Start with the lessons they flagged.' },
+  'pv.waitingbody': { ar: 'خلّصت «{m}» وعدّيت امتحانها. مدربك بيراجع شغلك قبل ما اللي بعده يتفتح.',
+                      en: 'You finished “{m}” and passed its exam. Your trainer is reviewing your work before the next unit opens.' },
+  'pv.submittitle': { ar: 'خلّصت «{m}» — محتاجة تقديم', en: 'You finished “{m}” — it needs submitting' },
+  'jr.ledger':      { ar: 'ملخّص الرحلة',          en: 'Journey summary' },
+  'tn.reassesswhen':{ ar: 'قيّم تاني لما يجهز',    en: 'reassess when ready' },
+  'tn.noteabout':   { ar: 'ملاحظة عن',             en: 'Note about' },
+  'tn.evalnotes':   { ar: 'ملاحظات التقييم',       en: 'Assessment notes' },
   // skills — product shell only (the level explanation stays Arabic: it teaches)
   'sk.title':       { ar: 'مهاراتك',                en: 'Skills' },
   'sk.aria':        { ar: 'المهارات اللي بتبنيها',  en: "Skills you're building" },
@@ -631,3 +671,14 @@ export const useLang = (): Lang => useSyncExternalStore(langStore.subscribe, lan
 
 /** Translate a UI key. Falls back to Arabic — never to a raw key on screen. */
 export const t = (key: Key, l: Lang = lang): string => DICT[key][l] ?? DICT[key].ar;
+
+/** A role's display name: built-in roles are translated, custom roles keep the admin's name. */
+export const roleName = (role: { readonly id: string; readonly name: string } | undefined, l: Lang = lang): string => {
+  if (!role) return '—';
+  const key = `role.${role.id}`;
+  return key in DICT ? t(key as Key, l) : role.name;
+};
+
+/** Translate and fill {placeholders}: tf('pf.dayof', { d: 12 }, lang). */
+export const tf = (key: Key, vars: Readonly<Record<string, string | number>>, l: Lang = lang): string =>
+  t(key, l).replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ''));

@@ -123,7 +123,7 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
               <div key={`${employee.id}:${m.id}`} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
                 <div style={{ flex: '1 1 220px' }}>
                   <span className="t-title" style={{ color: 'var(--tx0)' }}>{employee.name} · {m.title}</span>
-                  <span className="t-label" style={{ display: 'block', marginTop: 'var(--sp-1)' }}>{tr('tn.reviewing', lang)} — قيّم تاني لما يجهز</span>
+                  <span className="t-label" style={{ display: 'block', marginTop: 'var(--sp-1)' }}>{tr('tn.reviewing', lang)} — {tr('tn.reassesswhen', lang)}</span>
                 </div>
                 <StatusBadge tone="risk">{tr('tn.improving', lang)}</StatusBadge>
                 <Button variant="ghost" onClick={() => setEvaluating({ employee, moduleId: m.id })}>{tr('tn.reassess', lang)}</Button>
@@ -181,7 +181,7 @@ const RosterRow: React.FC<{ name: string; branch?: string; progress: number; onN
       </div>
       {open && (
         <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-3)', flexWrap: 'wrap' }}>
-          <input className="field" style={{ flex: '1 1 220px' }} placeholder={tr('tn.noteph', lang)} value={note} onChange={e => setNote(e.target.value)} aria-label={`ملاحظة عن ${name}`} />
+          <input className="field" style={{ flex: '1 1 220px' }} placeholder={tr('tn.noteph', lang)} value={note} onChange={e => setNote(e.target.value)} aria-label={`${tr('tn.noteabout', lang)} ${name}`} />
           <Button disabled={!note.trim()} onClick={() => { onNote(note.trim()); setNote(''); setOpen(false); }}>{tr('tn.save', lang)}</Button>
         </div>
       )}
@@ -367,7 +367,7 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
       )}
 
       <textarea className="field" style={{ width: '100%', marginTop: 'var(--sp-4)', minHeight: 76, resize: 'vertical' }}
-        placeholder={tr('tn.guideph', lang)} value={note} onChange={e => setNote(e.target.value)} aria-label="ملاحظات التقييم" />
+        placeholder={tr('tn.guideph', lang)} value={note} onChange={e => setNote(e.target.value)} aria-label={tr('tn.evalnotes', lang)} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
         <label className="t-sm" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
