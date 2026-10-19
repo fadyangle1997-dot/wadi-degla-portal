@@ -13,12 +13,12 @@ import { AssessmentMode, Button, OptionButton, FeedbackBlock, SpineWell, Status,
 import { shuffleOptions } from '../../content/shuffle';
 import { fade } from '../../ui/motion';
 import { useLang, t, tf } from '../../app/i18n';
-interface Props { battle: BossBattle; onExit: () => void; onFinish: () => void; }
+interface Props { battle: BossBattle; onExit: () => void; onFinish: () => void; exitLabel?: string; }
 
 
 type Phase = 'brief' | 'steps' | 'done';
 
-export const BossView: React.FC<Props> = ({ battle, onExit, onFinish }) => {
+export const BossView: React.FC<Props> = ({ battle, onExit, onFinish, exitLabel }) => {
   const lang = useLang();
   const [phase, setPhase] = useState<Phase>('brief');
   const [si, setSi] = useState(0);
@@ -65,7 +65,7 @@ export const BossView: React.FC<Props> = ({ battle, onExit, onFinish }) => {
           <p className="t-body measure mt-6 mb-0">{battle.passNote}</p>
           {!perfect && <p className="t-sm mt-3 mb-0">كل غلطة هنا اتعلّمت منها من غير ما عميل حقيقي يدفع تمنها — وده الهدف.</p>}
           <div className="mt-7">
-            <Button onClick={onExit}>{t('ex.backtopath', lang)} <ArrowRight size={16} className="icon-dir" /></Button>
+            <Button onClick={onExit}>{exitLabel ?? t('ex.backtopath', lang)} <ArrowRight size={16} className="icon-dir" /></Button>
           </div>
         </m.section>
       </AssessmentMode>

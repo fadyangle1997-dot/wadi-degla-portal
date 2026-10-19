@@ -19,10 +19,13 @@ interface Props {
   onFinish: (score: number) => void;
   /** A new attempt: the shell re-asks the attempt gate before mounting one. */
   onRetry: () => void;
+  /** Opens a lesson the result says to review. */
+  onReviewLesson?: (lessonId: string) => void;
+  exitLabel?: string;
 }
 
 
-export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry }) => {
+export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, onReviewLesson, exitLabel }) => {
   const lang = useLang();
   const qs = module.unitExam;
   const [qi, setQi] = useState(0);
@@ -80,12 +83,20 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry })
             <section className="mt-7" aria-labelledby="ex-review">
               <SectionHeader id="ex-review" title={t('as.reviewlist', lang)} count={reviewLessons.length} />
               <ol className="review-list mt-3">
-                {reviewLessons.map(l => <li key={l.id}>{l.title}</li>)}
+                {/* Each lesson to review opens from here: a plan you can act on,
+                    not a list you have to go and find. */}
+                {reviewLessons.map(l => (
+                  <li key={l.id}>
+                    {onReviewLesson
+                      ? <button type="button" className="review-link" onClick={() => onReviewLesson(l.id)}>{l.title} <ArrowRight size={16} className="icon-dir" aria-hidden /></button>
+                      : l.title}
+                  </li>
+                ))}
               </ol>
             </section>
           )}
           <div className="row mt-7 gap-3 wrap">
-            <Button onClick={onExit}>{t('ex.backtopath', lang)} <ArrowRight size={16} className="icon-dir" /></Button>
+            <Button onClick={onExit}>{exitLabel ?? t('ex.backtopath', lang)} <ArrowRight size={16} className="icon-dir" /></Button>
             {!passed && <Button variant="ghost" onClick={onRetry}><RotateCcw size={16} /> {t('ex.retry', lang)}</Button>}
           </div>
         </m.section>

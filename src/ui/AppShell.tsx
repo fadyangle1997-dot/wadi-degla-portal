@@ -86,7 +86,7 @@ export const AppShell: React.FC<{
             320px screen, which is trap #4 in this file's own history. */}
         <div className="shell-header-row row items-center" style={{ maxWidth: WIDTH.journey, margin: '0 auto' }}>
           <button className="rail-toggle" onClick={toggleRail}
-            aria-label={railCollapsed ? 'Expand menu' : 'Collapse menu'}
+            aria-label={t(railCollapsed ? 'a11y.railopen' : 'a11y.railclose', lang)}
             aria-expanded={!railCollapsed}>
             {railCollapsed ? '»' : '«'}
           </button>

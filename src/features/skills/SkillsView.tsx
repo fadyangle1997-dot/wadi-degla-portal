@@ -21,7 +21,7 @@ export const SkillsView: React.FC<{ onStartFirst: () => void }> = ({ onStartFirs
   return (
     <div className="min-h-screen">
       <m.main {...fade} aria-label={t('sk.aria', lang)} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
-        <Crumbs items={[t('crumb.academy', lang), t('nav.skills', lang)]} />
+        <Crumbs items={[<a key="a" href="#/" className="crumb-link">{t('crumb.academy', lang)}</a>, t('nav.skills', lang)]} />
         <h1 className="t-h1 mt-3">{t('sk.headline', lang)}</h1>
         <p className="t-sm measure mt-2 mb-7">
           {t('sk.sub', lang)}

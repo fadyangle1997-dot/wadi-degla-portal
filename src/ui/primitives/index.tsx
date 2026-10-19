@@ -399,12 +399,18 @@ export const AssessmentMode: React.FC<{
 };
 
 /* ---------------- toast ---------------- */
-export const Toast: React.FC<{ message: string | null }> = ({ message }) =>
+/** A passing confirmation, or — with tone="error" — a failure the person must
+ *  hear about (role="alert"). A check mark on a failure was a lie. */
+export const Toast: React.FC<{ message: string | null; tone?: 'ok' | 'error' }> = ({ message, tone = 'ok' }) =>
   message ? (
-    <div className="toast" role="status" aria-live="polite">
-      <Check size={13} className="c-ready" />{message}
+    <div className="toast" role={tone === 'error' ? 'alert' : 'status'} aria-live={tone === 'error' ? 'assertive' : 'polite'}>
+      {tone === 'error' ? <X size={13} className="c-risk" aria-hidden /> : <Check size={13} className="c-ready" aria-hidden />}{message}
     </div>
   ) : null;
+
+/** A failure next to the control that caused it, with the work still in place. */
+export const InlineError: React.FC<{ message: string | null }> = ({ message }) =>
+  message ? <p role="alert" className="t-sm c-risk m-0">{message}</p> : null;
 
 /* ---------------- skill bar ---------------- */
 export const SkillBar: React.FC<{ pct: number; segments?: number }> = ({ pct, segments = 8 }) => {

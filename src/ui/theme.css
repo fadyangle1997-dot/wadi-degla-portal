@@ -417,6 +417,8 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .page-header { display:flex; flex-direction:column; gap:var(--sp-3); padding-block:var(--sp-2) var(--sp-6); }
 .crumbs ol { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin:0; padding:0; list-style:none; }
 .crumbs li { font-size:.875rem; font-weight:600; color:var(--tx2); }
+.crumb-link { display:inline-flex; align-items:center; min-height:24px; color:var(--tx2); text-decoration:none; border-radius:var(--r-sm); }
+.crumb-link:hover { color:var(--tx0); text-decoration:underline; text-underline-offset:4px; }
 .crumbs li + li::before { content:"/"; margin-inline-end:var(--sp-2); color:var(--tx3); font-weight:400; }
 .crumbs li[aria-current="page"] { color:var(--g1); }
 .page-header-row { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:var(--sp-4); }
@@ -516,7 +518,7 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .dt tbody tr:has(.dt-open:focus-visible) { outline:2px solid var(--g2); outline-offset:-2px; }
 /* Controls in other cells sit above the stretched button. */
 .dt td :is(button, a, input, select) { position:relative; z-index:1; }
-.dt-sort { display:inline-flex; align-items:center; gap:var(--sp-1); padding:0; background:none; border:0;
+.dt-sort { display:inline-flex; align-items:center; gap:var(--sp-1); padding:0; min-height:44px; background:none; border:0;
   color:inherit; font:inherit; cursor:pointer; }
 .dt-sort:hover { color:var(--tx0); }
 .dt-sort-idle { opacity:.5; }
@@ -624,6 +626,9 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .review-list { list-style:none; margin:0; padding:0; counter-reset:review; border-top:1px solid var(--line); }
 .review-list li { counter-increment:review; display:flex; align-items:baseline; gap:var(--sp-3);
   padding:var(--sp-3) 0; border-bottom:1px solid var(--line); color:var(--tx1); }
+.review-link { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); flex:1;
+  min-height:44px; padding:0; background:none; border:0; color:var(--tx1); font:inherit; text-align:start; cursor:pointer; }
+.review-link:hover { color:var(--tx0); }
 .review-list li::before { content:counter(review); min-inline-size:1.5em; color:var(--attn);
   font-weight:600; font-variant-numeric:tabular-nums; }
 
@@ -697,6 +702,9 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .loading-state { display:flex; flex-direction:column; gap:var(--sp-3); padding:var(--sp-6) 0; max-width:var(--w-focus); }
 .error-state { display:flex; flex-direction:column; gap:var(--sp-2); padding:var(--sp-5) var(--sp-6);
   background:var(--s-1); border-radius:var(--r-lg); max-width:var(--w-focus); }
+
+/* Disclosure toggles are controls too: a 44px row, like every other one. */
+details > summary { min-block-size:44px; cursor:pointer; }
 
 /* -- Answer option -- */
 .option { display:flex; align-items:center; gap:var(--sp-3); width:100%; text-align:right;
@@ -907,7 +915,7 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .signin-btn:disabled { opacity: .6; cursor: default; }
 
 .signin-link {
-  background: none; border: 0; padding: 6px 2px; cursor: pointer;
+  background: none; border: 0; padding: 6px 2px; min-height: 44px; cursor: pointer;
   color: var(--sg-gold-soft); font: inherit; font-size: .875rem;
   border-radius: 6px; transition: color .18s ease;
 }

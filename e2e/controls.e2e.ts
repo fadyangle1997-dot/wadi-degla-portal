@@ -119,3 +119,13 @@ test('the skip link moves focus to the content and leaves the address alone', as
   await expect(page.locator('#wda-main')).toBeFocused();
   expect(page.url()).toBe(url);
 });
+
+test('a lesson opened from the roadmap goes back to the roadmap, and says so', async ({ page }) => {
+  await signIn(page, 'ahmed.m');
+  await toAcademy(page);
+  await page.goto('/#/roadmap');
+  await page.getByRole('button', { name: 'افتح' }).first().click();
+  await expect(page).toHaveURL(/#\/lesson\//);
+  await page.getByRole('button', { name: 'ارجع لرحلتي' }).first().click();
+  await expect(page).toHaveURL(/#\/roadmap/);
+});

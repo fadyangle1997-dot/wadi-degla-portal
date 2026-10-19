@@ -61,10 +61,12 @@ interface Props {
    *  silently did nothing whenever a next lesson existed. */
   onFinish?: () => void;
   onExit: () => void;
+  /** Where leaving goes, in words: the path, or the roadmap it was opened from. */
+  exitLabel?: string;
 }
 
 
-export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lessonIndex, lessonCount, nextStep, onCommit, onQuizAttempt, onComplete, onFinish, onExit }) => {
+export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lessonIndex, lessonCount, nextStep, onCommit, onQuizAttempt, onComplete, onFinish, onExit, exitLabel = 'ارجع للمسار' }) => {
   // Stage list derived from data — optional stages appear only when content exists.
   const stages = useMemo<Stage[]>(() => {
     const p = lesson.pro;
@@ -148,7 +150,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
     <div className="stack min-h-screen">
       {/* Orientation: the lesson's name and its place in the unit sit in the
           chrome; the bar shows progress within this lesson. */}
-      <ScreenHeader onBack={onExit} maxWidth={WIDTH.focus}
+      <ScreenHeader onBack={onExit} backLabel={exitLabel} maxWidth={WIDTH.focus}
         rail={<ProgressRail total={stages.length - 1} current={idx} />}
         trailing={
           <span className="t-label lesson-stage">
@@ -512,7 +514,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
                     {nextStep.label} <ArrowRight size={16} className="icon-dir" />
                   </Button>
                 )}
-                <Button variant={nextStep ? 'ghost' : 'primary'} onClick={onFinish ?? onExit}>ارجع للمسار</Button>
+                <Button variant={nextStep ? 'ghost' : 'primary'} onClick={onFinish ?? onExit}>{exitLabel}</Button>
               </div>
             </m.section>
           )}

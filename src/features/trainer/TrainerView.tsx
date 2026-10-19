@@ -19,7 +19,7 @@ import { readinessScore, EVALUATION_DIMENSIONS, ALL_DIMENSIONS, CONDUCT_CHECKS, 
 import { MODULES, moduleById } from '../../content/registry';
 import type { Lesson } from '../../domain/types/content';
 import { RULE_META } from '../../domain/rules/meta';
-import { Button, Card, ConfirmDialog, Eyebrow, EmptyState, Toast, Callout, ArabicContent, PageHeader, SectionHeader, MetricStrip, Metric, Status, Meter, Initials, DataTable, type Column } from '../../ui/primitives';
+import { Button, Card, ConfirmDialog, InlineError, Eyebrow, EmptyState, Toast, Callout, ArabicContent, PageHeader, SectionHeader, MetricStrip, Metric, Status, Meter, Initials, DataTable, type Column } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
@@ -154,7 +154,8 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     {
       id: 'note', header: tr('dt.action', lang), align: 'end',
       cell: r => (
-        <button className="icon-btn" onClick={() => setNoteFor(v => v === r.u.id ? null : r.u.id)} aria-expanded={noteFor === r.u.id}>
+        <button className="icon-btn" onClick={() => setNoteFor(v => v === r.u.id ? null : r.u.id)} aria-expanded={noteFor === r.u.id}
+          aria-label={`${tr('tn.note', lang)} — ${r.u.name}`}>
           <StickyNote size={13} /> {tr('tn.note', lang)}
         </button>
       ),
@@ -359,7 +360,11 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
   const toggle = (list: string[], set: (v: string[]) => void, id: string) =>
     set(list.includes(id) ? list.filter(x => x !== id) : [...list, id]);
 
+  const [failed, setFailed] = useState<string | null>(null);
   const decide = (decision: EvaluationDecision) => {
+    try { record(decision); } catch { setFailed(tr('err.save', lang)); }
+  };
+  const record = (decision: EvaluationDecision) => {
     trainingStore.recordEvaluation({
       employeeId: employee.id, moduleId, scores, decision,
       weakSkills, weakRules, note: note.trim() || undefined,
@@ -452,7 +457,7 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
         <div className="t-label mb-3">{tr('tn.conduct', lang)}</div>
         <div className="stack gap-2">
           {ALL_CONDUCT_CHECKS.map(c => (
-            <label key={c} className="row items-center gap-3" style={{ cursor: 'pointer', minHeight: 34 }}>
+            <label key={c} className="row items-center gap-3" style={{ cursor: 'pointer', minHeight: 44 }}>
               <input type="checkbox" checked={conduct[c] === true} style={{ width: 17, height: 17, accentColor: 'var(--g2)' }}
                 onChange={e => setConduct(p => ({ ...p, [c]: e.target.checked }))} />
               <span className="t-sm">{CONDUCT_CHECKS[c]}</span>
@@ -468,6 +473,7 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
 
       <div className="row gap-2 mt-5 wrap items-center">
         <div className="grow" />
+        <InlineError message={failed} />
         <Button variant="ghost" onClick={onCancel}>{tr('tn.cancel', lang)}</Button>
         {/* The guide's four decisions. Two were previously missing: «تمديد» is
             not a failure, and «تصعيد» is not a verdict — forcing either into

@@ -25,7 +25,7 @@ import {
   REVIEW_FIELDS, REVIEW_LABELS, REVIEW_PROMPTS, isComplete, type ReviewField,
 } from '../../domain/review';
 import { trainingStore, currentTraineeId } from '../../app/training/trainingStore';
-import { Button, Eyebrow, ScreenHeader, useExitFlow } from '../../ui/primitives';
+import { Button, Eyebrow, ScreenHeader, InlineError, useExitFlow } from '../../ui/primitives';
 import { t, langStore } from '../../app/i18n';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
@@ -44,6 +44,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [idx, setIdx] = useState(0);
   const [filed, setFiled] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const field = REVIEW_FIELDS[idx]!;
   const value = answers[field] ?? '';
@@ -62,12 +63,18 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
     if (!isLast) { setIdx(i => i + 1); return; }
     const full = { employeeId: currentTraineeId(), ...answers } as Record<string, string>;
     if (!isComplete(full)) return;
-    trainingStore.fileDecisionReview({
-      employeeId: currentTraineeId(),
-      situation: answers.situation!, decision: answers.decision!,
-      policy: answers.policy!, communication: answers.communication!,
-      improvement: answers.improvement!,
-    });
+    try {
+      trainingStore.fileDecisionReview({
+        employeeId: currentTraineeId(),
+        situation: answers.situation!, decision: answers.decision!,
+        policy: answers.policy!, communication: answers.communication!,
+        improvement: answers.improvement!,
+      });
+    } catch {
+      // The answers stay on screen; the person can try again.
+      setFailed(t('err.save', langStore.get()));
+      return;
+    }
     setFiled(true);
   };
 
@@ -123,6 +130,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
             style={{ resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.7 }}
           />
 
+          <div className="mt-3"><InlineError message={failed} /></div>
           <div className="row gap-2 mt-5 items-center">
             {/* «السابق» steps inside the debrief; «رجوع» was also the word for leaving it. */}
             {idx > 0 && <Button variant="ghost" onClick={() => setIdx(i => i - 1)}><ChevronLeft size={16} className="icon-dir" aria-hidden /> السابق</Button>}

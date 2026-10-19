@@ -128,7 +128,7 @@ export const ReadinessResult: React.FC<{ standing: ReadinessStanding; onExit: ()
 
   return (
     <main style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
-      <PageHeader crumbs={['الأكاديمية', 'رحلتي', 'تقييم الجاهزية']}
+      <PageHeader crumbs={[<a key="a" href="#/" className="crumb-link">الأكاديمية</a>, <a key="j" href="#/roadmap" className="crumb-link">رحلتي</a>, 'تقييم الجاهزية']}
         title="جاهزيتك للعمل المستقل"
         lead={<><Num>{shown}</Num> من <Num>{STATIONS.length}</Num> محطات اتثبتت · التقييم في اليوم 54–60</>}
         actions={<Button variant="ghost" onClick={onExit}><ArrowRight size={16} className="icon-dir" /> رجوع لرحلتي</Button>} />

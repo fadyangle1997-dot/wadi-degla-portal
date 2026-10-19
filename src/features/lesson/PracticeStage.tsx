@@ -35,7 +35,7 @@ export const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }>
                       onClick={() => setMarks(m => ({ ...m, [i]: b.v }))}
                       style={{
                         padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--r-full)', fontWeight: 600,
-                        fontFamily: 'var(--font-body)', cursor: checked ? 'default' : 'pointer', minHeight: 36,
+                        fontFamily: 'var(--font-body)', cursor: checked ? 'default' : 'pointer', minHeight: 44,
                         background: mark === b.v ? 'var(--g2)' : 'transparent',
                         color: mark === b.v ? 'var(--on-gold)' : 'var(--tx2)',
                         border: `1px solid ${mark === b.v ? 'var(--g2)' : 'var(--line-2)'}`,

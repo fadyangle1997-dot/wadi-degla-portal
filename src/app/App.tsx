@@ -46,6 +46,8 @@ const initialView = (): View => {
 
 /** A lazily loaded screen: its own loading state, and its own error state —
  *  a failed chunk or render is the screen's problem, not a blank app. */
+const IMMERSIVE = new Set<View['kind']>(['lesson', 'exam', 'boss']);
+
 const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <RouteBoundary onHome={() => { location.hash = '#/'; }}>
     <Suspense fallback={<div style={{ padding: 'var(--sp-6) var(--sp-5)' }}><LoadingState /></div>}>
@@ -136,11 +138,19 @@ export const App: React.FC = () => {
   // A redirect REPLACES the entry it refused: pushing it left a Back button
   // that returned to the refused URL, which redirected again — a trap.
   const setView = (v: View, replace = false) => {
+    // An immersive screen returns to where it was opened from: a lesson or a
+    // boss opened from the roadmap went back to the path, a screen away.
+    if (IMMERSIVE.has(v.kind) && !IMMERSIVE.has(viewRef.current.kind)) {
+      origin.current = viewRef.current.kind === 'roadmap' ? 'roadmap' : 'path';
+    }
     setViewState(v);
     if (replace) history.replaceState(null, '', toHash(v));
     else history.pushState(null, '', toHash(v));
   };
   const toPath = () => setView({ kind: 'path' });
+  const origin = useRef<'path' | 'roadmap'>('path');
+  const toOrigin = () => setView({ kind: origin.current });
+  const originLabel = () => t(origin.current === 'roadmap' ? 'nav.toroadmap' : 'ex.backtopath');
   // Stable identity so the redirect effect fires once, not on every render.
   const goTo = useCallback((k: string) => setView({ kind: k } as View, true), []);
 
@@ -298,9 +308,10 @@ export const App: React.FC = () => {
           if (traineeId) trainingStore.answerRetrieval(traineeId, lessonRetrievalId(m.id, lesson.id, questionId), m.id, correct);
         }}
         nextStep={nextStep}
-        onExit={toPath}
+        onExit={toOrigin}
+        exitLabel={originLabel()}
         onComplete={() => { progressStore.completeLesson(lesson.id); }}
-        onFinish={toPath}
+        onFinish={toOrigin}
       />
       </ArabicContent></Lazy>
     );
@@ -323,7 +334,8 @@ export const App: React.FC = () => {
     // the entry-time one cached above (gateFor).
     const gate = gateFor(m.id);
     if (!gate.allowed) return <ExamCooldown retryAt={gate.retryAt} onExit={toPath} />;
-    return <Lazy><ArabicContent><ExamView key={`${m.id}:${examRun}`} module={m} onExit={toPath}
+    return <Lazy><ArabicContent><ExamView key={`${m.id}:${examRun}`} module={m} onExit={toOrigin} exitLabel={originLabel()}
+      onReviewLesson={lessonId => openLesson(m.id, lessonId)}
       onRetry={() => { gateCache.current.delete(m.id); setExamRun(r => r + 1); }}
       onFinish={score => {
       // Two stores, no shared transaction. The exam result is earned and must never
@@ -347,7 +359,7 @@ export const App: React.FC = () => {
     const b = BOSS_BATTLES.find(x => x.id === view.bossId);
     // Guard: a boss opens only when every unit it covers is complete.
     if (!b || !b.afterUnits.every(u => isModuleComplete(p, u))) return <Redirect to="path" onGo={goTo} />;
-    return <Lazy><ArabicContent><BossView battle={b} onExit={toPath} onFinish={() => progressStore.passBoss(b.id)} /></ArabicContent></Lazy>;
+    return <Lazy><ArabicContent><BossView battle={b} onExit={toOrigin} exitLabel={originLabel()} onFinish={() => progressStore.passBoss(b.id)} /></ArabicContent></Lazy>;
   }
 
   return inShell(

@@ -121,7 +121,7 @@ export const TrainingJourney: React.FC<{
       {/* Same width as the app shell, so the route and its ledger have room;
           the route column's reading width is capped by the grid. */}
       <main style={{ maxWidth: WIDTH.journey, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
-        <Crumbs items={[tr('crumb.academy', lang), tr('nav.journey', lang)]} />
+        <Crumbs items={[<a key="a" href="#/" className="crumb-link">{tr('crumb.academy', lang)}</a>, tr('nav.journey', lang)]} />
         {/* ── THE HERO ─────────────────────────────────────────────────────
             An editorial spread has one focal point and everything defers to it.
             Here it is the day — the single number a trainee carries in their head.

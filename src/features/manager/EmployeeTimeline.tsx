@@ -8,7 +8,7 @@ import { moduleById } from '../../content/registry';
 import { DECISION_LABEL, readinessScore } from '../../domain/evaluation';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, Eyebrow, StatusBadge, ArabicContent, CloseButton, ConfirmDialog, Toast, useModal } from '../../ui/primitives';
+import { Button, Eyebrow, StatusBadge, ArabicContent, CloseButton, ConfirmDialog, Toast, InlineError, useModal } from '../../ui/primitives';
 import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
 import { useLang, t as tr, tf, type Key } from '../../app/i18n';
 
@@ -157,9 +157,17 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
     reject: { label: tr('mg.decreject', lang), tone: 'risk' },
   };
 
-  const decide = (decision: 'ready' | 'extend' | 'reject') => {
-    trainingStore.decideReadiness({ employeeId, decision, rationale: rationale.trim() });
+  const [failed, setFailed] = React.useState<string | null>(null);
+  const decide = (decision: 'ready' | 'extend' | 'reject'): boolean => {
+    try {
+      trainingStore.decideReadiness({ employeeId, decision, rationale: rationale.trim() });
+    } catch {
+      setFailed(tr('err.save', lang));   // the rationale stays in the box
+      return false;
+    }
+    setFailed(null);
     setRationale('');
+    return true;
   };
   // The final word on someone's readiness is said back, with what it does,
   // before it is written — the rationale alone did not stop a mis-click.
@@ -217,13 +225,14 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
             <Button variant="ghost" onClick={() => setPending('extend')} disabled={!rationale.trim()}>{tr('mg.decextend', lang)}</Button>
             <Button variant="ghost" onClick={() => setPending('reject')} disabled={!rationale.trim()} style={{ color: 'var(--risk)', borderColor: 'var(--risk)' }}>{tr('mg.decreject', lang)}</Button>
           </div>
+          <InlineError message={failed} />
         </div>
       )}
       <ConfirmDialog open={pending !== null}
         title={pending ? tf('mg.confirmtitle', { d: DECISION_META[pending]!.label }, lang) : ''}
         body={pending ? tr(`mg.confirm.${pending}` as Key, lang) : ''}
         confirmLabel={pending ? DECISION_META[pending]!.label : ''} danger={pending === 'reject'}
-        onConfirm={() => { const d = pending; setPending(null); if (d) { decide(d); flash(tr('mg.decided', lang)); } }}
+        onConfirm={() => { const d = pending; setPending(null); if (d && decide(d)) flash(tr('mg.decided', lang)); }}
         onCancel={() => setPending(null)} />
       <Toast message={saved} />
     </div>
