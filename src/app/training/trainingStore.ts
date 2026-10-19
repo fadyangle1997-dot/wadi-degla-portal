@@ -60,10 +60,9 @@ let state: TrainingState = backend.load();
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach(l => l());
 const now = () => Date.now();
-// A write with no signed-in actor cannot be attributed, so it never happens:
-// every caller sits behind the sign-in gate. The fallback keeps the type honest
-// rather than asserting a user that may not be there.
-const trainerId = () => identityStore.currentUser()?.id ?? 'unknown';
+// The acting trainer or manager. Same contract as currentTraineeId: a write
+// with no signed-in actor throws instead of recording an 'unknown' author.
+const trainerId = () => currentTraineeId();
 
 const apply = (fn: () => TrainingState) => { state = fn(); notify(); };
 

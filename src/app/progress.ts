@@ -10,14 +10,35 @@ import { TRAINING_POLICY } from '../domain/policy';
 import { canAttemptExam, type ExamAttempt, type AttemptDecision } from '../domain/exam/attempts';
 import { trainingStore, reviewOf, currentTraineeId, type TrainingState } from './training/trainingStore';
 import { isModuleUnlocked as pureIsModuleUnlocked } from '../domain/progress/selectors';
-import { LocalStorageBackend, type Progress, type ProgressBackend, type ProgressEvent } from './backend';
+import { LocalStorageBackend, storedProgressOf, type Progress, type ProgressBackend, type ProgressEvent } from './backend';
+import { identityStore } from './identity/identityStore';
+import { can, type User } from '../domain/identity';
 
 export type { Progress } from './backend';
 
-const backend: ProgressBackend = new LocalStorageBackend();
+/**
+ * The store is bound to whoever is signed in. Signing in or out swaps the
+ * backend, so each person reads and writes only their own record.
+ */
+const backendFor = (user: User | null): ProgressBackend =>
+  new LocalStorageBackend(user?.id ?? null, {
+    adoptLegacy: !!user && can(user, identityStore.get().roles, 'academy.learn'),
+  });
+
+let boundTo: string | null = identityStore.currentUser()?.id ?? null;
+let backend: ProgressBackend = backendFor(identityStore.currentUser());
 let state: Progress = backend.load();
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach(l => l());
+
+identityStore.subscribe(() => {
+  const user = identityStore.currentUser();
+  if ((user?.id ?? null) === boundTo) return;
+  boundTo = user?.id ?? null;
+  backend = backendFor(user);
+  state = backend.load();
+  notify();
+});
 const apply = (fn: () => Progress) => { state = fn(); notify(); };
 const now = () => Date.now();
 
@@ -63,6 +84,10 @@ export const progressStore = {
 
 export const useProgress = (): Progress =>
   useSyncExternalStore(progressStore.subscribe, progressStore.get);
+
+/** Any user's learning record as stored on this device (the live one for the signed-in user). */
+export const progressOf = (userId: string): Progress =>
+  userId === boundTo ? state : storedProgressOf(userId);
 
 /* ---------- derived (all FROM DATA) ---------- */
 

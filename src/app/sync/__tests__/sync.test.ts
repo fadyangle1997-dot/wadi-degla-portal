@@ -101,3 +101,58 @@ describe('SyncEngine — offline-first, append-only', () => {
     expect(reviewOf(A.snapshot, 'e1', 'm2_1').status).toBe('ready'); // never regressed
   });
 });
+
+describe('SyncEngine — no event lost, none counted twice', () => {
+  /** A server whose first append is held open until released. */
+  class HeldTransport extends MockTransport {
+    release: () => void = () => {};
+    private held = true;
+    override async append<E>(log: LogName, events: readonly E[]) {
+      if (this.held) { this.held = false; await new Promise<void>(r => { this.release = r; }); }
+      return super.append(log, events);
+    }
+  }
+  const counter = { log: 'progress' as LogName, reduce: (s: number[], e: number) => [...s, e], empty: [] as number[] };
+
+  it('an event dispatched while a push is in flight still reaches the server', async () => {
+    const server = new HeldTransport();
+    const engine = new SyncEngine<number[], number>({ ...counter, transport: server });
+    engine.dispatch(1);
+    await Promise.resolve();
+    engine.dispatch(2);            // arrives mid-flight
+    server.release();
+    await engine.flush();
+    await new Promise(r => setTimeout(r, 10));
+
+    const onServer = (await server.pull<number>('progress', 0)).map(e => e.event);
+    expect(onServer).toEqual([1, 2]);
+    expect(engine.pendingCount).toBe(0);
+  });
+
+  it('a local event is not applied again when it comes back from the server', async () => {
+    const server = new HeldTransport();
+    const engine = new SyncEngine<number[], number>({ ...counter, transport: server });
+    engine.dispatch(1);
+    await Promise.resolve();
+    engine.dispatch(2);
+    server.release();
+    await engine.flush();
+    await new Promise(r => setTimeout(r, 10));   // let every pending push and pull settle
+    expect(engine.snapshot).toEqual([1, 2]);
+  });
+
+  it('retries a failed push on its own, without another dispatch', async () => {
+    const server = new MockTransport();
+    server.online = false;
+    const engine = new SyncEngine<number[], number>({ ...counter, transport: server, retryBaseMs: 5 });
+    engine.dispatch(7);
+    await engine.flush();
+    expect(engine.pendingCount).toBe(1);
+    server.online = true;
+    await new Promise(r => setTimeout(r, 30));
+    await engine.flush();
+    expect(engine.pendingCount).toBe(0);
+    expect((await server.pull<number>('progress', 0)).map(e => e.event)).toEqual([7]);
+    engine.dispose();
+  });
+});

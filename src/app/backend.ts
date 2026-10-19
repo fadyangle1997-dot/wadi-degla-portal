@@ -78,33 +78,53 @@ export interface ProgressBackend {
 }
 
 /* ---------------- localStorage adapter (current) ---------------- */
-const SNAP_KEY = 'wda.progress.v2';
-const LOG_KEY = 'wda.events.v2';
-// Previous keys — read once for a forward migration, then left untouched.
-const SNAP_KEY_V1 = 'wda.progress.v1';
-const LOG_KEY_V1 = 'wda.events.v1';
+/**
+ * Progress belongs to a person, so storage is keyed by the signed-in user.
+ * A front-desk PC is shared: one global key meant the second trainee to sign
+ * in inherited the first one's lessons and exam attempts.
+ */
+const SNAP_PREFIX = 'wda.progress.v3:';
+const LOG_PREFIX = 'wda.events.v3:';
+// Pre-v3 keys held one device-wide record. The first learner to sign in on a
+// device adopts it once, and the keys are removed so nobody else inherits it.
+const LEGACY_KEYS = [
+  ['wda.progress.v2', 'wda.events.v2'],
+  ['wda.progress.v1', 'wda.events.v1'],
+] as const;
+
+export const progressKeysFor = (userId: string) =>
+  ({ snapshot: SNAP_PREFIX + userId, log: LOG_PREFIX + userId }) as const;
 
 export class LocalStorageBackend implements ProgressBackend {
-  private snapshot: Progress;
-  private log: ProgressEvent[];
+  private snapshot: Progress = EMPTY_PROGRESS;
+  private log: ProgressEvent[] = [];
   private ok = true;
 
-  constructor() {
-    // v2 first; if absent, migrate a v1 snapshot forward once (shape-compatible),
-    // then persist under v2 so the old key is never read again. Keeps progress
-    // in lockstep with the identity/training v2 reset instead of drifting.
-    const v2snap = this.readProgress(SNAP_KEY);
-    const v2log = this.readLog(LOG_KEY);
-    if (v2snap) {
-      this.snapshot = v2snap;
-      this.log = v2log;
-    } else {
-      const v1snap = this.readProgress(SNAP_KEY_V1);
-      const v1log = this.readLog(LOG_KEY_V1);
-      this.snapshot = v1snap ?? EMPTY_PROGRESS;
-      this.log = v1log;
-      if (v1snap || v1log.length) this.persist();  // adopt into v2 immediately
+  /**
+   * `owner` null means no one is signed in: an in-memory record that is never
+   * persisted. `adoptLegacy` is set only for learners, so a trainer signing in
+   * first on a device does not take over a trainee's pre-v3 record.
+   */
+  constructor(private readonly owner: string | null, opts: { readonly adoptLegacy?: boolean } = {}) {
+    if (!owner) return;
+    const keys = progressKeysFor(owner);
+    const snap = readProgress(keys.snapshot);
+    if (snap) {
+      this.snapshot = snap;
+      this.log = readLog(keys.log);
+      return;
     }
+    if (!opts.adoptLegacy) return;
+    for (const [snapKey, logKey] of LEGACY_KEYS) {
+      const legacySnap = readProgress(snapKey);
+      const legacyLog = readLog(logKey);
+      if (!legacySnap && legacyLog.length === 0) continue;
+      this.snapshot = legacySnap ?? EMPTY_PROGRESS;
+      this.log = legacyLog;
+      this.persist();
+      break;
+    }
+    for (const pair of LEGACY_KEYS) for (const k of pair) removeKey(k);
   }
 
   load() { return this.snapshot; }
@@ -124,48 +144,55 @@ export class LocalStorageBackend implements ProgressBackend {
     this.persist();
   }
 
-  private read<T>(key: string): T | null {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? (JSON.parse(raw) as T) : null;
-    } catch { return null; }
-  }
-
-  /**
-   * 🔴 STABILITY FIX — persistence is a TRUST BOUNDARY, and it was being
-   * crossed unchecked. `read<T>` casts whatever parses into T, so storage
-   * holding valid-but-wrong-shaped JSON (an older schema, a half-written
-   * value, a hand-edited key) sailed through as a Progress snapshot. The
-   * failure did not surface here: it surfaced far away, the first time some
-   * screen touched `p.lessons[id]` on an object with no `lessons` — a
-   * TypeError during render, i.e. the crash screen.
-   *
-   * Parsing proves the bytes are JSON. It proves nothing about the shape.
-   * Anything that fails this check is treated exactly like "no data": the
-   * app starts empty instead of starting corrupt.
-   */
-  private static isProgress(v: unknown): v is Progress {
-    if (!v || typeof v !== 'object') return false;
-    const p = v as Partial<Progress>;
-    return isPlainRecord(p.lessons) && isPlainRecord(p.exams) && isPlainRecord(p.bosses);
-  }
-  /** A snapshot, or null if storage holds anything that is not one. */
-  private readProgress(key: string): Progress | null {
-    const v = this.read<unknown>(key);
-    return LocalStorageBackend.isProgress(v) ? v : null;
-  }
-
-  /** The event log, or an empty log — never a non-array pretending to be one. */
-  private readLog(key: string): ProgressEvent[] {
-    const v = this.read<unknown>(key);
-    return Array.isArray(v) ? (v as ProgressEvent[]) : [];
-  }
-
   private persist() {
+    if (!this.owner) return;
+    const keys = progressKeysFor(this.owner);
     try {
-      localStorage.setItem(SNAP_KEY, JSON.stringify(this.snapshot));
-      localStorage.setItem(LOG_KEY, JSON.stringify(this.log));
+      localStorage.setItem(keys.snapshot, JSON.stringify(this.snapshot));
+      localStorage.setItem(keys.log, JSON.stringify(this.log));
       this.ok = true;
     } catch { this.ok = false; /* keep session alive in memory */ }
   }
+}
+
+/**
+ * Another user's stored progress on this device, read-only. Trainers and
+ * managers use it to see the trainees who trained on the same browser.
+ */
+export function storedProgressOf(userId: string): Progress {
+  return readProgress(progressKeysFor(userId).snapshot) ?? EMPTY_PROGRESS;
+}
+
+function read(key: string): unknown {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as unknown) : null;
+  } catch { return null; }
+}
+
+function removeKey(key: string): void {
+  try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
+}
+
+/**
+ * Storage is a trust boundary: parsing proves the bytes are JSON, not that
+ * they are a snapshot. Wrong-shaped data (an older schema, a hand-edited key)
+ * is treated as "no data" so the app starts empty instead of crashing in a
+ * render that touches `p.lessons[id]`.
+ */
+function isProgress(v: unknown): v is Progress {
+  if (!v || typeof v !== 'object') return false;
+  const p = v as Partial<Progress>;
+  return isPlainRecord(p.lessons) && isPlainRecord(p.exams) && isPlainRecord(p.bosses);
+}
+
+function readProgress(key: string): Progress | null {
+  const v = read(key);
+  return isProgress(v) ? v : null;
+}
+
+/** The event log, or an empty log — never a non-array pretending to be one. */
+function readLog(key: string): ProgressEvent[] {
+  const v = read(key);
+  return Array.isArray(v) ? (v as ProgressEvent[]) : [];
 }

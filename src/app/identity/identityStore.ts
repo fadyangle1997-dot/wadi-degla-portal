@@ -8,7 +8,7 @@ import { useSyncExternalStore } from 'react';
 import { DEMO_USERS } from './demoDirectory';
 import { can, type Permission, type User } from '../../domain/identity';
 import {
-  LocalStorageIdentityBackend, SYSTEM_ADMIN,
+  LocalStorageIdentityBackend,
   type IdentityBackend, type IdentityState,
 } from './identityBackend';
 import { authProvider } from './session';
@@ -43,8 +43,10 @@ const currentActor = (): User | null => {
 };
 
 const apply = (fn: (actorId: string) => IdentityState) => {
-  // Writes require an identity. An unattributed audit entry is worse than none.
-  const actor = currentActor() ?? SYSTEM_ADMIN;
+  // Writes require an identity. An unattributed audit entry is worse than none,
+  // and one attributed to the system admin is a false one.
+  const actor = currentActor();
+  if (!actor) throw new Error('identity: no signed-in user — audit entries must be attributable');
   state = fn(actor.id);
   notify();
 };

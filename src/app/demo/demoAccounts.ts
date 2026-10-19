@@ -10,7 +10,8 @@
  * actually did the work. No fake state, no bypassed rules.
  */
 import { MODULES } from '../../content/registry';
-import { progressStore, overallProgress } from '../progress';
+import { progressStore, progressOf, overallProgress } from '../progress';
+import { identityStore } from '../identity/identityStore';
 import { trainingStore } from '../training/trainingStore';
 import { TRAINING_POLICY } from '../../domain/policy';
 import { ALL_DIMENSIONS, type Scores } from '../../domain/evaluation';
@@ -125,33 +126,50 @@ const approve = (employeeId: string, moduleId: string) =>
  * Seed a trainee to `target` completion using real events, in curriculum order:
  * finish each unit's lessons, pass its exam, get trainer approval (so per-unit
  * gating unlocks the next unit exactly as it would in real use), then stop.
+ *
+ * Every write is made by the person it belongs to: progress while signed in
+ * as the trainee, approvals while signed in as their trainer. The session that
+ * was open before seeding is restored afterwards.
  */
 export function seedTraineeProgress(account: DemoAccount): void {
-  progressStore.reset();
-  if (!account.progress) return;               // new trainee: clean slate
-  progressStore.completeOnboarding();
+  const before = identityStore.currentUser()?.id ?? null;
+  const asTrainee = () => identityStore.signIn(account.id);
+  const asTrainer = () => identityStore.signIn(account.trainerId ?? 'admin');
 
-  const pass = TRAINING_POLICY.passThreshold + 0.15;
-  const reached = () => overallProgress(progressStore.get()) >= (account.progress ?? 0) - 0.001;
+  try {
+    asTrainee();
+    progressStore.reset();
+    if (!account.progress) return;               // new trainee: clean slate
+    progressStore.completeOnboarding();
 
-  for (const m of MODULES) {
-    for (const l of m.lessons) {
+    const pass = TRAINING_POLICY.passThreshold + 0.15;
+    const reached = () => overallProgress(progressOf(account.id)) >= (account.progress ?? 0) - 0.001;
+
+    for (const m of MODULES) {
+      asTrainee();
+      for (const l of m.lessons) {
+        if (reached()) return;
+        progressStore.completeLesson(l.id);
+      }
       if (reached()) return;
-      progressStore.completeLesson(l.id);
+      progressStore.recordExam(m.id, pass);
+      trainingStore.submitForReview(account.id, m.id);
+
+      // The "waiting for trainer" scenario stops with the last unit unapproved.
+      if (account.scenario === 'waiting_review' && reached()) return;
+      asTrainer();
+      approve(account.id, m.id);
+      if (reached()) return;
     }
-    if (reached()) return;
-    progressStore.recordExam(m.id, pass);
-    trainingStore.submitForReview(account.id, m.id);
 
-    // The "waiting for trainer" scenario stops with the last unit unapproved.
-    if (account.scenario === 'waiting_review' && reached()) return;
-    approve(account.id, m.id);
-    if (reached()) return;
-  }
-
-  // Graduated: make sure every unit is approved and every boss is done.
-  if (account.scenario === 'graduated') {
-    for (const m of MODULES) approve(account.id, m.id);
+    // Graduated: make sure every unit is approved.
+    if (account.scenario === 'graduated') {
+      asTrainer();
+      for (const m of MODULES) approve(account.id, m.id);
+    }
+  } finally {
+    if (before) identityStore.signIn(before);
+    else identityStore.signOut();
   }
 }
 

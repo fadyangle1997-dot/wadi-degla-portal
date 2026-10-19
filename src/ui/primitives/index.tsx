@@ -285,7 +285,7 @@ export const ProgressRail: React.FC<{ total: number; current: number; emphasis?:
    of thing that reads as «assembled» without anyone being able to name it.
    Every tone now takes its own -line token, which is the same hue as its text
    at the alpha the palette already defines. */
-const BADGE: Record<string, { c: string; b: string }> = {
+const BADGE = {
   ready: { c: 'var(--ready)', b: 'var(--ready-line)' },
   attn: { c: 'var(--attn)', b: 'var(--attn-line)' },
   risk: { c: 'var(--risk)', b: 'var(--risk-line)' },

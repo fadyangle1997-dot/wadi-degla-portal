@@ -13,7 +13,7 @@ import { ClipboardList, UserCheck, CalendarPlus, StickyNote } from 'lucide-react
 import { useIdentity, useCan, identityStore } from '../../app/identity/identityStore';
 import { scopeOf, visibleLearners } from '../../domain/identity/scope';
 import { useTraining, trainingStore, reviewOf } from '../../app/training/trainingStore';
-import { useProgress, overallProgress } from '../../app/progress';
+import { progressOf, learningProgress } from '../../app/progress';
 import { recommendFor } from '../../app/training/recommend';
 import { readinessScore, EVALUATION_DIMENSIONS, ALL_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS, conductPassed, type ConductObservations, type Scores, type EvaluationDecision } from '../../domain/evaluation';
 import { MODULES, moduleById } from '../../content/registry';
@@ -32,7 +32,6 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const { users, roles } = useIdentity();
   const org = useOrganization();
   const t = useTraining();
-  const p = useProgress();
   // What's under evaluation is a specific trainee's specific unit — never a
   // bare moduleId against a shared record.
   const [evaluating, setEvaluating] = useState<{ employee: User; moduleId: string } | null>(null);
@@ -140,23 +139,13 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
         {/* ---------- 2) roster ---------- */}
         <h2 className="t-h3" style={{ margin: 'var(--sp-8) 0 var(--sp-2)' }}>{tr('tn.yourstaff', lang)}</h2>
-        {/* 🔴 THE ROADMAP WAS LEAKING ONTO A USER'S SCREEN. This line used to
-            end with «بيتزامن مع تفعيل الخادم (المرحلة 7)» — a sentence that
-            asks a branch trainer to hold an engineering release plan in their
-            head to understand why a column is empty. The limitation is real and
-            stays stated; what goes is the internal vocabulary and the phase
-            number, which mean nothing to the person reading it and quietly say
-            «this product is not finished». */}
-        <p className="t-sm" style={{ marginBottom: 'var(--sp-4)' }}>
-          {tr('tn.deviceonly', lang)} <b className="t-num" style={{ color: 'var(--g1)' }}>{Math.round(overallProgress(p) * 100)}%</b>.
-          {tr('tn.deviceonly2', lang)}
-        </p>
+        <p className="t-sm" style={{ marginBottom: 'var(--sp-4)' }}>{tr('tn.deviceonly', lang)}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {employees.length === 0 && (
             <p className="t-sm" style={{ color: 'var(--tx3)' }}>{tr('tn.nostaff', lang)}</p>
           )}
           {employees.map(u => (
-            <RosterRow key={u.id} name={u.name} branch={branchNameOf(u.branchId, org.branches)} onNote={note => {
+            <RosterRow key={u.id} name={u.name} branch={branchNameOf(u.branchId, org.branches)} progress={learningProgress(progressOf(u.id))} onNote={note => {
               trainingStore.addCoachingNote(u.id, note); notify(tr('tn.notesaved', lang));
             }} />
           ))}
@@ -176,7 +165,7 @@ const waitLabel = (submittedAtMs: number, lang: Lang): string => {
 };
 
 /* ---------------- roster row (coaching note quick-add) ---------------- */
-const RosterRow: React.FC<{ name: string; branch?: string; onNote: (note: string) => void }> = ({ name, branch, onNote }) => {
+const RosterRow: React.FC<{ name: string; branch?: string; progress: number; onNote: (note: string) => void }> = ({ name, branch, progress, onNote }) => {
   const lang = useLang();
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
@@ -184,7 +173,9 @@ const RosterRow: React.FC<{ name: string; branch?: string; onNote: (note: string
     <div style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
         <span className="t-sm" style={{ flex: '1 1 180px', color: 'var(--tx1)' }}>{name}{branch ? ` · ${branch}` : ''}</span>
-        <StatusBadge tone="neutral">{tr('tn.syncing', lang)}</StatusBadge>
+        <StatusBadge tone={progress >= 1 ? 'ready' : 'neutral'}>
+          {tr('tn.learned', lang)} <span className="t-num">{Math.round(progress * 100)}%</span>
+        </StatusBadge>
         <button className="icon-btn" onClick={() => setOpen(v => !v)} aria-expanded={open}><StickyNote size={13} /> {tr('tn.note', lang)}</button>
       </div>
       {open && (
