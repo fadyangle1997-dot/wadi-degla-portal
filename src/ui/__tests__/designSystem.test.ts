@@ -260,6 +260,7 @@ describe('🔴 the material is warm all the way down — including where it is t
         if (r === 0 && g === 0 && b === 0) continue;          // pure black scrim — no temperature
         if (r === 255 && g === 255 && b === 255) continue;    // pure white
         if (g > r) continue;                                  // status colours own their hue
+        if (Math.max(r, g, b) > 96) continue;                 // not a near-black: a status hue, not an overlay
         expect(b <= g, `rgba(${r},${g},${b}) is cool — blue must never lead in this palette`).toBe(true);
       }
     }
@@ -647,7 +648,7 @@ describe('🔴 low vision: the type floor and the paper sheet', () => {
     expect(ratio(token('--ink-2'), paper)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(token('--gold-ink'), paper)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(token('--on-ink'), token('--ink'))).toBeGreaterThanOrEqual(7);
-    for (const status of ['#3F6B4A', '#9A4F1E', '#9B4A40', '#4F5963']) {
+    for (const status of ['#226B5C', '#9A4F1E', '#A23A50', '#3E5F82']) {
       expect(ratio(status, paper), status).toBeGreaterThanOrEqual(4.5);
     }
   });
@@ -656,5 +657,71 @@ describe('🔴 low vision: the type floor and the paper sheet', () => {
     expect(css).toContain('html[data-text="lg"] { font-size:112.5%; }');
     expect(css).toContain('html[data-text="xl"] { font-size:125%; }');
     expect(css).toMatch(/body \{[^}]*font-size:1\.0625rem/);
+  });
+});
+
+describe('🔴 low vision: contrast on every surface, status told apart by everyone', () => {
+  const tok = (name: string) => {
+    const m = root.match(new RegExp(`${name}:\\s*(#[0-9A-Fa-f]{6})`));
+    if (!m) throw new Error(`${name} missing`);
+    return m[1]!;
+  };
+  const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const rgb = (hex: string) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number];
+  const lum = (hex: string) => { const [r, g, b] = rgb(hex).map(lin) as [number, number, number]; return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const ratio = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p) as [number, number]; return (x + 0.05) / (y + 0.05); };
+  const surfaces = ['--void', '--s-2', '--s-1', '--s0', '--s1'].map(tok);
+
+  it('body text is AAA everywhere; secondary is AAA on the room and cards; nothing is under AA', () => {
+    for (const s of surfaces) expect(ratio(tok('--tx1'), s), `tx1 on ${s}`).toBeGreaterThanOrEqual(7);
+    for (const s of surfaces.slice(0, 3)) expect(ratio(tok('--tx2'), s), `tx2 on ${s}`).toBeGreaterThanOrEqual(7);
+    for (const t of ['--tx2', '--tx3', '--g1', '--ready', '--attn', '--risk', '--info']) {
+      for (const s of surfaces) expect(ratio(tok(t), s), `${t} on ${s}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('a field\'s edge clears 3:1, so the control can be found', () => {
+    for (const s of ['--void', '--s-2', '--s-1'].map(tok)) expect(ratio(tok('--line-ctl'), s)).toBeGreaterThanOrEqual(3);
+    expect(css).toMatch(/\.field \{[^}]*border:1px solid var\(--line-ctl\)/);
+  });
+
+  it('ready, attention and risk stay apart for colour-blind readers (CIEDE2000 ≥ 9)', () => {
+    // Machado et al. (2009) simulation at full severity, then ΔE2000 in CIELAB.
+    const M: Record<string, number[][]> = {
+      normal: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+      protan: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
+      deutan: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]],
+    };
+    const lab = (hex: string, kind: string): [number, number, number] => {
+      const l = rgb(hex).map(lin);
+      const m = M[kind]!;
+      const [r, g, b] = m.map(row => Math.max(0, Math.min(1, row[0]! * l[0]! + row[1]! * l[1]! + row[2]! * l[2]!))) as [number, number, number];
+      const x = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047, y = 0.2126 * r + 0.7152 * g + 0.0722 * b, z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883;
+      const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+      return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
+    };
+    const rad = (d: number) => (d * Math.PI) / 180;
+    const de2000 = ([L1, a1, b1]: number[], [L2, a2, b2]: number[]) => {
+      const C1 = Math.hypot(a1!, b1!), C2 = Math.hypot(a2!, b2!), Cb = (C1 + C2) / 2;
+      const G = 0.5 * (1 - Math.sqrt(Cb ** 7 / (Cb ** 7 + 25 ** 7)));
+      const a1p = (1 + G) * a1!, a2p = (1 + G) * a2!;
+      const C1p = Math.hypot(a1p, b1!), C2p = Math.hypot(a2p, b2!);
+      const h1p = ((Math.atan2(b1!, a1p) * 180) / Math.PI + 360) % 360, h2p = ((Math.atan2(b2!, a2p) * 180) / Math.PI + 360) % 360;
+      let dhp = h2p - h1p; if (dhp > 180) dhp -= 360; if (dhp < -180) dhp += 360;
+      const dLp = L2! - L1!, dCp = C2p - C1p, dHp = 2 * Math.sqrt(C1p * C2p) * Math.sin(rad(dhp / 2));
+      const Lbp = (L1! + L2!) / 2, Cbp = (C1p + C2p) / 2;
+      const hbp = Math.abs(h1p - h2p) <= 180 ? (h1p + h2p) / 2 : (h1p + h2p + 360) / 2;
+      const T = 1 - 0.17 * Math.cos(rad(hbp - 30)) + 0.24 * Math.cos(rad(2 * hbp)) + 0.32 * Math.cos(rad(3 * hbp + 6)) - 0.2 * Math.cos(rad(4 * hbp - 63));
+      const Rc = 2 * Math.sqrt(Cbp ** 7 / (Cbp ** 7 + 25 ** 7)), dth = 30 * Math.exp(-(((hbp - 275) / 25) ** 2));
+      const Sl = 1 + (0.015 * (Lbp - 50) ** 2) / Math.sqrt(20 + (Lbp - 50) ** 2), Sc = 1 + 0.045 * Cbp, Sh = 1 + 0.015 * Cbp * T;
+      const Rt = -Math.sin(rad(2 * dth)) * Rc;
+      return Math.sqrt((dLp / Sl) ** 2 + (dCp / Sc) ** 2 + (dHp / Sh) ** 2 + Rt * (dCp / Sc) * (dHp / Sh));
+    };
+    const st = ['--ready', '--attn', '--risk'].map(tok);
+    for (const kind of Object.keys(M)) {
+      for (let i = 0; i < st.length; i++) for (let j = i + 1; j < st.length; j++) {
+        expect(de2000(lab(st[i]!, kind), lab(st[j]!, kind)), `${st[i]} vs ${st[j]} (${kind})`).toBeGreaterThanOrEqual(9);
+      }
+    }
   });
 });

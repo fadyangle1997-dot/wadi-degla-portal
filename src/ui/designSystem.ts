@@ -58,9 +58,9 @@ export const COLOR = {
   goldLight: '#FEDEA0',
 
   textPrimary: '#FFFFFF',
-  textSecondary: '#CFCFCF',
-  /** Third tier — metadata, timestamps, things you read only if you look. */
-  textTertiary: '#8A8681',
+  textSecondary: '#DAD4CC',
+  /** Third tier — metadata and labels. AA on every surface (4.7:1 at worst). */
+  textTertiary: '#AEA79F',
 
   border: 'rgba(255,255,255,.08)',
   /** Hover / focus border. Still not a colour — just more of the same. */
@@ -68,22 +68,23 @@ export const COLOR = {
 } as const;
 
 /**
- * STATUS — deliberately desaturated.
+ * STATUS — told apart by everyone, and still under the gold.
  *
- * A saturated green next to #B38922 fights it and wins, and then the brand is
- * whatever colour the last alert was. These are muted to sit UNDER the gold:
- * loud enough to read as status, quiet enough to stay in the room.
- * Never the only signal — always paired with text or an icon.
+ * The first palette was muted so the brand stayed the loudest colour, and its
+ * green and red were the same colour to a deuteranope (ΔE2000 4.2). These keep
+ * ready / attention / risk at least 9 apart under normal, protan and deutan
+ * vision, read ≥ 4.5:1 as text on every dark surface, and stay below the
+ * gold's saturation. Never the only signal — always paired with text or an icon.
  */
 export const STATUS = {
-  success: '#74A67E',
+  success: '#4FBFA8',
   /**
      * Burnt amber, separated from the brand gold by hue: a warning must not look
      * like the primary button. Never the only signal — always icon + text.
      */
-  warning: '#D98650',
-  error: '#D1887F',
-  info: '#929CA6',
+  warning: '#E8904F',
+  error: '#F2899B',
+  info: '#8DB5DE',
 } as const;
 
 /* ═══ SPACE ═══════════════════════════════════════════════════════════════
