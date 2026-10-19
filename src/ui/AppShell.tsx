@@ -393,7 +393,6 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
         onClick={() => setOpen(v => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`${name} — ${role}. القائمة الشخصية`}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-3)',
           background: 'none', border: 'none', cursor: 'pointer', padding: 'var(--sp-1)',
@@ -415,6 +414,9 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
           <div className="t-label shell-greeting-time" style={{ color: 'var(--tx3)' }}>{greeting(langStore.get())}</div>
           <div className="t-sm" style={{ color: 'var(--tx0)', fontWeight: 500 }}>{name}</div>
         </div>
+        {/* The accessible name is the visible text plus this, so speech users
+            can say what they see (WCAG 2.5.3) and screen readers hear the role. */}
+        <span className="sr-only"> — {role}. القائمة الشخصية</span>
       </button>
 
       {open && (

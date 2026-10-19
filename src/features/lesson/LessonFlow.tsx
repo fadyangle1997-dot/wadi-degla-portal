@@ -554,7 +554,8 @@ const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }> = ({ p
                 <span className="t-body" style={{ flex: 1, minWidth: 200 }}>{it.text}</span>
                 <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
                   {[{ v: true, label: 'مطلوب' }, { v: false, label: 'مش مطلوب' }].map(b => (
-                    <button key={String(b.v)} disabled={checked} onClick={() => setMarks(m => ({ ...m, [i]: b.v }))}
+                    <button key={String(b.v)} type="button" disabled={checked} aria-pressed={mark === b.v}
+                      onClick={() => setMarks(m => ({ ...m, [i]: b.v }))}
                       style={{
                         padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--r-full)', fontWeight: 600,
                         fontFamily: 'var(--font-body)', cursor: checked ? 'default' : 'pointer', minHeight: 36,

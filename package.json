@@ -8,13 +8,15 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "server:dev": "tsx watch server/index.ts",
     "server:start": "tsx server/index.ts",
     "server:migrate": "tsx -e \"import('./server/db/client').then(async m => { const sql = await m.connect(); const { migrate } = await import('./server/db/migrate'); console.log(await migrate(sql)); await sql.end(); })\"",
-    "test:server": "vitest run server"
+    "test:server": "vitest run server",
+    "e2e": "playwright test",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",
@@ -37,6 +39,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "@vitest/coverage-v8": "^5.0.5",
     "axe-core": "^4.10.2",
     "jsdom": "^29.1.1",
     "playwright": "^1.62.1",

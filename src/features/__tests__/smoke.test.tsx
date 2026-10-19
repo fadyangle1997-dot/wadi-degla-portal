@@ -331,7 +331,7 @@ describe('profile menu — sign out', () => {
   it('🔴 signing out returns to the login screen', async () => {
     signIn('ahmed.m', 'Welcome@123');
     // open the profile menu (its label carries the name)
-    fireEvent.click(screen.getByLabelText(/القائمة الشخصية/));
+    fireEvent.click(screen.getByRole('button', { name: /القائمة الشخصية/ }));
     fireEvent.click(screen.getByRole('menuitem', { name: /تسجيل الخروج/ }));
     // back at the door: the username field exists again
     await waitFor(() => expect(screen.getByLabelText('Username')).toBeTruthy());
@@ -339,7 +339,7 @@ describe('profile menu — sign out', () => {
 
   it('the menu opens and closes on Escape', () => {
     signIn('ahmed.m', 'Welcome@123');
-    const trigger = screen.getByLabelText(/القائمة الشخصية/);
+    const trigger = screen.getByRole('button', { name: /القائمة الشخصية/ });
     fireEvent.click(trigger);
     expect(screen.getByRole('menu')).toBeTruthy();
     fireEvent.keyDown(document, { key: 'Escape' });
@@ -348,7 +348,7 @@ describe('profile menu — sign out', () => {
 
   it('sign-out works for a trainer too (every role)', async () => {
     signIn('trainer.adel', 'Welcome@123');
-    fireEvent.click(screen.getByLabelText(/القائمة الشخصية/));
+    fireEvent.click(screen.getByRole('button', { name: /القائمة الشخصية/ }));
     fireEvent.click(screen.getByRole('menuitem', { name: /تسجيل الخروج/ }));
     await waitFor(() => expect(screen.getByLabelText('Username')).toBeTruthy());
   });
