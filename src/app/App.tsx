@@ -28,7 +28,8 @@ const LessonFlow = lazy(() => import('../features/lesson/LessonFlow').then(m => 
 const ExamView = lazy(() => import('../features/exam/ExamView').then(m => ({ default: m.ExamView })));
 const BossView = lazy(() => import('../features/boss/BossView').then(m => ({ default: m.BossView })));
 import { readinessStanding } from '../domain/readiness/track';
-import { EmptyState, Button, Eyebrow, ScreenHeader, ArabicContent } from '../ui/primitives';
+import { EmptyState, Button, Eyebrow, ScreenHeader, ArabicContent, LoadingState } from '../ui/primitives';
+import { RouteBoundary } from './RouteBoundary';
 import { moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
@@ -43,10 +44,14 @@ const initialView = (): View => {
   return v;
 };
 
+/** A lazily loaded screen: its own loading state, and its own error state —
+ *  a failed chunk or render is the screen's problem, not a blank app. */
 const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Suspense fallback={<div role="status" className="row min-h-screen items-center justify-center c-tx3">{t('sh.loading')}</div>}>
-    {children}
-  </Suspense>
+  <RouteBoundary onHome={() => { location.hash = '#/'; }}>
+    <Suspense fallback={<div style={{ padding: 'var(--sp-6) var(--sp-5)' }}><LoadingState /></div>}>
+      {children}
+    </Suspense>
+  </RouteBoundary>
 );
 
 /** The trainee's readiness, computed from the stations their trainer and manager recorded. */
@@ -72,6 +77,11 @@ const NoAccess: React.FC = () => {
       <div className="text-center" style={{ maxWidth: 380 }}>
         <h1 className="t-h3">{t('sh.noaccess', lang)}</h1>
         <p className="t-body c-tx2 mt-2">{t('sh.noaccessbody', lang)}</p>
+        {/* Never a screen with no way out: the one thing that can be done
+            here is to leave and sign in as someone else. */}
+        <div className="mt-5">
+          <Button variant="ghost" onClick={() => identityStore.signOut()}>{t('menu.signout', lang)}</Button>
+        </div>
       </div>
     </div>
   );
@@ -229,7 +239,12 @@ export const App: React.FC = () => {
       if (m?.lessons[0]) openLesson(m.id, m.lessons[0].id);
     }} /></Lazy>
   );
-  if (view.kind === 'skills') return inShell(<Lazy><SkillsView onExit={toPath} /></Lazy>);
+  if (view.kind === 'skills') return inShell(<Lazy><SkillsView onStartFirst={() => {
+    // The empty state's action does what its label says: opens the first lesson.
+    const first = moduleById('m1') ?? moduleById('m2_1');
+    const lesson = first?.lessons[0];
+    if (first && lesson) openLesson(first.id, lesson.id); else toPath();
+  }} /></Lazy>);
 
   // The daily debrief — one question at a time, immersive so nothing competes
   // with the thinking. Reachable from the journey once independent work begins.

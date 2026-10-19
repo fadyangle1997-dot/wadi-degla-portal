@@ -12,7 +12,7 @@ import { fade } from '../../ui/motion';
 import { useLang, t } from '../../app/i18n';
 import { WIDTH } from '../../ui/designSystem';
 
-export const SkillsView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+export const SkillsView: React.FC<{ onStartFirst: () => void }> = ({ onStartFirst }) => {
   const p = useProgress();
   const lang = useLang();
   const skills = skillProgress(p);
@@ -31,7 +31,7 @@ export const SkillsView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
           <EmptyState
             title={t('sk.notstarted', lang)}
             body="أول درس هتخلّصه هيحرّك أول مهارة هنا — وهتشوف تقدّمك بيتبني قدامك درس ورا درس."
-            action={<Button onClick={onExit}>{t('sk.gotofirst', lang)}</Button>}
+            action={<Button onClick={onStartFirst}>{t('sk.gotofirst', lang)}</Button>}
           />
         ) : (
           <div className="stack gap-4">

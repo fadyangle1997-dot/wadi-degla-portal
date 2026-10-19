@@ -17,7 +17,7 @@ import { Building2, MapPin, Users2, Plus, Archive, ArchiveRestore, Pencil, Check
 import { useOrganization, orgStore } from '../../app/organization/orgStore';
 import { useIdentity } from '../../app/identity/identityStore';
 import { branchesOfArea, usersOfBranch } from '../../domain/organization';
-import { Card, Eyebrow, StatusBadge, Button, EmptyState } from '../../ui/primitives';
+import { Card, Eyebrow, StatusBadge, Button, EmptyState, ConfirmDialog } from '../../ui/primitives';
 import { useLang, t } from '../../app/i18n';
 
 export const OrganizationPanel: React.FC = () => {
@@ -27,6 +27,7 @@ export const OrganizationPanel: React.FC = () => {
   const [renaming, setRenaming] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [creating, setCreating] = useState(false);
+  const [archiving, setArchiving] = useState<string | null>(null);
 
   // Managers eligible to run an area. Derived from the live roster — never a
   // hardcoded list, so a newly-created area manager is immediately assignable.
@@ -91,7 +92,7 @@ export const OrganizationPanel: React.FC = () => {
                 )}
                 <div className="grow" />
                 {archived && <StatusBadge tone="risk">{t('og.archived', lang)}</StatusBadge>}
-                <button className="pill" onClick={() => orgStore.setAreaStatus(area.id, archived ? 'active' : 'inactive')}>
+                <button className="pill" onClick={() => (archived ? orgStore.setAreaStatus(area.id, 'active') : setArchiving(area.id))}>
                   {archived ? <><ArchiveRestore size={13} /> {t('og.restore', lang)}</> : <><Archive size={13} /> {t('og.archive', lang)}</>}
                 </button>
               </div>
@@ -176,6 +177,10 @@ export const OrganizationPanel: React.FC = () => {
           <EmptyState title={t('og.noareas', lang)} body={t('og.noareasbody', lang)} />
         )}
       </div>
+      <ConfirmDialog open={archiving !== null} danger
+        title={t('og.ask.archive', lang)} body={t('og.ask.archivebody', lang)} confirmLabel={t('og.archive', lang)}
+        onConfirm={() => { if (archiving) orgStore.setAreaStatus(archiving, 'inactive'); setArchiving(null); }}
+        onCancel={() => setArchiving(null)} />
     </section>
   );
 };

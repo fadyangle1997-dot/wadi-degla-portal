@@ -22,7 +22,7 @@ import { readinessFromOwnEvents } from '../../app/analytics/dashboardStore';
 import { currentPhase, dayPosition, PROGRAM, type PhaseContext } from '../../domain/journey/program';
 import { nextAction } from '../../domain/journey/nextAction';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent } from '../../ui/primitives';
+import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent, CloseButton } from '../../ui/primitives';
 import { useLang, t as tr, tf } from '../../app/i18n';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
@@ -80,7 +80,9 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
 
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={onClose} maxWidth={WIDTH.read} leading={<Eyebrow>{tr('pf.title', lang)}</Eyebrow>} />
+      {/* An overlay closes; it does not go «back to the path». */}
+      <ScreenHeader maxWidth={WIDTH.read} leading={<Eyebrow>{tr('pf.title', lang)}</Eyebrow>}
+        trailing={<CloseButton onClick={onClose} />} />
 
       {/* Enters with the same fade as every other screen — this was the
           only one that appeared instantly, which read as a different product

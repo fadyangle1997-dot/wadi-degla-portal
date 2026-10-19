@@ -296,12 +296,15 @@ body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--fon
    the viewport. `top` and `inset-inline-start` are logical-safe in both
    directions because the link is centred. */
 .skip-link {
-  position: fixed; top: -100px; inset-inline-start: 50%; transform: translateX(-50%);
+  /* Physical left: translateX(-50%) is physical too, so a logical start
+     put the link off-centre in RTL. */
+  position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
   z-index: 100; padding: var(--sp-3) var(--sp-5); border-radius: var(--r-sm);
   background: var(--g2); color: var(--void); font-weight: 700; text-decoration: none;
   transition: top .18s var(--ease);
 }
 .skip-link:focus-visible { top: var(--sp-3); outline: 2px solid var(--g0); outline-offset: 2px; }
+#wda-main:focus { outline: none; }
 
 /* Directional icons flip in RTL only, so «continue» points where the reader
    is going in both languages. */
@@ -689,6 +692,11 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   min-width:36px; min-height:36px; border-radius:var(--r-full); background:none; border:0;
   color:var(--tx2); cursor:pointer; }
 .dt-clear:hover { color:var(--tx0); background:var(--s0); }
+
+/* Loading and error: the screen's own place, not a blank page. */
+.loading-state { display:flex; flex-direction:column; gap:var(--sp-3); padding:var(--sp-6) 0; max-width:var(--w-focus); }
+.error-state { display:flex; flex-direction:column; gap:var(--sp-2); padding:var(--sp-5) var(--sp-6);
+  background:var(--s-1); border-radius:var(--r-lg); max-width:var(--w-focus); }
 
 /* -- Answer option -- */
 .option { display:flex; align-items:center; gap:var(--sp-3); width:100%; text-align:right;

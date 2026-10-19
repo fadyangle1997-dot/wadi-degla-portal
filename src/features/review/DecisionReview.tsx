@@ -20,12 +20,13 @@
  */
 import React, { useState } from 'react';
 import { m } from 'motion/react';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, ChevronLeft } from 'lucide-react';
 import {
   REVIEW_FIELDS, REVIEW_LABELS, REVIEW_PROMPTS, isComplete, type ReviewField,
 } from '../../domain/review';
 import { trainingStore, currentTraineeId } from '../../app/training/trainingStore';
-import { Button, Eyebrow, ScreenHeader } from '../../ui/primitives';
+import { Button, Eyebrow, ScreenHeader, useExitFlow } from '../../ui/primitives';
+import { t, langStore } from '../../app/i18n';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 
@@ -48,6 +49,13 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
   const value = answers[field] ?? '';
   const canAdvance = value.trim().length > 0;
   const isLast = idx === REVIEW_FIELDS.length - 1;
+  // Five free-text answers are work: leaving before filing asks first, from
+  // the back button and from the browser's Back.
+  const dirty = !filed && Object.values(answers).some(v => v.trim().length > 0);
+  const { leave, dialog } = useExitFlow(dirty, {
+    title: 'تسيب المراجعة من غير ما تسجّلها؟',
+    body: 'اللي كتبته في المراجعة دي مش هيتحفظ. لو كمّلت، تقدر تسجّلها في دقيقتين.',
+  });
 
   const advance = () => {
     if (!canAdvance) return;
@@ -66,7 +74,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
   if (filed) {
     return (
       <div className="min-h-screen">
-        <ScreenHeader onBack={onExit} maxWidth={WIDTH.focus} leading={<Eyebrow>مراجعة اليوم</Eyebrow>} />
+        <ScreenHeader onBack={onExit} backLabel={t('nav.toroadmap', langStore.get())} maxWidth={WIDTH.focus} leading={<Eyebrow>مراجعة اليوم</Eyebrow>} />
         <m.section {...fade} className="focus-col text-center" style={{ paddingTop: 'var(--sp-8)' }}>
           <Check size={32} className="c-ready" />
           <h1 className="t-h2" style={{ margin: 'var(--sp-4) 0 var(--sp-2)' }}>اتسجّلت</h1>
@@ -75,7 +83,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
             المدرب هيشوفها ويعلّق. الحلقة بتتقفل لما تقرا تعليقه.
           </p>
           <div className="mt-6">
-            <Button variant="ghost" onClick={onExit}>رجوع</Button>
+            <Button variant="ghost" onClick={onExit}>{t('nav.toroadmap', langStore.get())}</Button>
           </div>
         </m.section>
       </div>
@@ -84,7 +92,8 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
 
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={onExit} maxWidth={WIDTH.focus} leading={<Eyebrow>مراجعة اليوم · {idx + 1} من {REVIEW_FIELDS.length}</Eyebrow>} />
+      <ScreenHeader onBack={() => leave(onExit)} backLabel={t('nav.toroadmap', langStore.get())} maxWidth={WIDTH.focus}
+        leading={<Eyebrow>مراجعة اليوم · {idx + 1} من {REVIEW_FIELDS.length}</Eyebrow>} />
 
       <main className="focus-col">
         {/* The chain so far — you reason forward from what you already said. */}
@@ -115,7 +124,8 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
           />
 
           <div className="row gap-2 mt-5 items-center">
-            {idx > 0 && <Button variant="ghost" onClick={() => setIdx(i => i - 1)}>رجوع</Button>}
+            {/* «السابق» steps inside the debrief; «رجوع» was also the word for leaving it. */}
+            {idx > 0 && <Button variant="ghost" onClick={() => setIdx(i => i - 1)}><ChevronLeft size={16} className="icon-dir" aria-hidden /> السابق</Button>}
             <div className="grow" />
             <Button onClick={advance} disabled={!canAdvance}>
               {isLast ? 'سجّل المراجعة' : <>كمّل <ArrowRight size={16} className="icon-dir" /></>}
@@ -123,6 +133,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
           </div>
         </m.section>
       </main>
+      {dialog}
     </div>
   );
 };

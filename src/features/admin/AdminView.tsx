@@ -14,7 +14,7 @@ import { usersWhoCan } from '../../domain/identity/scope';
 import { Button, Card, Eyebrow, EmptyState, ScreenHeader, ConfirmDialog, Toast, StatusBadge } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
-import { useLang, t, t as tr, roleName as roleDisplayName } from '../../app/i18n';
+import { useLang, t, t as tr, tf, roleName as roleDisplayName, type Key } from '../../app/i18n';
 
 export const AdminView: React.FC<{ onExit: () => void; embedded?: boolean }> = ({ onExit, embedded }) => {
   const lang = useLang();
@@ -162,6 +162,18 @@ const UserRow: React.FC<{
   const [email, setEmail] = useState(u.email ?? '');
   const [branch, setBranch] = useState(u.branchId ?? '');
   const disabled = u.status === 'disabled';
+  // The signed-in admin cannot disable or demote themself from this row: the
+  // next screen would be a locked door with nobody left to open it.
+  const isSelf = identityStore.currentUser()?.id === u.id;
+  const [ask, setAsk] = useState<{ kind: 'disable' | 'reset' | 'role'; role?: string } | null>(null);
+  const roleLabel = (id?: string) => { const r = roles.find(x => x.id === id); return r ? roleDisplayName(r, lang) : (id ?? ''); };
+  const confirmAsk = () => {
+    if (!ask) return;
+    if (ask.kind === 'disable') { identityStore.setActive(u.id, false); notify(t('us.disabled_ok', lang)); }
+    if (ask.kind === 'reset') { identityStore.requestPasswordReset(u.id); notify(t('us.resetdone', lang)); }
+    if (ask.kind === 'role' && ask.role) { identityStore.changeRole(u.id, ask.role); notify(t('us.rolechanged', lang)); }
+    setAsk(null);
+  };
 
   return (
     <div className="row-hover" style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', opacity: disabled ? 0.6 : 1 }}>
@@ -178,7 +190,8 @@ const UserRow: React.FC<{
         {/* col 2 — role */}
         {canDo('users.assignRole') ? (
           <select aria-label={`${t('us.roleof', lang)} ${u.name}`} value={u.roleId} className="field t-sm"
-            onChange={e => { identityStore.changeRole(u.id, e.target.value); notify(t('us.rolechanged', lang)); }}>
+            disabled={isSelf} title={isSelf ? t('us.selfguard', lang) : undefined}
+            onChange={e => setAsk({ kind: 'role', role: e.target.value })}>
             {roles.map(r => <option key={r.id} value={r.id}>{roleDisplayName(r, lang)}</option>)}
           </select>
         ) : <span aria-hidden />}
@@ -205,13 +218,15 @@ const UserRow: React.FC<{
           )}
           {canDo('users.resetPassword') && (
             <button className="icon-btn" title={t('us.resetnote', lang)}
-              onClick={() => { identityStore.requestPasswordReset(u.id); notify(t('us.resetdone', lang)); }}>
+              onClick={() => setAsk({ kind: 'reset' })}>
               <KeyRound size={13} /> {t('us.resetpw', lang)}
             </button>
           )}
-          {canDo('users.activate') && (
+          {canDo('users.activate') && !isSelf && (
             <button className="icon-btn" style={{ color: disabled ? 'var(--ready)' : 'var(--attn)' }}
-              onClick={() => { identityStore.setActive(u.id, disabled); notify(disabled ? t('us.enabled_ok', lang) : t('us.disabled_ok', lang)); }}>
+              onClick={() => (disabled
+                ? (identityStore.setActive(u.id, true), notify(t('us.enabled_ok', lang)))
+                : setAsk({ kind: 'disable' }))}>
               <Power size={13} /> {disabled ? t('us.enable', lang) : t('us.disable', lang)}
             </button>
           )}
@@ -235,6 +250,11 @@ const UserRow: React.FC<{
           }}>{t('us.save', lang)}</Button>
         </div>
       )}
+      <ConfirmDialog open={ask !== null} danger={ask?.kind === 'disable'}
+        title={ask ? tf(`us.ask.${ask.kind}` as Key, { name: u.name, role: roleLabel(ask.role) }, lang) : ''}
+        body={ask ? tf(`us.ask.${ask.kind}body` as Key, { name: u.name, role: roleLabel(ask.role) }, lang) : ''}
+        confirmLabel={ask?.kind === 'disable' ? t('us.disable', lang) : ask?.kind === 'reset' ? t('us.resetpw', lang) : t('us.changerole', lang)}
+        onConfirm={confirmAsk} onCancel={() => setAsk(null)} />
     </div>
   );
 };

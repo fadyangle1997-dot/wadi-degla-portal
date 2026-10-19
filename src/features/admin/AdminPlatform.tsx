@@ -155,6 +155,7 @@ const DemoDataCard: React.FC = () => {
       </div>
       <ConfirmDialog
         open={confirm === 'load'}
+        danger
         title={t('ad.demoloadttl', lang)}
         body={t('ad.demoloadbody', lang)}
         confirmLabel={t('ad.demoload', lang)}

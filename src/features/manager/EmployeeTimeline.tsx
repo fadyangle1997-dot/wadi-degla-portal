@@ -8,9 +8,9 @@ import { moduleById } from '../../content/registry';
 import { DECISION_LABEL, readinessScore } from '../../domain/evaluation';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, Eyebrow, StatusBadge, ArabicContent } from '../../ui/primitives';
+import { Button, Eyebrow, StatusBadge, ArabicContent, CloseButton, ConfirmDialog, Toast, useModal } from '../../ui/primitives';
 import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
-import { useLang, t as tr } from '../../app/i18n';
+import { useLang, t as tr, tf, type Key } from '../../app/i18n';
 
 const moduleName = (id: string) => moduleById(id)?.title ?? id;
 
@@ -21,20 +21,8 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
   // Readiness stations and coaching notes change the log but not the snapshot.
   useTrainingEvents();
   const canDo = useCan();
-  const dialogRef = React.useRef<HTMLDivElement>(null);
-
-  // A modal dialog takes focus when it opens, closes on Escape, and hands
-  // focus back to whatever opened it.
-  // onClose is read through a ref so a parent re-render does not re-run this.
-  const onCloseRef = React.useRef(onClose);
-  onCloseRef.current = onClose;
-  React.useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    dialogRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
-    window.addEventListener('keydown', onKey);
-    return () => { window.removeEventListener('keydown', onKey); opener?.focus(); };
-  }, []);
+  // Focus in, Tab kept inside, Escape closes, focus back to the row.
+  const dialogRef = useModal<HTMLDivElement>(onClose);
   const user = users.find(u => u.id === employeeId);
   const name = user?.name ?? employeeId;
   const trainer = user?.trainerId ? users.find(u => u.id === user.trainerId) : undefined;
@@ -85,7 +73,7 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
         <div className="row items-center gap-3">
           <h2 className="t-h3 m-0 grow">{name}</h2>
           <Button variant="ghost" onClick={() => { window.location.hash = `#/readiness-report/${employeeId}`; }}>{tr('mg.report', lang)}</Button>
-          <Button variant="ghost" onClick={onClose}>{tr('mg.close', lang)}</Button>
+          <CloseButton onClick={onClose} label={tr('mg.close', lang)} />
         </div>
 
         {/* ── LAYER 1 · THE VERDICT — "do I need to act?" ── */}
@@ -173,6 +161,11 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
     trainingStore.decideReadiness({ employeeId, decision, rationale: rationale.trim() });
     setRationale('');
   };
+  // The final word on someone's readiness is said back, with what it does,
+  // before it is written — the rationale alone did not stop a mis-click.
+  const [pending, setPending] = React.useState<'ready' | 'extend' | 'reject' | null>(null);
+  const [saved, setSaved] = React.useState<string | null>(null);
+  const flash = (msg: string) => { setSaved(msg); window.setTimeout(() => setSaved(null), 2600); };
 
   return (
     <div className="mt-5" style={{ paddingTop: 'var(--sp-5)', borderTop: '1px solid var(--line)' }}>
@@ -196,7 +189,7 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
         <div className="stack mt-3 gap-3">
           <ReadinessOutcomeSummary employeeId={employeeId} />
           {/* Station 6 — the readiness interview — is the manager's own evidence. */}
-          {canDecide && <StationAssessment employeeId={employeeId} assessor="manager" onSaved={() => undefined} />}
+          {canDecide && <StationAssessment employeeId={employeeId} assessor="manager" onSaved={flash} />}
         </div>
       )}
 
@@ -220,12 +213,19 @@ const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof us
             style={{ background: 'var(--s-1)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)', padding: 'var(--sp-3)', resize: 'vertical', fontFamily: 'inherit' }}
           />
           <div className="row gap-2 wrap">
-            <Button onClick={() => decide('ready')} disabled={!rationale.trim()}>{tr('mg.decready', lang)}</Button>
-            <Button variant="ghost" onClick={() => decide('extend')} disabled={!rationale.trim()}>{tr('mg.decextend', lang)}</Button>
-            <Button variant="ghost" onClick={() => decide('reject')} disabled={!rationale.trim()} style={{ color: 'var(--risk)', borderColor: 'var(--risk)' }}>{tr('mg.decreject', lang)}</Button>
+            <Button onClick={() => setPending('ready')} disabled={!rationale.trim()}>{tr('mg.decready', lang)}</Button>
+            <Button variant="ghost" onClick={() => setPending('extend')} disabled={!rationale.trim()}>{tr('mg.decextend', lang)}</Button>
+            <Button variant="ghost" onClick={() => setPending('reject')} disabled={!rationale.trim()} style={{ color: 'var(--risk)', borderColor: 'var(--risk)' }}>{tr('mg.decreject', lang)}</Button>
           </div>
         </div>
       )}
+      <ConfirmDialog open={pending !== null}
+        title={pending ? tf('mg.confirmtitle', { d: DECISION_META[pending]!.label }, lang) : ''}
+        body={pending ? tr(`mg.confirm.${pending}` as Key, lang) : ''}
+        confirmLabel={pending ? DECISION_META[pending]!.label : ''} danger={pending === 'reject'}
+        onConfirm={() => { const d = pending; setPending(null); if (d) { decide(d); flash(tr('mg.decided', lang)); } }}
+        onCancel={() => setPending(null)} />
+      <Toast message={saved} />
     </div>
   );
 };

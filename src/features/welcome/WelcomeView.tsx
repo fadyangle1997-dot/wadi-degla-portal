@@ -7,7 +7,8 @@
  */
 import React from 'react';
 import { m } from 'motion/react';
-import { Compass, GraduationCap, Clock3, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Compass, GraduationCap, Clock3, ShieldCheck, ArrowRight, LogOut } from 'lucide-react';
+import { identityStore } from '../../app/identity/identityStore';
 import { MODULES, curriculumStats, BOSS_BATTLES } from '../../content/registry';
 import { Button, Eyebrow, ArabicContent } from '../../ui/primitives';
 import { useLang, t } from '../../app/i18n';
@@ -83,6 +84,14 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
         <m.p {...stagger(facts.length, 0.15)} className="t-sm mt-5 c-tx3">
           {t('wc.storage', lang)}
         </m.p>
+        {/* The one tertiary way out of a screen that otherwise has a single
+            action: someone who signed in on the wrong account must not be
+            stuck in a stranger's first day. */}
+        <div className="mt-6">
+          <button type="button" className="icon-btn" onClick={() => identityStore.signOut()}>
+            <LogOut size={16} aria-hidden /> {t('menu.signout', lang)}
+          </button>
+        </div>
         {/* One primary action. The journey is always one tap away in the shell. */}
       </m.main>
     </div>

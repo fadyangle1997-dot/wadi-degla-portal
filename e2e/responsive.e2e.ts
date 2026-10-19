@@ -32,3 +32,14 @@ test('the largest text size still fits a phone, and the choice survives a reload
   await signIn(page, 'manager.nabil');
   await noSidewaysScroll(page);
 });
+
+test('the tab bar moves between screens and marks where you are', async ({ page }) => {
+  await signIn(page, 'ahmed.m');
+  await toAcademy(page);
+  const tabs = page.getByRole('navigation').filter({ has: page.getByRole('button', { name: 'رحلتي' }) }).last();
+  await tabs.getByRole('button', { name: 'رحلتي' }).click();
+  await expect(page).toHaveURL(/#\/roadmap/);
+  await expect(tabs.getByRole('button', { name: 'رحلتي' })).toHaveAttribute('aria-current', 'page');
+  await tabs.getByRole('button', { name: 'الأكاديمية' }).click();
+  await expect(page).toHaveURL(/#\/$|#\/path/);
+});

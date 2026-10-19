@@ -23,6 +23,7 @@ import type { View } from '../app/router';
 import { navFor } from '../domain/identity/access';
 import { useLang, langStore, t, tf, roleName as roleDisplayName, type Key } from '../app/i18n';
 import { WIDTH } from './designSystem';
+import { LoadingState, useModal } from './primitives';
 
 /** Icons are presentation only — the nav itself is built from permissions. */
 const ICONS: Record<string, React.ReactNode> = {
@@ -69,7 +70,14 @@ export const AppShell: React.FC<{
     <div className="shell-root min-h-screen" data-collapsed={railCollapsed || undefined} style={{ background: 'var(--void)' }}>
       {/* Skip link (WCAG 2.4.1): invisible until focused, it lets keyboard users
           jump past the rail, nav and header controls on every screen. */}
-      <a href="#wda-main" className="skip-link">{t('a11y.skip', lang)}</a>
+      {/* The URL hash is the router: following #wda-main navigated to «home».
+          The link moves focus itself and leaves the address alone. */}
+      <a href="#wda-main" className="skip-link" onClick={e => {
+        e.preventDefault();
+        const main = document.getElementById('wda-main');
+        main?.focus({ preventScroll: true });
+        main?.scrollIntoView({ block: 'start' });
+      }}>{t('a11y.skip', lang)}</a>
       {/* Under 640px the header gets a shape instead of an arbitrary wrap: nav
           takes its own row, the brand keeps only its mark, and safe-area insets
           keep the bar clear of a notch. Desktop is unaffected. */}
@@ -144,18 +152,11 @@ export const AppShell: React.FC<{
         ))}
       </nav>
 
-      <div className="shell-content" id="wda-main" data-collapsed={railCollapsed || undefined}>
+      <div className="shell-content" id="wda-main" tabIndex={-1} data-collapsed={railCollapsed || undefined}>
         {children}
       </div>
 
-      {identityOpen && (
-        <div role="dialog" aria-modal="true" aria-label={t('pf.title', lang)}
-          style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'var(--void)', overflowY: 'auto' }}>
-          <React.Suspense fallback={null}>
-            <IdentityCenter onClose={() => setIdentityOpen(false)} />
-          </React.Suspense>
-        </div>
-      )}
+      {identityOpen && <ProfileOverlay label={t('pf.title', lang)} onClose={() => setIdentityOpen(false)} />}
     </div>
   );
 };
@@ -398,7 +399,9 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
           {onOpenProfile && (
             <button
               role="menuitem"
-              onClick={() => { setOpen(false); onOpenProfile(); }}
+              /* Focus goes back to the trigger first: the item is about to
+                 unmount, and the profile returns focus to whatever held it. */
+              onClick={() => { setOpen(false); triggerRef.current?.focus(); onOpenProfile(); }}
               className="row-hover row items-center gap-3 w-full text-start c-tx1"
               style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 48 }}
             >
@@ -452,6 +455,20 @@ const TextSizeChoice: React.FC = () => {
           </button>
         ))}
       </span>
+    </div>
+  );
+};
+
+/** The profile opens over the page: a dialog, so it takes focus, closes on
+ *  Escape or its × and gives focus back to the menu that opened it. */
+const ProfileOverlay: React.FC<{ label: string; onClose: () => void }> = ({ label, onClose }) => {
+  const ref = useModal<HTMLDivElement>(onClose);
+  return (
+    <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label}
+      style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'var(--void)', overflowY: 'auto', outline: 'none' }}>
+      <React.Suspense fallback={<div style={{ padding: 'var(--sp-6) var(--sp-5)' }}><LoadingState /></div>}>
+        <IdentityCenter onClose={onClose} />
+      </React.Suspense>
     </div>
   );
 };

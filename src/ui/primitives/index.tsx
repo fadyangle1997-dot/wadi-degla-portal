@@ -10,6 +10,7 @@ import { Check, X, ChevronLeft, Info } from 'lucide-react';
 import { WIDTH } from '../designSystem';
 import { t, langStore, useLang } from '../../app/i18n';
 import { leaveGuard } from '../../app/leaveGuard';
+import { useModal } from './useModal';
 
 /* ---------------- surfaces ---------------- */
 /**
@@ -178,6 +179,9 @@ export const ArabicContent: React.FC<{
 /* ---------------- screen header ---------------- */
 export const ScreenHeader: React.FC<{
   onBack?: () => void;
+  /** Where Back goes, said in its name: «ارجع للمسار» was on every back
+   *  button, including the ones that went to the roadmap or the manager. */
+  backLabel?: string;
   leading?: React.ReactNode;
   rail?: React.ReactNode;
   trailing?: React.ReactNode;
@@ -192,7 +196,7 @@ export const ScreenHeader: React.FC<{
      * tab (lesson, profile, review) keep the sticky bar and back button.
      */
   tabRoute?: boolean;
-}> = ({ onBack, leading, rail, trailing, maxWidth = WIDTH.read, tabRoute }) => (
+}> = ({ onBack, backLabel, leading, rail, trailing, maxWidth = WIDTH.read, tabRoute }) => (
   /* A <div>, not <header>: the shell owns the page's one banner landmark. */
   /* …and a <nav>, not a bare <div>: everything interactive in this bar is
      navigation — the back control, and on the admin screens the section tabs —
@@ -208,11 +212,7 @@ export const ScreenHeader: React.FC<{
     className={tabRoute ? `screen-header screen-header--tab${trailing || rail ? '' : ' screen-header--bare'}` : 'screen-header'}
     style={{ background: 'var(--overlay)', borderBottom: '1px solid var(--line)' }}>
     <div className="row items-center gap-3 wrap" style={{ maxWidth, margin: '0 auto', padding: 'var(--sp-3) var(--sp-5)' }}>
-      {onBack && (
-        <button onClick={onBack} aria-label={t('ex.backtopath', langStore.get())} className="back-btn">
-          <ChevronLeft size={22} className="icon-dir" />
-        </button>
-      )}
+      {onBack && <BackButton onClick={onBack} label={backLabel ?? t('ex.backtopath', langStore.get())} />}
       <span className="screen-header-label">{leading}</span>
       {rail && <div className="grow" style={{ minWidth: 120 }}>{rail}</div>}
       {!rail && <div className="grow" />}
@@ -255,49 +255,28 @@ export const StatusBadge: React.FC<{ tone: keyof typeof BADGE; children: React.R
    to whatever opened it when it closes. A dialog guarding something the user
    is in the middle of (an exam) starts on the safe button, so a stray Enter
    keeps them where they were. */
-export const ConfirmDialog: React.FC<{
+export interface ConfirmDialogProps {
   open: boolean; title: string; body: string;
   confirmLabel: string; danger?: boolean;
   cancelLabel?: string;
   /** Which button holds focus when the dialog opens. */
   initialFocus?: 'confirm' | 'cancel';
   onConfirm: () => void; onCancel: () => void;
-}> = ({ open, title, body, confirmLabel, danger, cancelLabel, initialFocus, onConfirm, onCancel }) => {
-  // A destructive dialog starts on the safe button, so a stray Enter cancels.
-  const startOn = initialFocus ?? (danger ? 'cancel' : 'confirm');
+}
+export const ConfirmDialog: React.FC<ConfirmDialogProps> = p => (p.open ? <ConfirmDialogOpen {...p} /> : null);
+
+const ConfirmDialogOpen: React.FC<ConfirmDialogProps> = ({ title, body, confirmLabel, danger, cancelLabel, initialFocus, onConfirm, onCancel }) => {
   const confirmRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
-  const boxRef = useRef<HTMLDivElement>(null);
-  // Callers pass inline handlers; reading the latest through a ref keeps the
-  // effect below from re-running (and re-focusing) on every parent render.
-  const onCancelRef = useRef(onCancel);
-  useEffect(() => { onCancelRef.current = onCancel; });
-  useEffect(() => {
-    if (!open) return;
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    (startOn === 'cancel' ? cancelRef : confirmRef).current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onCancelRef.current(); return; }
-      if (e.key !== 'Tab' || !boxRef.current) return;
-      const items = boxRef.current.querySelectorAll<HTMLElement>('button:not(:disabled)');
-      const first = items[0], last = items[items.length - 1];
-      if (!first || !last) return;
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      if (opener?.isConnected) opener.focus();
-    };
-  }, [open, startOn]);
-  if (!open) return null;
+  // A destructive dialog starts on the safe button, so a stray Enter cancels.
+  const startOn = initialFocus ?? (danger ? 'cancel' : 'confirm');
+  const boxRef = useModal<HTMLDivElement>(onCancel, () => (startOn === 'cancel' ? cancelRef : confirmRef).current);
   return (
     <div className="dialog-scrim" onClick={onCancel}>
       <div ref={boxRef} className="dialog" role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()}>
         <h2 className="t-h3 m-0">{title}</h2>
         <p className="t-sm" style={{ margin: 'var(--sp-3) 0 var(--sp-5)' }}>{body}</p>
-        <div className="row gap-3 justify-start">
+        <div className="row gap-3 justify-start wrap">
           <Button ref={confirmRef} onClick={onConfirm}
             style={danger ? { background: 'var(--risk)', borderColor: 'var(--risk)', color: '#fff' } : undefined}>
             {confirmLabel}
@@ -308,6 +287,76 @@ export const ConfirmDialog: React.FC<{
     </div>
   );
 };
+
+/* ---------------- back · close ----------------
+   Two different promises. Back returns to the previous screen and names it;
+   Close dismisses an overlay and never navigates. Neither is interchangeable
+   with Cancel (abandon an action) or Exit (leave a flow that holds work). */
+export const BackButton: React.FC<{ onClick: () => void; label: string }> = ({ onClick, label }) => (
+  <button type="button" onClick={onClick} aria-label={label} title={label} className="back-btn">
+    <ChevronLeft size={22} className="icon-dir" aria-hidden />
+  </button>
+);
+
+export const CloseButton: React.FC<{ onClick: () => void; label?: string }> = ({ onClick, label }) => {
+  const name = label ?? t('dlg.close', langStore.get());
+  return (
+    <button type="button" onClick={onClick} aria-label={name} title={name} className="back-btn no-shrink">
+      <X size={22} aria-hidden />
+    </button>
+  );
+};
+
+/* ---------------- loading · error ----------------
+   Every data screen answers «what happened, and what can I do now». */
+export const LoadingState: React.FC<{ label?: string }> = ({ label }) => (
+  <div role="status" className="loading-state">
+    <span className="sr-only">{label ?? t('sh.loading', langStore.get())}</span>
+    <Skeleton height={28} width="45%" />
+    <Skeleton height={16} width="80%" />
+    <Skeleton height={16} width="65%" />
+  </div>
+);
+
+export const ErrorState: React.FC<{
+  title: string; body: string;
+  onRetry?: () => void; retryLabel?: string;
+  secondary?: React.ReactNode;
+}> = ({ title, body, onRetry, retryLabel, secondary }) => (
+  <div role="alert" className="error-state">
+    <h2 className="t-h3 m-0">{title}</h2>
+    <p className="t-sm measure m-0">{body}</p>
+    <div className="row gap-3 wrap mt-3">
+      {onRetry && <Button onClick={onRetry}>{retryLabel ?? t('err.retry', langStore.get())}</Button>}
+      {secondary}
+    </div>
+  </div>
+);
+
+/* ---------------- exit flow ----------------
+   Leaving a flow that holds unsaved work asks first — from its own exit
+   control and from the browser's Back alike (through leaveGuard). Returns the
+   way to ask and the dialog to render. Without work to lose it never asks. */
+export function useExitFlow(holding: boolean, copy: { title: string; body: string }) {
+  const lang = useLang();
+  const [asking, setAsking] = useState(false);
+  const proceedRef = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    if (!holding) return;
+    return leaveGuard.hold({ ask: proceed => { proceedRef.current = proceed; setAsking(true); } });
+  }, [holding]);
+  const leave = (go: () => void) => {
+    if (!holding) { go(); return; }
+    proceedRef.current = go;
+    setAsking(true);
+  };
+  const dialog = (
+    <ConfirmDialog open={asking} title={copy.title} body={copy.body}
+      confirmLabel={t('as.leave', lang)} cancelLabel={t('as.stay', lang)} initialFocus="cancel"
+      onConfirm={() => { setAsking(false); proceedRef.current(); }} onCancel={() => setAsking(false)} />
+  );
+  return { leave, dialog };
+}
 
 /* ---------------- assessment mode ----------------
    An exam or a boss battle opens into a different room: the void instead of
@@ -326,17 +375,9 @@ export const AssessmentMode: React.FC<{
   onExit: () => void;
   children: React.ReactNode;
 }> = ({ mode, title, progress, leaveWarning, onExit, children }) => {
-  const [asking, setAsking] = useState(false);
   const lang = useLang();
-  // Where to go once leaving is confirmed: the exit button's own target, or
-  // wherever the browser's Back was heading (App asks through leaveGuard).
-  const proceedRef = useRef<() => void>(onExit);
-  const holding = !!leaveWarning;
-  useEffect(() => {
-    if (!holding) return;
-    return leaveGuard.hold({ ask: proceed => { proceedRef.current = proceed; setAsking(true); } });
-  }, [holding]);
-  const exit = () => { if (leaveWarning) { proceedRef.current = onExit; setAsking(true); } else onExit(); };
+  const { leave, dialog } = useExitFlow(!!leaveWarning, leaveWarning ?? { title: '', body: '' });
+  const exit = () => leave(onExit);
   return (
     <div className="assess">
       <nav className="assess-bar" aria-label={t('as.bar', lang)}>
@@ -352,11 +393,7 @@ export const AssessmentMode: React.FC<{
         </div>
       </nav>
       <main className="assess-body">{children}</main>
-      {leaveWarning && (
-        <ConfirmDialog open={asking} title={leaveWarning.title} body={leaveWarning.body}
-          confirmLabel={t('as.leave', lang)} cancelLabel={t('as.stay', lang)} initialFocus="cancel"
-          onConfirm={() => { setAsking(false); proceedRef.current(); }} onCancel={() => setAsking(false)} />
-      )}
+      {dialog}
     </div>
   );
 };
@@ -469,3 +506,4 @@ export const DayRing: React.FC<{ day: number; total: number; pct: number }> = ({
 };
 export { Crumbs, PageHeader, SectionNav, SectionHeader, Num, MetricStrip, Metric, Status, Brief, Meter, Initials } from './structure';
 export { DataTable, type Column, type DataTableProps } from './DataTable';
+export { useModal } from './useModal';
