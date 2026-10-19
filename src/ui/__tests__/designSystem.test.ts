@@ -725,3 +725,32 @@ describe('🔴 low vision: contrast on every surface, status told apart by every
     }
   });
 });
+
+describe('🔴 no grey: white on black, black on white', () => {
+  const hexOf = (name: string) => root.match(new RegExp(`${name}:\\s*(#[0-9A-Fa-f]{6})`))?.[1]?.toUpperCase();
+
+  it('every text step is white on the dark surfaces, and black on the paper sheet', () => {
+    for (const t of ['--tx0', '--tx1', '--tx2', '--tx3']) expect(hexOf(t), t).toBe('#FFFFFF');
+    for (const t of ['--ink', '--ink-2']) expect(hexOf(t), t).toBe('#000000');
+  });
+
+  it('no surface reaches a mid grey — a card is black on black', () => {
+    for (const s of ['--void', '--s-2', '--s-1', '--s0', '--s1']) {
+      const hex = hexOf(s)!;
+      const max = Math.max(...[1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)));
+      expect(max, `${s} ${hex}`).toBeLessThanOrEqual(0x30);
+    }
+  });
+
+  it('no neutral grey is written anywhere in the stylesheet', () => {
+    const offenders: string[] = [];
+    for (const m of css.matchAll(/#([0-9A-Fa-f]{6})\b/g)) {
+      const [r, g, b] = [0, 2, 4].map(i => parseInt(m[1]!.slice(i, i + 2), 16)) as [number, number, number];
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      // near-neutral (channels within 12) and between black and white
+      if (max - min <= 12 && max > 0x30 && min < 0xF0) offenders.push(`#${m[1]}`);
+    }
+    // The brand charcoal is kept as a brand colour (artwork), never as UI.
+    expect(offenders.filter(h => h.toUpperCase() !== '#34312F')).toEqual([]);
+  });
+});

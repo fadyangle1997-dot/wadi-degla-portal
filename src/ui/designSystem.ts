@@ -39,16 +39,18 @@
    The only brand colours. Nothing else is permitted anywhere in the app. */
 export const COLOR = {
   /**
-     * The room: #34312F's own hue at 7.5% lightness, so page and surface read
-     * as one material (a neutral near-black under a warm surface did not).
-     */
-  bg: '#161310',
-  /** THE surface — the brand colour, exactly. */
-  surface: '#34312F',
+   * Black, white and gold — no grey (the product owner's rule). Every surface
+   * is a warm black in the brand charcoal's hue; none reaches the mid greys.
+   */
+  bg: '#0D0B09',
+  /** A raised surface: hover, the accent card. */
+  surface: '#26201B',
   /** One step above, for nested panels only. */
-  surfaceHigh: '#3F3B39',
-  /** One step below, for wells and inset areas. */
-  surfaceLow: '#24201E',
+  surfaceHigh: '#2F2720',
+  /** The card. */
+  surfaceLow: '#1C1814',
+  /** The brand's own charcoal — brand artwork, not a UI surface. */
+  brandCharcoal: '#34312F',
 
   /** Primary gold. Buttons, active states, the one thing you must see. */
   gold: '#B38922',
@@ -58,9 +60,9 @@ export const COLOR = {
   goldLight: '#FEDEA0',
 
   textPrimary: '#FFFFFF',
-  textSecondary: '#DAD4CC',
-  /** Third tier — metadata and labels. AA on every surface (4.7:1 at worst). */
-  textTertiary: '#AEA79F',
+  /** One text colour on black: hierarchy is size, weight and gold, never grey. */
+  textSecondary: '#FFFFFF',
+  textTertiary: '#FFFFFF',
 
   border: 'rgba(255,255,255,.08)',
   /** Hover / focus border. Still not a colour — just more of the same. */

@@ -34,27 +34,31 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 :root {
   /* ── The material ────────────────────────────────────────────────────────
-     void → the room · s0 → THE surface, the brand colour exactly · s1 → above */
-  --void: #161310;
-  --s-2:  #1D1916;
-  --s-1:  #24201E;
-  --s0:   #34312F;
-  --s1:   #3F3B39;
+     Black, white and gold — no grey (the product owner's rule). Every surface
+     is a warm black in the brand charcoal's own hue; nothing reaches the mid
+     greys the brand charcoal itself sits at, so a card reads as black on black,
+     not as a grey panel. The charcoal stays a brand colour for brand artwork. */
+  --brand-charcoal: #34312F;
+  --void: #0D0B09;
+  --s-2:  #15120F;
+  --s-1:  #1C1814;
+  --s0:   #26201B;
+  --s1:   #2F2720;
 
   /* Overlays are the room's own material, translucent: --void's channels at
      the alphas in use, never a second (cool) black. */
-  --overlay:        rgba(22,19,16,.85);   /* sticky screen header */
-  --overlay-strong: rgba(22,19,16,.92);   /* mobile tab bar — sits over content */
-  --overlay-arena:  rgba(22,19,16,.88);   /* exam/boss chrome */
+  --overlay:        rgba(13,11,9,.88);    /* sticky screen header */
+  --overlay-strong: rgba(13,11,9,.94);    /* mobile tab bar — sits over content */
+  --overlay-arena:  rgba(13,11,9,.9);     /* exam/boss chrome */
 
-  /* Hairlines are the same material at higher lightness, not white at low
-     alpha: white over brown reads cold and turns every edge slightly grey. */
-  --line:   #2B2724;
-  --line-2: #3A3633;
-  --line-3: #46423F;
-  /* The edge of a control you type into or tick: 3.35:1 on a card, the WCAG
-     floor for a component's boundary. A hairline field cannot be found. */
-  --line-ctl: #77716A;
+  /* Hairlines are bronze, not grey: the same warm hue with its colour kept,
+     so a rule between rows reads as part of the black-and-gold material. */
+  --line:   #2A2219;
+  --line-2: #3A2E22;
+  --line-3: #4D3C2C;
+  /* The edge of a control you type into or tick: white, so the field is the
+     clearest thing on a black page (17:1; the WCAG floor is 3:1). */
+  --line-ctl: #FFFFFF;
 
   /* ── Gold ────────────────────────────────────────────────────────────────
      The only accent in the system. Three steps, no more: a fourth gold is a
@@ -70,16 +74,14 @@
   --on-gold: #241B05;   /* dark ink on champagne — 10.29 contrast */
 
   /* ── Text ────────────────────────────────────────────────────────────────
-     Four steps, each a real job, set for readers with low vision: the
-     hierarchy is carried by size and weight, so the quieter steps can stay
-     bright. Contrast on void / s-1 / s0 / s1:
-       tx1  12.6 / 11.0 / 8.8 / 7.5   body — AAA everywhere
-       tx2   9.2 /  8.0 / 6.4 / 5.5   secondary, the most common text — AAA on the room and cards
-       tx3   7.8 /  6.8 / 5.4 / 4.7   labels and metadata — AA on every surface */
+     One text colour per surface: white on black, black on the paper sheet.
+     No grey (the product owner's rule, and the clearest reading for low
+     vision). Hierarchy is carried by size, weight and the gold — never by a
+     dimmer shade. The four names stay so every call site keeps working. */
   --tx0: #FFFFFF;
-  --tx1: #DAD4CC;
-  --tx2: #BDB6AD;
-  --tx3: #AEA79F;
+  --tx1: #FFFFFF;
+  --tx2: #FFFFFF;
+  --tx3: #FFFFFF;
 
   /* ── Status ──────────────────────────────────────────────────────────────
      Chosen to stay apart for colour-blind readers, not only for the rest: the
@@ -92,7 +94,7 @@
   --attn: #E8904F;    --attn-bg: rgba(232,144,79,.12);   --attn-line: rgba(232,144,79,.3);
   --risk: #F2899B;    --risk-bg: rgba(242,137,155,.12);   --risk-line: rgba(242,137,155,.3);
   --info: #8DB5DE;    --info-bg: rgba(141,181,222,.12);  --info-line: rgba(141,181,222,.3);
-  --escalate: #8A847D; --escalate-line: rgba(138,132,125,.3);
+  --escalate: #CCAB6C; --escalate-line: rgba(204,171,108,.3);
 
   /* ── Paper ───────────────────────────────────────────────────────────────
      The one light surface: a cream sheet laid on the dark room, for the thing
@@ -101,8 +103,8 @@
      --paper: ink 14.3, ink-2 6.3, gold-ink 6.1, status inks ≥ 4.9. */
   --paper:    #EFE8DE;
   --paper-2:  #E3D9CC;
-  --ink:      #1E1915;
-  --ink-2:    #5C5248;
+  --ink:      #000000;
+  --ink-2:    #000000;
   --on-ink:   #F4EEE6;
   --gold-ink: #6B5112;
 
@@ -416,7 +418,7 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 /* Secondary: an outlined pill. A fill would vanish on a card or a dialog of
    the same surface; an outline reads on every surface. */
 .btn-ghost { background:transparent; color:var(--tx0); border:1px solid var(--line-3); }
-.btn-ghost:hover:not(:disabled) { background:rgba(255,255,255,.06); }
+.btn-ghost:hover:not(:disabled) { background:var(--s0); }
 /* A destructive action at rest: the risk colour on the outline and the word,
    never a red slab next to ordinary choices. */
 .btn-danger { color:var(--risk); border-color:var(--risk-line); }
@@ -502,7 +504,7 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .dt-search:focus-within { border-color:var(--g2); }
 .dt-search-input { flex:1; min-width:0; min-height:42px; background:none; border:0; outline:none;
   color:var(--tx0); font-family:var(--font-body); font-size:1rem; }
-.dt-search-input::placeholder { color:var(--tx3); }
+.dt-search-input::placeholder { color:var(--g1); }
 .dt-filters { display:flex; flex-wrap:wrap; gap:var(--sp-1); }
 .dt-filter { display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 var(--sp-4); background:none; border:1px solid var(--line-2);
   border-radius:var(--r-full); color:var(--tx2); font-family:var(--font-body); font-size:.875rem; font-weight:600;
@@ -758,15 +760,15 @@ details > summary { min-block-size:44px; cursor:pointer; }
   font-size:.875rem; font-family:var(--font-body); padding:10px 16px; min-height:44px;
   cursor:pointer; transition:border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
 .pill:hover { border-color:var(--line-3); color:var(--tx0); background:var(--s0); }
-.icon-btn { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.06);
+.icon-btn { display:inline-flex; align-items:center; gap:6px; background:var(--s0);
   border:1px solid transparent; border-radius:var(--r-full); color:var(--tx1);
   font-size:.875rem; font-family:var(--font-body); padding:10px 14px; min-height:44px;
   cursor:pointer; transition:border-color .15s var(--ease), color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
-.icon-btn:hover { color:var(--tx0); background:rgba(255,255,255,.1); }
-.back-btn { display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06); border:none;
+.icon-btn:hover { color:var(--tx0); background:var(--s1); }
+.back-btn { display:flex; align-items:center; justify-content:center; background:var(--s0); border:none;
   color:var(--tx1); cursor:pointer; min-height:44px; min-width:44px; border-radius:var(--r-full);
   transition:color .15s var(--ease), background .15s var(--ease), transform .1s var(--ease); }
-.back-btn:hover { color:var(--tx0); background:rgba(255,255,255,.1); }
+.back-btn:hover { color:var(--tx0); background:var(--s1); }
 
 /*
  * Press feedback for touch (where :hover is invisible): pills, choices, the
@@ -811,7 +813,7 @@ details > summary { min-block-size:44px; cursor:pointer; }
 
 /* Login: input with a leading icon (padding for the icon slot) + focus polish. */
 .field-icon { padding-inline-start: 38px; }
-.field::placeholder { color: var(--tx3); }
+.field::placeholder { color: var(--g1); }
 .field:focus-visible { outline: 2px solid var(--g2); outline-offset: 1px; border-color: var(--g2); }
 .spin { animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -840,7 +842,7 @@ details > summary { min-block-size:44px; cursor:pointer; }
   --sg-gold: var(--g2);
   --sg-gold-soft: var(--g1);
   --sg-gold-light: var(--g0);
-  --sg-glass: rgba(52, 49, 47, .55);
+  --sg-glass: rgba(28, 24, 20, .7);
   --sg-glass-line: rgba(254, 222, 160, .14);
   --sg-tx: var(--tx0);
   --sg-tx-dim: var(--tx2);
@@ -892,7 +894,7 @@ details > summary { min-block-size:44px; cursor:pointer; }
   min-height: 46px;
   transition: border-color .22s ease;
 }
-.signin-field::placeholder { color: #6F6B64; }
+.signin-field::placeholder { color: var(--sg-gold-soft); }
 .signin-field:hover { border-bottom-color: rgba(254, 222, 160, .38); }
 .signin-field:focus {
   outline: none;
