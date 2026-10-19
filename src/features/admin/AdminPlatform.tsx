@@ -16,7 +16,8 @@ import { detectOperationalIssues, summarizeIssues, type OperationalIssue, type S
 import { adminStats } from '../../domain/operations/adminStats';
 import { filterAudit, latestAudit, describeAudit, auditActions, type AuditFilter } from '../../domain/operations/audit';
 import { PERMISSIONS } from '../../domain/identity';
-import { Button, Eyebrow, EmptyState, ScreenHeader, StatusBadge, Card, Toast, ArabicContent } from '../../ui/primitives';
+import { Button, Eyebrow, EmptyState, ScreenHeader, StatusBadge, Card, Toast, ArabicContent, ConfirmDialog } from '../../ui/primitives';
+import { loadDemoScenario, clearDemoTraining } from '../../app/demo/demoScenario';
 import { fade } from '../../ui/motion';
 import { AdminView } from './AdminView';
 import { OrganizationPanel } from './OrganizationPanel';
@@ -150,7 +151,46 @@ const OperationalDashboard: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      <DemoDataCard />
     </>
+  );
+};
+
+/** Loads or clears the showcase scenario, so testers can see full screens. */
+const DemoDataCard: React.FC = () => {
+  const lang = useLang();
+  const [confirm, setConfirm] = useState<'load' | 'clear' | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const done = (msg: string) => { setConfirm(null); setToast(msg); setTimeout(() => setToast(null), 2600); };
+
+  return (
+    <Card layout={{ marginTop: 'var(--sp-4)' }}>
+      <Eyebrow>{t('ad.demo', lang)}</Eyebrow>
+      <p className="t-sm measure" style={{ margin: 'var(--sp-2) 0 var(--sp-4)' }}>{t('ad.demosub', lang)}</p>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+        <Button onClick={() => setConfirm('load')}>{t('ad.demoload', lang)}</Button>
+        <Button variant="ghost" onClick={() => setConfirm('clear')}>{t('ad.democlear', lang)}</Button>
+      </div>
+      <ConfirmDialog
+        open={confirm === 'load'}
+        title={t('ad.demoloadttl', lang)}
+        body={t('ad.demoloadbody', lang)}
+        confirmLabel={t('ad.demoload', lang)}
+        onConfirm={() => { loadDemoScenario(); done(t('ad.demoloaded', lang)); }}
+        onCancel={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        open={confirm === 'clear'}
+        danger
+        title={t('ad.democlearttl', lang)}
+        body={t('ad.democlearbody', lang)}
+        confirmLabel={t('ad.democlear', lang)}
+        onConfirm={() => { clearDemoTraining(); done(t('ad.democleared', lang)); }}
+        onCancel={() => setConfirm(null)}
+      />
+      <Toast message={toast} />
+    </Card>
   );
 };
 

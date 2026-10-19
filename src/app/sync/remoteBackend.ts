@@ -33,6 +33,7 @@ export class RemoteTrainingBackend implements TrainingBackend {
   record(e: TrainingEvent) { this.engine.dispatch(e); return this.engine.snapshot; }
   events() { return []; }
   healthy() { return true; }
+  reset() { /* server-side reset is an admin operation, not a client wipe */ }
   sync() { return this.engine.flush(); }
 }
 

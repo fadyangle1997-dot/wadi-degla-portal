@@ -146,6 +146,8 @@ export interface TrainingBackend {
   record(e: TrainingEvent): TrainingState;
   events(): readonly TrainingEvent[];
   healthy(): boolean;
+  /** Wipe every training record on this device (demo reset only). */
+  reset(): void;
 }
 
 const STATE_KEY = 'wda.training.state.v2';
@@ -170,6 +172,12 @@ export class LocalStorageTrainingBackend implements TrainingBackend {
     this.state = reduceTraining(this.state, e);
     this.persist();
     return this.state;
+  }
+
+  reset() {
+    this.state = EMPTY_TRAINING;
+    this.log = [];
+    this.persist();
   }
 
   private read<T>(key: string): T | null {

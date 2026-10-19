@@ -116,6 +116,9 @@ export const trainingStore = {
   addCoachingNote: (employeeId: string, note: string) =>
     apply(() => backend.record({ type: 'COACHING_NOTE_ADDED', employeeId, note, trainerId: trainerId(), at: now() })),
 
+  /** Clears every training record on this device. Used only by the demo reset. */
+  reset: () => apply(() => { backend.reset(); return backend.load(); }),
+
   /** The manager's final, evidence-based readiness decision for a trainee.
    *  Attributed to the current user (the manager); latest decision wins. */
   decideReadiness: (input: { employeeId: string; decision: 'ready' | 'extend' | 'reject'; rationale: string }) =>

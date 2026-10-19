@@ -19,6 +19,7 @@ import { identityStore } from '../identity/identityStore';
 import { trainingStore } from '../training/trainingStore';
 import { TRAINING_POLICY } from '../../domain/policy';
 import { ALL_DIMENSIONS, type Scores } from '../../domain/evaluation';
+import { READINESS_FLOORS } from '../../domain/readiness';
 import { sha256Hex } from '../../lib/sha256';
 
 export type DemoRole = 'admin' | 'general_manager' | 'area_manager' | 'manager' | 'trainer' | 'employee';
@@ -113,12 +114,29 @@ export function authenticate(username: string, password: string): DemoAccount | 
   return DEMO_ACCOUNTS.find(a => a.username.toLowerCase() === u && a.passwordHash === hash) ?? null;
 }
 
-const scores = (n: number): Scores =>
-  Object.fromEntries(ALL_DIMENSIONS.map(d => [d, n])) as Scores;
+/**
+ * How strong each demo trainee is, so the manager's screens show a spread
+ * instead of one number. Every value clears the readiness floors, because the
+ * scenario only records units the trainer approved.
+ */
+const DEMO_STRENGTH: Readonly<Record<string, number>> = {
+  'mariam.a': 78, 'omar.h': 72, 'sara.m': 88, 'youssef.a': 76, 'nada.t': 83,
+  'karim.s': 87, 'menna.k': 92, 'lina.h': 74, 'fady.r': 80, 'dina.s': 85,
+};
+// A fixed per-dimension shape, so nobody scores the same on every skill.
+const DIMENSION_OFFSET = [-5, 3, -2, 4, 0, -3, 5];
+
+const scoresFor = (employeeId: string, moduleIndex: number): Scores => {
+  const base = DEMO_STRENGTH[employeeId] ?? 82;
+  return Object.fromEntries(ALL_DIMENSIONS.map((d, i) => {
+    const wobble = DIMENSION_OFFSET[(i + moduleIndex) % DIMENSION_OFFSET.length] ?? 0;
+    return [d, Math.min(100, Math.max(READINESS_FLOORS[d] + 3, base + wobble))];
+  })) as Scores;
+};
 
 const approve = (employeeId: string, moduleId: string) =>
   trainingStore.recordEvaluation({
-    employeeId, moduleId, scores: scores(85),
+    employeeId, moduleId, scores: scoresFor(employeeId, MODULES.findIndex(m => m.id === moduleId)),
     decision: 'ready', weakSkills: [], weakRules: [],
   });
 
