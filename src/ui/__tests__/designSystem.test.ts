@@ -139,6 +139,14 @@ describe('the system has exactly one of everything', () => {
     expect(Object.keys(ELEVATION)).toHaveLength(3);
   });
 
+  it('every custom property the stylesheet reads is defined', () => {
+    // An undefined var() fails silently: an unnamed shadow token once left
+    // every dialog and toast flat.
+    const defined = new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map(m => m[1]));
+    const read = new Set([...css.matchAll(/var\(\s*(--[\w-]+)/g)].map(m => m[1]!));
+    expect([...read].filter(v => !defined.has(v))).toEqual([]);
+  });
+
   it('one motion curve — two curves is two products', () => {
     expect(MOTION.ease).toBeTruthy();
     expect(Object.keys(MOTION).filter(k => k !== 'ease')).toHaveLength(3);

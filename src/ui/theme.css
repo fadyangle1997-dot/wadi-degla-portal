@@ -440,11 +440,11 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .dialog-scrim { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
   display:flex; align-items:center; justify-content:center; z-index:60; padding:var(--sp-5); }
 .dialog { background:var(--s-1); border:1px solid var(--line-2); border-radius:var(--r-lg);
-  padding:var(--sp-6); max-width:420px; width:100%; box-shadow:var(--shadow-lift); }
+  padding:var(--sp-6); max-width:420px; width:100%; box-shadow:var(--e-floating); }
 .toast { position:fixed; bottom:var(--sp-6); right:50%; transform:translateX(50%);
   background:var(--s0); border:1px solid var(--line-2); border-radius:var(--r-full);
   padding:10px 20px; color:var(--tx0); font-size:0.85rem; z-index:70;
-  box-shadow:var(--shadow-lift); display:flex; align-items:center; gap:8px; }
+  box-shadow:var(--e-floating); display:flex; align-items:center; gap:8px; }
 
 /* -- Skeleton (future platforms: trainer/manager loading) -- */
 .skeleton { background:linear-gradient(90deg, var(--s-1) 25%, var(--s0) 50%, var(--s-1) 75%);
