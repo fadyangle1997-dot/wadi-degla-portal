@@ -32,6 +32,7 @@ import { EmptyState, Button, Eyebrow, ScreenHeader, ArabicContent } from '../ui/
 import { moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
+import { leaveGuard } from './leaveGuard';
 import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents, useTraining } from './training/trainingStore';
 import { TRAINING_POLICY } from '../domain/policy';
 import { useLang, t, tf } from './i18n';
@@ -105,6 +106,9 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (view.kind !== 'exam') gateCache.current.clear();
   }, [view.kind]);
+  // A retry is a new entry: it goes back through the gate, so «try again»
+  // can never take more attempts than the policy allows.
+  const [examRun, setExamRun] = useState(0);
   const gateFor = (moduleId: string) => {
     const hit = gateCache.current.get(moduleId);
     if (hit) return hit;
@@ -119,17 +123,34 @@ export const App: React.FC = () => {
   const signedIn = identityStore.currentUser() !== null;
   const p = useProgress();
 
-  const setView = (v: View) => {
+  // A redirect REPLACES the entry it refused: pushing it left a Back button
+  // that returned to the refused URL, which redirected again — a trap.
+  const setView = (v: View, replace = false) => {
     setViewState(v);
-    history.pushState(null, '', toHash(v));
+    if (replace) history.replaceState(null, '', toHash(v));
+    else history.pushState(null, '', toHash(v));
   };
   const toPath = () => setView({ kind: 'path' });
   // Stable identity so the redirect effect fires once, not on every render.
-  const goTo = useCallback((k: string) => setView({ kind: k } as View), []);
+  const goTo = useCallback((k: string) => setView({ kind: k } as View, true), []);
 
-  // Browser back/forward + manual hash edits stay in sync.
+  // Browser back/forward + manual hash edits stay in sync — unless the screen
+  // holds work it would lose: then the screen is put back and asked first.
+  const viewRef = useRef(view);
+  viewRef.current = view;
   useEffect(() => {
-    const onPop = () => setViewState(parseHash(location.hash));
+    const onPop = () => {
+      const next = parseHash(location.hash);
+      // popstate and hashchange both fire for one Back; the second sees the
+      // screen already restored and must not ask twice.
+      if (toHash(next) === toHash(viewRef.current)) return;
+      if (!leaveGuard.active()) { setViewState(next); return; }
+      history.pushState(null, '', toHash(viewRef.current));
+      leaveGuard.ask(() => {
+        history.pushState(null, '', toHash(next));
+        setViewState(next);
+      });
+    };
     window.addEventListener('popstate', onPop);
     window.addEventListener('hashchange', onPop);
     return () => { window.removeEventListener('popstate', onPop); window.removeEventListener('hashchange', onPop); };
@@ -236,7 +257,7 @@ export const App: React.FC = () => {
     const m = moduleById(view.moduleId);
     const lesson = m?.lessons.find(l => l.id === view.lessonId);
     // Deep-link guard: unknown or locked → path (data decides, not the URL).
-    if (!m || !lesson || !isModuleUnlocked(p, m.id)) { toPath(); return null; }
+    if (!m || !lesson || !isModuleUnlocked(p, m.id)) return <Redirect to="path" onGo={goTo} />;
     const li = m.lessons.findIndex(l => l.id === lesson.id);
     const nextLesson = m.lessons[li + 1];
     const allDoneAfterThis = m.lessons.every(l => l.id === lesson.id || isLessonDone(p, l.id));
@@ -264,7 +285,7 @@ export const App: React.FC = () => {
         nextStep={nextStep}
         onExit={toPath}
         onComplete={() => { progressStore.completeLesson(lesson.id); }}
-        onFinish={() => { progressStore.completeLesson(lesson.id); toPath(); }}
+        onFinish={toPath}
       />
       </ArabicContent></Lazy>
     );
@@ -274,20 +295,22 @@ export const App: React.FC = () => {
     const m = moduleById(view.moduleId);
     // Guard: the exam requires ALL unit lessons done — a URL can't skip the path.
     const lessonsDone = m ? m.lessons.every(l => isLessonDone(p, l.id)) : false;
-    if (!m || !isModuleUnlocked(p, m.id) || !lessonsDone) { toPath(); return null; }
+    if (!m || !isModuleUnlocked(p, m.id) || !lessonsDone) return <Redirect to="path" onGo={goTo} />;
 
     // A passed exam is never re-entered. A refresh on the result screen re-parses
     // #/exam/:id; send it to the path, where nextAction() already derives the
     // post-exam state from the attempt that was just recorded.
     const attempts = examAttemptsOf(m.id);
     const latestAttempt = attempts[attempts.length - 1];
-    if (latestAttempt?.passed) { toPath(); return null; }
+    if (latestAttempt?.passed) return <Redirect to="path" onGo={goTo} />;
 
     // Attempt policy: unlimited retries cannot brute-force a pass. The decision is
     // the entry-time one cached above (gateFor).
     const gate = gateFor(m.id);
     if (!gate.allowed) return <ExamCooldown retryAt={gate.retryAt} onExit={toPath} />;
-    return <Lazy><ArabicContent><ExamView module={m} onExit={toPath} onFinish={score => {
+    return <Lazy><ArabicContent><ExamView key={`${m.id}:${examRun}`} module={m} onExit={toPath}
+      onRetry={() => { gateCache.current.delete(m.id); setExamRun(r => r + 1); }}
+      onFinish={score => {
       // Two stores, no shared transaction. The exam result is earned and must never
       // be rolled back; submitting for review is the retryable step. If it throws,
       // nextAction() resolves the trainee to 'needs_submission', which has its own
@@ -308,7 +331,7 @@ export const App: React.FC = () => {
   if (view.kind === 'boss') {
     const b = BOSS_BATTLES.find(x => x.id === view.bossId);
     // Guard: a boss opens only when every unit it covers is complete.
-    if (!b || !b.afterUnits.every(u => isModuleComplete(p, u))) { toPath(); return null; }
+    if (!b || !b.afterUnits.every(u => isModuleComplete(p, u))) return <Redirect to="path" onGo={goTo} />;
     return <Lazy><ArabicContent><BossView battle={b} onExit={toPath} onFinish={() => progressStore.passBoss(b.id)} /></ArabicContent></Lazy>;
   }
 

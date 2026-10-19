@@ -7,7 +7,7 @@
  * Every action emits a training event; permissions via can() only.
  */
 import type { User } from '../../domain/identity';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { m } from 'motion/react';
 import { UserCheck, CalendarPlus, StickyNote } from 'lucide-react';
 import { useIdentity, useCan, identityStore } from '../../app/identity/identityStore';
@@ -19,13 +19,13 @@ import { readinessScore, EVALUATION_DIMENSIONS, ALL_DIMENSIONS, CONDUCT_CHECKS, 
 import { MODULES, moduleById } from '../../content/registry';
 import type { Lesson } from '../../domain/types/content';
 import { RULE_META } from '../../domain/rules/meta';
-import { Button, Card, Eyebrow, EmptyState, Toast, Callout, ArabicContent, PageHeader, SectionHeader, MetricStrip, Metric, Status, Meter, Initials, DataTable, type Column } from '../../ui/primitives';
+import { Button, Card, ConfirmDialog, Eyebrow, EmptyState, Toast, Callout, ArabicContent, PageHeader, SectionHeader, MetricStrip, Metric, Status, Meter, Initials, DataTable, type Column } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
 import { branchNameOf } from '../../domain/organization';
 import { useOrganization } from '../../app/organization/orgStore';
-import { useLang, t as tr, tf, iso, type Lang } from '../../app/i18n';
+import { useLang, t as tr, tf, iso, type Lang, type Key } from '../../app/i18n';
 import { isProgramComplete } from '../../domain/journey/programCompletion';
 import { TraineeReadinessBlock } from '../readiness/ReadinessStations';
 
@@ -191,7 +191,10 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
               rowTone={r => r.kind === 'waiting' ? (waitDays(r.at) >= 3 ? 'risk' : 'attn') : undefined} />
           )}
           {evaluating && (
-            <EvaluationPanel employee={evaluating.employee} moduleId={evaluating.moduleId}
+            /* Keyed by the trainee and unit: without it, opening another
+               trainee kept the previous one's scores, ticks and note. */
+            <EvaluationPanel key={`${evaluating.employee.id}:${evaluating.moduleId}`}
+              employee={evaluating.employee} moduleId={evaluating.moduleId}
               onDone={msg => { setEvaluating(null); notify(msg); }}
               onCancel={() => setEvaluating(null)} />
           )}
@@ -342,7 +345,15 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
   const [weakRules, setWeakRules] = useState<string[]>([]);
   const [note, setNote] = useState('');
   const [days, setDays] = useState(7);
+  const [pending, setPending] = useState<EvaluationDecision | null>(null);
   const readiness = readinessScore(scores);
+  // The panel opens under the queue, away from the row that opened it: take
+  // the eye and the keyboard to it.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    panelRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    panelRef.current?.focus({ preventScroll: true });
+  }, []);
   const recs = useMemo(() => recommendFor(weakRules, weakSkills), [weakRules, weakSkills]);
 
   const toggle = (list: string[], set: (v: string[]) => void, id: string) =>
@@ -367,6 +378,7 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
 
   if (!m) return null;
   return (
+    <div ref={panelRef} tabIndex={-1} role="region" aria-label={`${tr('tn.practical', lang)} — ${employee.name}`}>
     <Card tone="accent" pad={6} layout={{ marginTop: 'var(--sp-5)' }}>
       <div className="row items-center gap-3 wrap">
         <Eyebrow icon={<UserCheck size={13} />}>{tr('tn.practical', lang)} <ArabicContent as="span">{m.title}</ArabicContent></Eyebrow>
@@ -460,18 +472,31 @@ const EvaluationPanel: React.FC<{ employee: User; moduleId: string; onDone: (msg
         {/* The guide's four decisions. Two were previously missing: «تمديد» is
             not a failure, and «تصعيد» is not a verdict — forcing either into
             "needs improvement" made the trainer record something untrue. */}
-        <Button variant="ghost" style={{ borderColor: 'var(--attn)', color: 'var(--attn)' }} onClick={() => decide('escalate')}>
+        <Button variant="ghost" style={{ borderColor: 'var(--attn)', color: 'var(--attn)' }} onClick={() => setPending('escalate')}>
           {tr('tn.escalate', lang)}
         </Button>
-        <Button variant="ghost" style={{ borderColor: 'var(--risk)', color: 'var(--risk)' }} onClick={() => decide('not_ready')}>
+        <Button variant="ghost" style={{ borderColor: 'var(--risk)', color: 'var(--risk)' }} onClick={() => setPending('not_ready')}>
           {tr('tn.notready', lang)}
         </Button>
-        <Button variant="ghost" onClick={() => decide('extend')}>{tr('tn.extend', lang)}</Button>
-        <Button onClick={() => decide('ready')} disabled={!conductOk}
+        <Button variant="ghost" onClick={() => setPending('extend')}>{tr('tn.extend', lang)}</Button>
+        <Button onClick={() => setPending('ready')} disabled={!conductOk}
           title={conductOk ? undefined : tr('tn.conductmiss', lang)}>
           {tr('tn.ready', lang)}
         </Button>
       </div>
     </Card>
+    {/* A decision is written to the trainee's file and moves their programme:
+        it is said back, with its consequence, before it is recorded. */}
+    <ConfirmDialog open={pending !== null}
+      title={pending ? tf('tn.confirmtitle', { d: tr(DECISION_KEY[pending], lang) }, lang) : ''}
+      body={pending ? tf(`tn.confirm.${pending}` as Key, { name: employee.name, days }, lang) : ''}
+      confirmLabel={pending ? tr(DECISION_KEY[pending], lang) : ''} danger={pending === 'not_ready'}
+      onConfirm={() => { const d = pending; setPending(null); if (d) decide(d); }}
+      onCancel={() => setPending(null)} />
+    </div>
   );
+};
+
+const DECISION_KEY: Record<EvaluationDecision, Key> = {
+  ready: 'tn.ready', not_ready: 'tn.notready', extend: 'tn.extend', escalate: 'tn.escalate',
 };

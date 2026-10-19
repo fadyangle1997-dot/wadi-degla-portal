@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Check, X, ChevronLeft, Info } from 'lucide-react';
 import { WIDTH } from '../designSystem';
 import { t, langStore, useLang } from '../../app/i18n';
+import { leaveGuard } from '../../app/leaveGuard';
 
 /* ---------------- surfaces ---------------- */
 /**
@@ -261,7 +262,9 @@ export const ConfirmDialog: React.FC<{
   /** Which button holds focus when the dialog opens. */
   initialFocus?: 'confirm' | 'cancel';
   onConfirm: () => void; onCancel: () => void;
-}> = ({ open, title, body, confirmLabel, danger, cancelLabel, initialFocus = 'confirm', onConfirm, onCancel }) => {
+}> = ({ open, title, body, confirmLabel, danger, cancelLabel, initialFocus, onConfirm, onCancel }) => {
+  // A destructive dialog starts on the safe button, so a stray Enter cancels.
+  const startOn = initialFocus ?? (danger ? 'cancel' : 'confirm');
   const confirmRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -272,7 +275,7 @@ export const ConfirmDialog: React.FC<{
   useEffect(() => {
     if (!open) return;
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    (initialFocus === 'cancel' ? cancelRef : confirmRef).current?.focus();
+    (startOn === 'cancel' ? cancelRef : confirmRef).current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { onCancelRef.current(); return; }
       if (e.key !== 'Tab' || !boxRef.current) return;
@@ -287,7 +290,7 @@ export const ConfirmDialog: React.FC<{
       window.removeEventListener('keydown', onKey);
       if (opener?.isConnected) opener.focus();
     };
-  }, [open, initialFocus]);
+  }, [open, startOn]);
   if (!open) return null;
   return (
     <div className="dialog-scrim" onClick={onCancel}>
@@ -299,7 +302,7 @@ export const ConfirmDialog: React.FC<{
             style={danger ? { background: 'var(--risk)', borderColor: 'var(--risk)', color: '#fff' } : undefined}>
             {confirmLabel}
           </Button>
-          <Button ref={cancelRef} variant="ghost" onClick={onCancel}>{cancelLabel ?? 'إلغاء'}</Button>
+          <Button ref={cancelRef} variant="ghost" onClick={onCancel}>{cancelLabel ?? t('dlg.cancel', langStore.get())}</Button>
         </div>
       </div>
     </div>
@@ -325,6 +328,15 @@ export const AssessmentMode: React.FC<{
 }> = ({ mode, title, progress, leaveWarning, onExit, children }) => {
   const [asking, setAsking] = useState(false);
   const lang = useLang();
+  // Where to go once leaving is confirmed: the exit button's own target, or
+  // wherever the browser's Back was heading (App asks through leaveGuard).
+  const proceedRef = useRef<() => void>(onExit);
+  const holding = !!leaveWarning;
+  useEffect(() => {
+    if (!holding) return;
+    return leaveGuard.hold({ ask: proceed => { proceedRef.current = proceed; setAsking(true); } });
+  }, [holding]);
+  const exit = () => { if (leaveWarning) { proceedRef.current = onExit; setAsking(true); } else onExit(); };
   return (
     <div className="assess">
       <nav className="assess-bar" aria-label={t('as.bar', lang)}>
@@ -334,7 +346,7 @@ export const AssessmentMode: React.FC<{
             <span className="assess-title">{title}</span>
           </div>
           <div className="assess-rail">{progress && <ProgressRail total={progress.total} current={progress.current} />}</div>
-          <button type="button" className="icon-btn" onClick={() => (leaveWarning ? setAsking(true) : onExit())}>
+          <button type="button" className="icon-btn" onClick={exit}>
             <X size={16} aria-hidden />{t('as.exit', lang)}
           </button>
         </div>
@@ -343,7 +355,7 @@ export const AssessmentMode: React.FC<{
       {leaveWarning && (
         <ConfirmDialog open={asking} title={leaveWarning.title} body={leaveWarning.body}
           confirmLabel={t('as.leave', lang)} cancelLabel={t('as.stay', lang)} initialFocus="cancel"
-          onConfirm={onExit} onCancel={() => setAsking(false)} />
+          onConfirm={() => { setAsking(false); proceedRef.current(); }} onCancel={() => setAsking(false)} />
       )}
     </div>
   );

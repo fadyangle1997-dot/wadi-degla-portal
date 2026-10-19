@@ -26,6 +26,9 @@ export const PLATFORM_ACCESS = {
   // Staff platforms.
   trainer: 'training.review',
   manager: 'reports.view',
+  // The full readiness report opens from the manager's employee file; it was
+  // missing here, so every visit was refused and redirected — a dead link.
+  readiness_report: 'reports.view',
   admin: 'operations.view',
 } as const satisfies Record<string, Permission>;
 

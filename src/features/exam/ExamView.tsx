@@ -13,10 +13,16 @@ import { AssessmentMode, Button, OptionButton, FeedbackBlock, Num, SectionHeader
 import { fade } from '../../ui/motion';
 import { TRAINING_POLICY } from '../../domain/policy';
 import { useLang, t, tf } from '../../app/i18n';
-interface Props { module: Module; onExit: () => void; onFinish: (score: number) => void; }
+interface Props {
+  module: Module;
+  onExit: () => void;
+  onFinish: (score: number) => void;
+  /** A new attempt: the shell re-asks the attempt gate before mounting one. */
+  onRetry: () => void;
+}
 
 
-export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
+export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry }) => {
   const lang = useLang();
   const qs = module.unitExam;
   const [qi, setQi] = useState(0);
@@ -80,7 +86,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
           )}
           <div className="row mt-7 gap-3 wrap">
             <Button onClick={onExit}>{t('ex.backtopath', lang)} <ArrowRight size={16} className="icon-dir" /></Button>
-            {!passed && <Button variant="ghost" onClick={() => { setQi(0); setPicked(null); setAnswers([]); setWrongIds([]); setFinalScore(null); }}><RotateCcw size={16} /> {t('ex.retry', lang)}</Button>}
+            {!passed && <Button variant="ghost" onClick={onRetry}><RotateCcw size={16} /> {t('ex.retry', lang)}</Button>}
           </div>
         </m.section>
       </AssessmentMode>

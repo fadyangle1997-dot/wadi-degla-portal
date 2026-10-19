@@ -56,6 +56,14 @@ test('finishes a whole unit, sits the exam, and sees the result', async ({ page 
   await leave.getByRole('button', { name: 'كمّل' }).click();
   await expect(leave).toBeHidden();
   await expect(page).toHaveURL(/#\/exam\/m1/);
+
+  // The browser's Back asks the same question, and staying keeps the attempt.
+  await page.goBack();
+  await expect(leave).toBeVisible();
+  await expect(page).toHaveURL(/#\/exam\/m1/);
+  await leave.getByRole('button', { name: 'كمّل' }).click();
+  await expect(leave).toBeHidden();
+  await expect(page).toHaveURL(/#\/exam\/m1/);
   for (let i = 0; i < 60; i++) {
     await settle(page);
     if (await main.getByRole('button', { name: /ارجع للمسار/ }).isVisible()) break;
@@ -69,4 +77,39 @@ test('finishes a whole unit, sits the exam, and sees the result', async ({ page 
   await expect(page.getByText(/%/).first()).toBeVisible();
   await expect(page.getByText('حصلت مشكلة')).toHaveCount(0);
   await expectAccessible(page, 'exam result');
+});
+
+test('leaving a lesson keeps its place, and leaving its closing screen keeps it done', async ({ page }) => {
+  test.setTimeout(60_000);
+  await signIn(page, 'ahmed.m');
+  await openTodaysLesson(page);
+  const main = page.locator('main');
+  // Two stages in, then out with Escape and back in: the lesson resumes there.
+  for (let i = 0; i < 2; i++) {
+    await settle(page);
+    const option = main.locator('button.option-idle:enabled');
+    if (await option.count()) { await option.first().click(); await settle(page); }
+    await main.locator('button.btn:enabled').last().click();
+  }
+  await settle(page);
+  const where = await page.locator('.lesson-stage').innerText();
+  await page.keyboard.press('Escape');
+  await expect(page).not.toHaveURL(/#\/lesson\//);
+  await page.getByRole('button', { name: /كمّل الدرس/ }).click();
+  await settle(page);
+  await expect(page.locator('.lesson-stage')).toHaveText(where);
+
+  // Walk to the closing screen, then leave it with Escape instead of a button.
+  for (let step = 0; step < 80; step++) {
+    await settle(page);
+    if (await main.getByRole('button', { name: 'ارجع للمسار' }).isVisible()) break;
+    const forward = main.locator('button.btn:enabled');
+    if (await forward.count()) { await forward.last().click({ timeout: 2000 }).catch(() => {}); continue; }
+    const option = main.locator('button.option-idle:enabled');
+    if (await option.count()) { await option.first().click({ timeout: 2000 }).catch(() => {}); continue; }
+    const rows = main.getByRole('button', { name: 'مطلوب', exact: true });
+    if (await rows.count()) { for (const r of await rows.all()) if (await r.isEnabled()) await r.click().catch(() => {}); continue; }
+  }
+  await page.keyboard.press('Escape');
+  await expect(page.getByText('1 من 4 دروس')).toBeVisible();
 });

@@ -34,6 +34,25 @@ test.describe('branch manager', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByRole('dialog')).toContainText('Ahmed Magdy');
   });
+
+  test('closes a file back to the row it came from, and opens the full report', async ({ page }) => {
+    await signIn(page, 'manager.nabil');
+    const row = page.getByRole('table', { name: 'الموظفون' }).getByRole('button', { name: /Ahmed Magdy/ });
+    await row.click();
+    const file = page.getByRole('dialog');
+    await page.keyboard.press('Escape');
+    await expect(file).toBeHidden();
+    await expect(row).toBeFocused();
+
+    // The report was a dead link: the route was refused and redirected.
+    await row.click();
+    await file.getByRole('button', { name: 'التقرير' }).click();
+    await expect(page).toHaveURL(/#\/readiness-report\//);
+    await expect(page.locator('main')).toContainText('Ahmed Magdy');
+    await page.goBack();
+    await expect(page).toHaveURL(/#\/manager/);
+    await expect(page.getByRole('table', { name: 'الموظفون' })).toBeVisible();
+  });
 });
 
 test.describe('general manager', () => {

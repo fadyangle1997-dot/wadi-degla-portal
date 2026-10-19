@@ -54,6 +54,8 @@ interface Props {
   onQuizAttempt?: (questionId: string, correct: boolean) => void;
   /** Derived by the shell from data: the next lesson or the unit exam. */
   nextStep: { label: string; go: () => void } | null;
+  /** Called once, when the closing screen is reached: everything the lesson
+   *  asks has been done, so leaving from there by any route keeps it. */
   onComplete: () => void;
   /** Completion AND return to the path — the two were fused, so «ارجع للمسار»
    *  silently did nothing whenever a next lesson existed. */
@@ -95,7 +97,16 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
     return s;
   }, [lesson]);
 
-  const [idx, setIdx] = useState(0);
+  // Where the trainee is in the lesson survives leaving it, for this browser
+  // session: exiting mid-lesson is then a pause, not a loss, and needs no
+  // confirmation. Only a position inside the same stage list is trusted.
+  const posKey = `wda.lessonpos.v1.${lesson.id}`;
+  const [idx, setIdx] = useState(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(posKey) ?? 'null') as { n: number; at: number } | null;
+      return saved && saved.n === stages.length && saved.at > 0 && saved.at < stages.length - 1 ? saved.at : 0;
+    } catch { return 0; }
+  });
   // The trainee's one focus for tomorrow. Local to the lesson: it is echoed on
   // the closing screen so the choice is not swallowed. Carrying it across
   // sessions would need a store change, so it is deliberately not persisted.
@@ -110,6 +121,22 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
     // keyboard users land at the new content, not on the old button (Phase 2 §6).
     headingRef.current?.focus();
   }, [stage]);
+
+  useEffect(() => {
+    try {
+      if (stage === 'done') sessionStorage.removeItem(posKey);
+      else sessionStorage.setItem(posKey, JSON.stringify({ n: stages.length, at: idx }));
+    } catch { /* position is a convenience */ }
+  }, [idx, stage, stages.length, posKey]);
+
+  // Completion is recorded on arrival, once: before this, Back or Escape on the
+  // closing screen left without it and the lesson stayed open on the path.
+  const completed = useRef(false);
+  useEffect(() => {
+    if (stage !== 'done' || completed.current) return;
+    completed.current = true;
+    onComplete();
+  }, [stage, onComplete]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onExit(); };
@@ -481,11 +508,11 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
 
               <div className="row mt-6 gap-3 wrap justify-center">
                 {nextStep && (
-                  <Button onClick={() => { onComplete(); nextStep.go(); }}>
+                  <Button onClick={nextStep.go}>
                     {nextStep.label} <ArrowRight size={16} className="icon-dir" />
                   </Button>
                 )}
-                <Button variant={nextStep ? 'ghost' : 'primary'} onClick={onFinish ?? onComplete}>ارجع للمسار</Button>
+                <Button variant={nextStep ? 'ghost' : 'primary'} onClick={onFinish ?? onExit}>ارجع للمسار</Button>
               </div>
             </m.section>
           )}
