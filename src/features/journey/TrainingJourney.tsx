@@ -8,7 +8,7 @@
  * pure `phaseStatus` — nothing here stores or invents state.
  */
 import React, { useMemo } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { Check, Clock, Lock, PlayCircle, CircleDot, Flag, ArrowRight, Swords, Trophy } from 'lucide-react';
 import { REVIEW_STARTS_ON_DAY } from '../../domain/review';
 import { MODULES } from '../../content/registry';
@@ -156,7 +156,7 @@ export const TrainingJourney: React.FC<{
             The ring sits off to one side with the title flowing beside it.
             Centred, it would read as a dashboard widget; asymmetric, it reads as
             a composition. Same information, different posture. */}
-        <motion.header
+        <m.header
           className="jr-hero"
           {...fade}
           style={{
@@ -174,7 +174,7 @@ export const TrainingJourney: React.FC<{
               {tr('jr.daysleft', lang)} {remaining} {tr('jr.days', lang)} · {pct}% {tr('jr.unitsapp', lang)}
             </p>
           </div>
-        </motion.header>
+        </m.header>
 
         {/* ── ONE ACT, THEN QUIET ──────────────────────────────────────────
             Whatever matters most today is rendered large and owns the only
@@ -184,7 +184,7 @@ export const TrainingJourney: React.FC<{
             The section disappears entirely when nothing is due. An empty
             «no tasks!» panel is noise dressed as feedback. */}
         {primary && (
-          <motion.section {...fade} style={{ marginBottom: 'var(--sp-7)' }}>
+          <m.section {...fade} style={{ marginBottom: 'var(--sp-7)' }}>
             <Card tone={primary.gate ? 'accent' : 'raised'} pad={6}>
               <Eyebrow>{tr('db.mission', lang)}</Eyebrow>
               <h2 className="t-h3" style={{ margin: 'var(--sp-3) 0', letterSpacing: '-.015em' }}>
@@ -211,7 +211,7 @@ export const TrainingJourney: React.FC<{
                 ))}
               </div>
             )}
-          </motion.section>
+          </m.section>
         )}
 
         {/* 🔴 Retrieval MOVED to the dashboard (sprint 02). It used to live
@@ -240,7 +240,7 @@ export const TrainingJourney: React.FC<{
             summary above it would push the trainee's actual next step off
             screen. */}
         <div className="journey-grid">
-        <motion.ol className="snake-path" style={{ listStyle: 'none', margin: 0, padding: 0, position: 'relative' }}>
+        <m.ol className="snake-path" style={{ listStyle: 'none', margin: 0, padding: 0, position: 'relative' }}>
           {PROGRAM.map(phase => (
             <SnakeStation
               key={phase.id}
@@ -257,7 +257,7 @@ export const TrainingJourney: React.FC<{
               trainerName={trainerName}
             />
           ))}
-        </motion.ol>
+        </m.ol>
 
         {/* The ledger — derived, never stored. Deliberately does NOT repeat the
             header's "days left / % approved": duplicating those would make the
@@ -335,7 +335,7 @@ const SnakeStation: React.FC<{
   // what turns "a list of modules" into "how far I've come, and what's left".
   const travelled = status === 'completed';
   return (
-    <motion.li {...stagger(index)}
+    <m.li {...stagger(index)}
       className={`snake-node${isCurrent ? ' snake-node--current' : ''}`}
       style={{ position: 'relative', display: 'flex', gap: 'var(--sp-4)', alignItems: 'stretch' }}
     >
@@ -474,7 +474,7 @@ const SnakeStation: React.FC<{
       </div>
 
       </div>
-    </motion.li>
+    </m.li>
   );
 };
 

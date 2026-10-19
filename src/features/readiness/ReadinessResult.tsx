@@ -22,7 +22,7 @@
  * Reads the domain only. No decision is made here — the engine already decided.
  */
 import React from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { ShieldCheck, Clock, AlertTriangle, ArrowUpRight } from 'lucide-react';
 import type { ReadinessOutcome } from '../../domain/readiness';
 import { READINESS_FLOORS } from '../../domain/readiness';
@@ -74,14 +74,14 @@ export const ReadinessResult: React.FC<{ outcome: ReadinessOutcome; onExit: () =
 
       <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-8)' }}>
         {/* The decision, stated plainly. No euphemism, no confetti. */}
-        <motion.header {...fade} style={{ marginBottom: 'var(--sp-7)' }}>
+        <m.header {...fade} style={{ marginBottom: 'var(--sp-7)' }}>
           <span aria-hidden style={{ color, display: 'inline-flex' }}>{o.icon}</span>
           <h1 className="t-h1" style={{ margin: 'var(--sp-3) 0 var(--sp-3)' }}>{o.headline}</h1>
           <p className="t-body" style={{ color: 'var(--tx1)', margin: 0 }}>{o.meaning}</p>
-        </motion.header>
+        </m.header>
 
         {/* WHY — the engine's own reasons. This is the respect. */}
-        <motion.section {...stagger(0)} style={{ marginBottom: 'var(--sp-6)' }}>
+        <m.section {...stagger(0)} style={{ marginBottom: 'var(--sp-6)' }}>
           <div className="t-label" style={{ marginBottom: 'var(--sp-3)' }}>على أي أساس</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             {outcome.reasons.map(r => (
@@ -94,10 +94,10 @@ export const ReadinessResult: React.FC<{ outcome: ReadinessOutcome; onExit: () =
               </div>
             ))}
           </div>
-        </motion.section>
+        </m.section>
 
         {/* Named, per-KPI evidence — never a single opaque number. */}
-        <motion.section {...stagger(1)} style={{ marginBottom: 'var(--sp-6)' }}>
+        <m.section {...stagger(1)} style={{ marginBottom: 'var(--sp-6)' }}>
           <div className="t-label" style={{ marginBottom: 'var(--sp-3)' }}>
             الأدلة حسب المحاور الرسمية · الإجمالي {outcome.overall}%
           </div>
@@ -118,34 +118,34 @@ export const ReadinessResult: React.FC<{ outcome: ReadinessOutcome; onExit: () =
               );
             })}
           </div>
-        </motion.section>
+        </m.section>
 
         {/* Strengths are named too — an assessment that only names failures is
             an audit, not a development conversation. */}
         {outcome.strengths.length > 0 && (
-          <motion.section {...stagger(2)} style={{ marginBottom: 'var(--sp-6)' }}>
+          <m.section {...stagger(2)} style={{ marginBottom: 'var(--sp-6)' }}>
             <div className="t-label" style={{ marginBottom: 'var(--sp-2)' }}>اللي ظهر قوي</div>
             <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
               {outcome.strengths.map(d => <StatusBadge key={d} tone="ready">{EVALUATION_DIMENSIONS[d]}</StatusBadge>)}
             </div>
-          </motion.section>
+          </m.section>
         )}
 
         {/* Every outcome has a route forward — including the hard ones. */}
-        <motion.section {...stagger(3)} style={{ padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)' }}>
+        <m.section {...stagger(3)} style={{ padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)' }}>
           <div className="t-label" style={{ marginBottom: 'var(--sp-2)' }}>الخطوة الجاية</div>
           <p className="t-body" style={{ margin: 0, color: 'var(--tx1)' }}>{o.next}</p>
-        </motion.section>
+        </m.section>
 
         {/* Certification is a moment, not a destination — it lands here, on the
             terminal state, rather than as a page nobody would navigate to. */}
         {outcome.decision === 'ready' && (
-          <motion.section {...stagger(4)} style={{ marginTop: 'var(--sp-6)', padding: 'var(--sp-5)', border: `1px solid var(--g3)`, borderRadius: 'var(--r-md)' }}>
+          <m.section {...stagger(4)} style={{ marginTop: 'var(--sp-6)', padding: 'var(--sp-5)', border: `1px solid var(--g3)`, borderRadius: 'var(--r-md)' }}>
             <p className="t-body" style={{ margin: 0 }}>
               <strong>لما اعتماد المدير ينزل، إنت بقيت موثوق تمثّل وادي دجلة قدّام أعضائه.</strong>
               {' '}يعني كل جملة هتقولها بعد كده هي موقف النادي — زي أول يوم بالظبط، بس دلوقتي لوحدك.
             </p>
-          </motion.section>
+          </m.section>
         )}
 
         <div style={{ marginTop: 'var(--sp-7)' }}>

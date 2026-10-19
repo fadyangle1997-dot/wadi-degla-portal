@@ -8,7 +8,7 @@
  */
 import type { User } from '../../domain/identity';
 import React, { useMemo, useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { ClipboardList, UserCheck, CalendarPlus, StickyNote } from 'lucide-react';
 import { useIdentity, useCan, identityStore } from '../../app/identity/identityStore';
 import { scopeOf, visibleLearners } from '../../domain/identity/scope';
@@ -96,7 +96,7 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
       <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.staff}
         leading={<Eyebrow icon={<ClipboardList size={13} />}>{tr('tn.title', lang)}</Eyebrow>} />
 
-      <motion.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+      <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         {/* ---------- 1) who needs me TODAY ---------- */}
         <h1 className="t-h2" style={{ marginBottom: 'var(--sp-2)' }}>{tr('tn.needyou', lang)}</h1>
         <p className="t-sm" style={{ marginBottom: 'var(--sp-5)' }}>{tr('tn.needyousub', lang)}</p>
@@ -150,7 +150,7 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             }} />
           ))}
         </div>
-      </motion.main>
+      </m.main>
       <Toast message={toastMsg} />
     </div>
   );

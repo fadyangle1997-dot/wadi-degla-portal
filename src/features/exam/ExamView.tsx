@@ -4,7 +4,7 @@
  * failed exam becomes a personalised review plan, not a dead end (Proposal 9).
  */
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 import { ArrowRight, GraduationCap, RotateCcw, Unlock } from 'lucide-react';
 import type { Module } from '../../domain/types/content';
 import { MODULES } from '../../content/registry';
@@ -37,17 +37,17 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
       .filter((l): l is NonNullable<typeof l> => !!l);
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <motion.section {...fade} style={{ ...col, textAlign: 'center' }}>
+        <m.section {...fade} style={{ ...col, textAlign: 'center' }}>
           {passed && (
-            <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 15 }}
+            <m.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 15 }}
               style={{ width: 76, height: 76, margin: '0 auto var(--sp-4)', borderRadius: '50%', background: 'rgba(var(--g2-rgb),.13)', border: '2px solid var(--g1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 56px rgba(var(--g2-rgb),.3)' }}>
               <GraduationCap size={32} style={{ color: 'var(--g0)' }} />
-            </motion.div>
+            </m.div>
           )}
-          <motion.p initial={{ scale: 0.7 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+          <m.p initial={{ scale: 0.7 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}
             className="t-num" style={{ fontSize: '3.4rem', color: passed ? 'var(--g1)' : 'var(--attn)', margin: 0 }}>
             {Math.round(score * 100)}%
-          </motion.p>
+          </m.p>
           <h2 className="t-h2" style={{ marginTop: 'var(--sp-3)' }}>{passed ? 'الوحدة دي بقت في جيبك.' : 'قرّبت — راجع وارجع'}</h2>
           {passed && (() => {
             const opened = MODULES.filter(x => x.unlock.requiresUnits.includes(module.id)).map(x => x.title);
@@ -73,7 +73,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
             {!passed && <Button variant="ghost" onClick={() => { setQi(0); setPicked(null); setAnswers([]); setWrongIds([]); setFinalScore(null); }}><RotateCcw size={16} /> حاول تاني</Button>}
             <Button onClick={onExit}>ارجع للمسار <ArrowRight size={16} className="icon-dir" /></Button>
           </div>
-        </motion.section>
+        </m.section>
       </div>
     );
   }
@@ -94,7 +94,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
 
       <main style={{ flex: 1 }}>
         <AnimatePresence mode="wait">
-          <motion.section key={qi} {...fade} style={col}>
+          <m.section key={qi} {...fade} style={col}>
             <p className="t-sm" style={{ marginBottom: 'var(--sp-3)' }}>الأسئلة هنا بتخلط الدروس — زي عميل حقيقي بالظبط.</p>
             <h2 className="t-h2 measure" style={{ marginBottom: 'var(--sp-6)' }}>{q.prompt}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
@@ -106,7 +106,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
             </div>
             <AnimatePresence>
               {answered && (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 'var(--sp-5)' }}>
+                <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 'var(--sp-5)' }}>
                   <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'صح' : 'مش صح'}
                     onAction={() => {
                       const nextAnswers = [...answers, !!correct];
@@ -121,10 +121,10 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish }) => {
                     actionLabel={<>{qi >= qs.length - 1 ? t('ex.seeresult', lang) : t('ex.next', lang)} <ArrowRight size={16} className="icon-dir" /></>}>
                     {q.explanation}
                   </FeedbackBlock>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
-          </motion.section>
+          </m.section>
         </AnimatePresence>
       </main>
     </div>

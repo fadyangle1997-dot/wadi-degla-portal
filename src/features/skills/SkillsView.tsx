@@ -4,7 +4,7 @@
  * no streaks, no gamification — competency, stated plainly.
  */
 import React from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { TrendingUp } from 'lucide-react';
 import { useProgress } from '../../app/progress';
 import { skillProgress, skillState, SKILL_STATE_LABEL } from '../../app/skills';
@@ -23,7 +23,7 @@ export const SkillsView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     <div style={{ minHeight: '100vh' }}>
       <ScreenHeader onBack={onExit} tabRoute leading={<Eyebrow icon={<TrendingUp size={13} />}>{t('sk.title', lang)}</Eyebrow>} />
 
-      <motion.main {...fade} aria-label={t('sk.aria', lang)} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+      <m.main {...fade} aria-label={t('sk.aria', lang)} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         <h1 className="t-h1">{t('sk.headline', lang)}</h1>
         <p className="t-sm measure" style={{ marginTop: 'var(--sp-2)', marginBottom: 'var(--sp-7)' }}>
           {t('sk.sub', lang)}
@@ -55,7 +55,7 @@ export const SkillsView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             })}
           </div>
         )}
-      </motion.main>
+      </m.main>
     </div>
   );
 };

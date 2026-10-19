@@ -13,7 +13,7 @@
  * needs, in the design system's own tokens. No element exists just to look good.
  */
 import React, { useMemo } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { User2, MapPin, BadgeCheck, GraduationCap, Award, Clock } from 'lucide-react';
 import { useIdentity, identityStore } from '../../app/identity/identityStore';
 import { useProgress, learningProgress, moduleLessonsDone, isModuleUnlocked } from '../../app/progress';
@@ -82,7 +82,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
           only one that appeared instantly, which read as a different product
           for the half-second it took to notice. Consistency, not decoration:
           the shared `fade` already respects prefers-reduced-motion. */}
-      <motion.main {...fade} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
+      <m.main {...fade} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
 
         {/* ── 1 · Hero Identity — who am I ── */}
         <Card tone="accent" pad={6}>
@@ -219,7 +219,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
               body="الشهادة بتصدر بعد ما تكمّل البرنامج ويعتمد المدير جاهزيتك." />
           </div>
         </section>
-      </motion.main>
+      </m.main>
     </div>
   );
 };

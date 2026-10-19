@@ -6,7 +6,7 @@
  * directly (minimum friction to the first small win).
  */
 import React from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { Compass, GraduationCap, Clock3, ShieldCheck, ArrowRight } from 'lucide-react';
 import { MODULES, curriculumStats, BOSS_BATTLES } from '../../content/registry';
 import { Button, Eyebrow, ArabicContent } from '../../ui/primitives';
@@ -56,7 +56,7 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      <motion.main {...fade} aria-label="أهلاً بيك في أكاديمية عمليات العضويات" style={{ width: '100%', maxWidth: WIDTH.focus, margin: '0 auto', padding: 'var(--sp-7) var(--sp-5)' }}>
+      <m.main {...fade} aria-label="أهلاً بيك في أكاديمية عمليات العضويات" style={{ width: '100%', maxWidth: WIDTH.focus, margin: '0 auto', padding: 'var(--sp-7) var(--sp-5)' }}>
         <Eyebrow>{t('wel.eyebrow', lang)}</Eyebrow>
         <h1 className="t-display" style={{ marginTop: 'var(--sp-4)' }}>{t('wel.title', lang)}</h1>
         <p className="t-lead measure" style={{ marginTop: 'var(--sp-4)' }}>
@@ -69,35 +69,35 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
             the product asking to be read before it can be used. The act comes
             first; the four cards stay, as what they always were: the answer to
             «إيه ده؟» for whoever scrolls. */}
-        <motion.div {...stagger(1, 0.15)} style={{ marginTop: 'var(--sp-6)' }}>
+        <m.div {...stagger(1, 0.15)} style={{ marginTop: 'var(--sp-6)' }}>
           <Button onClick={onStartFirstLesson}>
             {t('wc.startfirst', lang)} — <ArabicContent as="span">{first?.lessons[0]?.title ?? ''}</ArabicContent> <ArrowRight size={16} className="icon-dir" />
           </Button>
-        </motion.div>
+        </m.div>
 
         <div style={{ marginTop: 'var(--sp-7)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
           {facts.map((f, i) => (
-            <motion.div key={f.title} {...stagger(i + 2, 0.15)}
+            <m.div key={f.title} {...stagger(i + 2, 0.15)}
               style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'flex-start', padding: 'var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
               <span style={{ color: 'var(--g2)', marginTop: 'var(--sp-1)', flexShrink: 0 }}>{f.icon}</span>
               <span>
                 <span className="t-title" style={{ display: 'block', color: 'var(--tx0)' }}>{f.title}</span>
                 <span className="t-sm" style={{ display: 'block', marginTop: 'var(--sp-1)' }}>{f.body}</span>
               </span>
-            </motion.div>
+            </m.div>
           ))}
         </div>
 
-        <motion.p {...stagger(facts.length, 0.15)} className="t-sm" style={{ marginTop: 'var(--sp-5)', color: 'var(--tx3)' }}>
+        <m.p {...stagger(facts.length, 0.15)} className="t-sm" style={{ marginTop: 'var(--sp-5)', color: 'var(--tx3)' }}>
           {t('wc.storage', lang)}
-        </motion.p>
+        </m.p>
         {/* 🔴 P1 (Sprint 5.0) — ONE primary action. This used to offer «ابدأ
             أول درس» beside a ghost «شوف المسار كله الأول», making the very
             first decision of the employee's professional life a CHOICE rather
             than an ACT. Exploration is not lost: «الرحلة» sits permanently in
             the header the moment they land, so the path is one tap away
             without competing with the only action that matters right now. */}
-      </motion.main>
+      </m.main>
     </div>
   );
 };

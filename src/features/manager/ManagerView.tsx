@@ -7,7 +7,7 @@
  * Uses only Design-System primitives; gated on reports.view.
  */
 import React, { useMemo, useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { LayoutDashboard, ShieldCheck, GraduationCap, TrendingUp, AlertTriangle, Users2, Gavel } from 'lucide-react';
 import { useCan, useIdentity, identityStore } from '../../app/identity/identityStore';
 import { scopeOf } from '../../domain/identity/scope';
@@ -115,7 +115,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
       <ScreenHeader onBack={onExit} tabRoute maxWidth={WIDTH.staff}
         leading={<Eyebrow icon={<LayoutDashboard size={13} />}>{tr('mg.title', lang)}</Eyebrow>} />
 
-      <motion.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+      <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         <h1 className="t-h2" style={{ marginBottom: 'var(--sp-2)' }}>{scopeTitle}</h1>
         <p className="t-sm" style={{ marginBottom: 'var(--sp-6)' }}>{tr('mg.sub', lang)}</p>
 
@@ -207,7 +207,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         )}
 
         {drill && <EmployeeTimeline employeeId={drill} onClose={() => setDrill(null)} />}
-      </motion.main>
+      </m.main>
     </div>
   );
 };

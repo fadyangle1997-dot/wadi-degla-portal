@@ -16,7 +16,7 @@
  * the pre-flight checklist.
  */
 import React, { useMemo, useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { dailySet, shuffleOrder, attemptCount, type RetrievalEvent } from '../../domain/retrieval';
 import { RETRIEVAL_BANK, retrievalQuestion } from '../../content/registry';
@@ -89,7 +89,7 @@ export const TodayRetrieval: React.FC<{
     // Same Card as everything else in today's work. It used to hand-roll its
     // own background, border, radius and padding — which is precisely how a
     // card ends up feeling like it came from a different application.
-    <motion.div {...fade}>
+    <m.div {...fade}>
      <Card tone="raised" pad={5}>
       <div className="t-label" style={{ marginBottom: 'var(--sp-2)', color: 'var(--tx3)' }}>
         فكّرني · {idx + 1} من {set.length}
@@ -119,7 +119,7 @@ export const TodayRetrieval: React.FC<{
       </div>
 
       {answered && (
-        <motion.div {...fade} style={{ marginTop: 'var(--sp-4)' }}>
+        <m.div {...fade} style={{ marginTop: 'var(--sp-4)' }}>
           {/* The same explanation block the lesson and the exam use — which also
               brings aria-live and the focus move to the continue button that
               this hand-rolled version never had. */}
@@ -128,9 +128,9 @@ export const TodayRetrieval: React.FC<{
             actionLabel={idx + 1 >= set.length ? t('rt.donetoday', lang) : <>{t('rt.next', lang)} <ArrowRight size={16} className="icon-dir" /></>}>
             {question.explanation}
           </FeedbackBlock>
-        </motion.div>
+        </m.div>
       )}
      </Card>
-    </motion.div>
+    </m.div>
   );
 };

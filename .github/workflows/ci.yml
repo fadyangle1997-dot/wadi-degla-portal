@@ -41,6 +41,9 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Initial download budget
+        run: npm run size
+
       # The bundle is public. Nothing in it may be a credential.
       - name: No credentials in the built bundle
         run: |

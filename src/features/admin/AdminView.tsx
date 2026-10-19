@@ -6,7 +6,7 @@
  * Every action is permission-gated via can(); role ids never touch the UI.
  */
 import React, { useMemo, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { UserPlus, ShieldCheck, KeyRound, Archive, Power, Pencil, Check } from 'lucide-react';
 import { useIdentity, identityStore, useCan } from '../../app/identity/identityStore';
 import { can, type User } from '../../domain/identity';
@@ -63,7 +63,7 @@ export const AdminView: React.FC<{ onExit: () => void; embedded?: boolean }> = (
         </div>
       )}
 
-      <motion.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+      <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         {showCreate && (
           <CreateUserForm onDone={created => { setShowCreate(false); if (created) notify(t('us.added', lang)); }} />
         )}
@@ -91,7 +91,7 @@ export const AdminView: React.FC<{ onExit: () => void; embedded?: boolean }> = (
             </div>
           </details>
         )}
-      </motion.main>
+      </m.main>
 
       <ConfirmDialog
         open={confirmTarget !== null}

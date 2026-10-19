@@ -6,7 +6,6 @@
  */
 import { authenticate as authenticateDev } from './demo/demoAccounts';
 import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { WelcomeView } from '../features/welcome/WelcomeView';
 import { PathView } from '../features/path/PathView';
 import { LoginView } from '../features/login/LoginView';
 import { AppShell } from '../ui/AppShell';
@@ -18,16 +17,19 @@ const AdminPlatform = lazy(() => import('../features/admin/AdminPlatform').then(
 const TrainerView = lazy(() => import('../features/trainer/TrainerView').then(m => ({ default: m.TrainerView })));
 const ManagerView = lazy(() => import('../features/manager/ManagerView').then(m => ({ default: m.ManagerView })));
 const ReadinessReportView = lazy(() => import('../features/readiness/ReadinessReportView').then(m => ({ default: m.ReadinessReportView })));
-import { JourneyView } from '../features/journey/JourneyView';
-import { TrainingJourney } from '../features/journey/TrainingJourney';
-import { SkillsView } from '../features/skills/SkillsView';
-import { DecisionReview } from '../features/review/DecisionReview';
-import { ReadinessResult } from '../features/readiness/ReadinessResult';
+// Trainee screens beyond the dashboard load on first visit, so the sign-in and
+// dashboard download stays small.
+const WelcomeView = lazy(() => import('../features/welcome/WelcomeView').then(m => ({ default: m.WelcomeView })));
+const JourneyView = lazy(() => import('../features/journey/JourneyView').then(m => ({ default: m.JourneyView })));
+const TrainingJourney = lazy(() => import('../features/journey/TrainingJourney').then(m => ({ default: m.TrainingJourney })));
+const SkillsView = lazy(() => import('../features/skills/SkillsView').then(m => ({ default: m.SkillsView })));
+const DecisionReview = lazy(() => import('../features/review/DecisionReview').then(m => ({ default: m.DecisionReview })));
+const ReadinessResult = lazy(() => import('../features/readiness/ReadinessResult').then(m => ({ default: m.ReadinessResult })));
+const LessonFlow = lazy(() => import('../features/lesson/LessonFlow').then(m => ({ default: m.LessonFlow })));
+const ExamView = lazy(() => import('../features/exam/ExamView').then(m => ({ default: m.ExamView })));
+const BossView = lazy(() => import('../features/boss/BossView').then(m => ({ default: m.BossView })));
 import { assessReadiness } from '../domain/readiness';
-import { LessonFlow } from '../features/lesson/LessonFlow';
-import { ExamView } from '../features/exam/ExamView';
 import { EmptyState, Button, Eyebrow, ScreenHeader, ArabicContent } from '../ui/primitives';
-import { BossView } from '../features/boss/BossView';
 import { moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
@@ -180,13 +182,15 @@ export const App: React.FC = () => {
   if (view.kind === 'welcome') {
     const first = moduleById('m1') ?? moduleById('m2_1');
     return (
-      <WelcomeView
-        onStartFirstLesson={() => {
-          progressStore.completeOnboarding();
-          if (first?.lessons[0]) openLesson(first.id, first.lessons[0].id);
-          else toPath();
-        }}
-      />
+      <Lazy>
+        <WelcomeView
+          onStartFirstLesson={() => {
+            progressStore.completeOnboarding();
+            if (first?.lessons[0]) openLesson(first.id, first.lessons[0].id);
+            else toPath();
+          }}
+        />
+      </Lazy>
     );
   }
 
@@ -196,9 +200,9 @@ export const App: React.FC = () => {
     <AppShell active={view.kind} onNavigate={k => setView({ kind: k } as View)}>{node}</AppShell>
   );
 
-  if (view.kind === 'journey') return inShell(<ArabicContent><JourneyView onExit={toPath} /></ArabicContent>);
+  if (view.kind === 'journey') return inShell(<Lazy><ArabicContent><JourneyView onExit={toPath} /></ArabicContent></Lazy>);
   if (view.kind === 'roadmap') return inShell(
-    <TrainingJourney
+    <Lazy><TrainingJourney
       onExit={toPath}
       onOpenReview={() => setView({ kind: 'review' })}
       onOpenReadiness={() => setView({ kind: 'readiness' })}
@@ -206,24 +210,24 @@ export const App: React.FC = () => {
       onOpenModule={id => {
       const m = moduleById(id);
       if (m?.lessons[0]) openLesson(m.id, m.lessons[0].id);
-    }} />
+    }} /></Lazy>
   );
-  if (view.kind === 'skills') return inShell(<SkillsView onExit={toPath} />);
+  if (view.kind === 'skills') return inShell(<Lazy><SkillsView onExit={toPath} /></Lazy>);
 
   // The daily debrief — one question at a time, immersive so nothing competes
   // with the thinking. Reachable from the journey once independent work begins.
-  if (view.kind === 'review') return <ArabicContent><DecisionReview onExit={() => setView({ kind: 'roadmap' })} /></ArabicContent>;
+  if (view.kind === 'review') return <Lazy><ArabicContent><DecisionReview onExit={() => setView({ kind: 'roadmap' })} /></ArabicContent></Lazy>;
 
   // Surfaces the readiness engine against REAL evidence. With no stations
   // assessed yet the engine truthfully reports what blocks certification —
   // that IS the answer to "where am I?", not a placeholder.
   if (view.kind === 'readiness') return inShell(
-    <ArabicContent>
+    <Lazy><ArabicContent>
       <ReadinessResult
         outcome={assessReadiness({ evidence: [], conduct: {} })}
         onExit={() => setView({ kind: 'roadmap' })}
       />
-    </ArabicContent>,
+    </ArabicContent></Lazy>,
   );
   /* 🔴 ISLANDS, DECLARED — NOT A DOCUMENT PINNED TO ONE DIRECTION.
      Two different reasons sit behind these wrappers, and the difference matters
@@ -256,7 +260,7 @@ export const App: React.FC = () => {
         ? { label: 'امتحان الوحدة', go: () => setView({ kind: 'exam', moduleId: m.id }) }
         : null;
     return (
-      <ArabicContent>
+      <Lazy><ArabicContent>
       <LessonFlow
         lesson={lesson}
         unitCode={m.code}
@@ -276,7 +280,7 @@ export const App: React.FC = () => {
         onComplete={() => { progressStore.completeLesson(lesson.id); }}
         onFinish={() => { progressStore.completeLesson(lesson.id); toPath(); }}
       />
-      </ArabicContent>
+      </ArabicContent></Lazy>
     );
   }
 
@@ -317,7 +321,7 @@ export const App: React.FC = () => {
     // halfway through an exam already in progress was the bug.
     const gate = gateFor(m.id);
     if (!gate.allowed) return <ExamCooldown retryAt={gate.retryAt} onExit={toPath} />;
-    return <ArabicContent><ExamView module={m} onExit={toPath} onFinish={score => {
+    return <Lazy><ArabicContent><ExamView module={m} onExit={toPath} onFinish={score => {
       // 🔴 P0 FIX — these are two writes to two separate stores with no shared
       // transaction (a real architectural constraint, not something a single
       // sprint can merge). recordExam is the one that MUST succeed — it is a
@@ -339,14 +343,14 @@ export const App: React.FC = () => {
           // no silent data loss, no crash screen for a step that can be redone.
         }
       }
-    }} /></ArabicContent>;
+    }} /></ArabicContent></Lazy>;
   }
 
   if (view.kind === 'boss') {
     const b = BOSS_BATTLES.find(x => x.id === view.bossId);
     // Guard: a boss opens only when every unit it covers is complete.
     if (!b || !b.afterUnits.every(u => isModuleComplete(p, u))) { toPath(); return null; }
-    return <ArabicContent><BossView battle={b} onExit={toPath} onFinish={() => progressStore.passBoss(b.id)} /></ArabicContent>;
+    return <Lazy><ArabicContent><BossView battle={b} onExit={toPath} onFinish={() => progressStore.passBoss(b.id)} /></ArabicContent></Lazy>;
   }
 
   return inShell(

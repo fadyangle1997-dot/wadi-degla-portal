@@ -5,7 +5,7 @@
  * employee "stands" in a journey that belongs to the file, not the trainee.
  */
 import React from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { MapPin, Building2, Archive } from 'lucide-react';
 import { JOURNEY_STAGES } from '../../content/registry';
 import { Eyebrow, ScreenHeader, StatusBadge } from '../../ui/primitives';
@@ -22,7 +22,7 @@ export const JourneyView: React.FC<{ onExit: () => void }> = ({ onExit }) => (
   <div style={{ minHeight: '100vh' }}>
     <ScreenHeader onBack={onExit} leading={<Eyebrow>رحلة ملف العضوية</Eyebrow>} />
 
-    <motion.main {...fade} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+    <m.main {...fade} style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
       <h1 className="t-h1">من أول ما العميل يدخل… لحد الأرشيف.</h1>
       <p className="t-sm measure" style={{ marginTop: 'var(--sp-2)', marginBottom: 'var(--sp-7)' }}>
         11 مرحلة بيمشيها كل ملف. المراحل الذهبية هي اللي بين إيديك — اعرف اللي قبلك واللي بعدك، وهتفهم ليه كل خطوة مهمة.
@@ -69,6 +69,6 @@ export const JourneyView: React.FC<{ onExit: () => void }> = ({ onExit }) => (
           })}
         </ol>
       </div>
-    </motion.main>
+    </m.main>
   </div>
 );

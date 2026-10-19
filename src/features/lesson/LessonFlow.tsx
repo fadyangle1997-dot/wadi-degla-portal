@@ -6,7 +6,7 @@
  * structurally impossible now. All persistence is event-driven via onComplete.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 import { Check, HelpCircle, Lightbulb, Sparkles, ArrowRight, ClipboardCheck } from 'lucide-react';
 import { archetypeById, STATE_LABEL, type MemberState } from '../../domain/simulation';
 import type { Production, Lesson, QuizQuestion, Practice } from '../../domain/types/content';
@@ -132,7 +132,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               A real situation, alone, before a single word of explanation.
               The trainee must want the answer before being given one. */}
           {stage === 'challenge' && lesson.pro?.openingChallenge && (
-            <motion.section key="challenge" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="challenge" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <Eyebrow icon={<HelpCircle size={13} />}>موقف في المكتب</Eyebrow>
               <h1 className="t-h1 measure" style={{ marginTop: 'var(--sp-4)' }}>{lesson.pro.openingChallenge}</h1>
               {/* The trainee's own question, under the situation that provokes
@@ -145,11 +145,11 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               <div style={{ marginTop: 'var(--sp-7)' }}>
                 <Button onClick={next}>تفتكر تعمل إيه؟ <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
-            </motion.section>
+            </m.section>
           )}
 
           {stage === 'ask' && (
-            <motion.section key="ask" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="ask" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <Eyebrow icon={<HelpCircle size={13} />}>سؤال بيقابلك في الشغل</Eyebrow>
               <h1 className="t-h1 measure" style={{ marginTop: 'var(--sp-4)' }}>{lesson.employeeQuestion}</h1>
               <div style={{ marginTop: 'var(--sp-6)' }}>
@@ -158,7 +158,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               <div style={{ marginTop: 'var(--sp-7)' }}>
                 <Button onClick={next}>يلا نجاوب عليه <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
-            </motion.section>
+            </m.section>
           )}
 
           {stage === 'predict' && <PredictStage key="predict" lesson={lesson} onNext={next} />}
@@ -182,7 +182,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               the rule was filler: exactly backwards. The example is disposable;
               the rule is the job. */}
           {stage === 'learn' && (
-            <motion.section key="learn" {...fade} style={col}>
+            <m.section key="learn" {...fade} style={col}>
               <Eyebrow>{lesson.title}</Eyebrow>
 
               <p className="t-lead measure" style={{ marginTop: 'var(--sp-3)', marginBottom: 'var(--sp-6)' }}>
@@ -201,14 +201,14 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               {/* ③ THE HERO */}
               <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
                 {lesson.points.map((pt, i) => (
-                  <motion.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06 + i * 0.06 }}>
+                  <m.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06 + i * 0.06 }}>
                     {pt.rule ? <RuleObject text={pt.text} /> : <SupportingPoint text={pt.text} />}
-                  </motion.li>
+                  </m.li>
                 ))}
               </ul>
 
               {/* ④ Prose, not a card. It must not out-weigh the rule. */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 + lesson.points.length * 0.06 }}
                 style={{ marginTop: 'var(--sp-6)' }}
@@ -225,8 +225,8 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
                     {lesson.practice ? 'جرّب بنفسك' : 'فهمت — اختبرني'} <ArrowRight size={16} className="icon-dir" />
                   </Button>
                 </div>
-              </motion.div>
-            </motion.section>
+              </m.div>
+            </m.section>
           )}
 
           {/* ── REFLECT ───────────────────────────────────────────────────
@@ -234,20 +234,20 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               answer, no options. The button says «فكّرت» — a small contract
               with yourself, not a navigation label. */}
           {stage === 'reflect' && lesson.pro?.reflectiveQuestion && (
-            <motion.section key="reflect" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="reflect" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <Eyebrow icon={<Lightbulb size={13} />}>خد ثانية وفكّر</Eyebrow>
               <h2 className="t-h2 measure" style={{ marginTop: 'var(--sp-4)' }}>{lesson.pro.reflectiveQuestion}</h2>
               <div style={{ marginTop: 'var(--sp-7)' }}>
                 <Button variant="ghost" onClick={next}>فكّرت <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
-            </motion.section>
+            </m.section>
           )}
 
           {/* ── OFFICE ────────────────────────────────────────────────────
               One moment from two sides — what happened, and what the member
               felt while it happened. Splitting them would break the scene. */}
           {stage === 'office' && lesson.pro?.officeScenario && (
-            <motion.section key="office" {...fade} style={col}>
+            <m.section key="office" {...fade} style={col}>
               <Eyebrow icon={<ClipboardCheck size={13} />}>في المكتب</Eyebrow>
               <p className="t-lead measure" style={{ marginTop: 'var(--sp-3)' }}>{lesson.pro.officeScenario}</p>
               {/* The journey-overview lesson compresses all eleven stages into
@@ -288,14 +288,14 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               <div style={{ marginTop: 'var(--sp-7)' }}>
                 <Button onClick={next}>طيب أتصرّف إزاي؟ <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
-            </motion.section>
+            </m.section>
           )}
 
           {/* ── COACH ─────────────────────────────────────────────────────
               The emotional peak: the trainer talking in your ear. It closes on
               the golden rule — the one line meant to survive years. */}
           {stage === 'coach' && lesson.pro?.professionalThinking && (
-            <motion.section key="coach" {...fade} style={col}>
+            <m.section key="coach" {...fade} style={col}>
               <Eyebrow icon={<Sparkles size={13} />}>إزاي المحترف بيفكّر</Eyebrow>
               <p className="t-lead measure" style={{ marginTop: 'var(--sp-3)' }}>{lesson.pro.professionalThinking}</p>
               {lesson.pro.ownershipMindset && (
@@ -309,13 +309,13 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               <div style={{ marginTop: 'var(--sp-7)' }}>
                 <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
-            </motion.section>
+            </m.section>
           )}
 
           {/* ── MISTAKES ──────────────────────────────────────────────────
               Contrast, and only after the right model exists to contrast with. */}
           {stage === 'mistakes' && lesson.pro?.commonMistakes?.length && (
-            <motion.section key="mistakes" {...fade} style={col}>
+            <m.section key="mistakes" {...fade} style={col}>
               <Eyebrow>أخطاء بتحصل كتير</Eyebrow>
               <ul role="list" style={{ listStyle: 'none', margin: 'var(--sp-4) 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
                 {lesson.pro.commonMistakes.map((m, i) => (
@@ -328,11 +328,11 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               <div style={{ marginTop: 'var(--sp-7)' }}>
                 <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
-            </motion.section>
+            </m.section>
           )}
 
           {stage === 'dialogue' && lesson.dialogue && (
-        <motion.section {...fade} style={col}>
+        <m.section {...fade} style={col}>
           <Eyebrow>نفس الموقف · نفس القرار</Eyebrow>
           <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>الفرق في التوصيل</h2>
           <p className="t-body" style={{ color: 'var(--tx2)', marginBottom: 'var(--sp-5)' }}>{lesson.dialogue.setup}</p>
@@ -347,11 +347,11 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
           <div style={{ marginTop: 'var(--sp-5)' }}>
             <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
           </div>
-        </motion.section>
+        </m.section>
       )}
 
       {stage === 'comms' && lesson.comms && (
-        <motion.section {...fade} style={col}>
+        <m.section {...fade} style={col}>
           <Eyebrow>{lesson.comms.audience === 'sales' ? 'التوصيل الداخلي · للمبيعات' : 'التوصيل · للعضو'}</Eyebrow>
           <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-5)' }}>
             {lesson.comms.audience === 'sales'
@@ -381,7 +381,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
           <div style={{ marginTop: 'var(--sp-6)' }}>
             <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
           </div>
-        </motion.section>
+        </m.section>
       )}
 
       {stage === 'produce' && lesson.production && (
@@ -402,7 +402,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               commits to nothing. The choice is echoed on the closing screen so
               it is not swallowed the moment it is made. */}
           {stage === 'commit' && lesson.pro?.commitmentOptions?.length && (
-            <motion.section key="commit" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="commit" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <Eyebrow>هتركّز على إيه بكرة؟</Eyebrow>
               <h2 className="t-h3 measure" style={{ marginTop: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>اختار حاجة واحدة بس.</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
@@ -415,11 +415,11 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               <div style={{ marginTop: 'var(--sp-6)' }}>
                 <Button disabled={!commitment} onClick={() => { if (commitment) onCommit?.(commitment); next(); }}>ده اللي هركّز عليه <ArrowRight size={16} className="icon-dir" /></Button>
               </div>
-            </motion.section>
+            </m.section>
           )}
 
           {stage === 'done' && (
-            <motion.section key="done" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <m.section key="done" {...fade} style={{ ...col, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               {/* THE HERO — capability, never completion. «You finished» rewards
                   attendance; «tomorrow you can» rewards becoming. The whole
                   screen is sized so the eye lands here first and only here. */}
@@ -484,7 +484,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
                 )}
                 <Button variant={nextStep ? 'ghost' : 'primary'} onClick={onFinish ?? onComplete}>ارجع للمسار</Button>
               </div>
-            </motion.section>
+            </m.section>
           )}
         </AnimatePresence>
       </main>
@@ -506,7 +506,7 @@ const PredictStage: React.FC<{ lesson: Lesson; onNext: () => void }> = ({ lesson
   const [picked, setPicked] = useState<number | null>(null);
   const p = lesson.prediction;
   return (
-    <motion.section {...fade} style={col}>
+    <m.section {...fade} style={col}>
       <Eyebrow icon={<HelpCircle size={13} />}>قبل ما نقولك القاعدة — إنت إيه رأيك؟</Eyebrow>
       <h2 className="t-h2 measure" style={{ marginTop: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>{p.prompt}</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
@@ -516,15 +516,15 @@ const PredictStage: React.FC<{ lesson: Lesson; onNext: () => void }> = ({ lesson
       </div>
       <AnimatePresence>
         {picked !== null && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 'var(--sp-5)' }}>
+          <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 'var(--sp-5)' }}>
             <FeedbackBlock tone="summary" title="القاعدة" onAction={onNext}
               actionLabel={<>كمّل الشرح <ArrowRight size={16} className="icon-dir" /></>}>
               {p.reveal}
             </FeedbackBlock>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.section>
+    </m.section>
   );
 };
 
@@ -536,7 +536,7 @@ const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }> = ({ p
   const allCorrect = checked && practice.items.every((it, i) => marks[i] === it.correct);
 
   return (
-    <motion.section {...fade} style={col}>
+    <m.section {...fade} style={col}>
       <Eyebrow icon={<ClipboardCheck size={13} />}>تمرين — قرارك إنت</Eyebrow>
       <h2 className="t-h2 measure" style={{ marginTop: 'var(--sp-4)', marginBottom: 'var(--sp-3)' }}>{practice.prompt}</h2>
       <p className="t-sm" style={{ marginBottom: 'var(--sp-5)' }}>حدّد لكل بند: مطلوب فعلاً في الملف ده، ولا لأ؟</p>
@@ -588,7 +588,7 @@ const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }> = ({ p
             </FeedbackBlock>
           )}
       </div>
-    </motion.section>
+    </m.section>
   );
 };
 
@@ -631,7 +631,7 @@ const QuizStage: React.FC<{
   };
 
   return (
-    <motion.section {...fade} style={col}>
+    <m.section {...fade} style={col}>
       <Eyebrow>{round === 'first' ? 'اتأكد إنك فهمت' : 'الأسئلة اللي زغللت — جاوبها تاني'} · {qi + 1} من {pool.length}</Eyebrow>
       <h2 className="t-h2 measure" style={{ marginTop: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>{q.prompt}</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
@@ -653,7 +653,7 @@ const QuizStage: React.FC<{
       </div>
       <AnimatePresence>
         {answered && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 'var(--sp-5)' }}>
+          <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 'var(--sp-5)' }}>
             <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'صح' : 'مش صح — اعرف ليه'}
               onAction={advance}
               actionLabel={<>
@@ -662,10 +662,10 @@ const QuizStage: React.FC<{
               </>}>
               {q.explanation}
             </FeedbackBlock>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.section>
+    </m.section>
   );
 };
 
@@ -737,7 +737,7 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
 
   if (!started) {
     return (
-      <motion.section {...fade} style={col}>
+      <m.section {...fade} style={col}>
         <Eyebrow>إنتاج · {MODE_LABEL[p.mode]}</Eyebrow>
         <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-4)' }}>دورك دلوقتي</h2>
         <p className="t-body" style={{ marginBottom: 'var(--sp-5)' }}>{p.task}</p>
@@ -794,12 +794,12 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
           <strong style={{ color: 'var(--tx2)' }}> أول مرة تنطقها المفروض تكون هنا، مش قدّام عضو.</strong>
         </p>
         <Button onClick={() => setStarted(true)}>بدأت <ArrowRight size={16} className="icon-dir" /></Button>
-      </motion.section>
+      </m.section>
     );
   }
 
   return (
-    <motion.section {...fade} style={col}>
+    <m.section {...fade} style={col}>
       <Eyebrow>إنتاج · محاولة {attempt}</Eyebrow>
       <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>راجع اللي قلته</h2>
       <p className="t-sm" style={{ color: 'var(--tx3)', marginBottom: 'var(--sp-5)' }}>
@@ -823,7 +823,7 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
       )}
 
       {reviewed && !passed && (
-        <motion.div {...fade} style={{ marginTop: 'var(--sp-5)' }}>
+        <m.div {...fade} style={{ marginTop: 'var(--sp-5)' }}>
           <SpineWell spine="risk" label={`ناقص ${missed.length}`}>
             <ul className="t-sm" style={{ margin: 0, paddingInlineStart: '1.1em', color: 'var(--tx1)' }}>
               {missed.map(i => <li key={i} style={{ marginBottom: 'var(--sp-1)' }}>{p.criteria[i]}</li>)}
@@ -841,11 +841,11 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
               قولها تاني — والمرة دي ركّز على اللي فوق
             </Button>
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {reviewed && passed && (
-        <motion.div {...fade} style={{ marginTop: 'var(--sp-5)' }}>
+        <m.div {...fade} style={{ marginTop: 'var(--sp-5)' }}>
           <p className="t-body" style={{ margin: '0 0 var(--sp-4)' }}>
             الأربعة اتعملوا{attempt > 1 ? ` — بعد ${attempt} محاولات، وده الطبيعي` : ''}.
             {' '}دي الجملة اللي هتقولها بكرة على الكاونتر.
@@ -862,9 +862,9 @@ const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = ({ p, o
             </Card>
           )}
           <Button onClick={onPass}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
-        </motion.div>
+        </m.div>
       )}
-    </motion.section>
+    </m.section>
   );
 };
 

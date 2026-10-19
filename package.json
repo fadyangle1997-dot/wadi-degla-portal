@@ -16,7 +16,8 @@
     "server:migrate": "tsx -e \"import('./server/db/client').then(async m => { const sql = await m.connect(); const { migrate } = await import('./server/db/migrate'); console.log(await migrate(sql)); await sql.end(); })\"",
     "test:server": "vitest run server",
     "e2e": "playwright test",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "size": "node scripts/check-bundle-size.mjs 200"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",

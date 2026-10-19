@@ -28,7 +28,7 @@
  * aria-live, and ambient motion drops entirely under prefers-reduced-motion.
  */
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { BrandLogo } from '../../ui/BrandLogo';
 import { fade } from '../../ui/motion';
@@ -80,7 +80,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
       <span aria-hidden className="signin-orb" style={{ width: 260, height: 260, top: '18%', right: '-6%', background: '#B38922', animationDelay: '-9s', opacity: .38 }} />
       <span aria-hidden className="signin-orb" style={{ width: 300, height: 300, bottom: '-12%', right: '12%', background: '#FEDEA0', animationDelay: '-17s', opacity: .3 }} />
 
-      <motion.main
+      <m.main
         {...fade}
         style={{ position: 'relative', width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
       >
@@ -185,7 +185,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
 
         {/* Development-only role switcher — statically dropped from prod builds. */}
         {import.meta.env.DEV && <DevPanel onFill={(u, p) => { setUsername(u); setPassword(p); setError(''); }} />}
-      </motion.main>
+      </m.main>
     </div>
   );
 };

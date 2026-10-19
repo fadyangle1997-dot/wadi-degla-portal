@@ -2,12 +2,12 @@
  * BrandLogo — the ONE place the logo asset is referenced. Swapping in an SVG
  * later means changing only this file; no layout anywhere else moves.
  *
- * ── WHY TWO FILES AND A srcSet ───────────────────────────────────────────
- * The source asset is 3000×3000. The mark renders at 32–104px, so shipping the
- * original would cost ~250KB and a full-size decode on the very first screen a
- * user sees, to draw something the size of a thumbnail. Instead: 512 covers
- * every realistic size at 4×, 1024 covers 4K and future larger placements, and
- * the browser picks. Total: 56KB for the common case.
+ * ── SIZES ────────────────────────────────────────────────────────────────
+ * The mark renders at 28–104px. Three WebP files (128, 256, 512 px wide) cover
+ * every placement up to 4× density, and the browser picks by `sizes`. The
+ * common case is 6–13KB; the old PNG pair was 51KB + 157KB, and its srcset
+ * declared each file at twice its real width, so dense screens got a blurry
+ * mark.
  *
  * ── WHY THE ASSET WAS RE-PROCESSED ───────────────────────────────────────
  * The original stores transparency in a palette, and its transparent pixels
@@ -18,13 +18,14 @@
  * 272px of dead margin was cropped so the mark fills its box and centres true.
  */
 import React from 'react';
-import logoUrl from '../assets/wadi-degla-logo.png';
-import logo2xUrl from '../assets/wadi-degla-logo@2x.png';
+import logo128 from '../assets/wadi-degla-logo-128.webp';
+import logo256 from '../assets/wadi-degla-logo-256.webp';
+import logo512 from '../assets/wadi-degla-logo-512.webp';
 
 export const BrandLogo: React.FC<{ size?: number; className?: string }> = ({ size = 32, className }) => (
   <img
-    src={logoUrl}
-    srcSet={`${logoUrl} 512w, ${logo2xUrl} 1024w`}
+    src={logo256}
+    srcSet={`${logo128} 128w, ${logo256} 256w, ${logo512} 512w`}
     sizes={`${size}px`}
     alt="وادي دجلة"
     width={size}

@@ -8,7 +8,7 @@
  * All derived; Design-System primitives only; gated on operations.view.
  */
 import React, { useMemo, useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { LayoutDashboard, Inbox, ScrollText, ShieldCheck, AlertOctagon, AlertTriangle, Info, Users2, Building2 } from 'lucide-react';
 import { useIdentity, useCan, identityStore } from '../../app/identity/identityStore';
 import { useTraining, trainingStore } from '../../app/training/trainingStore';
@@ -63,12 +63,12 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   return (
     <div style={{ minHeight: '100vh' }}>
       <TabBar tabs={visibleTabs} active={tab} onChange={setTab} onExit={onExit} />
-      <motion.main key={tab} {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+      <m.main key={tab} {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         {tab === 'dashboard' && <OperationalDashboard />}
         {tab === 'inbox' && <OperationalInbox onGoToUsers={() => setTab('users')} />}
         {tab === 'org' && <OrganizationPanel />}
         {tab === 'audit' && <AuditPanel canExport={canDo('audit.export')} />}
-      </motion.main>
+      </m.main>
     </div>
   );
 };

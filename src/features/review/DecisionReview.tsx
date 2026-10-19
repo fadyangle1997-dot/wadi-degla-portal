@@ -19,7 +19,7 @@
  * aviation or medicine does not congratulate you for showing up.
  */
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { ArrowRight, Check } from 'lucide-react';
 import {
   REVIEW_FIELDS, REVIEW_LABELS, REVIEW_PROMPTS, isComplete, type ReviewField,
@@ -68,7 +68,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
     return (
       <div style={{ minHeight: '100vh' }}>
         <ScreenHeader onBack={onExit} maxWidth={WIDTH.focus} leading={<Eyebrow>مراجعة اليوم</Eyebrow>} />
-        <motion.section {...fade} style={{ ...col, textAlign: 'center', paddingTop: 'var(--sp-8)' }}>
+        <m.section {...fade} style={{ ...col, textAlign: 'center', paddingTop: 'var(--sp-8)' }}>
           <Check size={32} style={{ color: 'var(--ready)' }} />
           <h1 className="t-h2" style={{ margin: 'var(--sp-4) 0 var(--sp-2)' }}>اتسجّلت</h1>
           {/* No congratulation. Filing a debrief is the job, not an achievement. */}
@@ -78,7 +78,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
           <div style={{ marginTop: 'var(--sp-6)' }}>
             <Button variant="ghost" onClick={onExit}>رجوع</Button>
           </div>
-        </motion.section>
+        </m.section>
       </div>
     );
   }
@@ -101,7 +101,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
           </div>
         )}
 
-        <motion.section key={field} {...fade}>
+        <m.section key={field} {...fade}>
           <h1 className="t-h2" style={{ margin: 0 }}>{REVIEW_PROMPTS[field]}</h1>
           <p className="t-sm" style={{ color: 'var(--tx3)', margin: 'var(--sp-2) 0 var(--sp-5)' }}>{RATIONALE[field]}</p>
 
@@ -122,7 +122,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
               {isLast ? 'سجّل المراجعة' : <>كمّل <ArrowRight size={16} className="icon-dir" /></>}
             </Button>
           </div>
-        </motion.section>
+        </m.section>
       </main>
     </div>
   );
