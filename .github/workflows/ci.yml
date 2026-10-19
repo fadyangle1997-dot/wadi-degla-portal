@@ -1,0 +1,48 @@
+# CI quality gate — every push/PR must pass typecheck + tests + build before merge.
+# This is the automated enforcement of the gate we ran manually every version.
+#
+# Phase 1 adds the server to the SAME gate rather than a second pipeline: the
+# API imports src/domain/, so a change to the domain can break the server and
+# must be caught in the run that reviews it.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Typecheck (app)
+        run: npx tsc --noEmit
+
+      - name: Typecheck (server)
+        run: npx tsc --noEmit -p tsconfig.server.json
+
+      # One suite: the existing app tests, the domain's Node-importability
+      # contract, and the server's migration, constraint and health tests.
+      # Server tests run against PGlite — real Postgres in-process — so CI
+      # needs no database service.
+      - name: Tests (app + domain + server)
+        run: npx vitest run
+
+      - name: Production build
+        run: npm run build
+
+      # Phase 2 turns this into a full credential scan. Today it guards the one
+      # thing that must already be true: no connection string in the bundle.
+      - name: No connection string in the built bundle
+        run: |
+          if grep -rEq "postgres(ql)?://[^\"' ]*:[^\"'@ ]+@" dist/; then
+            echo "::error::a database connection string reached the built bundle"
+            exit 1
+          fi
