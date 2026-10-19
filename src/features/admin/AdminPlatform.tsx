@@ -14,9 +14,8 @@ import { useIdentity, useCan, identityStore } from '../../app/identity/identityS
 import { useTraining, trainingStore } from '../../app/training/trainingStore';
 import { detectOperationalIssues, summarizeIssues, type OperationalIssue, type Severity } from '../../domain/operations/health';
 import { adminStats } from '../../domain/operations/adminStats';
-import { filterAudit, latestAudit, describeAudit, auditActions, type AuditFilter } from '../../domain/operations/audit';
-import { PERMISSIONS } from '../../domain/identity';
-import { Button, Eyebrow, EmptyState, StatusBadge, Card, Toast, ArabicContent, ConfirmDialog, PageHeader, SectionNav, SectionHeader, MetricStrip, Metric, Brief, Meter } from '../../ui/primitives';
+import { filterAudit, latestAudit, describeAudit, auditActions, auditExportRows, type AuditFilter } from '../../domain/operations/audit';
+import { Button, Eyebrow, EmptyState, Card, Toast, ArabicContent, ConfirmDialog, PageHeader, SectionNav, SectionHeader, MetricStrip, Metric, Brief, Meter, DataTable, Status, Num, FormField, type Column } from '../../ui/primitives';
 import { loadDemoScenario, clearDemoTraining } from '../../app/demo/demoScenario';
 import { fade } from '../../ui/motion';
 import { AdminView } from './AdminView';
@@ -32,6 +31,9 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const lang = useLang();
   const canDo = useCan();
   const [tab, setTab] = useState<Tab>('dashboard');
+  // An inbox fix that names a person opens that person's account, not the top
+  // of a list of everyone.
+  const [focusUser, setFocusUser] = useState<string | null>(null);
 
   if (!canDo('operations.view') && !canDo('users.view')) {
     return (
@@ -54,19 +56,18 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const header = (
     <PageHeader crumbs={[t('crumb.academy', lang), t('nav.admin', lang)]} title={t('ad.platform', lang)}
       nav={<SectionNav label={t('ad.sections', lang)} items={visibleTabs} active={current.id}
-        onChange={(id: string) => setTab(id as Tab)} />} />
+        onChange={(id: string) => { setFocusUser(null); setTab(id as Tab); }} />} />
   );
 
   return (
     <div className="min-h-screen">
       <div style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) 0' }}>{header}</div>
       {tab === 'users'
-        // The user-management screen, reused as it is.
-        ? <AdminView onExit={onExit} embedded />
+        ? <AdminView key={focusUser ?? 'list'} onExit={onExit} openUserId={focusUser} />
         : (
           <m.main key={tab} {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)' }}>
             {tab === 'dashboard' && <OperationalDashboard onOpenInbox={() => setTab('inbox')} />}
-            {tab === 'inbox' && <OperationalInbox onGoToUsers={() => setTab('users')} />}
+            {tab === 'inbox' && <OperationalInbox onGoToUser={id => { setFocusUser(id ?? null); setTab('users'); }} />}
             {tab === 'org' && <OrganizationPanel />}
             {tab === 'audit' && <AuditPanel canExport={canDo('audit.export')} />}
           </m.main>
@@ -199,52 +200,52 @@ const SEV_META: Record<Severity, { icon: React.ReactNode; tone: 'risk' | 'attn' 
   info: { icon: <Info size={16} />, tone: 'info', labelKey: 'ad.sevinfo' },
 };
 
-const OperationalInbox: React.FC<{ onGoToUsers: () => void }> = ({ onGoToUsers }) => {
+const OperationalInbox: React.FC<{ onGoToUser: (userId: string | undefined) => void }> = ({ onGoToUser }) => {
   const lang = useLang();
   const { users } = useIdentity();
   useTraining();
   const issues = useMemo(() => detectOperationalIssues(users, trainingStore.events()), [users]);
   const sev = summarizeIssues(issues);
+  const rank: Record<Severity, number> = { critical: 2, warning: 1, info: 0 };
+  const columns: Column<OperationalIssue>[] = [
+    {
+      id: 'issue', header: t('ad.col.issue', lang),
+      cell: i => <ArabicContent as="span" className="c-tx1">{i.message}</ArabicContent>,
+    },
+    {
+      id: 'sev', header: t('ad.col.sev', lang), sortValue: i => rank[i.severity],
+      cell: i => <Status tone={SEV_META[i.severity].tone}>{t(SEV_META[i.severity].labelKey, lang)}</Status>,
+    },
+    {
+      id: 'act', header: t('dt.action', lang), align: 'end',
+      cell: i => (
+        <button type="button" className="icon-btn" onClick={() => onGoToUser(i.targetUserId)}>
+          <ArabicContent as="span">{i.action}</ArabicContent>
+        </button>
+      ),
+    },
+  ];
 
   return (
-    <>
-      <div className="row items-baseline gap-3 wrap mb-2">
-        <h2 className="t-h2 m-0">{t('ad.needsyou', lang)}</h2>
-        {issues.length > 0 && <span className="t-num t-label c-tx2">{issues.length} {t('ad.issuecount', lang)}</span>}
-      </div>
-      <p className="t-sm mb-5">{t('ad.autodetect', lang)}</p>
-
+    <section aria-labelledby="ad-inbox">
+      <SectionHeader id="ad-inbox" title={t('ad.needsyou', lang)} count={issues.length} description={t('ad.autodetect', lang)} />
       {issues.length === 0 ? (
-        <EmptyState icon={<ShieldCheck />} title={t('ad.allclear', lang)}
-          body={t('ad.allclearbody', lang)} />
+        <EmptyState icon={<ShieldCheck />} title={t('ad.allclear', lang)} body={t('ad.allclearbody', lang)} />
       ) : (
         <>
-          <div className="row gap-3 wrap mb-4">
-            {sev.critical > 0 && <StatusBadge tone="risk">{sev.critical} {t('ad.sevcritical', lang)}</StatusBadge>}
-            {sev.warning > 0 && <StatusBadge tone="attn">{sev.warning} {t('ad.sevwarning', lang)}</StatusBadge>}
-            {sev.info > 0 && <StatusBadge tone="info">{sev.info} {t('ad.sevinfo', lang)}</StatusBadge>}
-          </div>
-          <div className="stack gap-2">
-            {issues.map(issue => <InboxRow key={issue.id} issue={issue} onAction={onGoToUsers} />)}
+          <MetricStrip label={t('ad.col.sev', lang)}>
+            <Metric label={t('ad.sevcritical', lang)} value={<Num>{sev.critical}</Num>} tone={sev.critical ? 'risk' : undefined} />
+            <Metric label={t('ad.sevwarning', lang)} value={<Num>{sev.warning}</Num>} tone={sev.warning ? 'attn' : undefined} />
+            <Metric label={t('ad.sevinfo', lang)} value={<Num>{sev.info}</Num>} />
+          </MetricStrip>
+          <div className="mt-5">
+            <DataTable caption={t('ad.needsyou', lang)} columns={columns} rows={issues} rowKey={i => i.id}
+              rowTone={i => (i.severity === 'critical' ? 'risk' : i.severity === 'warning' ? 'attn' : undefined)}
+              initialSort={{ id: 'sev', dir: 'desc' }} />
           </div>
         </>
       )}
-    </>
-  );
-};
-
-const InboxRow: React.FC<{ issue: OperationalIssue; onAction: () => void }> = ({ issue, onAction }) => {
-  const lang = useLang();
-  const meta = SEV_META[issue.severity];
-  return (
-    <div className="row-hover row items-center gap-3 wrap" style={{ padding: 'var(--sp-3) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', minHeight: 52 }}>
-      <span className="no-shrink" style={{ color: `var(--${meta.tone === 'risk' ? 'risk' : meta.tone === 'attn' ? 'attn' : 'info'})` }}
-        title={t(meta.labelKey, lang)} aria-label={t(meta.labelKey, lang)}>{meta.icon}</span>
-      {/* The issue text and its action come from the operations engine in
-          Arabic — operational content, so an island, not a translation. */}
-      <ArabicContent as="span" className="t-sm c-tx1" style={{ flex: '1 1 240px' }}>{issue.message}</ArabicContent>
-      <Button variant="ghost" onClick={onAction}><ArabicContent as="span">{issue.action}</ArabicContent></Button>
-    </div>
+    </section>
   );
 };
 
@@ -258,46 +259,73 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
     const map = new Map(users.map(u => [u.id, u.name]));
     return (id: string) => map.get(id) ?? id;
   }, [users]);
-
+  const CAP = 200;
   const actions = useMemo(() => auditActions(log), [log]);
-  const filtered = useMemo(() => latestAudit(filterAudit(log, filter, nameOf), 200), [log, filter, nameOf]);
+  const matching = useMemo(() => filterAudit(log, filter, nameOf), [log, filter, nameOf]);
+  const shown = useMemo(() => latestAudit(matching, CAP), [matching]);
   const [toast, setToast] = useState<string | null>(null);
+  const when = (at: number) => new Date(at).toLocaleString(lang === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+
+  // The export is real: every matching event, not just the visible page,
+  // as a CSV that opens in Excel with its Arabic intact (UTF-8 BOM).
+  const exportCsv = () => {
+    const rows = auditExportRows(matching, nameOf);
+    const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = ['\uFEFF' + ['at', 'actor', 'action', 'detail'].join(','),
+      ...rows.map(r => [new Date(r.at).toISOString(), r.actor, r.action, r.detail].map(cell).join(','))].join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Revoked after the click has been handed to the browser: revoking at
+    // once cancels the download in Chromium.
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setToast(t('ad.exported', lang));
+    window.setTimeout(() => setToast(null), 2600);
+  };
+
+  type Ev = (typeof shown)[number];
+  const columns: Column<Ev>[] = [
+    { id: 'what', header: t('ad.col.what', lang), cell: e => <span className="c-tx1">{describeAudit(e, nameOf)}</span> },
+    { id: 'when', header: t('ad.col.when', lang), sortValue: e => e.at, cell: e => <span className="t-sm"><Num>{when(e.at)}</Num></span> },
+    { id: 'type', header: t('ad.col.type', lang), cell: e => <span className="t-label" lang="en" dir="ltr">{e.type}</span> },
+  ];
 
   return (
-    <>
-      <h2 className="t-h2 mb-2">{t('ad.audittitle', lang)}</h2>
-      <p className="t-sm mb-5">{t('ad.auditsub', lang)}</p>
-
-      <div className="row gap-3 wrap mb-4">
-        <input className="field" style={{ flex: '1 1 220px' }} placeholder={t('ad.searchlog', lang)} aria-label={t('ad.searcharia', lang)}
-          value={filter.text ?? ''} onChange={e => setFilter(f => ({ ...f, text: e.target.value || undefined }))} />
-        <select className="field" aria-label={t('ad.actiontype', lang)} value={filter.action ?? ''}
-          onChange={e => setFilter(f => ({ ...f, action: e.target.value || undefined }))}>
-          <option value="">{t('ad.allactions', lang)}</option>
-          {actions.map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
-        {canExport && (
-          <Button variant="ghost" onClick={() => setToast(t('ad.exportsoon', lang))}>{t('ad.export', lang)}</Button>
-        )}
+    <section aria-labelledby="ad-audit">
+      <SectionHeader id="ad-audit" title={t('ad.audittitle', lang)} count={matching.length} description={t('ad.auditsub', lang)}
+        action={canExport && matching.length > 0 ? <Button variant="ghost" onClick={exportCsv}>{t('ad.exportcsv', lang)}</Button> : undefined} />
+      <div className="form-grid mt-4">
+        <FormField id="audit-q" label={t('ad.searcharia', lang)}>
+          {p => <input {...p} type="search" className="field" value={filter.text ?? ''}
+            onChange={e => setFilter(f => ({ ...f, text: e.target.value || undefined }))} />}
+        </FormField>
+        <FormField id="audit-type" label={t('ad.actiontype', lang)}>
+          {p => (
+            <select {...p} className="field" value={filter.action ?? ''}
+              onChange={e => setFilter(f => ({ ...f, action: e.target.value || undefined }))}>
+              <option value="">{t('ad.allactions', lang)}</option>
+              {actions.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          )}
+        </FormField>
       </div>
-
-      {filtered.length === 0 ? (
-        <EmptyState title={t('ad.noevents', lang)} body={t('ad.noeventsbody', lang)} />
-      ) : (
-        <ol role="list" className="stack m-0 gap-2" style={{ listStyle: 'none', padding: 0 }}>
-          {filtered.map((e, i) => (
-            <li key={i} className="row gap-3 items-start" style={{ padding: 'var(--sp-3) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
-              <span className="mt-2 no-shrink" style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--g2)' }} aria-hidden />
-              <div className="grow">
-                <span className="t-sm c-tx1">{describeAudit(e, nameOf)}</span>
-                <span className="t-label block mt-1">{new Date(e.at).toLocaleString('ar-EG')}</span>
-              </div>
-              <span className="t-label c-tx3">{PERMISSIONS['audit.view'] ? e.type : e.type}</span>
-            </li>
-          ))}
-        </ol>
+      {(filter.text || filter.action) && (
+        <div className="mt-3"><button type="button" className="icon-btn" onClick={() => setFilter({})}>{t('dt.reset', lang)}</button></div>
       )}
+      <div className="mt-4">
+        {shown.length === 0 ? (
+          <EmptyState title={t('ad.noevents', lang)} body={t('ad.noeventsbody', lang)} />
+        ) : (
+          <DataTable caption={t('ad.audittitle', lang)} columns={columns} rows={shown}
+            rowKey={e => `${e.at}:${e.type}:${'userId' in e ? String(e.userId) : ''}`} initialSort={{ id: 'when', dir: 'desc' }} />
+        )}
+        {matching.length > CAP && <p className="t-sm mt-3 mb-0">{tf('ad.showing', { n: CAP }, lang)}</p>}
+      </div>
       <Toast message={toast} />
-    </>
+    </section>
   );
 };

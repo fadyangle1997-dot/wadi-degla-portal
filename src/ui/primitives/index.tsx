@@ -288,6 +288,41 @@ const ConfirmDialogOpen: React.FC<ConfirmDialogProps> = ({ title, body, confirmL
   );
 };
 
+/* ---------------- form field ----------------
+   A visible label (never a placeholder standing in for one: it disappears the
+   moment you type, and low-contrast placeholder text is the first thing a
+   low-vision reader loses), an optional hint, and the error next to the field
+   that caused it — wired to the control with aria-invalid/aria-describedby. */
+export interface FieldControlProps {
+  id: string;
+  'aria-invalid'?: true;
+  'aria-describedby'?: string;
+  'aria-required'?: true;
+}
+export const FormField: React.FC<{
+  id: string;
+  label: string;
+  hint?: string;
+  error?: string | null;
+  required?: boolean;
+  children: (control: FieldControlProps) => React.ReactNode;
+}> = ({ id, label, hint, error, required, children }) => {
+  const lang = useLang();
+  const hintId = hint ? `${id}-hint` : undefined;
+  const errId = error ? `${id}-err` : undefined;
+  const describedBy = [errId, hintId].filter(Boolean).join(' ') || undefined;
+  return (
+    <div className="form-field">
+      <label htmlFor={id} className="form-label">
+        {label}{!required && <span className="form-optional"> · {t('form.optional', lang)}</span>}
+      </label>
+      {children({ id, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy, 'aria-required': required ? true : undefined })}
+      {error && <p id={errId} className="form-error" role="alert"><X size={13} aria-hidden /> {error}</p>}
+      {hint && <p id={hintId} className="form-hint">{hint}</p>}
+    </div>
+  );
+};
+
 /* ---------------- back · close ----------------
    Two different promises. Back returns to the previous screen and names it;
    Close dismisses an overlay and never navigates. Neither is interchangeable

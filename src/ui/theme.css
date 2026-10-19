@@ -417,6 +417,9 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
    the same surface; an outline reads on every surface. */
 .btn-ghost { background:transparent; color:var(--tx0); border:1px solid var(--line-3); }
 .btn-ghost:hover:not(:disabled) { background:rgba(255,255,255,.06); }
+/* A destructive action at rest: the risk colour on the outline and the word,
+   never a red slab next to ordinary choices. */
+.btn-danger { color:var(--risk); border-color:var(--risk-line); }
 
 /* ============================================================
    PAGE STRUCTURE — where am I, what matters, what next.
@@ -715,6 +718,22 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 
 /* Disclosure toggles are controls too: a 44px row, like every other one. */
 details > summary { min-block-size:44px; cursor:pointer; }
+
+/* FORMS — a label above every field, the error under it, a grid that
+   becomes one column on a narrow container. */
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap:var(--sp-4); }
+.form-field { display:flex; flex-direction:column; gap:var(--sp-1); min-width:0; }
+.form-label { font-size:0.875rem; font-weight:600; color:var(--tx1); }
+.form-optional { font-weight:400; color:var(--tx3); }
+.form-hint { margin:0; font-size:0.875rem; color:var(--tx3); }
+.form-error { display:flex; align-items:center; gap:var(--sp-1); margin:0; font-size:0.875rem; font-weight:600; color:var(--risk); }
+.field[aria-invalid="true"] { border-color:var(--risk); }
+.field:focus-visible { border-color:var(--g2); }
+.field:disabled { opacity:.6; cursor:not-allowed; }
+.form-actions { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-3); }
+/* A panel section inside a dialog: a title and its controls, ruled from the next. */
+.panel-section { padding-block:var(--sp-5); border-top:1px solid var(--line); }
+.panel-section:first-of-type { border-top:0; padding-top:var(--sp-4); }
 
 /* -- Answer option -- */
 .option { display:flex; align-items:center; gap:var(--sp-3); width:100%; text-align:right;
