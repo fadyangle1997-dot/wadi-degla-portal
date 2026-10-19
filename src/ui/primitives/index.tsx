@@ -331,12 +331,16 @@ export const Skeleton: React.FC<{ height?: number; width?: string }> = ({ height
  *
  * A statement that carries weight SINKS into the page and grows a coloured spine
  * along its reading edge. Recessed rather than raised, on purpose: a raised card
- * says «notice me and move on»; a well says «this is set into the page».
+ * says «notice me and move on»; a well says «this is set into the page», and the
+ * eye stops because the surface itself changed under it.
  *
- * Extracted from LessonFlow (where it was defined and used six times) into the
- * shared primitives so every screen composes from the same object instead of
- * redefining it. Styling, spacing and colours are unchanged — this is an
- * ownership move only.
+ * The spine is not a border. A border frames a thing; a spine points at it — and
+ * in RTL it runs down the edge the eye starts from, so it is the first thing
+ * seen and the last thing left.
+ *
+ * Wherever the academy has something that MATTERS — a rule, the professional
+ * way, a verdict — it looks like this. A screenshot should be identifiable
+ * without the logo.
  */
 export const SpineWell: React.FC<{ children: React.ReactNode; spine?: 'rule' | 'risk'; label?: React.ReactNode }> = ({ children, spine = 'rule', label }) => (
   <div className="relative" style={{ background: 'var(--s-2)', borderRadius: 'var(--r-md)', padding: 'var(--sp-4) var(--sp-5)', overflow: 'hidden' }}>

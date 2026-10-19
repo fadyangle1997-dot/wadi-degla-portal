@@ -202,7 +202,9 @@ describe('🔴 the lesson has a real hero — remove it and the screen changes',
 });
 
 describe('🔴 the language is FROZEN — identity comes from repetition', () => {
-  const lesson = readFileSync(join(FEATURES, 'lesson/LessonFlow.tsx'), 'utf-8');
+  // The flow and its stages: LessonFlow sequences them, the stage files render them.
+  const lesson = ['LessonFlow', 'lessonBlocks', 'PredictStage', 'PracticeStage', 'QuizStage', 'ProductionStage']
+    .map(f => readFileSync(join(FEATURES, `lesson/${f}.tsx`), 'utf-8')).join('\n');
   const journey = readFileSync(join(FEATURES, 'journey/TrainingJourney.tsx'), 'utf-8');
 
   it('🚫 no component may define its own surface — the vocabulary is closed', () => {
