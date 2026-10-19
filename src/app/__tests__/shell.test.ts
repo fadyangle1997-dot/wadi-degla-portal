@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 /**
  * RBAC contract tests — the role matrix, asserted against the real domain
  * functions the app uses (no duplicated logic here). These freeze the rule the
@@ -120,8 +121,13 @@ describe('access map integrity', () => {
 describe('fail-closed guarantees — RBAC must never be bypassable', () => {
   it('every screen in the product is in the access map (nothing is unguarded)', () => {
     // A screen missing from the map would be unreachable rather than open —
-    // this asserts the map covers the router's full surface.
-    const routerViews = ['welcome', 'path', 'roadmap', 'skills', 'journey', 'lesson', 'exam', 'boss', 'review', 'readiness', 'trainer', 'manager', 'admin'];
+    // this asserts the map covers the router's full surface. Read from the
+    // router's own View union: a hand-kept list left out the readiness report,
+    // and the report shipped as a dead link.
+    const router = readFileSync(new URL('../router.ts', import.meta.url), 'utf-8');
+    const union = router.slice(router.indexOf('export type View'), router.indexOf(';', router.indexOf('export type View')));
+    const routerViews = [...union.matchAll(/kind: '([a-z_]+)'/g)].map(m => m[1]!);
+    expect(routerViews.length).toBeGreaterThan(10);
     for (const v of routerViews) {
       expect(PLATFORM_ACCESS[v as keyof typeof PLATFORM_ACCESS], v).toBeDefined();
     }
@@ -143,7 +149,7 @@ describe('fail-closed guarantees — RBAC must never be bypassable', () => {
   it('no role can reach a platform outside its own matrix row', () => {
     const matrix: Record<string, readonly string[]> = {
       admin: ['admin'],
-      manager: ['manager'],
+      manager: ['manager', 'readiness_report'],
       trainer: ['trainer'],
       employee: ['welcome', 'path', 'roadmap', 'skills', 'journey', 'lesson', 'exam', 'boss', 'review', 'readiness'],
     };
