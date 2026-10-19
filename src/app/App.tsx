@@ -4,7 +4,7 @@
  * locked lesson falls back to the path. First launch (no ONBOARDING event)
  * routes to the welcome experience.
  */
-import { authenticate as authenticateDev } from './demo/demoAccounts';
+import { signInWithDemo } from './signIn';
 import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { PathView } from '../features/path/PathView';
 import { LoginView } from '../features/login/LoginView';
@@ -12,7 +12,6 @@ import { AppShell } from '../ui/AppShell';
 import { canAccess, landingFor } from '../domain/identity/access';
 import { useCan, useIdentity, identityStore } from './identity/identityStore';
 
-import { can as canFor, type Permission } from '../domain/identity';
 const AdminPlatform = lazy(() => import('../features/admin/AdminPlatform').then(m => ({ default: m.AdminPlatform })));
 const TrainerView = lazy(() => import('../features/trainer/TrainerView').then(m => ({ default: m.TrainerView })));
 const ManagerView = lazy(() => import('../features/manager/ManagerView').then(m => ({ default: m.ManagerView })));
@@ -152,20 +151,12 @@ export const App: React.FC = () => {
   if (!signedIn) {
     return (
       <LoginView onSignIn={(username, password) => {
-        // This is a demo/showcase build: demo auth always runs. There is no
-        // environment flag gating it — a flag that reads undefined on a
-        // misconfigured host is exactly how the deployed login broke before.
-        // When OIDC lands, the switch will be the PRESENCE of a configured
-        // provider (a real object, checked here), not an env string that a
-        // build host may or may not inject.
-        const account = authenticateDev(username, password);
-        if (!account) return 'Incorrect username or password.';
-        identityStore.signIn(account.id);
-        const can = (perm: Permission) =>
-          canFor(identityStore.currentUser(), identityStore.get().roles, perm);
-        const landing = landingFor(can);
-        if (!landing) { identityStore.signOut(); return 'This account has no platform access. Contact your administrator.'; }
-        setView({ kind: landing } as View);
+        // The showcase build always signs in with the demo accounts. When OIDC
+        // lands, the switch is the presence of a configured provider object,
+        // not an environment string a build host may or may not inject.
+        const result = signInWithDemo(username, password);
+        if ('error' in result) return result.error;
+        setView({ kind: result.landing } as View);
         return null;
       }} />
     );

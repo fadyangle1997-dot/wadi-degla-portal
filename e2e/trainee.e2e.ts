@@ -1,15 +1,16 @@
-import { test, expect, signIn, finishLesson, settle } from './fixtures';
+import { test, expect, signIn, finishLesson, settle, openTodaysLesson, toAcademy } from './fixtures';
 
 test.describe('trainee', () => {
-  test('lands on the academy with today\'s task', async ({ page }) => {
+  test('a new trainee is welcomed first, then has today\'s task on the academy', async ({ page }) => {
     await signIn(page, 'ahmed.m');
-    await expect(page.getByText('مهمة النهارده')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'أهلاً بيك في فريق العضويات.' })).toBeVisible();
+    await toAcademy(page);
     await expect(page.getByText('0 من 4 دروس')).toBeVisible();
   });
 
   test('completes the first lesson end to end, and it counts', async ({ page }) => {
     await signIn(page, 'ahmed.m');
-    await page.getByRole('button', { name: 'كمّل الدرس' }).click();
+    await openTodaysLesson(page);
     await expect(page).toHaveURL(/#\/lesson\/m1\//);
     await finishLesson(page);
     await expect(page.getByText('1 من 4 دروس')).toBeVisible();
@@ -17,7 +18,7 @@ test.describe('trainee', () => {
 
   test('progress and session survive a reload', async ({ page }) => {
     await signIn(page, 'ahmed.m');
-    await page.getByRole('button', { name: 'كمّل الدرس' }).click();
+    await openTodaysLesson(page);
     await finishLesson(page);
     await page.reload();
     await expect(page.getByLabel('Username')).toBeHidden();
@@ -26,6 +27,7 @@ test.describe('trainee', () => {
 
   test('the next unit stays locked until the trainer approves', async ({ page }) => {
     await signIn(page, 'ahmed.m');
+    await toAcademy(page);
     await expect(page.getByText('تُفتح بعد اعتماد الوحدة الحالية من المدرب')).toBeVisible();
   });
 });
@@ -34,7 +36,7 @@ test('finishes a whole unit, sits the exam, and sees the result', async ({ page 
   test.setTimeout(120_000);
   await signIn(page, 'ahmed.m');
   for (let i = 0; i < 4; i++) {
-    await page.getByRole('button', { name: 'كمّل الدرس' }).click();
+    await openTodaysLesson(page);
     await finishLesson(page);
   }
   await expect(page.getByText('4 من 4 دروس')).toBeVisible();

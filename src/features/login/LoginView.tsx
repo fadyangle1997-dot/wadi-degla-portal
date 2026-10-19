@@ -28,10 +28,8 @@
  * aria-live, and ambient motion drops entirely under prefers-reduced-motion.
  */
 import React, { useState } from 'react';
-import { m } from 'motion/react';
 import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { BrandLogo } from '../../ui/BrandLogo';
-import { fade } from '../../ui/motion';
 
 /** Returns an error message, or null when the credentials are accepted. */
 /** Returns an error message, or null when the credentials are accepted. */
@@ -80,8 +78,9 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
       <span aria-hidden className="signin-orb" style={{ width: 260, height: 260, top: '18%', right: '-6%', background: '#B38922', animationDelay: '-9s', opacity: .38 }} />
       <span aria-hidden className="signin-orb" style={{ width: 300, height: 300, bottom: '-12%', right: '12%', background: '#FEDEA0', animationDelay: '-17s', opacity: .3 }} />
 
-      <m.main
-        {...fade}
+      {/* A CSS entrance, not Motion: the sign-in screen paints before the
+          animation engine has loaded, so it must not start invisible. */}
+      <main className="enter-rise"
         style={{ position: 'relative', width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
       >
         <BrandLogo size={104} />
@@ -177,7 +176,7 @@ export const LoginView: React.FC<Props> = ({ onSignIn }) => {
 
         {/* Development-only role switcher — statically dropped from prod builds. */}
         {import.meta.env.DEV && <DevPanel onFill={(u, p) => { setUsername(u); setPassword(p); setError(''); }} />}
-      </m.main>
+      </main>
     </div>
   );
 };

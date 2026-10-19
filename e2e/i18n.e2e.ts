@@ -1,4 +1,4 @@
-import { test, expect, signIn, settle } from './fixtures';
+import { test, expect, signIn, settle, toAcademy } from './fixtures';
 import type { Page } from '@playwright/test';
 
 test('switching to English changes language and direction, and the choice persists', async ({ page }) => {
@@ -54,6 +54,7 @@ test('admin sections: no untranslated Arabic in English mode', async ({ page }) 
 
 test('trainee shell and profile: no untranslated Arabic in English mode', async ({ page }) => {
   await signIn(page, 'ahmed.m');
+  await toAcademy(page);
   await page.getByRole('button', { name: 'English' }).first().click();
   expect(await untranslated(page), 'dashboard').toEqual([]);
   await page.getByRole('button', { name: /personal menu/ }).first().click();

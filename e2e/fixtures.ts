@@ -37,6 +37,31 @@ export async function signIn(page: Page, username: string, password = passwordFo
   await settle(page);
 }
 
+/**
+ * A brand-new trainee is welcomed first; anyone who has started is on the
+ * academy. Opens today's lesson from whichever of the two is showing.
+ */
+export async function openTodaysLesson(page: Page) {
+  const start = page.getByRole('button', { name: /ابدأ أول درس|كمّل الدرس/ });
+  await expect(start).toBeVisible();
+  await start.click();
+  await expect(page).toHaveURL(/#\/lesson\//);
+}
+
+/** Gets a trainee to the academy dashboard, through the welcome screen if needed. */
+export async function toAcademy(page: Page) {
+  const start = page.getByRole('button', { name: /ابدأ أول درس|كمّل الدرس/ });
+  await expect(start).toBeVisible();
+  if (/ابدأ أول درس/.test(await start.innerText())) {
+    await start.click();
+    await expect(page).toHaveURL(/#\/lesson\//);
+    // The lesson screen loads lazily: wait for its back control, then use it.
+    await page.getByRole('button', { name: 'ارجع للمسار' }).first().click();
+    await expect(page).not.toHaveURL(/#\/lesson\//);
+  }
+  await expect(page.getByText('مهمة النهارده')).toBeVisible();
+}
+
 export async function signOut(page: Page) {
   await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
   await page.getByRole('menuitem', { name: 'تسجيل الخروج' }).click();
@@ -54,17 +79,19 @@ export async function finishLesson(page: Page) {
     if (!/#\/lesson\//.test(page.url())) return;
     await settle(page);
     const back = main.getByRole('button', { name: 'ارجع للمسار' });
-    if (await back.isVisible()) { await back.click(); continue; }
+    if (await back.isVisible()) { await back.click({ timeout: 2000 }).catch(() => {}); continue; }
 
     const forward = main.locator('button.btn:enabled');
-    if (await forward.count()) { await forward.last().click(); continue; }
+    // A stage can be replaced between finding a button and clicking it, so
+    // each click is short-lived and the loop looks again.
+    if (await forward.count()) { await forward.last().click({ timeout: 2000 }).catch(() => {}); continue; }
 
     const option = main.locator('button.option-idle:enabled');
-    if (await option.count()) { await option.first().click(); continue; }
+    if (await option.count()) { await option.first().click({ timeout: 2000 }).catch(() => {}); continue; }
 
     const rows = main.getByRole('button', { name: 'مطلوب', exact: true });
     if (await rows.count()) {
-      for (const r of await rows.all()) if (await r.isEnabled()) await r.click();
+      for (const r of await rows.all()) if (await r.isEnabled()) await r.click({ timeout: 2000 }).catch(() => {});
       continue;
     }
     await page.waitForTimeout(150); // a stage is still animating in

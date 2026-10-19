@@ -1,4 +1,4 @@
-import { test, expect, signIn, expectAccessible } from './fixtures';
+import { test, expect, signIn, expectAccessible, toAcademy, openTodaysLesson } from './fixtures';
 
 test('sign-in screen', async ({ page }) => {
   await page.goto('/');
@@ -8,9 +8,10 @@ test('sign-in screen', async ({ page }) => {
 
 test('trainee academy and first lesson screen', async ({ page }) => {
   await signIn(page, 'ahmed.m');
+  await expectAccessible(page, 'welcome');
+  await toAcademy(page);
   await expectAccessible(page, 'academy');
-  await page.getByRole('button', { name: 'كمّل الدرس' }).click();
-  await expect(page).toHaveURL(/#\/lesson\//);
+  await openTodaysLesson(page);
   await expectAccessible(page, 'lesson');
 });
 

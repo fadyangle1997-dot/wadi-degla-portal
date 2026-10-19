@@ -18,7 +18,7 @@ npx vite preview       # تشغيل نسخة البناء
 npm run lint           # ESLint بصفر تحذيرات
 npm run typecheck      # TypeScript strict: الواجهة والخادم وملفات الأدوات
 npm run test:coverage  # Vitest مع حد أدنى للتغطية (55% للكل · 90% للـdomain)
-npm run build && npm run size   # أقصى حد لأول تحميل 200 KB مضغوط
+npm run build && npm run size   # أقصى حد لأول تحميل 100 KB مضغوط
 npm run e2e            # Playwright: كل الأدوار + axe (WCAG 2.1 AA) + CSP + الترجمة
 ```
 محليًا، لو Chromium متثبّت في مكان تاني: `PW_CHROMIUM_PATH=/path/to/chrome npm run e2e`.

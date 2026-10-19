@@ -7,7 +7,7 @@
 
 ## 2) النشر (Deployment)
 - **بناء:** `npm ci && npm run build` → مخرجات ثابتة في `dist/`.
-- **البوابة:** الـCI (`.github/workflows/ci.yml`) بيشغّل قبل أي دمج: lint، وفحص الأنواع (الواجهة والخادم والأدوات)، واختبارات Vitest بحد أدنى للتغطية، والبناء، وحد أقصى لأول تحميل، وفحص إن مفيش أي بيانات دخول في `dist/`، و`npm audit`، واختبارات Playwright (الأدوار وaxe وCSP والترجمة).
+- **البوابة:** الـCI (`.github/workflows/ci.yml`) بيشغّل قبل أي دمج: lint، وفحص الأنواع (الواجهة والخادم والأدوات)، واختبارات Vitest بحد أدنى للتغطية، والبناء، وحد أقصى لأول تحميل (100 KB)، وفحص إن مفيش أي بيانات دخول في `dist/`، و`npm audit`، واختبارات Playwright (الأدوار وaxe وCSP والترجمة).
 - **الاستضافة الثابتة:** `vercel.json` (Vercel) و`public/_headers` (Netlify / Cloudflare Pages) فيهم headers الأمان والـcache.
 - **الإنتاج:** `BACKEND_CONFIG.mode='remote'` + `apiBaseUrl`. صفر تغيير كود أعلى المحوّلات.
 - **الفصل البيئي:** staging (بيانات وهمية) → production. rollback = إعادة نشر البناء السابق (ثابت، بلا هجرة).

@@ -37,12 +37,14 @@ describe('🔴 C2 — no readable demo password in shipped code', () => {
   it('the demo account table stores hashes, never passwords', () => {
     // The showcase build signs in with these accounts, so the module ships.
     // What must never ship is a password someone could read in DevTools.
-    const accounts = readFileSync(join(SRC, 'app/demo/demoAccounts.ts'), 'utf-8');
+    const accounts = readFileSync(join(SRC, 'app/demo/credentials.ts'), 'utf-8');
     const code = accounts.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/g, '');
     expect(code).not.toMatch(/\bpassword:\s*'/);
     expect(code).not.toContain('Welcome@123');
     expect(code).not.toContain('Admin@2026');
-    for (const m of code.matchAll(/passwordHash: '([^']*)'/g)) expect(m[1]).toMatch(/^[0-9a-f]{64}$/);
+    const hashes = [...code.matchAll(/passwordHash: '([^']*)'/g)];
+    expect(hashes.length).toBeGreaterThan(0);
+    for (const m of hashes) expect(m[1]).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('the only plaintext demo credentials sit behind import.meta.env.DEV', () => {
