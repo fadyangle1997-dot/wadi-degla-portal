@@ -291,23 +291,12 @@ body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--fon
 .empty-state-icon svg { width:22px; height:22px; }
 .measure { max-width:var(--measure); }
 
-/* 🔴 THE BROWSER WAS SETTING THE RHYTHM. Headings and paragraphs that did not
-   carry an explicit margin fell back to the user-agent's `1em` / `.67em`
-   defaults, which are FONT-SIZE-derived and therefore off an 8px grid by
-   construction: measured 14.4px under a .t-sm, 16.08px above a .t-h2,
-   17.6px under a .t-lead, 32.16px under .t-display. Four spacing values no
-   one chose, changing with every font-size, in a system whose own contract
-   says every layout gap is 8 or more. The type classes now own their block
-   margins in tokens; any component that already sets its own margin inline
-   still wins, so nothing deliberately spaced moves. */
-   🔴 SCOPED TO REAL HEADINGS AND PARAGRAPHS — element + class, deliberately.
-   Written as bare classes, these margins also hit every <span> carrying a type
-   class, and a span that becomes a FLEX ITEM is blockified: its block margins
-   suddenly apply. That is exactly what happened to the station number on the
-   Learning Journey — a `.t-sm` span inside a 44px flex-centred orb picked up
-   16px of bottom margin and sat 3px from the top of its own circle. A span was
-   never at risk from the user-agent defaults this rule exists to replace, so
-   it has no business receiving the replacement either. */
+/* Type classes own their block margins in tokens, so headings and paragraphs
+   sit on the 8px grid instead of the user agent's font-size-derived 1em/.67em.
+   Scoped to real headings and paragraphs: a <span> with a type class that
+   becomes a flex item is blockified and would pick up the margin too.
+   (This comment used to close early, which made the heading rule below an
+   invalid selector that minifiers silently dropped.) */
 :is(h1, h2, h3, h4).t-display,
 :is(h1, h2, h3, h4).t-h1,
 :is(h1, h2, h3, h4).t-h2,

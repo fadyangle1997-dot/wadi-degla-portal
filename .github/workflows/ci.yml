@@ -38,11 +38,17 @@ jobs:
       - name: Production build
         run: npm run build
 
-      # Phase 2 turns this into a full credential scan. Today it guards the one
-      # thing that must already be true: no connection string in the bundle.
-      - name: No connection string in the built bundle
+      # The bundle is public. Nothing in it may be a credential.
+      - name: No credentials in the built bundle
         run: |
           if grep -rEq "postgres(ql)?://[^\"' ]*:[^\"'@ ]+@" dist/; then
             echo "::error::a database connection string reached the built bundle"
             exit 1
           fi
+          if grep -rEq "Welcome@123|Admin@2026|password:\"" dist/; then
+            echo "::error::a readable demo password reached the built bundle"
+            exit 1
+          fi
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high

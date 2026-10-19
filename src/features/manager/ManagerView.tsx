@@ -339,7 +339,7 @@ const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: string)
               <StatusBadge tone={sevTone[i.severity]}><ArabicContent as="span">{i.action}</ArabicContent></StatusBadge>
               {/* 🔴 The row printed the name and then the message — and every
                   message from health.ts already OPENS with that same name, so
-                  the manager's main list read «Ahmed Mohamed — Ahmed Mohamed
+                  the manager's main list read «Ahmed Magdy — Ahmed Magdy
                   لسه من غير أي تقييم» on all six rows. The message owns the
                   name; the row shows it once. */}
               <ArabicContent as="span" className="t-sm" style={{ flex: 1 }}>{i.message}</ArabicContent>

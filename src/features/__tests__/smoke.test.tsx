@@ -183,7 +183,7 @@ describe('identity is a person, not a role label', () => {
   });
 
   it('display name, username and role are three separate fields', () => {
-    // Deriving one from another is how «Ahmed Mohamed» becomes «ahmed.m» on a
+    // Deriving one from another is how «Ahmed Magdy» becomes «ahmed.m» on a
     // screen a member can see.
     for (const a of DEMO_ACCOUNTS) {
       expect(a.name).not.toBe(a.username);
@@ -208,8 +208,8 @@ describe('identity is a person, not a role label', () => {
   });
 
   it('initials come from first and last name', () => {
-    expect(initialsOf('Ahmed Mohamed')).toBe('AM');
-    expect(initialsOf('Mariam Ashraf')).toBe('MA');
+    expect(initialsOf('Ahmed Magdy')).toBe('AM');
+    expect(initialsOf('Mariam Atef')).toBe('MA');
     expect(initialsOf('System Administrator')).toBe('SA');
   });
 
@@ -236,7 +236,7 @@ describe('identity is a person, not a role label', () => {
 
   it('the signed-in user sees their own name, not just their role', () => {
     identityStore.signIn('trainer.adel');
-    expect(identityStore.currentUser()?.name).toBe('Mohamed Adel');
+    expect(identityStore.currentUser()?.name).toBe('Adel Ramadan');
   });
 });
 
@@ -301,9 +301,12 @@ describe('🔴 every demo account can actually SIGN IN and reach a platform', ()
   // regress silently again.
   beforeEach(() => { identityStore.signOut(); });
 
+  // The demo credentials handed to testers. The module itself stores only hashes.
+  const passwordOf = (username: string) => (username === 'admin' ? 'Admin@2026' : 'Welcome@123');
+
   for (const acc of DEMO_ACCOUNTS) {
     it(`${acc.username} authenticates and lands somewhere`, () => {
-      const found = authenticate(acc.username, acc.password);
+      const found = authenticate(acc.username, passwordOf(acc.username));
       expect(found, `${acc.username} failed authentication`).not.toBeNull();
       identityStore.signIn(found!.id);
       const user = identityStore.currentUser();

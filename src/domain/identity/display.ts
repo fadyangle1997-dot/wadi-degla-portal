@@ -10,7 +10,7 @@
 
 /**
  * Two-letter initials from a display name: first and last word.
- * «Ahmed Mohamed» → AM. A single name yields one letter rather than a
+ * «Ahmed Magdy» → AM. A single name yields one letter rather than a
  * fabricated second. Derived, never stored — an initials field goes stale the
  * moment a name is corrected.
  */

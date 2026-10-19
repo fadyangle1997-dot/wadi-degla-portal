@@ -33,22 +33,28 @@ describe('🔴 C1 — no screen reads a shared trainee record', () => {
   });
 });
 
-describe('🔴 C2 — demo credentials never reach production code paths', () => {
-  it('only App.tsx imports the credential module, and only behind import.meta.env.DEV', () => {
-    // The demo table holds cleartext passwords. Any unconditional import pulls
-    // them into the bundle, where DevTools reads them in plain sight.
-    const importers = files(SRC).filter(f =>
-      /from\s+['"][^'"]*demo\/demoAccounts['"]/.test(readFileSync(f, 'utf-8')));
-    expect(importers.map(f => f.replace(SRC, '')).sort(), 'unexpected credential importers')
-      .toEqual(['app/App.tsx']);
+describe('🔴 C2 — no readable demo password in shipped code', () => {
+  it('the demo account table stores hashes, never passwords', () => {
+    // The showcase build signs in with these accounts, so the module ships.
+    // What must never ship is a password someone could read in DevTools.
+    const accounts = readFileSync(join(SRC, 'app/demo/demoAccounts.ts'), 'utf-8');
+    const code = accounts.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/g, '');
+    expect(code).not.toMatch(/\bpassword:\s*'/);
+    expect(code).not.toContain('Welcome@123');
+    expect(code).not.toContain('Admin@2026');
+    for (const m of code.matchAll(/passwordHash: '([^']*)'/g)) expect(m[1]).toMatch(/^[0-9a-f]{64}$/);
+  });
 
-    const app = readFileSync(join(SRC, 'app/App.tsx'), 'utf-8');
-    // Demo auth runs unconditionally in this showcase build — no env flag, which
-    // is what broke the deployed login (a flag that reads undefined on a
-    // misconfigured host). The OIDC switch, when it lands, is a real provider
-    // object, not an env string.
-    expect(app).toContain('const account = authenticateDev(username, password);');
-    expect(app, 'the fragile env gate must be gone').not.toContain('VITE_DEMO_AUTH');
+  it('the only plaintext demo credentials sit behind import.meta.env.DEV', () => {
+    // The login screen's dev switcher fills credentials for developers. It is
+    // rendered only when import.meta.env.DEV is true, which Vite replaces with
+    // false in a production build, so the strings are dropped with it.
+    for (const f of files(SRC)) {
+      const src = readFileSync(f, 'utf-8');
+      if (!src.includes('Welcome@123') && !src.includes('Admin@2026')) continue;
+      expect(f.replace(SRC, ''), 'plaintext demo password outside the dev switcher').toBe('features/login/LoginView.tsx');
+      expect(src).toContain('{import.meta.env.DEV && <DevPanel');
+    }
   });
 
   it('the identity store seeds from a credential-FREE directory', () => {

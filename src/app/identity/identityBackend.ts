@@ -50,7 +50,7 @@ export interface IdentityBackend {
 }
 
 /* ---------------- localStorage adapter ---------------- */
-const USERS_KEY = 'wda.identity.users.v2';   // v2: reseeded staff (real names + trainer links)
+const USERS_KEY = 'wda.identity.users.v2';
 const AUDIT_KEY = 'wda.identity.audit.v2';
 
 /**
@@ -88,7 +88,13 @@ export class LocalStorageIdentityBackend implements IdentityBackend {
     // account — which is exactly how a valid login lands with "no access".
     if (stored) {
       const byId = new Map(seed.map(u => [u.id, u]));
-      for (const u of stored) byId.set(u.id, u);
+      for (const u of stored) {
+        const seeded = byId.get(u.id);
+        // A seed record nobody has edited (updatedAt 0) follows the directory,
+        // so a renamed demo account shows its new name in browsers that cached
+        // the old one. Anything an admin touched keeps the admin's version.
+        byId.set(u.id, seeded && u.updatedAt === 0 ? { ...u, name: seeded.name } : u);
+      }
       this.users = [...byId.values()];
     } else {
       this.users = seed;

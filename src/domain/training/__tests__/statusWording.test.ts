@@ -3,7 +3,7 @@ import { waitingForTrainer } from '../statusWording';
 
 describe('waiting-for-trainer wording — one unified phrase', () => {
   it('names the trainer by first name', () => {
-    expect(waitingForTrainer('Mohamed Adel')).toBe('في انتظار مدربك Mohamed');
+    expect(waitingForTrainer('Adel Ramadan')).toBe('في انتظار مدربك Adel');
   });
   it('falls back gracefully when the trainer is unknown', () => {
     expect(waitingForTrainer(undefined)).toBe('في انتظار مدربك');
