@@ -592,6 +592,60 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .review-list li::before { content:counter(review); min-inline-size:1.5em; color:var(--attn);
   font-weight:600; font-variant-numeric:tabular-nums; }
 
+/* A ruled list: short statements, one per line, no bullets and no boxes. */
+.ruled-list { list-style:none; margin:0; padding:0; border-top:1px solid var(--line); }
+.ruled-list li { padding:var(--sp-3) 0; border-bottom:1px solid var(--line); font-size:0.9rem; line-height:1.65; color:var(--tx1); }
+
+/* READINESS TRACK — six stations on one spine. The marker carries the
+   station's number; the line between markers is the order they are met in.
+   A demonstrated station turns its marker green; a gap turns it amber. */
+.track { list-style:none; margin:0; padding:0; }
+.track-station { position:relative; display:grid; grid-template-columns:40px minmax(0, 1fr);
+  column-gap:var(--sp-4); padding-bottom:var(--sp-6); }
+.track-station::before { content:""; position:absolute; inset-inline-start:19px; top:44px; bottom:4px;
+  width:2px; background:var(--line-2); }
+.track-station:last-child { padding-bottom:0; }
+.track-station:last-child::before { display:none; }
+.track-marker { inline-size:40px; block-size:40px; border-radius:var(--r-full); display:flex;
+  align-items:center; justify-content:center; background:var(--s-1); border:1px solid var(--line-2);
+  color:var(--tx2); font-weight:600; font-variant-numeric:tabular-nums; }
+.track-station[data-stage="practicing"] .track-marker { border-color:var(--g2); color:var(--g1); }
+.track-station[data-stage="demonstrated"] .track-marker,
+.track-station[data-stage="ready"] .track-marker { border-color:var(--ready); color:var(--ready); background:var(--ready-bg); }
+.track-station[data-gap] .track-marker { border-color:var(--attn); color:var(--attn); background:var(--attn-bg); }
+.track-body { min-width:0; }
+.track-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
+  gap:var(--sp-2) var(--sp-4); min-height:40px; }
+.track-title { margin:0; font-size:1rem; font-weight:600; color:var(--tx0); }
+.track-meta { margin:var(--sp-1) 0 0; font-size:0.78rem; color:var(--tx2); }
+.track-evidence { margin:var(--sp-3) 0 0; padding:var(--sp-3) var(--sp-4); background:var(--s-2);
+  border-inline-start:2px solid var(--line-3); border-radius:var(--r-sm); font-size:0.9rem; line-height:1.65; color:var(--tx1); }
+.track-evidence figcaption { margin-top:var(--sp-2); font-size:0.78rem; color:var(--tx2); }
+.track-gaps { list-style:none; margin:var(--sp-3) 0 0; padding:0; display:flex; flex-direction:column; gap:var(--sp-1);
+  font-size:0.85rem; color:var(--attn); }
+.track-gaps li[data-critical] { color:var(--risk); }
+.track-action { margin-top:var(--sp-3); }
+.station-form { margin-top:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--line); }
+/* The trainer's list of trainees in the readiness phase: ruled blocks, not cards. */
+.readiness-block { padding:var(--sp-5) 0; border-bottom:1px solid var(--line); }
+.readiness-block:first-child { border-top:1px solid var(--line); }
+.conduct { margin:0; padding:0; border:0; min-width:0; }
+.conduct-row { display:flex; align-items:center; gap:var(--sp-3); min-height:44px; cursor:pointer;
+  border-bottom:1px solid var(--line); }
+.conduct-row input { inline-size:17px; block-size:17px; accent-color:var(--g2); flex-shrink:0; }
+/* A station's stage: four marks and a word. The word is the meaning. */
+.stage { display:inline-flex; align-items:center; gap:var(--sp-2); font-size:0.78rem; font-weight:600; color:var(--tx2); white-space:nowrap; }
+.stage-pips { display:inline-flex; gap:3px; }
+.stage-pips > span { inline-size:14px; block-size:4px; border-radius:var(--r-full); background:var(--line-2); }
+.stage-pips > span[data-on] { background:var(--tx3); }
+.stage[data-stage="practicing"] { color:var(--g1); }
+.stage[data-stage="practicing"] .stage-pips > span[data-on] { background:var(--g2); }
+.stage[data-stage="demonstrated"], .stage[data-stage="ready"] { color:var(--ready); }
+.stage[data-stage="demonstrated"] .stage-pips > span[data-on],
+.stage[data-stage="ready"] .stage-pips > span[data-on] { background:var(--ready); }
+.stage[data-gap] { color:var(--attn); }
+.stage[data-gap] .stage-pips > span[data-on] { background:var(--attn); }
+
 /* -- Answer option -- */
 .option { display:flex; align-items:center; gap:var(--sp-3); width:100%; text-align:right;
   padding:var(--sp-4) var(--sp-5); border-radius:var(--r-md); min-height:52px;
@@ -646,8 +700,11 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 /* -- Dialog & toast -- */
 .dialog-scrim { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
   display:flex; align-items:center; justify-content:center; z-index:60; padding:var(--sp-5); }
+/* A dialog never grows past the screen: long content scrolls inside it, so its
+   actions can always be reached (the employee file outgrew a short laptop). */
 .dialog { background:var(--s-1); border:1px solid var(--line-2); border-radius:var(--r-lg);
-  padding:var(--sp-6); max-width:420px; width:100%; box-shadow:var(--e-floating); }
+  padding:var(--sp-6); max-width:420px; width:100%; box-shadow:var(--e-floating);
+  max-height:calc(100dvh - 2 * var(--sp-5)); overflow-y:auto; overscroll-behavior:contain; }
 .toast { position:fixed; bottom:var(--sp-6); right:50%; transform:translateX(50%);
   background:var(--s0); border:1px solid var(--line-2); border-radius:var(--r-full);
   padding:10px 20px; color:var(--tx0); font-size:0.85rem; z-index:70;

@@ -162,7 +162,7 @@ export const OptionButton: React.FC<{
    from leaking into the surrounding sentence. */
 export const ArabicContent: React.FC<{
   children: React.ReactNode;
-  as?: 'div' | 'section' | 'article' | 'main' | 'span';
+  as?: 'div' | 'section' | 'article' | 'main' | 'span' | 'blockquote';
   className?: string;
   style?: React.CSSProperties;
   ariaLabel?: string;

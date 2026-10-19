@@ -7,33 +7,39 @@
  */
 import React, { useMemo, useState } from 'react';
 import { ClipboardCheck, ChevronDown, ChevronUp } from 'lucide-react';
-import { useTrainingEvents, trainingStore } from '../../app/training/trainingStore';
-import { assessReadiness, STATIONS, type Station } from '../../domain/readiness';
-import {
-  readinessInputOf, latestStationAssessments, latestConduct, stationAssessmentProblem, stationsFor,
-} from '../../domain/readiness/evidence';
+import { useTrainingEvents, useTraining, trainingStore } from '../../app/training/trainingStore';
+import { STATIONS, type Station } from '../../domain/readiness';
+import { latestConduct, stationAssessmentProblem } from '../../domain/readiness/evidence';
+import { readinessStanding } from '../../domain/readiness/track';
 import {
   EVALUATION_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS,
   type EvaluationDimension, type EvaluationDecision, type ConductObservations,
 } from '../../domain/evaluation';
-import { Button, StatusBadge, ArabicContent, Eyebrow } from '../../ui/primitives';
+import { Button, ArabicContent, Status } from '../../ui/primitives';
+import { ReadinessTrack } from './ReadinessTrack';
 import { useLang, t as tr, tf, type Key } from '../../app/i18n';
 
 const DECISION_TONE: Record<EvaluationDecision, 'ready' | 'attn' | 'risk' | 'info'> = {
   ready: 'ready', extend: 'attn', not_ready: 'risk', escalate: 'info',
 };
 
+/** Staff only see readiness for trainees who finished the programme. */
+const useStanding = (employeeId: string) => {
+  const events = useTrainingEvents();
+  const training = useTraining();
+  return useMemo(() => readinessStanding(training, events, employeeId, true), [training, events, employeeId]);
+};
+
 /** The engine's verdict for one trainee, with the reasons behind it. */
 export const ReadinessOutcomeSummary: React.FC<{ employeeId: string }> = ({ employeeId }) => {
   const lang = useLang();
-  const events = useTrainingEvents();
-  const outcome = useMemo(() => assessReadiness(readinessInputOf(events, employeeId)), [events, employeeId]);
+  const { outcome } = useStanding(employeeId);
   const done = STATIONS.length - outcome.stationsMissing.length;
   return (
     <div className="stack gap-2">
-      <div className="row items-center gap-3 wrap">
+      <div className="row items-center gap-4 wrap">
         <span className="t-label">{tr('rd.outcome', lang)}</span>
-        <StatusBadge tone={DECISION_TONE[outcome.decision]}>{tr(`rd.dec.${outcome.decision}` as Key, lang)}</StatusBadge>
+        <Status tone={DECISION_TONE[outcome.decision]}>{tr(`rd.dec.${outcome.decision}` as Key, lang)}</Status>
         <span className="t-sm t-num c-tx2">{tf('rd.progress', { n: done, total: STATIONS.length }, lang)}</span>
       </div>
       {outcome.reasons.map(r => (
@@ -43,7 +49,7 @@ export const ReadinessOutcomeSummary: React.FC<{ employeeId: string }> = ({ empl
   );
 };
 
-/** The stations one assessor owns, plus conduct for the trainer. */
+/** The stations one assessor owns, on the track, plus conduct for the trainer. */
 export const StationAssessment: React.FC<{
   employeeId: string;
   assessor: Station['assessor'];
@@ -51,41 +57,33 @@ export const StationAssessment: React.FC<{
 }> = ({ employeeId, assessor, onSaved }) => {
   const lang = useLang();
   const events = useTrainingEvents();
-  const latest = latestStationAssessments(events, employeeId);
+  const { track } = useStanding(employeeId);
   const [open, setOpen] = useState<string | null>(null);
 
   return (
-    <div className="stack gap-2">
-      {stationsFor(assessor).map(st => {
-        const prev = latest.get(st.id);
-        const isOpen = open === st.id;
-        return (
-          <div key={st.id} style={{ border: '1px solid var(--line)', borderRadius: 'var(--r-md)', background: 'var(--s-2)' }}>
-            <div className="row items-center gap-3 wrap" style={{ padding: 'var(--sp-3) var(--sp-4)' }}>
-              <span className="t-num t-label c-g1">{st.order}</span>
-              <ArabicContent as="span" className="t-sm c-tx0" style={{ flex: '1 1 200px' }}>{st.title}</ArabicContent>
-              <StatusBadge tone={prev ? 'ready' : 'neutral'}>
-                {prev ? <span className="t-num">{average(prev.scores, st.measures)}%</span> : tr('rd.notyet', lang)}
-              </StatusBadge>
-              <Button variant="ghost" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : st.id)}>
-                {prev ? tr('rd.update', lang) : tr('rd.assess', lang)}
-              </Button>
-            </div>
-            {isOpen && (
-              <StationForm
-                station={st}
-                initial={prev?.scores}
-                initialObservation={prev?.observation ?? ''}
-                onSave={(scores, observation) => {
-                  trainingStore.assessStation({ employeeId, stationId: st.id, scores, observation });
-                  setOpen(null);
-                  onSaved(tr('rd.saved', lang));
-                }}
-              />
-            )}
-          </div>
-        );
-      })}
+    <div className="stack gap-6">
+      <ReadinessTrack label={tr('tr.stations', lang)} headingLevel={4}
+        standings={track.filter(s => s.station.assessor === assessor)}
+        action={s => {
+          const isOpen = open === s.station.id;
+          return (
+            <Button variant="ghost" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : s.station.id)}>
+              {s.assessment ? tr('rd.update', lang) : tr('rd.assess', lang)}
+            </Button>
+          );
+        }}
+        extra={s => open === s.station.id ? (
+          <StationForm
+            station={s.station}
+            initial={s.assessment?.scores}
+            initialObservation={s.assessment?.observation ?? ''}
+            onSave={(scores, observation) => {
+              trainingStore.assessStation({ employeeId, stationId: s.station.id, scores, observation });
+              setOpen(null);
+              onSaved(tr('rd.saved', lang));
+            }}
+          />
+        ) : null} />
       {assessor === 'trainer' && (
         <ConductForm
           key={employeeId}
@@ -96,9 +94,6 @@ export const StationAssessment: React.FC<{
     </div>
   );
 };
-
-const average = (scores: Readonly<Partial<Record<EvaluationDimension, number>>>, dims: readonly EvaluationDimension[]) =>
-  Math.round(dims.reduce((n, d) => n + (scores[d] ?? 0), 0) / Math.max(1, dims.length));
 
 const StationForm: React.FC<{
   station: Station;
@@ -114,7 +109,7 @@ const StationForm: React.FC<{
   const obsId = `obs-${station.id}`;
 
   return (
-    <div className="stack gap-3" style={{ padding: '0 var(--sp-4) var(--sp-4)' }}>
+    <div className="station-form stack gap-3">
       <ArabicContent as="div" className="t-sm measure c-tx2">{station.situation}</ArabicContent>
       <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         {station.measures.map(d => (
@@ -145,42 +140,40 @@ const ConductForm: React.FC<{ initial: ConductObservations; onSave: (c: ConductO
   const lang = useLang();
   const [conduct, setConduct] = useState<ConductObservations>(initial);
   return (
-    <div style={{ padding: 'var(--sp-4)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-      <div className="t-label mb-3">{tr('rd.conduct', lang)}</div>
-      <div className="stack gap-2">
+    <fieldset className="conduct">
+      <legend className="panel-title">{tr('rd.conduct', lang)}</legend>
+      <div className="stack">
         {ALL_CONDUCT_CHECKS.map(c => (
-          <label key={c} className="row items-center gap-3" style={{ cursor: 'pointer', minHeight: 34 }}>
-            <input type="checkbox" checked={conduct[c] === true} style={{ width: 17, height: 17, accentColor: 'var(--g2)' }}
+          <label key={c} className="conduct-row">
+            <input type="checkbox" checked={conduct[c] === true}
               onChange={e => setConduct(p => ({ ...p, [c]: e.target.checked }))} />
-            <ArabicContent as="span" className="t-sm">{CONDUCT_CHECKS[c]}</ArabicContent>
+            <ArabicContent as="span" className="t-sm c-tx1">{CONDUCT_CHECKS[c]}</ArabicContent>
           </label>
         ))}
       </div>
       <div className="mt-3">
         <Button variant="ghost" onClick={() => onSave(conduct)}>{tr('rd.conductsave', lang)}</Button>
       </div>
-    </div>
+    </fieldset>
   );
 };
 
-/** A collapsible readiness block for one trainee: the verdict, then the stations. */
+/** One trainee's readiness in the trainer's list: the verdict, then their stations. */
 export const TraineeReadinessBlock: React.FC<{
   employeeId: string; name: string; assessor: Station['assessor']; onSaved: (m: string) => void;
 }> = ({ employeeId, name, assessor, onSaved }) => {
   const lang = useLang();
   const [open, setOpen] = useState(false);
   return (
-    <section aria-label={`${tr('rd.title', lang)} — ${name}`}
-      className="stack gap-3" style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
+    <section aria-label={`${tr('rd.title', lang)} — ${name}`} className="readiness-block stack gap-3">
       <div className="row items-center gap-3 wrap">
-        <Eyebrow>{name}</Eyebrow>
-        <div className="grow" />
+        <h3 className="track-title grow">{name}</h3>
         <Button variant="ghost" aria-expanded={open} onClick={() => setOpen(v => !v)}>
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />} {open ? tr('rd.close', lang) : tr('rd.open', lang)}
         </Button>
       </div>
       <ReadinessOutcomeSummary employeeId={employeeId} />
-      {open && <StationAssessment employeeId={employeeId} assessor={assessor} onSaved={onSaved} />}
+      {open && <div className="mt-3"><StationAssessment employeeId={employeeId} assessor={assessor} onSaved={onSaved} /></div>}
     </section>
   );
 };

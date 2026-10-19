@@ -19,143 +19,188 @@
  * The message is «اتوثق فيك تمثّل وادي دجلة» — recognition and responsibility,
  * not confetti. A qualification is a transfer of trust, and trust is sobering.
  *
+ * WHY AN INCOMPLETE ASSESSMENT IS NOT SHOWN AS «NOT READY»:
+ * The engine is fail-closed: with a station unobserved it answers not_ready,
+ * and that is right for certification. Said to the trainee as a verdict, it
+ * would be false: nothing was judged yet. Until every station has evidence the
+ * screen says the assessment is under way and names the next station. The
+ * engine's own reason still shows under «على أي أساس».
+ *
  * Reads the domain only. No decision is made here — the engine already decided.
  */
 import React from 'react';
-import { m } from 'motion/react';
-import { ShieldCheck, Clock, AlertTriangle, ArrowUpRight } from 'lucide-react';
-import type { ReadinessOutcome } from '../../domain/readiness';
-import { READINESS_FLOORS } from '../../domain/readiness';
-import { EVALUATION_DIMENSIONS, DECISION_LABEL, type EvaluationDecision } from '../../domain/evaluation';
-import { Eyebrow, ScreenHeader, StatusBadge, Button, Num } from '../../ui/primitives';
-import { fade, stagger } from '../../ui/motion';
+import { ArrowRight } from 'lucide-react';
+import type { ReadinessStanding } from '../../domain/readiness/track';
+import { demonstratedCount, nextStation } from '../../domain/readiness/track';
+import { READINESS_FLOORS, CRITICAL_DIMENSIONS, STATIONS } from '../../domain/readiness';
+import {
+  EVALUATION_DIMENSIONS, DECISION_LABEL, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS,
+  type EvaluationDecision, type EvaluationDimension,
+} from '../../domain/evaluation';
+import {
+  Button, Num, PageHeader, Brief, SectionHeader, Status, Meter, DataTable, type Column,
+} from '../../ui/primitives';
+import { ReadinessTrack } from './ReadinessTrack';
 import { WIDTH } from '../../ui/designSystem';
 
 /** Each outcome states plainly what it is, and what happens next. */
 const OUTCOME: Record<EvaluationDecision, {
-  headline: string; meaning: string; next: string;
-  tone: 'ready' | 'attn' | 'info' | 'risk'; icon: React.ReactNode;
+  headline: string; meaning: string; next: string; tone: 'gold' | 'attn' | 'risk';
 }> = {
   ready: {
     headline: 'جاهز للعمل المستقل',
     meaning: 'الأدلة من الست محطات بتقول إنك بتاخد القرار الصح وبتوصّله صح — تحت الضغط كمان.',
     next: 'باقي اعتماد المدير — قرار الجاهزية من صلاحيته. توقيع واحد مش تأهيل.',
-    tone: 'ready', icon: <ShieldCheck size={22} />,
+    tone: 'gold',
   },
   extend: {
     headline: 'تمديد — أيام إضافية بإشراف',
     meaning: 'مفيش خطر تشغيلي في شغلك. فيه فجوات قابلة للتطوير محتاجة وقت مش إعادة.',
     next: 'المدرب هيحدّد أيام إضافية على النقط دي بالظبط، وبعدها تقييم تاني.',
-    tone: 'attn', icon: <Clock size={22} />,
+    tone: 'attn',
   },
   escalate: {
     headline: 'مراجعة المدير',
     meaning: 'فيه حاجة في التقييم من سلطة المدير مش من سلطة المدرب. ده مش حكم على أدائك.',
     next: 'المدير هيراجع الأدلة ويقرّر. هتتبلّغ بالنتيجة.',
-    tone: 'info', icon: <ArrowUpRight size={22} />,
+    tone: 'gold',
   },
   not_ready: {
     headline: 'مش جاهز للعمل المستقل دلوقتي',
     meaning: 'فيه نقط بتخلّي العمل المستقل خطر عليك وعلى النادي. القرار ده على الأداء في المحطات — مش عليك.',
-    next: 'النقط اللي تحت مش عامة — دي اللي اتشافت بالظبط، وهي خطة الفترة الجاية.',
-    tone: 'risk', icon: <AlertTriangle size={22} />,
+    next: 'المحطات اللي عليها علامة إعادة هي خطة الفترة الجاية — مش نصايح عامة.',
+    tone: 'risk',
   },
 };
 
-const TONE_COLOR = { ready: 'var(--ready)', attn: 'var(--attn)', info: 'var(--g2)', risk: 'var(--risk)' } as const;
+const FINAL_LABEL = { ready: 'معتمد', extend: 'تمديد', reject: 'مرفوض' } as const;
+const FINAL_TONE = { ready: 'ready', extend: 'attn', reject: 'risk' } as const;
 
-export const ReadinessResult: React.FC<{ outcome: ReadinessOutcome; onExit: () => void }> = ({ outcome, onExit }) => {
-  const o = OUTCOME[outcome.decision];
-  const color = TONE_COLOR[o.tone];
+interface DimRow { d: EvaluationDimension; score: number; floor: number; critical: boolean }
+
+export const ReadinessResult: React.FC<{ standing: ReadinessStanding; onExit: () => void }> = ({ standing, onExit }) => {
+  const { outcome, track, conduct, managerDecision, phaseOpen, certified } = standing;
+  const shown = demonstratedCount(track);
+  const missing = outcome.stationsMissing.length;
+  const next = nextStation(track);
+  const trainerDone = track.filter(s => s.station.assessor === 'trainer' && s.assessment).length;
+  const trainerTotal = STATIONS.filter(s => s.assessor === 'trainer').length;
+  const interview = track.find(s => s.station.assessor === 'manager');
+  const conductSeen = ALL_CONDUCT_CHECKS.filter(c => conduct[c] === true).length;
+
+  // The one thing on the screen that must be read: the decision, or where the
+  // assessment is when there is no decision yet.
+  const brief = certified
+    ? { tone: 'gold' as const, title: 'معتمد للعمل المستقل',
+        body: 'إنت بقيت موثوق تمثّل وادي دجلة قدّام أعضائه. كل جملة هتقولها بعد كده هي موقف النادي — زي أول يوم بالظبط، بس دلوقتي لوحدك.' }
+    : missing > 0
+      ? { tone: 'gold' as const,
+          title: phaseOpen ? 'التقييم لسه شغّال' : 'التقييم بيبدأ بعد اعتماد كل الوحدات',
+          body: phaseOpen
+            ? <>
+                <p className="m-0">فاضل <Num>{missing}</Num> من <Num>{STATIONS.length}</Num> محطات. القرار بيتاخد لما الأدلة تكتمل — مفيش حكم قبلها.</p>
+                {next && <p className="m-0 c-tx1">المحطة الجاية: <strong>{next.station.title}</strong> · {next.station.assessor === 'manager' ? 'مع المدير' : 'مع المدرب'}</p>}
+              </>
+            : 'الست محطات بتتعمل في آخر أسبوع من البرنامج (اليوم 54–60). اللي بتتعلّمه دلوقتي هو اللي هيتقاس فيها.' }
+      : { tone: OUTCOME[outcome.decision].tone, title: OUTCOME[outcome.decision].headline,
+          body: <><p className="m-0">{OUTCOME[outcome.decision].meaning}</p><p className="m-0 c-tx1">{OUTCOME[outcome.decision].next}</p></> };
+
+  const dims: DimRow[] = (Object.keys(EVALUATION_DIMENSIONS) as EvaluationDimension[]).map(d => ({
+    d, score: outcome.scores[d], floor: READINESS_FLOORS[d], critical: CRITICAL_DIMENSIONS.includes(d),
+  }));
+  const observed = (d: EvaluationDimension) => track.some(s => s.assessment && s.station.measures.includes(d));
+  const columns: Column<DimRow>[] = [
+    { id: 'dim', header: 'المحور', cell: r => <span className="c-tx0">{EVALUATION_DIMENSIONS[r.d]}</span> },
+    {
+      id: 'score', header: 'الدرجة', align: 'end', sortValue: r => r.score,
+      cell: r => observed(r.d)
+        ? <span className="row items-center gap-3 justify-end"><Meter value={r.score} tone={r.score < r.floor ? (r.critical ? 'risk' : 'attn') : 'ready'} /><Num>{r.score}%</Num></span>
+        : <span className="c-tx2">—</span>,
+    },
+    { id: 'floor', header: 'الحد الأدنى', align: 'end', cell: r => <Num>{r.floor}</Num> },
+    {
+      id: 'state', header: 'الحالة',
+      cell: r => !observed(r.d) ? <Status tone="neutral">لسه ما اتقاسش</Status>
+        : r.score >= r.floor ? <Status tone="ready">فوق الحد</Status>
+        : <Status tone={r.critical ? 'risk' : 'attn'}>{r.critical ? 'تحت الحد · حرج' : 'تحت الحد'}</Status>,
+    },
+  ];
 
   return (
-    <div className="min-h-screen">
-      <ScreenHeader onBack={onExit} maxWidth={WIDTH.read} leading={<Eyebrow>تقييم الجاهزية · اليوم 54–60</Eyebrow>} />
+    <main style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+      <PageHeader crumbs={['الأكاديمية', 'رحلتي', 'تقييم الجاهزية']}
+        title="جاهزيتك للعمل المستقل"
+        lead={<><Num>{shown}</Num> من <Num>{STATIONS.length}</Num> محطات اتثبتت · التقييم في اليوم 54–60</>}
+        actions={<Button variant="ghost" onClick={onExit}><ArrowRight size={16} className="icon-dir" /> رجوع لرحلتي</Button>} />
 
-      <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-8)' }}>
-        {/* The decision, stated plainly. No euphemism, no confetti. */}
-        <m.header {...fade} className="mb-7">
-          <span aria-hidden style={{ color, display: 'inline-flex' }}>{o.icon}</span>
-          <h1 className="t-h1" style={{ margin: 'var(--sp-3) 0 var(--sp-3)' }}>{o.headline}</h1>
-          <p className="t-body c-tx1 m-0">{o.meaning}</p>
-        </m.header>
+      <Brief prominent tone={brief.tone} title={brief.title} body={brief.body}
+        eyebrow={<Status tone={certified ? 'ready' : missing > 0 ? 'neutral' : outcome.decision === 'ready' ? 'ready' : outcome.decision === 'extend' ? 'attn' : outcome.decision === 'not_ready' ? 'risk' : 'info'}>
+          {certified ? 'معتمد من المدرب والمدير' : missing > 0 ? 'لسه ما اتحسمش' : `قرار المحطات: ${DECISION_LABEL[outcome.decision]}`}
+        </Status>} />
 
-        {/* WHY — the engine's own reasons. This is the respect. */}
-        <m.section {...stagger(0)} className="mb-6">
-          <div className="t-label mb-3">على أي أساس</div>
-          <div className="stack gap-2">
-            {outcome.reasons.map(r => (
-              <div key={r} style={{
-                padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-1)',
-                border: '1px solid var(--line)', borderRadius: 'var(--r-sm)',
-                borderInlineStartWidth: 3, borderInlineStartColor: color,
-              }}>
-                <p className="t-body m-0">{r}</p>
-              </div>
-            ))}
+      <div className="workspace workspace--aside region">
+        <section aria-labelledby="rd-track">
+          <SectionHeader id="rd-track" title="المحطات الست" count={STATIONS.length}
+            description="كل محطة موقف حقيقي بيتقاس فيه أكتر من محور مع بعض. الملاحظة اللي بتتسجّل هي الدليل." />
+          <div className="mt-5"><ReadinessTrack label="المحطات الست" standings={track} /></div>
+        </section>
+
+        <aside className="stack gap-7" aria-label="الاعتماد">
+          <section>
+            <h2 className="panel-title">الاعتماد</h2>
+            <dl className="kv">
+              <div><dt className="t-sm">المدرب · محطات 1–5</dt><dd><Status tone={trainerDone === trainerTotal ? 'ready' : 'neutral'}><Num>{trainerDone}</Num> من <Num>{trainerTotal}</Num></Status></dd></div>
+              <div><dt className="t-sm">السلوك المهني</dt><dd><Status tone={conductSeen === ALL_CONDUCT_CHECKS.length ? 'ready' : 'neutral'}><Num>{conductSeen}</Num> من <Num>{ALL_CONDUCT_CHECKS.length}</Num></Status></dd></div>
+              <div><dt className="t-sm">المدير · المقابلة</dt><dd><Status tone={interview?.assessment ? 'ready' : 'neutral'}>{interview?.assessment ? 'اتسجّلت' : 'لسه'}</Status></dd></div>
+              <div><dt className="t-sm">القرار النهائي</dt><dd>{managerDecision
+                ? <Status tone={FINAL_TONE[managerDecision.decision]}>{FINAL_LABEL[managerDecision.decision]}</Status>
+                : <Status tone="neutral">لسه</Status>}</dd></div>
+            </dl>
+            <p className="t-sm mt-3 mb-0">توقيع واحد مش تأهيل: المدرب بيوصي من الأدلة، والمدير بيعتمد الجاهزية.</p>
+          </section>
+
+          <section>
+            <h2 className="panel-title">السلوك المهني</h2>
+            <dl className="kv">
+              {ALL_CONDUCT_CHECKS.map(c => (
+                <div key={c}><dt className="t-sm">{CONDUCT_CHECKS[c]}</dt>
+                  <dd>{conduct[c] === true ? <Status tone="ready">اتشاف</Status> : <Status tone="neutral">لسه</Status>}</dd></div>
+              ))}
+            </dl>
+          </section>
+
+          {outcome.strengths.length > 0 && (
+            <section>
+              {/* Strengths are named too — an assessment that only names
+                  failures is an audit, not a development conversation. */}
+              <h2 className="panel-title">اللي ظهر قوي</h2>
+              <p className="t-sm c-tx1 m-0">{outcome.strengths.map(d => EVALUATION_DIMENSIONS[d]).join(' · ')}</p>
+            </section>
+          )}
+        </aside>
+      </div>
+
+      <div className="stack gap-8 region">
+        <section aria-labelledby="rd-why">
+          <SectionHeader id="rd-why" title="على أي أساس" description="أسباب محرك الجاهزية نفسها — كل سبب راجع لقاعدة." />
+          <ul className="ruled-list mt-3">
+            {outcome.reasons.map(r => <li key={r}>{r}</li>)}
+          </ul>
+        </section>
+
+        <section aria-labelledby="rd-dims">
+          <SectionHeader id="rd-dims" title="المحاور الرسمية"
+            description={<>الإجمالي الموزون <Num>{outcome.overall}%</Num> · الحرجة: مراجعة المستندات، تطبيق اللائحة، الدقة.</>} />
+          <div className="mt-3">
+            <DataTable caption="المحاور الرسمية" columns={columns} rows={dims} rowKey={r => r.d}
+              rowTone={r => observed(r.d) && r.score < r.floor ? (r.critical ? 'risk' : 'attn') : undefined} />
           </div>
-        </m.section>
+        </section>
+      </div>
 
-        {/* Named, per-KPI evidence — never a single opaque number. */}
-        <m.section {...stagger(1)} className="mb-6">
-          <div className="t-label mb-3">
-            الأدلة حسب المحاور الرسمية · الإجمالي <Num>{outcome.overall}%</Num>
-          </div>
-          <div className="stack gap-2">
-            {(Object.keys(EVALUATION_DIMENSIONS) as (keyof typeof EVALUATION_DIMENSIONS)[]).map(d => {
-              const score = outcome.scores[d];
-              const floor = READINESS_FLOORS[d];
-              const below = score < floor;
-              return (
-                <div key={d} className="row items-center gap-3" style={{ padding: 'var(--sp-2) var(--sp-3)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
-                  <span className="t-sm" style={{ flex: '1 1 130px', minWidth: 0 }}>{EVALUATION_DIMENSIONS[d]}</span>
-                  <span className="relative" style={{ flex: '2 1 120px', height: 4, background: 'var(--s1)', borderRadius: 'var(--r-full)', overflow: 'hidden' }}>
-                    <span style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: `${score}%`, background: below ? 'var(--risk)' : 'var(--ready)' }} />
-                  </span>
-                  <span className="t-num t-label" style={{ minWidth: 'var(--sp-5)', textAlign: 'end', color: below ? 'var(--risk)' : 'var(--tx2)' }}>{score}%</span>
-                  {below && <StatusBadge tone="risk">تحت {floor}</StatusBadge>}
-                </div>
-              );
-            })}
-          </div>
-        </m.section>
-
-        {/* Strengths are named too — an assessment that only names failures is
-            an audit, not a development conversation. */}
-        {outcome.strengths.length > 0 && (
-          <m.section {...stagger(2)} className="mb-6">
-            <div className="t-label mb-2">اللي ظهر قوي</div>
-            <div className="row gap-2 wrap">
-              {outcome.strengths.map(d => <StatusBadge key={d} tone="ready">{EVALUATION_DIMENSIONS[d]}</StatusBadge>)}
-            </div>
-          </m.section>
-        )}
-
-        {/* Every outcome has a route forward — including the hard ones. */}
-        <m.section {...stagger(3)} style={{ padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)' }}>
-          <div className="t-label mb-2">الخطوة الجاية</div>
-          <p className="t-body m-0 c-tx1">{o.next}</p>
-        </m.section>
-
-        {/* Certification is a moment, not a destination — it lands here, on the
-            terminal state, rather than as a page nobody would navigate to. */}
-        {outcome.decision === 'ready' && (
-          <m.section {...stagger(4)} className="mt-6" style={{ padding: 'var(--sp-5)', border: `1px solid var(--g3)`, borderRadius: 'var(--r-md)' }}>
-            <p className="t-body m-0">
-              <strong>لما اعتماد المدير ينزل، إنت بقيت موثوق تمثّل وادي دجلة قدّام أعضائه.</strong>
-              {' '}يعني كل جملة هتقولها بعد كده هي موقف النادي — زي أول يوم بالظبط، بس دلوقتي لوحدك.
-            </p>
-          </m.section>
-        )}
-
-        <div className="mt-7">
-          <Button variant="ghost" onClick={onExit}>رجوع لرحلتي</Button>
-        </div>
-
-        <p className="t-sm c-tx3 mt-5">
-          القرار: {DECISION_LABEL[outcome.decision]} · مبني على أدلة من {6 - outcome.stationsMissing.length} من 6 محطات.
-        </p>
-      </main>
-    </div>
+      <p className="t-sm mt-8 mb-0">
+        القرار في النظام: {DECISION_LABEL[outcome.decision]} · مبني على أدلة من <Num>{STATIONS.length - missing}</Num> من <Num>{STATIONS.length}</Num> محطات.
+      </p>
+    </main>
   );
 };

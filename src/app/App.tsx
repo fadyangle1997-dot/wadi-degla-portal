@@ -27,13 +27,12 @@ const ReadinessResult = lazy(() => import('../features/readiness/ReadinessResult
 const LessonFlow = lazy(() => import('../features/lesson/LessonFlow').then(m => ({ default: m.LessonFlow })));
 const ExamView = lazy(() => import('../features/exam/ExamView').then(m => ({ default: m.ExamView })));
 const BossView = lazy(() => import('../features/boss/BossView').then(m => ({ default: m.BossView })));
-import { assessReadiness } from '../domain/readiness';
-import { readinessInputOf } from '../domain/readiness/evidence';
+import { readinessStanding } from '../domain/readiness/track';
 import { EmptyState, Button, Eyebrow, ScreenHeader, ArabicContent } from '../ui/primitives';
 import { moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
-import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents } from './training/trainingStore';
+import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents, useTraining } from './training/trainingStore';
 import { TRAINING_POLICY } from '../domain/policy';
 import { useLang, t, tf } from './i18n';
 
@@ -52,9 +51,10 @@ const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 /** The trainee's readiness, computed from the stations their trainer and manager recorded. */
 const TraineeReadiness: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const events = useTrainingEvents();
-  const id = traineeIdOrNull();
-  const outcome = assessReadiness(id ? readinessInputOf(events, id) : { evidence: [], conduct: {} });
-  return <ReadinessResult outcome={outcome} onExit={onExit} />;
+  const training = useTraining();
+  const id = traineeIdOrNull() ?? '';
+  const standing = readinessStanding(training, events, id, progressStore.hasOnboarded());
+  return <ReadinessResult standing={standing} onExit={onExit} />;
 };
 
 /** Redirects an unauthorised view to the identity's own landing page. */
