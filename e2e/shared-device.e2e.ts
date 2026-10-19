@@ -18,8 +18,8 @@ test('two trainees on one browser keep separate progress, and the trainer sees e
   await signOut(page);
 
   await signIn(page, 'trainer.adel');
-  const ahmed = page.locator('main').getByText('Ahmed Magdy · Maadi').locator('..');
-  const mariam = page.locator('main').getByText('Mariam Atef · Maadi').locator('..');
-  await expect(ahmed).not.toContainText('التعلّم 0%');
-  await expect(mariam).toContainText('0%');
+  // Each trainee's row in the roster ledger carries their own learning figure.
+  const learning = (name: RegExp) => page.locator('main').getByRole('row', { name }).getByText(/^\d+%$/);
+  await expect(learning(/Ahmed Magdy/)).not.toHaveText('0%');
+  await expect(learning(/Mariam Atef/)).toHaveText('0%');
 });

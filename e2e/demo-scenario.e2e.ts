@@ -15,5 +15,5 @@ test('admin loads the demo scenario; trainer and manager screens fill with real 
 
   // The branch manager now sees trainees with real readiness, not zeros.
   await signIn(page, 'manager.nabil');
-  await expect(page.locator('main').getByText(/جاهزية [1-9]\d*%/).first()).toBeVisible();
+  await expect(page.locator('main').getByRole('cell', { name: /^[1-9]\d*%$/ }).first()).toBeVisible();
 });

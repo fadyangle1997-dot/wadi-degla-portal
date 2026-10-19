@@ -392,4 +392,5 @@ export const DayRing: React.FC<{ day: number; total: number; pct: number }> = ({
     </div>
   );
 };
-export { Crumbs, PageHeader, SectionNav, SectionHeader, Num, MetricStrip, Metric, Status } from './structure';
+export { Crumbs, PageHeader, SectionNav, SectionHeader, Num, MetricStrip, Metric, Status, Brief, Meter, Initials } from './structure';
+export { DataTable, type Column, type DataTableProps } from './DataTable';

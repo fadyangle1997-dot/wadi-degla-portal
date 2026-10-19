@@ -1,5 +1,10 @@
 import { test, expect, signIn, expectAccessible, toAcademy, openTodaysLesson } from './fixtures';
 
+// Contrast is a property of the settled screen. Motion's JS-driven fades are
+// invisible to getAnimations(), so axe could sample a heading mid-fade; with
+// reduced motion (which the app honours) every screen renders in its final state.
+test.use({ reducedMotion: 'reduce' });
+
 test('sign-in screen', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByLabel('Username')).toBeVisible();

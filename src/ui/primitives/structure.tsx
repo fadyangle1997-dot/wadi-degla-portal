@@ -8,6 +8,7 @@
  */
 import React from 'react';
 import { useLang, t } from '../../app/i18n';
+import { initialsOf } from '../../domain/identity/display';
 
 /* ---------------- page header ---------------- */
 /** The context path, outermost first; the last entry is the current page. */
@@ -111,7 +112,7 @@ type Tone = 'ready' | 'attn' | 'risk' | 'info' | 'gold' | 'neutral';
  * numbers are the content, so nothing competes with them.
  */
 export const MetricStrip: React.FC<{ children: React.ReactNode; label?: string }> = ({ children, label }) => (
-  <dl className="metric-strip" aria-label={label}>{children}</dl>
+  <div className="metric-strip-wrap"><dl className="metric-strip" aria-label={label}>{children}</dl></div>
 );
 
 export const Metric: React.FC<{
@@ -140,4 +141,47 @@ export const Status: React.FC<{ tone: Tone; children: React.ReactNode }> = ({ to
     <span className="status-dot" aria-hidden />
     {children}
   </span>
+);
+
+/* ---------------- brief ---------------- */
+/**
+ * The one raised surface on a screen: the decision or the next step, and its
+ * one action. Everything else on the screen is a region, not a surface.
+ */
+export const Brief: React.FC<{
+  eyebrow?: React.ReactNode;
+  title: React.ReactNode;
+  body?: React.ReactNode;
+  action?: React.ReactNode;
+  tone?: 'gold' | 'attn' | 'risk';
+  level?: 2 | 3;
+  /** The trainee's mission reads at heading size; a staff brief is quieter. */
+  prominent?: boolean;
+}> = ({ eyebrow, title, body, action, tone = 'gold', level = 2, prominent }) => {
+  const H = level === 2 ? 'h2' : 'h3';
+  return (
+    <section className="brief" data-tone={tone}>
+      <div className="brief-text">
+        {eyebrow}
+        <H className={`${prominent ? 't-h2' : 't-h3'} m-0`}>{title}</H>
+        {body && (typeof body === 'string'
+          ? <p className="t-sm measure m-0">{body}</p>
+          : <div className="t-sm measure stack gap-2">{body}</div>)}
+      </div>
+      {action && <div className="brief-action">{action}</div>}
+    </section>
+  );
+};
+
+/* ---------------- meter & initials ---------------- */
+/** A proportion as a short bar beside its figure; the figure carries the value. */
+export const Meter: React.FC<{ value: number; tone?: 'gold' | 'ready' | 'attn' | 'risk' }> = ({ value, tone = 'gold' }) => (
+  <span className={`meter meter--${tone}`} aria-hidden>
+    <span style={{ inlineSize: `${Math.max(0, Math.min(100, value))}%` }} />
+  </span>
+);
+
+/** Two letters for a person: no photo, and never a silhouette. */
+export const Initials: React.FC<{ name: string }> = ({ name }) => (
+  <span className="initials" aria-hidden>{initialsOf(name)}</span>
 );

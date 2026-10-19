@@ -17,12 +17,13 @@ import { MODULES } from '../../content/registry';
 const READINESS_PHASE_DAY = 54;
 import { nextAction } from '../../domain/journey/nextAction';
 import { PROGRAM, PROGRAM_DAYS, phaseStatus, currentPhase, dayPosition, type JourneyPhase, type PhaseStatus, type PhaseContext } from '../../domain/journey/program';
-import { useProgress, isModuleUnlocked, moduleLessonsDone, learningProgress, approvalProgress } from '../../app/progress';
-import { useTraining, reviewOf, traineeIdOrNull } from '../../app/training/trainingStore';
+import { useProgress, moduleLessonsDone, learningProgress, approvalProgress } from '../../app/progress';
+import { useTraining, traineeIdOrNull } from '../../app/training/trainingStore';
 import { identityStore } from '../../app/identity/identityStore';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { moduleById, bossBattlesAfter } from '../../content/registry';
 import { Eyebrow, StatusBadge, Button, Card, DayRing, ArabicContent, Num, Crumbs } from '../../ui/primitives';
+import { phaseContextFor } from '../../app/journeyContext';
 import { useLang, t as tr, type Key } from '../../app/i18n';
 import { fade, stagger } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
@@ -55,12 +56,7 @@ export const TrainingJourney: React.FC<{
     // and profile use; only it gets the primary CTA.
   const actionableModuleId = nextAction(p, t, traineeIdOrNull() ?? '').module?.id ?? null;
 
-  const ctx: PhaseContext = {
-    isModuleApproved: id => reviewOf(t, (traineeIdOrNull() ?? ''), id).status === 'ready',
-    isModuleWaiting: id => reviewOf(t, (traineeIdOrNull() ?? ''), id).status === 'waiting',
-    isModuleStarted: id => moduleLessonsDone(p, id) > 0,
-    isModuleUnlocked: id => isModuleUnlocked(p, id),
-  };
+  const ctx = phaseContextFor(p, t, traineeIdOrNull() ?? '');
 
   // Whether anything is due, computed BEFORE render: the heading «مهمة
   // النهارده» must not appear above an empty space. The component itself

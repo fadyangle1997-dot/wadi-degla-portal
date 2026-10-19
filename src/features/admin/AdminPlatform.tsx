@@ -16,7 +16,7 @@ import { detectOperationalIssues, summarizeIssues, type OperationalIssue, type S
 import { adminStats } from '../../domain/operations/adminStats';
 import { filterAudit, latestAudit, describeAudit, auditActions, type AuditFilter } from '../../domain/operations/audit';
 import { PERMISSIONS } from '../../domain/identity';
-import { Button, Eyebrow, EmptyState, StatusBadge, Card, Toast, ArabicContent, ConfirmDialog, PageHeader, SectionNav } from '../../ui/primitives';
+import { Button, Eyebrow, EmptyState, StatusBadge, Card, Toast, ArabicContent, ConfirmDialog, PageHeader, SectionNav, SectionHeader, MetricStrip, Metric, Brief, Meter } from '../../ui/primitives';
 import { loadDemoScenario, clearDemoTraining } from '../../app/demo/demoScenario';
 import { fade } from '../../ui/motion';
 import { AdminView } from './AdminView';
@@ -24,7 +24,7 @@ import { OrganizationPanel } from './OrganizationPanel';
 import { WIDTH } from '../../ui/designSystem';
 import { useOrganization } from '../../app/organization/orgStore';
 import { branchNameOf } from '../../domain/organization';
-import { useLang, t, type Key } from '../../app/i18n';
+import { useLang, t, tf, iso, type Key } from '../../app/i18n';
 
 type Tab = 'dashboard' | 'inbox' | 'org' | 'audit' | 'users';
 
@@ -65,7 +65,7 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         ? <AdminView onExit={onExit} embedded />
         : (
           <m.main key={tab} {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)' }}>
-            {tab === 'dashboard' && <OperationalDashboard />}
+            {tab === 'dashboard' && <OperationalDashboard onOpenInbox={() => setTab('inbox')} />}
             {tab === 'inbox' && <OperationalInbox onGoToUsers={() => setTab('users')} />}
             {tab === 'org' && <OrganizationPanel />}
             {tab === 'audit' && <AuditPanel canExport={canDo('audit.export')} />}
@@ -76,7 +76,7 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 };
 
 /* ---------------- operational dashboard ---------------- */
-const OperationalDashboard: React.FC = () => {
+const OperationalDashboard: React.FC<{ onOpenInbox: () => void }> = ({ onOpenInbox }) => {
   const lang = useLang();
   const { users } = useIdentity();
   useTraining();
@@ -84,47 +84,53 @@ const OperationalDashboard: React.FC = () => {
   const stats = useMemo(() => adminStats(users), [users]);
   const issues = useMemo(() => detectOperationalIssues(users, trainingStore.events()), [users]);
   const sev = summarizeIssues(issues);
+  const urgent = sev.critical + sev.warning;
 
   return (
     <>
-      <h2 className="t-h2 mb-2">{t('ad.dirhealth', lang)}</h2>
-      <p className="t-sm mb-5">{t('ad.dirhealthsub', lang)}</p>
-
-      <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-        <Stat label={t('ad.active', lang)} value={stats.active} />
-        <Stat label={t('ad.disabled', lang)} value={stats.disabled} tone={stats.disabled ? 'attn' : undefined} />
-        <Stat label={t('ad.archivedst', lang)} value={stats.archived} />
+      <SectionHeader title={t('ad.dirhealth', lang)} description={t('ad.dirhealthsub', lang)} />
+      <MetricStrip label={t('ad.dirhealth', lang)}>
+        <Metric label={t('ad.active', lang)} value={stats.active} />
+        <Metric label={t('ad.disabled', lang)} value={stats.disabled} tone={stats.disabled ? 'attn' : undefined} />
+        <Metric label={t('ad.archivedst', lang)} value={stats.archived} />
         {/* Green means nothing to do, so only a zero count is green; informational
             issues are `info`. */}
-        <Stat label={t('ad.opissues', lang)} value={sev.total}
-          tone={sev.critical ? 'risk' : sev.warning ? 'attn' : sev.total > 0 ? 'info' : 'ready'} />
-      </div>
+        <Metric label={t('ad.opissues', lang)} value={sev.total}
+          tone={sev.critical ? 'risk' : sev.warning ? 'attn' : sev.total > 0 ? 'info' : 'ready'}
+          context={sev.total > 0 ? `${sev.critical} ${t('ad.sevcritical', lang)} · ${sev.warning} ${t('ad.sevwarning', lang)} · ${sev.info} ${t('ad.sevinfo', lang)}` : undefined} />
+      </MetricStrip>
 
-      <div className="gap-3 mt-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-        <Card>
-          <Eyebrow>{t('ad.byrole', lang)}</Eyebrow>
-          <div className="stack gap-2 mt-3">
+      {/* The next step, when there is one: the inbox holds every issue with its fix. */}
+      {urgent > 0 && (
+        <div className="mt-6">
+          <Brief tone={sev.critical ? 'risk' : 'attn'} title={tf('ad.brief', { n: iso(urgent) }, lang)} body={t('ad.briefbody', lang)}
+            action={<Button onClick={onOpenInbox}>{t('ad.openinbox', lang)}</Button>} />
+        </div>
+      )}
+
+      <div className="panels region">
+        <section aria-labelledby="ad-byrole">
+          <h3 className="panel-title" id="ad-byrole">{t('ad.byrole', lang)}</h3>
+          <dl className="kv">
             <Dist label={t('ad.employees', lang)} n={stats.employees} />
             <Dist label={t('ad.trainers', lang)} n={stats.trainers} />
             <Dist label={t('ad.managers', lang)} n={stats.managers} />
             <Dist label={t('ad.admins', lang)} n={stats.admins} />
-          </div>
-        </Card>
-        <Card>
-          <Eyebrow>{t('ad.coverage', lang)}</Eyebrow>
-          <div className="mt-3">
+          </dl>
+        </section>
+        <section aria-labelledby="ad-cov">
+          <h3 className="panel-title" id="ad-cov">{t('ad.coverage', lang)}</h3>
+          <dl className="kv">
             <Coverage label={t('ad.covtrainer', lang)} pct={stats.trainerCoverage} />
             <Coverage label={t('ad.covmanager', lang)} pct={stats.managerCoverage} />
-          </div>
-        </Card>
-        <Card>
-          <Eyebrow>{t('ad.bybranch', lang)}</Eyebrow>
-          <div className="stack gap-2 mt-3">
-            {stats.branches.length === 0
-              ? <p className="t-sm c-tx3 m-0">{t('ad.nobranches', lang)}</p>
-              : stats.branches.map(b => <Dist key={b.branch} label={branchNameOf(b.branch, org.branches)} n={b.count} />)}
-          </div>
-        </Card>
+          </dl>
+        </section>
+        <section aria-labelledby="ad-bybranch">
+          <h3 className="panel-title" id="ad-bybranch">{t('ad.bybranch', lang)}</h3>
+          {stats.branches.length === 0
+            ? <p className="t-sm c-tx3 m-0">{t('ad.nobranches', lang)}</p>
+            : <dl className="kv">{stats.branches.map(b => <Dist key={b.branch} label={branchNameOf(b.branch, org.branches)} n={b.count} />)}</dl>}
+        </section>
       </div>
 
       <DemoDataCard />
@@ -140,7 +146,7 @@ const DemoDataCard: React.FC = () => {
   const done = (msg: string) => { setConfirm(null); setToast(msg); setTimeout(() => setToast(null), 2600); };
 
   return (
-    <Card layout={{ marginTop: 'var(--sp-4)' }}>
+    <Card tone="quiet" layout={{ marginTop: 'var(--sp-8)' }}>
       <Eyebrow>{t('ad.demo', lang)}</Eyebrow>
       <p className="t-sm measure" style={{ margin: 'var(--sp-2) 0 var(--sp-4)' }}>{t('ad.demosub', lang)}</p>
       <div className="row gap-3 wrap">
@@ -169,33 +175,21 @@ const DemoDataCard: React.FC = () => {
   );
 };
 
-const Stat: React.FC<{ label: string; value: number; tone?: 'ready' | 'attn' | 'risk' | 'info' }> = ({ label, value, tone }) => {
-  const color = tone === 'risk' ? 'var(--risk)' : tone === 'attn' ? 'var(--attn)'
-    : tone === 'ready' ? 'var(--ready)' : tone === 'info' ? 'var(--info)' : 'var(--tx0)';
+const Dist: React.FC<{ label: string; n: number }> = ({ label, n }) => (
+  <div>
+    <dt className="t-sm c-tx1">{label}</dt>
+    <dd className="t-num c-tx0">{n}</dd>
+  </div>
+);
+const Coverage: React.FC<{ label: string; pct: number }> = ({ label, pct }) => {
+  const tone = pct >= 90 ? 'ready' : pct >= 60 ? 'attn' : 'risk';
   return (
-    <div style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-      <span className="t-label">{label}</span>
-      <div className="t-num t-h2 mt-1" style={{ color }}>{value}</div>
+    <div>
+      <dt className="t-sm c-tx1">{label}</dt>
+      <dd className="row items-center gap-2"><Meter value={pct} tone={tone} /><span className={`t-num c-${tone}`}>{pct}%</span></dd>
     </div>
   );
 };
-const Dist: React.FC<{ label: string; n: number }> = ({ label, n }) => (
-  <div className="row justify-between">
-    <span className="t-sm">{label}</span>
-    <span className="t-num c-tx0">{n}</span>
-  </div>
-);
-const Coverage: React.FC<{ label: string; pct: number }> = ({ label, pct }) => (
-  <div className="mb-3">
-    <div className="row justify-between mb-1">
-      <span className="t-sm">{label}</span>
-      <span className="t-num t-label" style={{ color: pct >= 90 ? 'var(--ready)' : pct >= 60 ? 'var(--attn)' : 'var(--risk)' }}>{pct}%</span>
-    </div>
-    <div style={{ height: 6, borderRadius: 'var(--r-full)', background: 'var(--line-2)', overflow: 'hidden' }}>
-      <div style={{ height: '100%', width: `${pct}%`, background: pct >= 90 ? 'var(--ready)' : pct >= 60 ? 'var(--attn)' : 'var(--risk)' }} />
-    </div>
-  </div>
-);
 
 /* ---------------- operational inbox ---------------- */
 const SEV_META: Record<Severity, { icon: React.ReactNode; tone: 'risk' | 'attn' | 'info'; labelKey: Key }> = {

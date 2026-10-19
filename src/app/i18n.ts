@@ -560,6 +560,10 @@ const DICT = {
   'mg.finishedok':  { ar: 'أنهوا وجاهزون',        en: 'Finished and ready' },
   'mg.staff':       { ar: 'الموظفون',             en: 'Staff' },
   'mg.inbranch':    { ar: 'في الفرع',             en: 'in the branch' },
+  'mg.inarea':      { ar: 'في منطقتك',            en: 'in your area' },
+  'mg.inorg':       { ar: 'في المؤسسة',           en: 'in the organisation' },
+  'mg.avgarea':     { ar: 'متوسط المنطقة',         en: 'Area average' },
+  'mg.avgorg':      { ar: 'متوسط المؤسسة',         en: 'Organisation average' },
   'mg.needsfollow': { ar: 'يحتاج متابعة',         en: 'Needs follow-up' },
   'mg.needyou':     { ar: 'محتاجين تدخّلك',        en: 'need you' },
   'mg.awaitreview': { ar: 'بانتظار المراجعة',     en: 'Awaiting review' },
@@ -634,6 +638,52 @@ const DICT = {
   'a11y.tabnav':    { ar: 'تبويبات المنصة',       en: 'Primary tabs' },
   'a11y.crumbs':    { ar: 'إنت فين',               en: 'Where you are' },
   'crumb.academy':  { ar: 'الأكاديمية',            en: 'Academy' },
+  'dt.filter':      { ar: 'فلترة',                 en: 'Filter' },
+  'dt.all':         { ar: 'الكل',                  en: 'All' },
+  'dt.nomatch':     { ar: 'مفيش نتايج بالبحث ده.',  en: 'Nothing matches.' },
+  'dt.employee':    { ar: 'الموظف',                en: 'Employee' },
+  'dt.status':      { ar: 'الحالة',                en: 'Status' },
+  'dt.action':      { ar: 'الإجراء',               en: 'Action' },
+  'mg.lead':        { ar: '{n} موظف · متوسط الجاهزية {r} · {a} محتاجين متابعة', en: '{n} staff · average readiness {r} · {a} need follow-up' },
+  'mg.metrics':     { ar: 'مؤشرات اليوم',           en: 'Today’s figures' },
+  'mg.col.trainer': { ar: 'المدرب',                en: 'Trainer' },
+  'mg.col.last':    { ar: 'آخر نشاط',              en: 'Last activity' },
+  'mg.col.branch':  { ar: 'الفرع',                 en: 'Branch' },
+  'mg.f.attention': { ar: 'محتاجين متابعة',        en: 'Needs follow-up' },
+  'mg.f.ready':     { ar: 'جاهزين',                en: 'Ready' },
+  'mg.search':      { ar: 'دوّر باسم الموظف',       en: 'Search by name' },
+  'mg.openfile':    { ar: 'افتح ملف {name}',        en: 'Open {name}’s file' },
+  'mg.detail':      { ar: 'التفاصيل',              en: 'Details' },
+  'mg.followsub':   { ar: 'مرتّبة بالأولوية: الحرِج الأول، وبعده اللي بقاله أطول من غير تقييم.', en: 'By priority: critical first, then whoever has gone longest without an assessment.' },
+  'mg.unitsub':     { ar: 'الأسوأ الأول. افتح الفرع عشان تشوف موظفينه.', en: 'Worst first. Open a branch to see its staff.' },
+  'tn.lead':        { ar: '{q} وحدة مستنية تقييمك · {w} بيتحسّنوا · {n} موظفين معاك', en: '{q} units waiting for you · {w} improving · {n} staff with you' },
+  'tn.metrics':     { ar: 'مؤشرات النهارده',        en: 'Today’s figures' },
+  'tn.m.queue':     { ar: 'مستنية تقييمك',          en: 'Waiting for you' },
+  'tn.m.oldest':    { ar: 'أقدمها: {w}',            en: 'Oldest: {w}' },
+  'tn.m.clear':     { ar: 'مفيش حاجة مستنية',       en: 'Nothing waiting' },
+  'tn.m.improving': { ar: 'بيتحسّنوا',              en: 'Improving' },
+  'tn.m.improvingctx': { ar: 'وحدات اتقيّمت «يحتاج تحسين»', en: 'Units marked “needs improvement”' },
+  'tn.m.learning':  { ar: 'متوسط التعلّم',          en: 'Average learning' },
+  'tn.m.learningctx': { ar: 'الدروس اللي خلصت على الجهاز ده', en: 'Lessons finished on this device' },
+  'tn.m.finished':  { ar: 'خلّصوا البرنامج',        en: 'Finished the programme' },
+  'tn.m.finishedctx': { ar: 'جاهزين لتقييم الجاهزية', en: 'Ready for the readiness assessment' },
+  'tn.queue':       { ar: 'طابور التقييم',          en: 'Assessment queue' },
+  'tn.queuesub':    { ar: 'الأقدم الأول. التقييم العملي بيفتح الوحدة اللي بعدها.', en: 'Oldest first. Your practical assessment opens the next unit.' },
+  'tn.col.unit':    { ar: 'الوحدة',                en: 'Unit' },
+  'tn.col.waiting': { ar: 'من إمتى',               en: 'Waiting since' },
+  'tn.col.learned': { ar: 'التعلّم',                en: 'Learning' },
+  'tn.st.waiting':  { ar: 'مستني تقييمك',          en: 'Waiting for you' },
+  'tn.st.done':     { ar: 'خلّص البرنامج',          en: 'Programme finished' },
+  'tn.st.ontrack':  { ar: 'على المسار',            en: 'On track' },
+  'tn.search':      { ar: 'دوّر باسم الموظف',       en: 'Search by name' },
+  'home.crumb':     { ar: 'النهارده',              en: 'Today' },
+  'home.title':     { ar: 'اليوم {d} من {total}',  en: 'Day {d} of {total}' },
+  'home.phase':     { ar: 'المرحلة {n} من {total}', en: 'Phase {n} of {total}' },
+  'home.trainer':   { ar: 'مدربك',                 en: 'Your trainer:' },
+  'home.where':     { ar: 'مكانك في البرنامج',      en: 'Where you are in the programme' },
+  'ad.brief':       { ar: '{n} مشاكل تشغيلية محتاجة تدخّل', en: '{n} operational issues need action' },
+  'ad.briefbody':   { ar: 'كل مشكلة في الوارد ومعاها الإجراء اللي يحلّها.', en: 'Each one is in the inbox with the action that fixes it.' },
+  'ad.openinbox':   { ar: 'افتح الوارد',            en: 'Open the inbox' },
 
 } as const;
 
@@ -689,6 +739,12 @@ export const roleName = (role: { readonly id: string; readonly name: string } | 
   const key = `role.${role.id}`;
   return key in DICT ? t(key as Key, l) : role.name;
 };
+
+/**
+ * A figure for a translated sentence, wrapped in Unicode isolates (FSI…PDI):
+ * the string equivalent of <bdi>, so «83%» keeps its order inside Arabic.
+ */
+export const iso = (v: string | number): string => `\u2068${v}\u2069`;
 
 /** Translate and fill {placeholders}: tf('pf.dayof', { d: 12 }, lang). */
 export const tf = (key: Key, vars: Readonly<Record<string, string | number>>, l: Lang = lang): string =>

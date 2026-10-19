@@ -20,8 +20,10 @@ import { useTraining, traineeIdOrNull, trainingStore } from '../../app/training/
 import { identityStore } from '../../app/identity/identityStore';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { homeContext } from '../../domain/journey/nextAction';
-import { Card, Button, Eyebrow, StatusBadge, ProgressRail, ArabicContent } from '../../ui/primitives';
-import { useLang, t as tr, tf } from '../../app/i18n';
+import { Card, Button, Eyebrow, StatusBadge, ProgressRail, ArabicContent, PageHeader, Brief } from '../../ui/primitives';
+import { phaseContextFor } from '../../app/journeyContext';
+import { PROGRAM, PROGRAM_DAYS, currentPhase, dayPosition } from '../../domain/journey/program';
+import { useLang, t as tr, tf, iso } from '../../app/i18n';
 import { WIDTH } from '../../ui/designSystem';
 import { TodayRetrieval, dueToday } from '../journey/TodayRetrieval';
 
@@ -41,6 +43,9 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
   const trainerName = identityStore.userById(identityStore.currentUser()?.trainerId)?.name;
 
   const { action, currentModule, nextModule } = homeContext(p, t, traineeId);
+  const ctx = phaseContextFor(p, t, traineeId);
+  const phase = currentPhase(ctx);
+  const { day } = dayPosition(ctx);
   const startedCurrent = currentModule ? moduleLessonsDone(p, currentModule.id) > 0 : false;
   // The promise they made at the end of the last lesson, read back where the
   // work actually starts. Derived from the event log — nothing new stored here.
@@ -69,69 +74,64 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
         </div>
       )}
 
-      {/* Two tiers, two gaps: the hero (Today's Mission) stands alone; the
-          supporting cards below it group at the tighter related-cards gap. */}
-      <main className="stack" style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-8) var(--sp-5) var(--sp-9)' }}>
+      <main style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+        {/* Where the trainee is in the programme: the day, the phase, the
+            trainer. The phase title is curriculum content, so it stays Arabic. */}
+        <PageHeader crumbs={[tr('crumb.academy', lang), tr('home.crumb', lang)]}
+          title={tf('home.title', { d: iso(day), total: iso(PROGRAM_DAYS) }, lang)}
+          lead={phase ? (
+            <>
+              {tf('home.phase', { n: iso(phase.order), total: iso(PROGRAM.length) }, lang)} · <ArabicContent as="span">{phase.title}</ArabicContent>
+              {trainerName && <> · {tr('home.trainer', lang)} {trainerName}</>}
+            </>
+          ) : tr('path.alldone', lang)} />
 
-        {/* ① Today's Mission — the single hero. It stands alone with a full sp-8
-            of air beneath it so nothing competes for the first glance. */}
-        <TodaysMission
-          action={action}
-          trainerName={trainerName}
-          onOpenLesson={onOpenLesson}
-          onOpenExam={onOpenExam}
-        />
+        <div className="workspace workspace--aside">
+          <div className="stack gap-5">
+            {/* The single next step: the brief, and the screen's one primary action. */}
+            <TodaysMission action={action} trainerName={trainerName} onOpenLesson={onOpenLesson} onOpenExam={onOpenExam} />
 
-        {/* Supporting group — current module, next preview. Tighter internal
-            spacing (sp-4) reads as one secondary block beneath the hero, not
-            three peers competing with it. marginTop keeps the category shift
-            (active work → this block) at the wider sp-8 breath. */}
-        {/* The tier gap follows the device: a desktop breath is a tenth of a
-            phone screen. */}
-        <div className="tier-gap stack gap-4">
-
-        {/* Yesterday's commitment, shown back to the trainee: what they chose and
-            when. Never «did you do it?» — the platform cannot know (ADR-004). */}
-        {commitment && (
-          <Card tone="quiet">
-            <Eyebrow icon={<Flag size={13} />}>
-              {commitment.daysAgo === 0 ? tr('db.committoday', lang) : commitment.daysAgo === 1 ? tr('db.commitysdy', lang) : `${tr('db.commitdays', lang)} ${commitment.daysAgo} ${tr('db.daysago', lang)}`}
-            </Eyebrow>
-            <p className="t-body c-tx0" style={{ margin: 'var(--sp-2) 0 0' }}>{commitment.text}</p>
-          </Card>
-        )}
-
-        {/* Quick review: spaced retrieval under the mission, silent when nothing
-            is due. Not scored; never touches exams, readiness or certification. */}
-        {hasRetrieval && (
-          <TodayRetrieval passedModuleIds={passedModuleIds} completedLessonIds={completedLessonIds} />
-        )}
-
-        {/* ③ Current module card — supports the hero, lighter weight. */}
-        {currentModule && action.kind !== 'all_done' && (
-          <CurrentModuleCard
-            moduleId={currentModule.id}
-            started={startedCurrent}
-            waiting={action.kind === 'waiting_review' && action.module?.id === currentModule.id}
-            trainerName={trainerName}
-            done={moduleLessonsDone(p, currentModule.id)}
-            /* The unit's big question appears here only when the hero is showing
-               something else (exam, waiting, rejected, retry); otherwise the hero
-               already states it. */
-            showQuestion={!(
-              action.module?.id === currentModule.id
-              && action.kind !== 'take_exam'
-              && action.kind !== 'waiting_review'
-              && action.kind !== 'rejected_review'
-              && action.kind !== 'needs_submission'
+            {/* Yesterday's commitment, shown back to the trainee: what they chose and
+                when. Never «did you do it?» — the platform cannot know (ADR-004). */}
+            {commitment && (
+              <Card tone="quiet">
+                <Eyebrow icon={<Flag size={13} />}>
+                  {commitment.daysAgo === 0 ? tr('db.committoday', lang) : commitment.daysAgo === 1 ? tr('db.commitysdy', lang) : `${tr('db.commitdays', lang)} ${commitment.daysAgo} ${tr('db.daysago', lang)}`}
+                </Eyebrow>
+                <p className="t-body c-tx0" style={{ margin: 'var(--sp-2) 0 0' }}>{commitment.text}</p>
+              </Card>
             )}
-          />
-        )}
 
-        {/* ③ Next module — collapsed, locked, one sentence, no CTA */}
-        {nextModule && (
-          <NextModulePreview moduleId={nextModule.id} />
-        )}
+            {/* Quick review: spaced retrieval under the mission, silent when nothing
+                is due. Not scored; never touches exams, readiness or certification. */}
+            {hasRetrieval && (
+              <TodayRetrieval passedModuleIds={passedModuleIds} completedLessonIds={completedLessonIds} />
+            )}
+          </div>
+
+          {/* Context beside the work: where the current unit stands, and what opens next. */}
+          <aside className="stack gap-4" aria-label={tr('home.where', lang)}>
+            {currentModule && action.kind !== 'all_done' && (
+              <CurrentModuleCard
+                moduleId={currentModule.id}
+                started={startedCurrent}
+                waiting={action.kind === 'waiting_review' && action.module?.id === currentModule.id}
+                trainerName={trainerName}
+                done={moduleLessonsDone(p, currentModule.id)}
+                /* The unit's big question appears here only when the brief is showing
+                   something else (exam, waiting, rejected, retry); otherwise the brief
+                   already states it. */
+                showQuestion={!(
+                  action.module?.id === currentModule.id
+                  && action.kind !== 'take_exam'
+                  && action.kind !== 'waiting_review'
+                  && action.kind !== 'rejected_review'
+                  && action.kind !== 'needs_submission'
+                )}
+              />
+            )}
+            {nextModule && <NextModulePreview moduleId={nextModule.id} />}
+          </aside>
         </div>
       </main>
     </div>
@@ -150,42 +150,36 @@ const TodaysMission: React.FC<{
 
   if (action.kind === 'all_done') {
     return (
-      <Card tone="accent" pad={6}>
-        <Eyebrow icon={<Check size={13} />}>{tr('path.mission', lang)}</Eyebrow>
-        <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{tr('path.alldone', lang)}</h1>
-        <p className="t-sm measure">{tr('db.nostep', lang)}</p>
-      </Card>
+      <Brief prominent eyebrow={<Eyebrow icon={<Check size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
+        title={tr('path.alldone', lang)} body={tr('db.nostep', lang)} />
     );
   }
 
   if (action.kind === 'rejected_review') {
     return (
-      <Card tone="accent" pad={6}>
-        <Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>
-        <h1 className="t-h2 c-risk" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{tr('path.needswork', lang)}</h1>
-        <p className="t-sm measure mb-5">{tf('pv.rejectedbody', { m: m?.title ?? '' }, lang)}</p>
-        <Button onClick={() => { if (m?.lessons[0]) onOpenLesson(m.id, m.lessons[0].id); }}>
-          {tr('db.reviewunit', lang)} <ArrowRight size={16} className="icon-dir" />
-        </Button>
-      </Card>
+      <Brief prominent tone="risk" eyebrow={<Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
+        title={tr('path.needswork', lang)} body={tf('pv.rejectedbody', { m: m?.title ?? '' }, lang)}
+        action={
+          <Button onClick={() => { if (m?.lessons[0]) onOpenLesson(m.id, m.lessons[0].id); }}>
+            {tr('db.reviewunit', lang)} <ArrowRight size={16} className="icon-dir" />
+          </Button>
+        } />
     );
   }
 
   if (action.kind === 'waiting_review') {
     return (
-      <Card tone="accent" pad={6}>
-        <Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>
-        <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{waitingForTrainer(trainerName)}</h1>
-        <p className="t-sm measure">{tf('pv.waitingbody', { m: m?.title ?? '' }, lang)}</p>
-        {/* Waiting is the trainee's job right now; these lines say what happened
-            and what to do meanwhile, so the wait does not read as stuck. */}
-        <p className="t-sm measure mt-4 c-tx3">
-          {tr('db.waiting', lang)}
-        </p>
-        <p className="t-sm measure mt-2 c-tx3">
-          {tr('db.meanwhile', lang)}
-        </p>
-      </Card>
+      <Brief prominent eyebrow={<Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
+        title={waitingForTrainer(trainerName)}
+        body={
+          /* Waiting is the trainee's job right now; these lines say what happened
+             and what to do meanwhile, so the wait does not read as stuck. */
+          <>
+            <p className="m-0">{tf('pv.waitingbody', { m: m?.title ?? '' }, lang)}</p>
+            <p className="m-0 c-tx3">{tr('db.waiting', lang)}</p>
+            <p className="m-0 c-tx3">{tr('db.meanwhile', lang)}</p>
+          </>
+        } />
     );
   }
 
@@ -193,36 +187,29 @@ const TodaysMission: React.FC<{
   // trainer. Retry calls the same idempotent submitForReview.
   if (action.kind === 'needs_submission') {
     return (
-      <Card tone="accent" pad={6}>
-        <Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>
-        <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>{tf('pv.submittitle', { m: m?.title ?? '' }, lang)}</h1>
-        <p className="t-sm measure mb-5">
-          {tr('db.retrysubmit', lang)}
-        </p>
-        <Button onClick={() => { if (m) trainingStore.submitForReview(traineeIdOrNull() ?? '', m.id); }}>
-          {tr('db.submitrev', lang)} <ArrowRight size={16} className="icon-dir" />
-        </Button>
-      </Card>
+      <Brief prominent tone="attn" eyebrow={<Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
+        title={tf('pv.submittitle', { m: m?.title ?? '' }, lang)} body={tr('db.retrysubmit', lang)}
+        action={
+          <Button onClick={() => { if (m) trainingStore.submitForReview(traineeIdOrNull() ?? '', m.id); }}>
+            {tr('db.submitrev', lang)} <ArrowRight size={16} className="icon-dir" />
+          </Button>
+        } />
     );
   }
 
   const isExam = action.kind === 'take_exam';
   return (
-    <Card tone="accent" pad={6}>
-      <Eyebrow icon={isExam ? <GraduationCap size={13} /> : <Play size={13} />}>{tr('path.mission', lang)}</Eyebrow>
-      <h1 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>
-        {isExam ? <>{tr('db.examof', lang)} <ArabicContent as="span">{m?.title}</ArabicContent></> : <>{tr('db.contunit', lang)} <ArabicContent as="span">«{m?.title}»</ArabicContent></>}
-      </h1>
-      <p className="t-sm measure mb-5">
-        {isExam ? tr('db.examintro', lang) : <ArabicContent as="span">{m?.bigQuestion}</ArabicContent>}
-      </p>
-      <Button onClick={() => {
-        if (isExam && m) onOpenExam(m.id);
-        else if (action.lessonId && m) onOpenLesson(m.id, action.lessonId);
-      }}>
-        {isExam ? tr('db.startexam', lang) : tr('db.contlesson', lang)} <ArrowRight size={16} className="icon-dir" />
-      </Button>
-    </Card>
+    <Brief prominent eyebrow={<Eyebrow icon={isExam ? <GraduationCap size={13} /> : <Play size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
+      title={isExam ? <>{tr('db.examof', lang)} <ArabicContent as="span">{m?.title}</ArabicContent></> : <>{tr('db.contunit', lang)} <ArabicContent as="span">«{m?.title}»</ArabicContent></>}
+      body={isExam ? tr('db.examintro', lang) : <p className="m-0"><ArabicContent as="span">{m?.bigQuestion}</ArabicContent></p>}
+      action={
+        <Button onClick={() => {
+          if (isExam && m) onOpenExam(m.id);
+          else if (action.lessonId && m) onOpenLesson(m.id, action.lessonId);
+        }}>
+          {isExam ? tr('db.startexam', lang) : tr('db.contlesson', lang)} <ArrowRight size={16} className="icon-dir" />
+        </Button>
+      } />
   );
 };
 

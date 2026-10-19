@@ -16,12 +16,12 @@ import { orgSummary } from '../../domain/analytics/organization';
 import { trainingStore, useTraining, finalDecisionOf } from '../../app/training/trainingStore';
 import { isProgramComplete } from '../../domain/journey/programCompletion';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, EmptyState, PageHeader } from '../../ui/primitives';
+import { Button, EmptyState, Eyebrow, PageHeader, MetricStrip, Metric, Brief, Num, SectionHeader } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
-import { useLang, t as tr } from '../../app/i18n';
-import { NeedsAttention, UnitCard } from './NeedsAttention';
+import { useLang, t as tr, tf, iso } from '../../app/i18n';
+import { NeedsAttention, UnitsTable } from './NeedsAttention';
 import { CollapsibleRoster, EmployeeGrid } from './EmployeeRoster';
 import { EmployeeTimeline } from './EmployeeTimeline';
 
@@ -53,7 +53,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
   // orgSummary() scans the whole event log, so it runs once per data change
   // here rather than once per branch per render; sorted worst-first.
-  const unitCards = useMemo(() => {
+  const unitRows = useMemo(() => {
     if (!branchGroups) return [];
     const events = trainingStore.events() as readonly OrgEvent[];
     const branches = orgStore.get().branches;
@@ -92,93 +92,69 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const s = d.summary;
   const noData = s.activeTrainees === 0;
 
+  const attention = s.needsAttention + s.needsImmediate;
+  const firstDecision = pendingDecisions[0];
+  const decisionName = firstDecision ? (users.find(u => u.id === firstDecision)?.name ?? '') : '';
+
   return (
     <div className="min-h-screen">
       <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         <PageHeader crumbs={[tr('crumb.academy', lang), tr('nav.manager', lang)]}
-          title={scopeTitle} lead={tr('mg.sub', lang)} />
+          title={scopeTitle}
+          lead={noData ? tr('mg.sub', lang) : tf('mg.lead', { n: iso(s.activeTrainees), r: iso(`${s.avgReadiness}%`), a: iso(attention) }, lang)} />
 
         {noData ? (
           <EmptyState icon={<Users2 />} title={tr('mg.nodata', lang)}
             body={tr('mg.nodatabody', lang)} />
         ) : (
           <>
-            {/* ═══ pending decisions — the manager's single most urgent number ═══ */}
-            {canDo('readiness.decide') && pendingDecisions.length > 0 && (
-              <button className="row-hover row w-full items-center gap-4 text-start mb-4" onClick={() => setDrill(pendingDecisions[0]!)}
-                style={{ padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--attn)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}>
-                <span aria-hidden className="row items-center justify-center c-attn no-shrink" style={{ width: 44, height: 44, borderRadius: 'var(--r-full)', background: 'var(--s0)' }}>
-                  <Gavel size={22} />
-                </span>
-                <div className="grow">
-                  <div className="t-title">{tr('mg.decisions', lang)}</div>
-                  <div className="t-label c-tx3">{tr('mg.decisionsub', lang)}</div>
-                </div>
-                <span className="t-h2 t-num c-attn">{pendingDecisions.length}</span>
-              </button>
+            {/* The operation in five figures, before any detail. The heading
+                names the scope truthfully: an organisation roll-up is not a
+                «branch». */}
+            <MetricStrip label={scope.kind === 'organization' ? tr('mg.orghealth', lang) : scope.kind === 'area' ? tr('mg.areahealth', lang) : tr('mg.branchhealth', lang)}>
+              <Metric icon={<ShieldCheck size={13} />} label={tr('mg.readiness', lang)} value={`${s.avgReadiness}%`}
+                context={tr(scope.kind === 'organization' ? 'mg.avgorg' : scope.kind === 'area' ? 'mg.avgarea' : 'mg.avgbranch', lang)} tone={s.avgReadiness >= 80 ? 'ready' : s.avgReadiness >= 65 ? 'attn' : 'risk'} />
+              <Metric icon={<GraduationCap size={13} />} label={tr('mg.readystaff', lang)} value={`${Math.round(s.certificationRate * 100)}%`}
+                context={tr('mg.finishedok', lang)} />
+              <Metric icon={<Users2 size={13} />} label={tr('mg.staff', lang)} value={s.activeTrainees} context={tr(scope.kind === 'organization' ? 'mg.inorg' : scope.kind === 'area' ? 'mg.inarea' : 'mg.inbranch', lang)} />
+              <Metric icon={<AlertTriangle size={13} />} label={tr('mg.needsfollow', lang)} value={attention}
+                context={tr('mg.needyou', lang)} tone={s.needsImmediate > 0 ? 'risk' : s.needsAttention > 0 ? 'attn' : 'ready'} />
+              <Metric icon={<TrendingUp size={13} />} label={tr('mg.awaitreview', lang)} value={s.waitingForTrainer}
+                context={tr('mg.attrainer', lang)} tone={s.waitingForTrainer > 0 ? 'attn' : undefined} />
+            </MetricStrip>
+
+            {/* The manager's single most urgent decision: staff who finished
+                the programme and are waiting for the final call. */}
+            {canDo('readiness.decide') && firstDecision && (
+              <div className="mt-6">
+                <Brief tone="attn" eyebrow={<Eyebrow icon={<Gavel size={13} />}>{tr('mg.decisions', lang)}</Eyebrow>}
+                  title={<><Num>{pendingDecisions.length}</Num> · {tr('mg.decisionsub', lang)}</>}
+                  action={<Button onClick={() => setDrill(firstDecision)}>{tf('mg.openfile', { name: decisionName }, lang)}</Button>} />
+              </div>
             )}
 
-            {/* ═══ 1 · NEEDS YOUR ATTENTION — ordered by operational urgency ═══ */}
             <NeedsAttention ids={d.employeeIds} onInspect={setDrill} />
 
-            {/* ═══ 2 · EMPLOYEES — card grid, opens the Operational Dossier ═══
-                Grouped by branch the moment the scope spans more than one —
-                that IS the answer to "الفروع وبروفيل كل موظف فيها". A branch
-                manager (single branch) sees the exact same flat grid as
-                before — zero visual change for the role this screen was
-                built for first. */}
-            {branchGroups && !openUnit ? (
-              /* Area / General Manager: COMPARE units, never employees. The
-                 previous version grouped the employee grid by branch, which
-                 still answered the branch manager's question ("who needs my
-                 decision?") at the wrong altitude. These cards answer theirs
-                 — "which unit needs me?" — sorted worst-first. Opening one
-                 drills into that unit's employees, so nothing was lost. */
-              <>
-                <h2 className="t-h3" style={{ margin: 'var(--sp-7) 0 var(--sp-3)' }}>
-                  {scope.kind === 'organization' ? tr('mg.branches', lang) : tr('mg.yourbranches', lang)}
-                </h2>
-                <div className="stack gap-3">
-                  {unitCards.map(u => (
-                    <UnitCard key={u.id} name={u.name} people={u.people} s={u.s}
-                      onOpen={() => setOpenUnit(u.id)} />
-                  ))}
-                </div>
-              </>
-            ) : branchGroups && openUnit ? (
-              <>
-                <button className="pill mt-7" onClick={() => setOpenUnit(null)}>
-                  ← {tr('mg.allbranches', lang)}
-                </button>
-                <h2 className="t-h3" style={{ margin: 'var(--sp-4) 0 var(--sp-3)' }}>
-                  {orgStore.get().branches.find(b => b.id === openUnit)?.name ?? openUnit}
-                </h2>
-                <EmployeeGrid ids={branchGroups.find(([b]) => b === openUnit)?.[1] ?? []} onInspect={setDrill} />
-              </>
-            ) : (
-              <CollapsibleRoster ids={d.employeeIds} onInspect={setDrill} />
-            )}
-
-            {/* ═══ 3 · BRANCH HEALTH — five operational KPIs, no charts ═══ */}
-            {/* Scope-truthful heading: these five tiles aggregate whatever the
-                 viewer's scope covers. Calling an 11-branch roll-up «صحة
-                 الفرع» told a general manager something false about what the
-                 numbers meant. */}
-            <h2 className="t-h3" style={{ margin: 'var(--sp-7) 0 var(--sp-3)' }}>
-              {scope.kind === 'organization' ? tr('mg.orghealth', lang) : scope.kind === 'area' ? tr('mg.areahealth', lang) : tr('mg.branchhealth', lang)}
-            </h2>
-            <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
-              <IndexTile icon={<ShieldCheck size={16} />} label={tr('mg.readiness', lang)} value={`${s.avgReadiness}%`}
-                sub={tr('mg.avgbranch', lang)} tone={s.avgReadiness >= 80 ? 'ready' : s.avgReadiness >= 65 ? 'attn' : 'risk'} />
-              <IndexTile icon={<GraduationCap size={16} />} label={tr('mg.readystaff', lang)} value={`${Math.round(s.certificationRate * 100)}%`}
-                sub={tr('mg.finishedok', lang)} tone="info" />
-              <IndexTile icon={<Users2 size={16} />} label={tr('mg.staff', lang)} value={`${s.activeTrainees}`}
-                sub={tr('mg.inbranch', lang)} tone="info" />
-              <IndexTile icon={<AlertTriangle size={16} />} label={tr('mg.needsfollow', lang)} value={`${s.needsAttention + s.needsImmediate}`}
-                sub={tr('mg.needyou', lang)} tone={s.needsImmediate > 0 ? 'risk' : s.needsAttention > 0 ? 'attn' : 'ready'} />
-              <IndexTile icon={<TrendingUp size={16} />} label={tr('mg.awaitreview', lang)} value={`${s.waitingForTrainer}`}
-                sub={tr('mg.attrainer', lang)} tone={s.waitingForTrainer > 0 ? 'attn' : 'ready'} />
-            </div>
+            {/* Area and general managers compare units, never employees; a
+                unit opens onto its staff. A branch manager sees the staff. */}
+            <section className="region" aria-labelledby="mg-people">
+              {branchGroups && !openUnit ? (
+                <>
+                  <SectionHeader id="mg-people" count={unitRows.length} description={tr('mg.unitsub', lang)}
+                    title={scope.kind === 'organization' ? tr('mg.branches', lang) : tr('mg.yourbranches', lang)} />
+                  <UnitsTable units={unitRows} onOpen={setOpenUnit} />
+                </>
+              ) : branchGroups && openUnit ? (
+                <>
+                  <SectionHeader id="mg-people"
+                    title={orgStore.get().branches.find(b => b.id === openUnit)?.name ?? openUnit}
+                    action={<Button variant="ghost" onClick={() => setOpenUnit(null)}>{tr('mg.allbranches', lang)}</Button>} />
+                  <EmployeeGrid ids={branchGroups.find(([b]) => b === openUnit)?.[1] ?? []} onInspect={setDrill} />
+                </>
+              ) : (
+                <CollapsibleRoster ids={d.employeeIds} onInspect={setDrill} />
+              )}
+            </section>
           </>
         )}
 
@@ -187,16 +163,3 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     </div>
   );
 };
-
-/* ---------------- executive index tile ---------------- */
-const IndexTile: React.FC<{ icon: React.ReactNode; label: string; value: string; sub: string; tone: 'ready' | 'attn' | 'risk' | 'info' }> =
-  ({ icon, label, value, sub, tone }) => {
-    const color = tone === 'ready' ? 'var(--ready)' : tone === 'attn' ? 'var(--attn)' : tone === 'risk' ? 'var(--risk)' : 'var(--info)';
-    return (
-      <div style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-        <span className="t-label row items-center gap-1 c-tx3">{icon}{label}</span>
-        <div className="t-h2 t-num" style={{ color, margin: 'var(--sp-2) 0 var(--sp-1)' }}>{value}</div>
-        <span className="t-label c-tx3">{sub}</span>
-      </div>
-    );
-  };

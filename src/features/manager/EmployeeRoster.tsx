@@ -3,10 +3,9 @@ import { useIdentity } from '../../app/identity/identityStore';
 import { readinessFromOwnEvents, groupByEmployee } from '../../app/analytics/dashboardStore';
 import { trainingStore, useTraining, reviewOf } from '../../app/training/trainingStore';
 import { currentPhase, type PhaseContext } from '../../domain/journey/program';
-import { initialsOf } from '../../domain/identity/display';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import type { HealthState } from '../../domain/analytics/employee';
-import { StatusBadge, ArabicContent } from '../../ui/primitives';
+import { ArabicContent, DataTable, Status, Meter, Initials, type Column } from '../../ui/primitives';
 import { useLang, t as tr, type Key, type Lang } from '../../app/i18n';
 
 const HEALTH_META: Record<HealthState, { labelKey: Key; tone: 'ready' | 'info' | 'attn' | 'risk' }> = {
@@ -35,10 +34,10 @@ export const CollapsibleRoster: React.FC<{ ids: readonly string[]; onInspect: (i
   return (
     <details className="roster" open={openByDefault}>
       <summary className="roster-summary">
-        <h2 className="t-h3 m-0">{tr('mg.staff', lang)}</h2>
-        <span className="t-label roster-count">{ids.length}</span>
+        <h2 className="t-h3 m-0" id="mg-people">{tr('mg.staff', lang)}</h2>
+        <span className="section-count t-num">{ids.length}</span>
       </summary>
-      <div className="mt-3">
+      <div className="mt-4">
         <EmployeeGrid ids={ids} onInspect={onInspect} />
       </div>
     </details>
@@ -66,47 +65,66 @@ export const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: st
         r: readinessFromOwnEvents(id, own),
         lastAt: last?.at,
       };
-    }).sort((a, b) => rank(b.r.health) - rank(a.r.health));
+    });
   }, [ids, users, events, t, lang]);
 
-  if (rows.length === 0) return <p className="t-sm c-tx3">{tr('mg.nostaff', lang)}</p>;
+  type Row = (typeof rows)[number];
+  const columns: Column<Row>[] = [
+    {
+      id: 'name', header: tr('dt.employee', lang), sortValue: r => r.name,
+      cell: r => (
+        <span className="row items-center gap-3">
+          <Initials name={r.name} />
+          <span className="stack" style={{ minWidth: 0 }}>
+            <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{r.name}</span>
+            {/* The stage comes from the curriculum, so it stays Arabic. */}
+            <ArabicContent as="span" className="t-label c-tx3">{r.stage}</ArabicContent>
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'readiness', header: tr('mg.readiness', lang), align: 'end', sortValue: r => r.r.readinessIndex,
+      cell: r => (
+        <span className="row items-center gap-2 justify-end">
+          <Meter value={r.r.readinessIndex} tone={meterTone(r.r.health)} />
+          <span className="t-num c-tx0">{r.r.readinessIndex}%</span>
+        </span>
+      ),
+    },
+    {
+      id: 'status', header: tr('dt.status', lang), sortValue: r => rank(r.r.health),
+      cell: r => <Status tone={HEALTH_META[r.r.health].tone}>{tr(HEALTH_META[r.r.health].labelKey, lang)}</Status>,
+    },
+    { id: 'trainer', header: tr('mg.col.trainer', lang), sortValue: r => r.trainer, cell: r => <span className="t-sm">{r.trainer}</span> },
+    {
+      id: 'last', header: tr('mg.col.last', lang), sortValue: r => r.lastAt ?? 0,
+      cell: r => <span className="t-sm c-tx2">{r.lastAt ? relativeDay(r.lastAt, lang) : tr('mg.notstarted', lang)}</span>,
+    },
+  ];
+
   return (
-    <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
-      {rows.map(({ id, name, trainer, stage, r, lastAt }) => {
-        const meta = HEALTH_META[r.health];
-        return (
-          <button key={id} className="row-hover stack gap-3 text-start" onClick={() => onInspect(id)}
-            style={{ padding: 'var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)', cursor: 'pointer' }}>
-            {/* avatar + name */}
-            <div className="row items-center gap-3">
-              <span aria-hidden className="row no-shrink items-center justify-center c-tx2" style={{ width: 40, height: 40, borderRadius: 'var(--r-full)', background: 'var(--s0)', border: '1px solid var(--line-2)' }}>
-                <span className="t-sm">{initialsOf(name)}</span>
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <div className="t-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
-                {/* The stage name comes from the curriculum — content, so an
-                    island; the trainee's phase is called the same thing in both
-                    modes because it IS the same thing. */}
-                <ArabicContent as="div" className="t-label c-tx3">{stage}</ArabicContent>
-              </div>
-            </div>
-            {/* readiness + risk */}
-            <div className="row items-center gap-3 wrap">
-              <span className="t-sm">{tr('mg.readinessof', lang)} <b className="t-num c-tx0">{r.readinessIndex}%</b></span>
-              <StatusBadge tone={meta.tone}>{tr(meta.labelKey, lang)}</StatusBadge>
-            </div>
-            {/* trainer + last activity */}
-            <div className="row items-center gap-3 wrap" style={{ borderTop: '1px solid var(--line)', paddingTop: 'var(--sp-3)' }}>
-              <span className="t-label c-tx3">{tr('mg.trainerof', lang)} {trainer}</span>
-              <div className="grow" />
-              <span className="t-label c-tx3">{lastAt ? relativeDay(lastAt, lang) : tr('mg.notstarted', lang)}</span>
-            </div>
-          </button>
-        );
-      })}
-    </div>
+    <DataTable
+      caption={tr('mg.staff', lang)}
+      columns={columns}
+      rows={rows}
+      rowKey={r => r.id}
+      onOpen={r => onInspect(r.id)}
+      rowTone={r => r.r.health === 'needs_immediate_attention' ? 'risk' : r.r.health === 'needs_attention' ? 'attn' : undefined}
+      initialSort={{ id: 'status', dir: 'desc' }}
+      search={{ placeholder: tr('mg.search', lang), match: (r, q) => r.name.toLowerCase().includes(q) }}
+      filters={[
+        { id: 'attention', label: tr('mg.f.attention', lang), test: r => r.r.health === 'needs_attention' || r.r.health === 'needs_immediate_attention' },
+        { id: 'ready', label: tr('mg.f.ready', lang), test: r => r.r.health === 'ready' },
+      ]}
+      empty={<p className="t-sm c-tx3">{tr('mg.nostaff', lang)}</p>}
+    />
   );
 };
+
+/** On track reads as gold progress; the other states keep their status hue. */
+const meterTone = (h: HealthState) =>
+  h === 'ready' ? 'ready' : h === 'needs_attention' ? 'attn' : h === 'needs_immediate_attention' ? 'risk' : 'gold';
 
 const rank = (h: HealthState) => ({ needs_immediate_attention: 3, needs_attention: 2, on_track: 1, ready: 0 }[h]);
 

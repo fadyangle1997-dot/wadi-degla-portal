@@ -29,7 +29,8 @@ test.describe('branch manager', () => {
 
   test('opens a trainee file', async ({ page }) => {
     await signIn(page, 'manager.nabil');
-    await page.locator('main').getByRole('button', { name: /Ahmed Magdy.*جاهزية/ }).click();
+    // From the staff ledger (the follow-up list may name him too).
+    await page.getByRole('table', { name: 'الموظفون' }).getByRole('button', { name: /Ahmed Magdy/ }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByRole('dialog')).toContainText('Ahmed Magdy');
   });

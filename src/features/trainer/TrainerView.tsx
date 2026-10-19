@@ -19,13 +19,13 @@ import { readinessScore, EVALUATION_DIMENSIONS, ALL_DIMENSIONS, CONDUCT_CHECKS, 
 import { MODULES, moduleById } from '../../content/registry';
 import type { Lesson } from '../../domain/types/content';
 import { RULE_META } from '../../domain/rules/meta';
-import { Button, Card, Eyebrow, EmptyState, StatusBadge, Toast, Callout, ArabicContent, PageHeader } from '../../ui/primitives';
+import { Button, Card, Eyebrow, EmptyState, Toast, Callout, ArabicContent, PageHeader, SectionHeader, MetricStrip, Metric, Status, Meter, Initials, DataTable, type Column } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
 import { branchNameOf } from '../../domain/organization';
 import { useOrganization } from '../../app/organization/orgStore';
-import { useLang, t as tr, type Lang } from '../../app/i18n';
+import { useLang, t as tr, tf, iso, type Lang } from '../../app/i18n';
 import { isProgramComplete } from '../../domain/journey/programCompletion';
 import { TraineeReadinessBlock } from '../readiness/ReadinessStations';
 
@@ -39,6 +39,7 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   // bare moduleId against a shared record.
   const [evaluating, setEvaluating] = useState<{ employee: User; moduleId: string } | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [noteFor, setNoteFor] = useState<string | null>(null);
   const notify = (m: string) => { setToastMsg(m); setTimeout(() => setToastMsg(null), 2600); };
 
   // Row-level authorization: the domain decides whose records are visible.
@@ -81,74 +82,145 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     );
   }
 
+  type QueueRow = { kind: 'waiting' | 'improving'; employee: User; module: (typeof MODULES)[number]; at: number };
+  const queueRows: QueueRow[] = [
+    ...queue.map(q => ({ kind: 'waiting' as const, ...q })),
+    ...needsWork.map(n => ({ kind: 'improving' as const, at: 0, ...n })),
+  ];
+  const firstWaiting = queueRows.find(r => r.kind === 'waiting');
+  const queueColumns: Column<QueueRow>[] = [
+    { id: 'name', header: tr('dt.employee', lang), cell: r => <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{r.employee.name}</span> },
+    {
+      id: 'unit', header: tr('tn.col.unit', lang),
+      cell: r => (
+        <span className="stack">
+          <ArabicContent as="span" className="t-sm c-tx1">{r.module.title}</ArabicContent>
+          <span className="t-label c-tx3">{r.module.code} · {r.kind === 'waiting' ? tr('tn.passedwait', lang) : tr('tn.reviewing', lang)}</span>
+        </span>
+      ),
+    },
+    {
+      id: 'since', header: tr('tn.col.waiting', lang),
+      cell: r => r.kind === 'waiting'
+        ? <Status tone={waitDays(r.at) >= 3 ? 'risk' : 'attn'}>{waitLabel(r.at, lang)}</Status>
+        : <Status tone="risk">{tr('tn.improving', lang)}</Status>,
+    },
+    {
+      id: 'act', header: tr('dt.action', lang), align: 'end',
+      cell: r => r.kind === 'waiting'
+        ? <Button variant={r === firstWaiting ? 'primary' : 'ghost'} onClick={() => setEvaluating({ employee: r.employee, moduleId: r.module.id })}>{tr('tn.assessnow', lang)}</Button>
+        : <Button variant="ghost" onClick={() => setEvaluating({ employee: r.employee, moduleId: r.module.id })}>{tr('tn.reassess', lang)}</Button>,
+    },
+  ];
+
+  type StaffRow = { u: User; branch?: string; progress: number; state: 'waiting' | 'improving' | 'done' | 'ontrack' };
+  const staffRows: StaffRow[] = employees.map(u => ({
+    u,
+    branch: branchNameOf(u.branchId, org.branches),
+    progress: learningProgress(progressOf(u.id)),
+    state: queue.some(q => q.employee.id === u.id) ? 'waiting'
+      : needsWork.some(n => n.employee.id === u.id) ? 'improving'
+      : isProgramComplete(t, u.id) ? 'done' : 'ontrack',
+  }));
+  const STATE = {
+    waiting: { tone: 'attn', key: 'tn.st.waiting' },
+    improving: { tone: 'risk', key: 'tn.improving' },
+    done: { tone: 'ready', key: 'tn.st.done' },
+    ontrack: { tone: 'gold', key: 'tn.st.ontrack' },
+  } as const;
+  const staffColumns: Column<StaffRow>[] = [
+    {
+      id: 'name', header: tr('dt.employee', lang), sortValue: r => r.u.name,
+      cell: r => (
+        <span className="row items-center gap-3">
+          <Initials name={r.u.name} />
+          <span className="stack">
+            <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{r.u.name}</span>
+            {r.branch && <span className="t-label c-tx3">{r.branch}</span>}
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'learn', header: tr('tn.col.learned', lang), align: 'end', sortValue: r => r.progress,
+      cell: r => (
+        <span className="row items-center gap-2 justify-end">
+          <Meter value={Math.round(r.progress * 100)} tone={r.progress >= 1 ? 'ready' : 'gold'} />
+          <span className="t-num c-tx0">{Math.round(r.progress * 100)}%</span>
+        </span>
+      ),
+    },
+    { id: 'state', header: tr('dt.status', lang), sortValue: r => r.state, cell: r => <Status tone={STATE[r.state].tone}>{tr(STATE[r.state].key, lang)}</Status> },
+    {
+      id: 'note', header: tr('dt.action', lang), align: 'end',
+      cell: r => (
+        <button className="icon-btn" onClick={() => setNoteFor(v => v === r.u.id ? null : r.u.id)} aria-expanded={noteFor === r.u.id}>
+          <StickyNote size={13} /> {tr('tn.note', lang)}
+        </button>
+      ),
+    },
+  ];
+
+  const avgLearning = staffRows.length ? Math.round(staffRows.reduce((a, r) => a + r.progress, 0) / staffRows.length * 100) : 0;
+  const finished = staffRows.filter(r => r.state === 'done').length;
+
   return (
     <div className="min-h-screen">
       <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
-        {/* ---------- 1) who needs me TODAY ---------- */}
         <PageHeader crumbs={[tr('crumb.academy', lang), tr('nav.trainer', lang)]}
-          title={tr('tn.needyou', lang)} lead={tr('tn.needyousub', lang)} />
+          title={tr('tn.needyou', lang)}
+          lead={tf('tn.lead', { q: iso(queue.length), w: iso(needsWork.length), n: iso(employees.length) }, lang)} />
 
-        {queue.length === 0 && needsWork.length === 0 ? (
-          <EmptyState icon={<UserCheck />} title={tr('tn.nothing', lang)}
-            body={tr('tn.nothingbody', lang)} />
-        ) : (
-          <div className="stack gap-3">
-            {queue.map(({ employee, module: m, at }) => (
-              <div key={`${employee.id}:${m.id}`} className="row-hover row items-center gap-3 wrap" style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--attn-line)', borderRadius: 'var(--r-md)' }}>
-                <div style={{ flex: '1 1 220px' }}>
-                  <span className="t-title c-tx0">{employee.name} · <ArabicContent as="span">{m.title}</ArabicContent></span>
-                  <span className="t-label block mt-1">
-                    {m.code} · {tr('tn.passedwait', lang)}
-                  </span>
-                </div>
-                <StatusBadge tone={waitDays(at) >= 3 ? 'risk' : 'attn'}>{waitLabel(at, lang)}</StatusBadge>
-                <Button onClick={() => setEvaluating({ employee, moduleId: m.id })}>{tr('tn.assessnow', lang)}</Button>
-              </div>
-            ))}
-            {needsWork.map(({ employee, module: m }) => (
-              <div key={`${employee.id}:${m.id}`} className="row items-center gap-3 wrap" style={{ padding: 'var(--sp-4) var(--sp-5)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-                <div style={{ flex: '1 1 220px' }}>
-                  <span className="t-title c-tx0">{employee.name} · <ArabicContent as="span">{m.title}</ArabicContent></span>
-                  <span className="t-label block mt-1">{tr('tn.reviewing', lang)} — {tr('tn.reassesswhen', lang)}</span>
-                </div>
-                <StatusBadge tone="risk">{tr('tn.improving', lang)}</StatusBadge>
-                <Button variant="ghost" onClick={() => setEvaluating({ employee, moduleId: m.id })}>{tr('tn.reassess', lang)}</Button>
-              </div>
-            ))}
-          </div>
-        )}
+        <MetricStrip label={tr('tn.metrics', lang)}>
+          <Metric label={tr('tn.m.queue', lang)} value={queue.length} tone={queue.length ? 'attn' : 'ready'}
+            context={queue.length ? tf('tn.m.oldest', { w: waitLabel(queue[0]!.at, lang) }, lang) : tr('tn.m.clear', lang)} />
+          <Metric label={tr('tn.m.improving', lang)} value={needsWork.length} tone={needsWork.length ? 'risk' : undefined}
+            context={tr('tn.m.improvingctx', lang)} />
+          <Metric label={tr('tn.m.learning', lang)} value={`${avgLearning}%`} context={tr('tn.m.learningctx', lang)} />
+          <Metric label={tr('tn.m.finished', lang)} value={finished} context={tr('tn.m.finishedctx', lang)} />
+        </MetricStrip>
 
-        {evaluating && (
-          <EvaluationPanel employee={evaluating.employee} moduleId={evaluating.moduleId}
-            onDone={msg => { setEvaluating(null); notify(msg); }}
-            onCancel={() => setEvaluating(null)} />
-        )}
+        {/* ---------- 1) who needs me TODAY ---------- */}
+        <section className="region" aria-labelledby="tn-queue">
+          <SectionHeader id="tn-queue" title={tr('tn.queue', lang)} count={queueRows.length} description={tr('tn.queuesub', lang)} />
+          {queueRows.length === 0 ? (
+            <EmptyState icon={<UserCheck />} title={tr('tn.nothing', lang)} body={tr('tn.nothingbody', lang)} headingLevel={3} />
+          ) : (
+            <DataTable caption={tr('tn.queue', lang)} columns={queueColumns} rows={queueRows}
+              rowKey={r => `${r.employee.id}:${r.module.id}`}
+              rowTone={r => r.kind === 'waiting' ? (waitDays(r.at) >= 3 ? 'risk' : 'attn') : undefined} />
+          )}
+          {evaluating && (
+            <EvaluationPanel employee={evaluating.employee} moduleId={evaluating.moduleId}
+              onDone={msg => { setEvaluating(null); notify(msg); }}
+              onCancel={() => setEvaluating(null)} />
+          )}
+        </section>
 
         {/* ---------- 2) roster ---------- */}
-        <h2 className="t-h3" style={{ margin: 'var(--sp-8) 0 var(--sp-2)' }}>{tr('tn.yourstaff', lang)}</h2>
-        <p className="t-sm mb-4">{tr('tn.deviceonly', lang)}</p>
-        <div className="stack gap-2">
-          {employees.length === 0 && (
-            <p className="t-sm c-tx3">{tr('tn.nostaff', lang)}</p>
-          )}
-          {employees.map(u => (
-            <RosterRow key={u.id} name={u.name} branch={branchNameOf(u.branchId, org.branches)} progress={learningProgress(progressOf(u.id))} onNote={note => {
-              trainingStore.addCoachingNote(u.id, note); notify(tr('tn.notesaved', lang));
-            }} />
-          ))}
-        </div>
+        <section className="region" aria-labelledby="tn-staff">
+          <SectionHeader id="tn-staff" title={tr('tn.yourstaff', lang)} count={employees.length} description={tr('tn.deviceonly', lang)} />
+          <DataTable caption={tr('tn.yourstaff', lang)} columns={staffColumns} rows={staffRows} rowKey={r => r.u.id}
+            initialSort={{ id: 'learn', dir: 'asc' }}
+            search={employees.length > 6 ? { placeholder: tr('tn.search', lang), match: (r, q) => r.u.name.toLowerCase().includes(q) } : undefined}
+            rowExtra={r => noteFor === r.u.id ? (
+              <NoteForm name={r.u.name} onSave={note => {
+                trainingStore.addCoachingNote(r.u.id, note); setNoteFor(null); notify(tr('tn.notesaved', lang));
+              }} />
+            ) : null}
+            empty={<p className="t-sm c-tx3">{tr('tn.nostaff', lang)}</p>} />
+        </section>
 
         {/* ---------- 3) readiness assessment (programme finished) ---------- */}
-        <h2 className="t-h3" style={{ margin: 'var(--sp-8) 0 var(--sp-2)' }}>{tr('rd.title', lang)}</h2>
-        <p className="t-sm mb-4">{tr('rd.sub', lang)}</p>
-        <div className="stack gap-3">
-          {employees.filter(u => isProgramComplete(t, u.id)).length === 0 && (
-            <p className="t-sm c-tx3">{tr('rd.none', lang)}</p>
-          )}
-          {employees.filter(u => isProgramComplete(t, u.id)).map(u => (
-            <TraineeReadinessBlock key={u.id} employeeId={u.id} name={u.name} assessor="trainer" onSaved={notify} />
-          ))}
-        </div>
+        <section className="region" aria-labelledby="tn-ready">
+          <SectionHeader id="tn-ready" title={tr('rd.title', lang)} count={finished} description={tr('rd.sub', lang)} />
+          <div className="stack gap-3">
+            {finished === 0 && <p className="t-sm c-tx3">{tr('rd.none', lang)}</p>}
+            {employees.filter(u => isProgramComplete(t, u.id)).map(u => (
+              <TraineeReadinessBlock key={u.id} employeeId={u.id} name={u.name} assessor="trainer" onSaved={notify} />
+            ))}
+          </div>
+        </section>
       </m.main>
       <Toast message={toastMsg} />
     </div>
@@ -163,26 +235,15 @@ const waitLabel = (submittedAtMs: number, lang: Lang): string => {
   return d <= 0 ? tr('tn.today', lang) : d === 1 ? tr('tn.yesterday', lang) : `${tr('tn.daysago', lang)} ${d} ${tr('tn.days', lang)}`;
 };
 
-/* ---------------- roster row (coaching note quick-add) ---------------- */
-const RosterRow: React.FC<{ name: string; branch?: string; progress: number; onNote: (note: string) => void }> = ({ name, branch, progress, onNote }) => {
+/* ---------------- coaching note (opens under a roster row) ---------------- */
+const NoteForm: React.FC<{ name: string; onSave: (note: string) => void }> = ({ name, onSave }) => {
   const lang = useLang();
-  const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
   return (
-    <div style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
-      <div className="row items-center gap-3 wrap">
-        <span className="t-sm c-tx1" style={{ flex: '1 1 180px' }}>{name}{branch ? ` · ${branch}` : ''}</span>
-        <StatusBadge tone={progress >= 1 ? 'ready' : 'neutral'}>
-          {tr('tn.learned', lang)} <span className="t-num">{Math.round(progress * 100)}%</span>
-        </StatusBadge>
-        <button className="icon-btn" onClick={() => setOpen(v => !v)} aria-expanded={open}><StickyNote size={13} /> {tr('tn.note', lang)}</button>
-      </div>
-      {open && (
-        <div className="row gap-2 mt-3 wrap">
-          <input className="field" style={{ flex: '1 1 220px' }} placeholder={tr('tn.noteph', lang)} value={note} onChange={e => setNote(e.target.value)} aria-label={`${tr('tn.noteabout', lang)} ${name}`} />
-          <Button disabled={!note.trim()} onClick={() => { onNote(note.trim()); setNote(''); setOpen(false); }}>{tr('tn.save', lang)}</Button>
-        </div>
-      )}
+    <div className="row gap-2 wrap" style={{ paddingTop: 'var(--sp-3)' }}>
+      <input className="field" style={{ flex: '1 1 220px' }} placeholder={tr('tn.noteph', lang)} value={note} onChange={e => setNote(e.target.value)}
+        aria-label={`${tr('tn.noteabout', lang)} ${name}`} autoFocus />
+      <Button disabled={!note.trim()} onClick={() => onSave(note.trim())}>{tr('tn.save', lang)}</Button>
     </div>
   );
 };

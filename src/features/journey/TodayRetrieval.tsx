@@ -86,11 +86,10 @@ export const TodayRetrieval: React.FC<{
   };
 
   return (
-    // Same Card as everything else in today's work. It used to hand-roll its
-    // own background, border, radius and padding — which is precisely how a
-    // card ends up feeling like it came from a different application.
+    // A default Card, not a raised one: the mission above is the screen's one
+    // raised surface, and a second would compete with it for the first glance.
     <m.div {...fade}>
-     <Card tone="raised" pad={5}>
+     <Card pad={5}>
       <div className="t-label mb-2 c-tx3">
         فكّرني · {idx + 1} من {set.length}
       </div>
