@@ -66,6 +66,15 @@ test('admin: the users ledger, an account panel, and a form showing its errors',
   await expectAccessible(page, 'new user with errors');
 });
 
+test('the roadmap and a phase sheet', async ({ page }) => {
+  await signIn(page, 'ahmed.m');
+  await toAcademy(page);
+  await page.goto('/#/roadmap');
+  await expectAccessible(page, 'roadmap');
+  await page.getByRole('region', { name: 'مسار البرنامج' }).getByRole('button').first().click();
+  await expectAccessible(page, 'phase sheet');
+});
+
 test('profile overlay and the trainee readiness page', async ({ page }) => {
   await signIn(page, 'ahmed.m');
   await toAcademy(page);

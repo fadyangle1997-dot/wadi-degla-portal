@@ -275,25 +275,13 @@ body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--fon
 /* Capsule — base layout only, so a media query can still reach it. */
 .capsule { display:inline-flex; align-items:center; }
 
-/* Journey station rail + card — sized here so the narrow-phone rules below can
-   reach them. At 320 the rail (52) plus the detailed card's padding (40 each
-   side) left 108px for text inside a 256px column, and the grid overflowed by
-   39px. The smallest phone gets a narrower rail and the compact card padding;
-   nothing changes from 361px up. */
+/* The shell's header row — sized here so the narrow-phone rule below can reach it. */
 .shell-header-row { padding: var(--sp-3) var(--sp-5); gap: var(--sp-4); }
-.snake-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 52px; }
-.snake-card { padding: var(--sp-4) var(--sp-5); }
-.snake-card--detail { padding: var(--sp-6); }
 
 @media (max-width: 360px) {
-  .snake-rail { width: 40px; }
-  .snake-orb { width: 38px; height: 38px; }
-  .snake-orb--milestone { width: 40px; height: 40px; }  /* never wider than its rail */
   /* The identity row is four controls wide; at 320 the outer padding is the
      only thing that has to give. */
   .shell-header-row { padding-inline: var(--sp-3); gap: var(--sp-2); }
-  .snake-card--detail { padding: var(--sp-4); }
-  .snake-node { gap: var(--sp-2) !important; }
 }
 
 /* Manager roster — open on desktop, folded on a phone. The `open` attribute is
@@ -792,7 +780,8 @@ details > summary { min-block-size:44px; cursor:pointer; }
 
 /* -- Dialog & toast -- */
 .dialog-scrim { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
-  display:flex; align-items:center; justify-content:center; z-index:60; padding:var(--sp-5); }
+  display:flex; align-items:center; justify-content:center; z-index:60; padding:var(--sp-5);
+  overflow:hidden; overscroll-behavior:contain; }
 /* A dialog never grows past the screen: long content scrolls inside it, so its
    actions can always be reached (the employee file outgrew a short laptop). */
 .dialog { background:var(--s-1); border:1px solid var(--line-2); border-radius:var(--r-lg);
@@ -961,11 +950,6 @@ details > summary { min-block-size:44px; cursor:pointer; }
   .signin-btn { transition: none; }
 }
 
-/* ── Premium Snake Journey (Phase 5.6) ─────────────────────────────────────
-   The roadmap reads as a route. The node is integrated INTO each card's header,
-   so node + card are one milestone. Cards alternate sides, joined by a soft
-   drawn connector. Tokens only — black + gold identity, calm motion, no glow. */
-.snake-path { position: relative; }
 /* Route + ledger. Mobile-first: one column, ledger after the route so the
    next step stays on screen. From 900px a second column appears and the
    ledger sticks while the route scrolls (align-items: start lets it stick). */
@@ -976,30 +960,6 @@ details > summary { min-block-size:44px; cursor:pointer; }
   .journey-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: var(--sp-7); }
   .journey-ledger { position: sticky; top: var(--sp-8); }
 }
-
-.snake-node { width: 100%; }
-/* One vertical rail every station sits on; travelled track gold, road
-   ahead grey. */
-.snake-card { width: 100%; }
-
-/* the node sits on the rail; a subtle lift on hover keeps it feeling alive */
-.snake-orb { width: 44px; height: 44px; transition: transform .28s var(--ease), box-shadow .28s var(--ease); }
-.snake-orb--milestone { width: 52px; height: 52px; }
-
-/* The station numeral inherits the orb's colour (5.28:1 on gold, 5.0:1 on
-   the void) and is sized to the disc. */
-.snake-orb-num {
-  font-size: 1.125rem; font-weight: 700; line-height: 1;
-  color: inherit; font-variant-numeric: tabular-nums;
-}
-.snake-card:hover .snake-orb { transform: scale(1.04); }
-
-/* current node — a soft pulse that guides the eye. No neon, no glow. */
-@keyframes snake-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--g2) 40%, transparent); }
-  50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--g2) 0%, transparent); }
-}
-.snake-pulse { animation: snake-pulse 2.6s var(--ease) infinite; }
 
 /*
  * Shell header — mobile (< 640px). Gives the wrap a shape instead of leaving
@@ -1030,7 +990,6 @@ details > summary { min-block-size:44px; cursor:pointer; }
   .shell-greeting-time { display: none; }
 }
 
-@media (prefers-reduced-motion: reduce) { .snake-pulse { animation: none; } }
 
 /* ─── FILE JOURNEY MAP ──────────────────────────────────────────────────
    An editorial ownership map, not eleven equal cards. The dominant variable
@@ -1189,14 +1148,78 @@ details > summary { min-block-size:44px; cursor:pointer; }
   .pf-state-title { font-size: 1.375rem; }
 }
 
-/* "أنت هنا" — the current station named in words, so position on the rail is
-   never carried by the accent colour alone. */
-.snake-here {
-  display: inline-flex; align-items: center;
-  padding: var(--sp-1) var(--sp-2); border-radius: var(--r-full);
-  background: var(--g2); color: var(--on-gold);
-  font-size: .875rem; font-weight: 700; letter-spacing: .06em;
+/* ─── THE DAY RING ──────────────────────────────────────────────────────
+   A native <progress> drawn as a ring: a conic gradient, hollowed by the
+   border-area clip or, where that is missing, a radial mask. The day and
+   «من 60 يوم» sit inside it, sized with it. */
+.dayring { --ring:154px; --thickness:4px; width:var(--ring); height:var(--ring); display:grid; place-items:center; }
+.dayring-track { --value:0; position:absolute; inset:0; width:100%; height:100%; appearance:none; -webkit-appearance:none;
+  border-radius:var(--r-full); border:var(--thickness) solid transparent;
+  background:conic-gradient(var(--g2) calc(var(--value) * 1%), var(--line-2) 0) border-box;
+  background-clip:border-area; }
+@supports not (background-clip: border-area) {
+  .dayring-track { border:0; background-clip:border-box;
+    mask-image:radial-gradient(farthest-side, transparent calc(100% - var(--thickness)), #000 calc(100% - var(--thickness) + .5px)); }
 }
+.dayring-track::-webkit-progress-bar, .dayring-track::-webkit-progress-value { background:transparent; }
+.dayring-track::-moz-progress-bar { background:transparent; }
+.dayring-content { position:relative; display:flex; flex-direction:column; align-items:center; line-height:1; }
+.dayring-day { font-size:3.25rem; font-weight:600; letter-spacing:-.03em; color:var(--tx0);
+  font-variant-numeric:tabular-nums lining-nums; unicode-bidi:isolate; }
+.dayring-total { margin-top:var(--sp-1); font-size:.875rem; font-weight:600; color:var(--tx0); }
+
+/* ─── THE JOURNEY MAP ───────────────────────────────────────────────────
+   The roadmap as a road: one winding line, the travelled stretch gold, the
+   road ahead bronze; stations are discs with their titles under them. */
+.jmap { position:relative; width:100%; max-width:440px; margin-inline:auto; }
+.jmap-road { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+.jmap-road path { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.jmap-road-ahead { stroke:var(--line-2); stroke-width:10; }
+.jmap-road-glow { stroke:var(--g2); stroke-width:24; stroke-opacity:.14; }
+.jmap-road-done { stroke-width:10; }
+.jmap-stations { list-style:none; padding:0; position:absolute; inset:0; }
+.jmap-station { position:absolute; width:44%; transform:translateX(-50%); }
+.jmap-btn { display:flex; flex-direction:column; align-items:center; gap:var(--sp-3); width:100%; padding:0;
+  background:none; border:0; color:var(--tx0); font:inherit; text-align:center; cursor:pointer; }
+.jmap-btn:focus-visible { outline:none; }
+.jmap-btn:focus-visible .jmap-disc { outline:2px solid var(--g0); outline-offset:8px; }
+.jmap-disc { position:relative; display:grid; place-items:center; flex-shrink:0; width:84px; height:84px;
+  border-radius:var(--r-full); transition:transform var(--t-base) var(--ease); }
+.jmap-btn:hover .jmap-disc { transform:scale(1.04); }
+.jmap-disc--done { background:linear-gradient(160deg, var(--g1), var(--g2)); color:var(--on-gold);
+  box-shadow:0 12px 28px -16px rgba(var(--g2-rgb),.55); }
+.jmap-disc--open { background:var(--s0); color:var(--tx0); border:2px solid var(--g2); }
+.jmap-disc--locked { background:var(--s-1); color:var(--tx0); border:1px dashed var(--line-ctl); }
+.jmap-disc--current { width:104px; height:104px; background:var(--s0); color:var(--g1);
+  box-shadow:0 0 0 14px rgba(var(--g2-rgb),.1), 0 22px 48px -18px rgba(var(--g2-rgb),.5); }
+/* Milestones (the phases that end in a gate) carry a second, thin gold ring. */
+.jmap-disc--milestone:not(.jmap-disc--current) { outline:1px solid var(--g3); outline-offset:5px; }
+.jmap-ring { --p:0; position:absolute; inset:-10px; border-radius:var(--r-full);
+  background:conic-gradient(var(--g2) calc(var(--p) * 1%), var(--line-2) 0);
+  mask-image:radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px)); }
+.jmap-badge { position:absolute; top:-2px; inset-inline-end:-2px; display:grid; place-items:center;
+  width:30px; height:30px; border-radius:var(--r-full); border:3px solid var(--void); }
+.jmap-badge--done { background:var(--ready); color:var(--void); }
+.jmap-badge--locked { background:var(--s1); color:var(--tx0); }
+.jmap-badge--attn { background:var(--attn); color:var(--void); }
+.jmap-here { position:absolute; bottom:-16px; left:50%; transform:translateX(-50%); white-space:nowrap;
+  padding:2px var(--sp-3); border-radius:var(--r-full); border:3px solid var(--void);
+  background:var(--g2); color:var(--on-gold); font-size:.875rem; font-weight:700; }
+.jmap-label { display:flex; flex-direction:column; gap:2px; }
+.jmap-btn--current .jmap-label { margin-top:var(--sp-3); }
+.jmap-title { font-size:1.0625rem; font-weight:600; line-height:1.35; color:var(--tx0); text-wrap:balance; }
+.jmap-meta { font-size:.875rem; font-weight:500; line-height:1.5; color:var(--tx0); }
+.jmap-days { color:var(--g1); white-space:nowrap; }
+.jmap-meta--ready { color:var(--ready); }
+.jmap-meta--attn { color:var(--attn); }
+.jmap-meta--gold { color:var(--g1); }
+@keyframes jmap-breathe {
+  0%, 100% { box-shadow:0 0 0 14px rgba(var(--g2-rgb),.1), 0 22px 48px -18px rgba(var(--g2-rgb),.5); }
+  50%      { box-shadow:0 0 0 20px rgba(var(--g2-rgb),.04), 0 22px 48px -18px rgba(var(--g2-rgb),.5); }
+}
+@media (prefers-reduced-motion: no-preference) { .jmap-disc--current { animation:jmap-breathe 3.2s var(--ease) infinite; } }
+/* The phase sheet is wider than a confirmation: it holds a unit list. */
+.dialog.phase-sheet { max-width:560px; }
 
 /* ─── AGE ELIGIBILITY TIMELINE ──────────────────────────────────────────
    A lookup, not artwork: the trainee arrives with one number and leaves with
@@ -1481,14 +1504,15 @@ details > summary { min-block-size:44px; cursor:pointer; }
    and shrinks it; the order Phase → Title → Remaining → Progress is
    untouched, as is every token. Desktop rules are not in this query. */
 @media (max-width: 640px) {
-  .jr-hero { --ring: 88px; flex-wrap: nowrap !important;
+  .jr-hero { flex-wrap: nowrap !important;
     gap: var(--sp-4) !important; padding: var(--sp-5) 0 var(--sp-4) !important; }
   .jr-hero-text { min-width: 0 !important; }
   .jr-hero .t-h1 { font-size: 1.5rem; margin: 4px 0 var(--sp-2) !important; }
-  .jr-hero .dayring span.t-num { font-size: 1.875rem !important; }
+  .jr-hero .dayring { --ring: 112px; }
+  .jr-hero .dayring-day { font-size: 2.25rem; }
   /* The approval capsule overlapped the shrunken ring and covered «من 60 يوم».
      The same percentage already appears in the line below, so hiding it on
      mobile loses nothing — the accessible label stays in that line. */
   .jr-hero .dayring > *:last-child { display: none; }
 }
-@media (max-width: 380px) { .jr-hero { --ring: 76px; } }
+@media (max-width: 380px) { .jr-hero .dayring { --ring: 100px; } .jr-hero .dayring-day { font-size: 2rem; } }

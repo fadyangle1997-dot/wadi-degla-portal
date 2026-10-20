@@ -117,9 +117,10 @@ describe('🔴 the journey is composed, not assembled', () => {
   it('the hero is a ring — composed from the shared primitive', () => {
     // The screen composes DayRing rather than hand-rolling geometry…
     expect(src).toContain('DayRing');
-    // …and the ring's geometry lives in the shared primitive.
+    // …and the ring lives in the shared primitive: a native <progress>, so the
+    // day is announced as progress, not only drawn.
     const primitives = readFileSync(join(FEATURES, '../ui/primitives/index.tsx'), 'utf-8');
-    expect(primitives).toMatch(/strokeDasharray/);
+    expect(primitives).toMatch(/<progress className="dayring-track"[^>]*max=\{total\}/);
   });
 
   it('the hero comes before anything the screen asks of you', () => {

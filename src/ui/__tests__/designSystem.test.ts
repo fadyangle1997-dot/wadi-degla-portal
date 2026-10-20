@@ -446,7 +446,7 @@ describe('🔴 phone rules can reach what they need to override', () => {
     // Trap #4 in this codebase, paid for five times: an inline layout property
     // outranks any media query, so the narrow-phone rules silently did nothing.
     // Scoped to the four elements those rules actually address.
-    const guarded = ['snake-rail', 'snake-card', 'snake-orb', 'shell-header-row'];
+    const guarded = ['jmap-disc', 'jmap-btn', 'shell-header-row'];
     const offenders: string[] = [];
     for (const [name, src] of [['TrainingJourney', journey], ['AppShell', shell]] as const) {
       for (const cls of guarded) {
@@ -460,10 +460,18 @@ describe('🔴 phone rules can reach what they need to override', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('the station orb is never wider than the rail it sits on', () => {
-    const rail = css.match(/@media \(max-width: 360px\)[\s\S]*?\.snake-rail \{ width: (\d+)px/)?.[1];
-    const orb = css.match(/@media \(max-width: 360px\)[\s\S]*?\.snake-orb--milestone \{ width: (\d+)px/)?.[1];
-    expect(Number(orb)).toBeLessThanOrEqual(Number(rail));
+  it('the journey map keeps every label on the page and the road beside it', () => {
+    // A station's label is centred under its disc; the road leaves the disc
+    // sideways and drops at the next station's x. Both stay true at any width
+    // because x is a percentage: labels inside 0–100, the road outside a label.
+    const map = readFileSync(new URL('../../features/journey/JourneyMap.tsx', import.meta.url), 'utf-8');
+    const swing = JSON.parse(map.match(/const SWING = (\[[^\]]+\])/)![1]!) as number[];
+    const half = Number(css.match(/\.jmap-station \{[^}]*width:(\d+)%/)![1]) / 2;
+    expect(Math.min(...swing) - half).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...swing) + half).toBeLessThanOrEqual(100);
+    for (let i = 0; i < swing.length; i++) {
+      expect(Math.abs(swing[(i + 1) % swing.length]! - swing[i]!)).toBeGreaterThan(half);
+    }
   });
 });
 
@@ -618,7 +626,7 @@ describe('🔴 accessibility contracts (sprint 07)', () => {
   it('lists keep their semantics when the marker is removed', () => {
     for (const file of componentSources()) {
       for (const m of file.matchAll(/<(ul|ol)([^>]*)>/g)) {
-        if (/listStyle:\s*'none'|className="snake-path"/.test(m[2]!)) {
+        if (/listStyle:\s*'none'|className="jmap-stations/.test(m[2]!)) {
           expect(m[0], 'unmarked list without role=list').toContain('role="list"');
         }
       }

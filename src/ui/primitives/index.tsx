@@ -509,39 +509,28 @@ export const SpineWell: React.FC<{ children: React.ReactNode; spine?: 'rule' | '
 
 
 /**
- * DayRing — the calendar-day progress ring (day N of the programme, with an
- * approval-percentage capsule riding on it). Extracted verbatim from
- * TrainingJourney into shared primitives so the home screen can compose the SAME
- * ring in a later step instead of a second copy. Styling, sizes, colours and the
- * capsule placement are unchanged — ownership move only.
+ * DayRing — day N of the programme as a ring, with the approval percentage
+ * riding on it as a capsule.
  */
 export const DayRing: React.FC<{ day: number; total: number; pct: number }> = ({ day, total, pct }) => {
-  const R = 74, STROKE = 3, C = 2 * Math.PI * R;
-  const size = (R + STROKE) * 2;
+  const lang = useLang();
   const elapsed = Math.min(day / total, 1);
-
   return (
-    /* Sized by CSS var so a media query can shrink it without touching the
-       geometry maths: the SVG scales with the box via viewBox. */
-    <div className="dayring relative no-shrink" style={{ width: 'var(--ring, ' + size + 'px)', height: 'var(--ring, ' + size + 'px)' }}>
-      <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" aria-hidden className="block" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={R} fill="none" stroke="var(--line-2)" strokeWidth={STROKE} />
-        <circle
-          cx={size / 2} cy={size / 2} r={R} fill="none"
-          stroke="var(--g2)" strokeWidth={STROKE} strokeLinecap="round"
-          strokeDasharray={C} strokeDashoffset={C * (1 - elapsed)}
-          style={{ transition: 'stroke-dashoffset var(--t-slow) var(--ease)' }}
-        />
-      </svg>
-
-      <div className="stack items-center justify-center" style={{ position: 'absolute', inset: 0 }}>
-        <span className="t-score">{day}</span>
-        <span className="t-label c-tx3 mt-1">من {total} يوم</span>
+    /* Sized by --ring so a media query can shrink it; the number inside
+       shrinks with it (.dayring-day), so nothing ever sits on the ring. */
+    <div className="dayring relative no-shrink">
+      {/* The ring IS the progress: a native <progress>, so a screen reader
+          hears «day 43 of 60» and the drawing stays CSS. */}
+      <progress className="dayring-track" value={Math.min(day, total)} max={total}
+        aria-label={`${t('jr.day', lang)} ${day} ${t('jr.of', lang)} ${total}`}
+        style={{ '--value': Math.round(elapsed * 100) } as React.CSSProperties} />
+      <div className="dayring-content" aria-hidden>
+        <span className="dayring-day">{day}</span>
+        <span className="dayring-total">{t('jr.of', lang)} {total} {t('jr.days', lang)}</span>
       </div>
-
       {/* Approval rides ON the ring: it belongs to the same fact, and a second
           number floating beside it would compete with the first. */}
-      <Capsule label={`${pct} بالمية من الوحدات معتمدة`} style={{ position: 'absolute', insetInlineEnd: 0, bottom: 'var(--sp-1)' }}>
+      <Capsule label={`${pct}% ${t('jr.unitsapp', lang)}`} style={{ position: 'absolute', insetInlineEnd: 0, bottom: 'var(--sp-1)' }}>
         {pct}%
       </Capsule>
     </div>

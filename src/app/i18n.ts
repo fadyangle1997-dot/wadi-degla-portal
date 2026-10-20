@@ -58,6 +58,7 @@ const DICT = {
   'jr.inphase':     { ar: 'وفي مرحلتك دلوقتي:',  en: 'In your current phase:' },
   'jr.nextgate':    { ar: 'البوابة الجاية',      en: 'Next gate' },
   'jr.youarehere':  { ar: 'أنت هنا',            en: 'You are here' },
+  'jr.route':       { ar: 'مسار البرنامج',       en: 'The programme route' },
   'jr.approved':    { ar: 'معتمدة',             en: 'Approved' },
   'jr.open':        { ar: 'افتح',               en: 'Open' },
   // approved product vocabulary — actions & status

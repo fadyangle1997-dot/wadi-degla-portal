@@ -124,10 +124,25 @@ test('a lesson opened from the roadmap goes back to the roadmap, and says so', a
   await signIn(page, 'ahmed.m');
   await toAcademy(page);
   await page.goto('/#/roadmap');
-  await page.getByRole('button', { name: 'افتح' }).first().click();
+  // A station opens its phase in a sheet; the unit opens from there.
+  await page.getByRole('region', { name: 'مسار البرنامج' }).getByRole('button').first().click();
+  await page.getByRole('dialog').getByRole('button', { name: 'افتح' }).first().click();
   await expect(page).toHaveURL(/#\/lesson\//);
   await page.getByRole('button', { name: 'ارجع لرحلتي' }).first().click();
   await expect(page).toHaveURL(/#\/roadmap/);
+});
+
+test('a roadmap station opens its phase in a sheet, and closing returns to the station', async ({ page }) => {
+  await signIn(page, 'ahmed.m');
+  await toAcademy(page);
+  await page.goto('/#/roadmap');
+  const station = page.getByRole('region', { name: 'مسار البرنامج' }).getByRole('button').first();
+  await station.click();
+  const sheet = page.getByRole('dialog');
+  await expect(sheet.getByRole('heading', { level: 2 })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(sheet).toHaveCount(0);
+  await expect(station).toBeFocused();
 });
 
 test('a menu takes focus, moves with the arrow keys, and Tab leaves it', async ({ page }) => {

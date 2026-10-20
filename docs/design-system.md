@@ -65,6 +65,7 @@
 | الحالات | `LoadingState` · `ErrorState` · `EmptyState` · `Toast` · `InlineError` · `RouteBoundary` | كل حالة بتقول اللي حصل وإيه الخطوة الجاية. الـToast بـ`role="status"` |
 | التعلّم | `OptionButton` · `FeedbackBlock` · `ProgressRail` · `ScreenHeader` · `DayRing` | صح وغلط بيتقالوا كلام للقارئ الصوتي، مش لون بس |
 | الجاهزية | `ReadinessTrack` · `StageMark` (`features/readiness`) | المحطات الست كمسار واحد |
+| الرحلة | `JourneyMap` (`features/journey`) · `DayRing` | الطريق المتعرّج: المحطة دايرة واسمها تحتها، والتفاصيل في ورقة. الحلقة `<progress>` حقيقي |
 | أساسية | `Card` · `Eyebrow` · `Callout` · `StatusBadge` · `SkillBar` · `Skeleton` · `SpineWell` · `Capsule` · `PricesNote` · `ArabicContent` | — |
 
 ## 5) لغة التفاعل

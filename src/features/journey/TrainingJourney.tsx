@@ -7,9 +7,10 @@
  * of courses. Every status shown is derived from the existing stores via the
  * pure `phaseStatus` — nothing here stores or invents state.
  */
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { m } from 'motion/react';
 import { Check, Clock, Lock, PlayCircle, CircleDot, Flag, ArrowRight, Swords, Trophy } from 'lucide-react';
+import { JourneyMap } from './JourneyMap';
 import { REVIEW_STARTS_ON_DAY } from '../../domain/review';
 import { MODULES } from '../../content/registry';
 
@@ -22,10 +23,10 @@ import { useTraining, traineeIdOrNull } from '../../app/training/trainingStore';
 import { identityStore } from '../../app/identity/identityStore';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { moduleById, bossBattlesAfter } from '../../content/registry';
-import { Eyebrow, StatusBadge, Button, Card, DayRing, ArabicContent, Num, Crumbs } from '../../ui/primitives';
+import { Eyebrow, StatusBadge, Button, Card, DayRing, ArabicContent, Num, Crumbs, CloseButton, useModal } from '../../ui/primitives';
 import { phaseContextFor } from '../../app/journeyContext';
 import { useLang, t as tr, type Key } from '../../app/i18n';
-import { fade, stagger } from '../../ui/motion';
+import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 // DayRing now lives in shared primitives (see import below).
 
@@ -113,6 +114,7 @@ export const TrainingJourney: React.FC<{
   ].filter(Boolean) as { gate: boolean; title: string; blurb: string; cta: string; open: () => void }[]),
   [day, onOpenReadiness, onOpenReview, lang]);
 
+  const [openPhase, setOpenPhase] = useState<JourneyPhase | null>(null);
   const primary = acts[0];
   const secondary = acts.slice(1);
 
@@ -139,7 +141,7 @@ export const TrainingJourney: React.FC<{
         >
           <DayRing day={day} total={PROGRAM_DAYS} pct={pct} />
           <div className="jr-hero-text grow" style={{ minWidth: '18ch' }}>
-            <Eyebrow>{current ? `${tr('jr.phaseof', lang)} ${String(current.order).padStart(2, '0')} / ${PROGRAM.length}` : tr('jr.done', lang)}</Eyebrow>
+            <Eyebrow>{current ? `${tr('jr.phaseof', lang)} ${current.order} ${tr('jr.of', lang)} ${PROGRAM.length}` : tr('jr.done', lang)}</Eyebrow>
             <h1 className="t-h1" style={{ margin: 'var(--sp-2) 0 var(--sp-3)', letterSpacing: '-.025em' }}>
               {current ? <ArabicContent as="span">{current.title}</ArabicContent> : tr('jr.allapproved', lang)}
             </h1>
@@ -188,29 +190,23 @@ export const TrainingJourney: React.FC<{
             same items twice in one morning. */}
 
         {/* ── THE ROUTE + ITS LEDGER ───────────────────────────────────────
-            One vertical rail, every station on it, travelled track in gold. The
-            ledger beside it shows what the route cannot (stations behind you, the
-            next gate), derived from the same phaseStatus. On phones it moves below
-            the route so the next step stays on screen. */}
+            The route is a road: every phase a station on one winding line,
+            the stretch behind you gold. A station opens its detail in a
+            sheet. The ledger beside it shows what the road cannot (how much
+            is behind you, the next gate); on phones it follows the road. */}
         <div className="journey-grid">
-        <m.ol className="snake-path m-0 relative" style={{ listStyle: 'none', padding: 0 }}>
-          {PROGRAM.map(phase => (
-            <SnakeStation
-              key={phase.id}
-              index={phase.order - 1}
-              phase={phase}
-              status={phaseStatus(phase, ctx)}
-              isCurrent={current?.id === phase.id}
-              onOpenModule={onOpenModule}
-              onOpenBoss={onOpenBoss}
-              ctx={ctx}
-              actionableModuleId={actionableModuleId}
-              lessonsDone={id => moduleLessonsDone(p, id)}
-              bossDone={id => !!p.bosses[id]}
-              trainerName={trainerName}
-            />
-          ))}
-        </m.ol>
+        <section aria-label={tr('jr.route', lang)}>
+          <JourneyMap
+            stations={PROGRAM.map(phase => {
+              const status = phaseStatus(phase, ctx);
+              return {
+                phase, status, current: current?.id === phase.id,
+                statusLabel: status === 'waiting_trainer' ? waitingForTrainer(trainerName) : tr(STATUS_META[status].labelKey, lang),
+                lessons: current?.id === phase.id ? currentLessons : null,
+              };
+            })}
+            onOpen={setOpenPhase} />
+        </section>
 
         {/* The ledger — derived, never stored. Deliberately does NOT repeat the
             header's "days left / % approved": duplicating those would make the
@@ -254,15 +250,34 @@ export const TrainingJourney: React.FC<{
         </aside>
         </div>
       </main>
+      {openPhase && (
+        <PhaseSheet
+          phase={openPhase}
+          status={phaseStatus(openPhase, ctx)}
+          onClose={() => setOpenPhase(null)}
+          onOpenModule={onOpenModule}
+          onOpenBoss={onOpenBoss}
+          ctx={ctx}
+          actionableModuleId={actionableModuleId}
+          lessonsDone={id => moduleLessonsDone(p, id)}
+          bossDone={id => !!p.bosses[id]}
+          trainerName={trainerName}
+        />
+      )}
     </div>
   );
 };
 
-const SnakeStation: React.FC<{
-  index: number;
+/**
+ * One phase, opened from its station: why it exists, what you will be able to
+ * do after it, and its units and boss battles with their actions. A sheet on a
+ * phone, a dialog on a wider screen; focus starts on its title and returns to
+ * the station on close.
+ */
+const PhaseSheet: React.FC<{
   phase: JourneyPhase;
   status: PhaseStatus;
-  isCurrent: boolean;
+  onClose: () => void;
   actionableModuleId: string | null;
   onOpenModule: (moduleId: string) => void;
   onOpenBoss: (bossId: string) => void;
@@ -270,143 +285,97 @@ const SnakeStation: React.FC<{
   lessonsDone: (moduleId: string) => number;
   bossDone: (bossId: string) => boolean;
   trainerName?: string;
-}> = ({ index, phase, status, isCurrent, actionableModuleId, onOpenModule, onOpenBoss, ctx, lessonsDone, bossDone, trainerName }) => {
+}> = ({ phase, status, onClose, actionableModuleId, onOpenModule, onOpenBoss, ctx, lessonsDone, bossDone, trainerName }) => {
   const lang = useLang();
   const meta = STATUS_META[status];
-  // Waiting on the trainer names the person — unified with PathView's wording.
   const label = status === 'waiting_trainer' ? waitingForTrainer(trainerName) : tr(meta.labelKey, lang);
-  // Progressive disclosure: only the phase you act on shows its full detail.
-  const showDetail = isCurrent || status === 'waiting_trainer';
-  const locked = status === 'locked' || status === 'planned';
-  // One continuous rail; its colour is the progress (gold travelled, grey ahead).
-  const travelled = status === 'completed';
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const boxRef = useModal<HTMLDivElement>(onClose, () => titleRef.current);
   return (
-    <m.li {...stagger(index)}
-      className={`snake-node relative row gap-4 items-stretch${isCurrent ? ' snake-node--current' : ''}`}
-    >
-      {/* THE RAIL — the spine of the journey. The orb sits directly on it, so
-          the eye reads one unbroken line from day 1 to graduation. */}
-      {/* The orb centres on the card's first line (padding + half a badge row −
-          half the orb), so «station · label» reads across one line. */}
-      <div aria-hidden className="snake-rail" style={{ paddingTop: showDetail ? 'var(--sp-5)' : 'var(--sp-3)' }}>
-        <span className={`snake-orb row items-center justify-center no-shrink${phase.milestone ? ' snake-orb--milestone' : ''}${isCurrent ? ' snake-pulse' : ''}`} style={{
-          borderRadius: 'var(--r-full)',
-          background: isCurrent ? meta.color : travelled ? 'var(--g2)' : 'var(--void)',
-          border: `2px solid ${travelled || isCurrent ? meta.color : 'var(--line-2)'}`,
-          color: isCurrent || travelled ? 'var(--void)' : 'var(--tx3)',
-        }}>
-          {travelled ? <Check size={22} /> : locked ? <Lock size={16} /> : <span className="t-num snake-orb-num">{phase.order}</span>}
-        </span>
-        {index < PROGRAM.length - 1 && (
-          <span className="grow mt-2 mb-2" style={{
-            width: 2, minHeight: 'var(--sp-6)', borderRadius: 'var(--r-full)',
-            // Travelled track is gold; the road ahead stays quiet.
-            background: travelled ? 'var(--g2)' : 'var(--line-2)',
-          }} />
-        )}
-      </div>
-
-      <div className="grow" style={{ paddingBottom: 'var(--sp-5)' }}>
-
-      {/* Padding lives in CSS so it can narrow on 320px screens. */}
-      <div className={`snake-card${showDetail ? ' snake-card--detail' : ''}${isCurrent ? ' snake-card--current' : ''}${locked ? ' snake-card--locked' : ''}`} style={{
-        background: isCurrent ? 'var(--s0)' : 'var(--s-1)',
-        border: `1px solid ${isCurrent ? 'var(--g3)' : 'var(--line)'}`,
-        borderRadius: 'var(--r-lg)',
-        /* No veil on locked cards: the icon, border and badge already say locked,
-           and opacity would drop the text below contrast. */
-        transition: 'border-color .3s var(--ease), background .3s var(--ease)',
-      }}>
-        <div className="row items-center gap-3 wrap">
-          {/* "You are here" as WORDS, not colour alone. Position on the rail was
-              carried only by the accent, which fails for anyone who can't
-              separate it from the surrounding tones — and is the first thing
-              lost on a printout or a low-quality screen. */}
-          {isCurrent && <span className="snake-here">{tr('jr.youarehere', lang)}</span>}
-          {/* --tx2 here: this label rides both --s-1 and the lighter --s0 of the
-              current card, and --tx3 is out of bounds on --s0 (3.97:1). */}
-          <span className="t-label c-tx2">{tr('jr.day', lang)} {phase.dayStart}–{phase.dayEnd}</span>
-          <StatusBadge tone={meta.tone}>{label}</StatusBadge>
+    <div className="dialog-scrim" onClick={onClose}>
+      <div ref={boxRef} className="dialog phase-sheet" role="dialog" aria-modal="true" aria-labelledby="phase-sheet-title"
+        onClick={e => e.stopPropagation()}>
+        <div className="row items-start gap-3">
+          <div className="grow" style={{ minWidth: 0 }}>
+            <Eyebrow>{tr('jr.phaseof', lang)} {phase.order} {tr('jr.of', lang)} {PROGRAM.length} · {tr('jr.day', lang)} {phase.dayStart}–{phase.dayEnd}</Eyebrow>
+            <h2 id="phase-sheet-title" ref={titleRef} tabIndex={-1} className="t-h3" style={{ margin: 'var(--sp-2) 0' }}>
+              <ArabicContent as="span">{phase.title}</ArabicContent>
+            </h2>
+            <StatusBadge tone={meta.tone} icon={meta.icon}>{label}</StatusBadge>
+          </div>
+          <CloseButton onClick={onClose} />
         </div>
 
-        <h2 className={showDetail ? 't-h3' : 't-title'} style={{ margin: 'var(--sp-2) 0 0' }}>{phase.title}</h2>
+        <p className="t-body c-tx2" style={{ margin: 'var(--sp-4) 0' }}>{phase.purpose}</p>
+        <div className="t-label mb-2">{tr('jr.whatnext', lang)}</div>
+        <ul className="stack m-0 gap-1" style={{ paddingInlineStart: 'var(--sp-4)' }}>
+          {phase.outcomes.map(o => <li key={o} className="t-sm c-tx1">{o}</li>)}
+        </ul>
 
-        {showDetail && (
-          <>
-            <p className="t-body c-tx2" style={{ margin: 'var(--sp-2) 0 var(--sp-4)' }}>{phase.purpose}</p>
-            <div className="t-label mb-2">{tr('jr.whatnext', lang)}</div>
-            <ul className="stack m-0 gap-1" style={{ paddingInlineStart: 'var(--sp-4)' }}>
-              {phase.outcomes.map(o => <li key={o} className="t-sm c-tx1">{o}</li>)}
-            </ul>
+        {/* the units that carry this phase */}
+        {phase.moduleIds.length > 0 && (
+          <div className="stack mt-4 gap-2">
+            {phase.moduleIds.map(id => {
+              const m = moduleById(id);
+              if (!m) return null;
+              const approved = ctx.isModuleApproved(id);
+              const unlocked = ctx.isModuleUnlocked(id);
+              return (
+                <Card key={id} tone="quiet" pad={4} className="row-hover">
+                {/* Two rows: the title owns the first, meta and action share the second,
+                    so the module name reads as a sentence on a 390px phone. */}
+                <div className="stack gap-2">
+                  <div className="row items-baseline gap-2">
+                    <span className="t-label c-tx2 no-shrink">{m.code}</span>
+                    <span className="t-sm grow" style={{ minWidth: 0 }}>{m.title}</span>
+                  </div>
+                  <div className="row items-center gap-3">
+                    {/* This counter sits on --s0, the lightest surface in
+                        the system, where --tx3 measures 3.49:1. --tx2 is
+                        the quiet tier that is legal here. */}
+                    <span className="t-label t-num c-tx2">
+                      {lessonsDone(id)}/{m.lessons.length}
+                    </span>
+                    <div className="grow" />
+                    {approved
+                      ? <StatusBadge tone="ready">{tr('jr.approved', lang)}</StatusBadge>
+                      : unlocked
+                        ? <Button variant={id === actionableModuleId ? 'primary' : 'ghost'} onClick={() => onOpenModule(id)}>{tr('jr.open', lang)}</Button>
+                        : <Lock size={13} className="c-tx3" />}
+                  </div>
+                </div>
+                </Card>
+              );
+            })}
+            {/* Boss battles are milestones that follow this phase's units —
+                same milestone language, opened via the existing onOpenBoss. */}
+            {phase.moduleIds.flatMap(id => bossBattlesAfter(id)).map(b => {
+              const ready = b.afterUnits.every((u: string) => ctx.isModuleApproved(u));
+              const passed = bossDone(b.id);
+              return (
+                <Card key={b.id} tone="quiet" pad={4} className="row-hover">
+                <div className="row items-center gap-3">
+                  {passed ? <Trophy size={16} className="c-g1 no-shrink" /> : <Swords size={16} className="c-g2 no-shrink" />}
+                  <span className="t-sm grow" style={{ minWidth: 0, color: ready || passed ? 'var(--g1)' : 'var(--tx2)' }}>{b.title}</span>
+                  {passed
+                    ? <StatusBadge tone="ready">{tr('jr.passed', lang)}</StatusBadge>
+                    : ready
+                      ? <Button variant="ghost" onClick={() => onOpenBoss(b.id)}>{tr('jr.start', lang)}</Button>
+                      : <Lock size={13} className="c-tx3" />}
+                </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
-            {/* the units that carry this phase */}
-            {phase.moduleIds.length > 0 && (
-              <div className="stack mt-4 gap-2">
-                {phase.moduleIds.map(id => {
-                  const m = moduleById(id);
-                  if (!m) return null;
-                  const approved = ctx.isModuleApproved(id);
-                  const unlocked = ctx.isModuleUnlocked(id);
-                  return (
-                    <Card key={id} tone="quiet" pad={4} className="row-hover">
-                    {/* Two rows: the title owns the first, meta and action share the second,
-                        so the module name reads as a sentence on a 390px phone. */}
-                    <div className="stack gap-2">
-                      <div className="row items-baseline gap-2">
-                        <span className="t-label c-tx2 no-shrink">{m.code}</span>
-                        <span className="t-sm grow" style={{ minWidth: 0 }}>{m.title}</span>
-                      </div>
-                      <div className="row items-center gap-3">
-                        {/* This counter sits on --s0, the lightest surface in
-                            the system, where --tx3 measures 3.49:1. --tx2 is
-                            the quiet tier that is legal here. */}
-                        <span className="t-label t-num c-tx2">
-                          {lessonsDone(id)}/{m.lessons.length}
-                        </span>
-                        <div className="grow" />
-                        {approved
-                          ? <StatusBadge tone="ready">{tr('jr.approved', lang)}</StatusBadge>
-                          : unlocked
-                            ? <Button variant={id === actionableModuleId ? 'primary' : 'ghost'} onClick={() => onOpenModule(id)}>{tr('jr.open', lang)}</Button>
-                            : <Lock size={13} className="c-tx3" />}
-                      </div>
-                    </div>
-                    </Card>
-                  );
-                })}
-                {/* Boss battles are milestones that follow this phase's units —
-                    same milestone language, opened via the existing onOpenBoss. */}
-                {phase.moduleIds.flatMap(id => bossBattlesAfter(id)).map(b => {
-                  const ready = b.afterUnits.every((u: string) => ctx.isModuleApproved(u));
-                  const passed = bossDone(b.id);
-                  return (
-                    <Card key={b.id} tone="quiet" pad={4} className="row-hover">
-                    <div className="row items-center gap-3">
-                      {passed ? <Trophy size={16} className="c-g1 no-shrink" /> : <Swords size={16} className="c-g2 no-shrink" />}
-                      <span className="t-sm grow" style={{ minWidth: 0, color: ready || passed ? 'var(--g1)' : 'var(--tx2)' }}>{b.title}</span>
-                      {passed
-                        ? <StatusBadge tone="ready">{tr('jr.passed', lang)}</StatusBadge>
-                        : ready
-                          ? <Button variant="ghost" onClick={() => onOpenBoss(b.id)}>{tr('jr.start', lang)}</Button>
-                          : <Lock size={13} className="c-tx3" />}
-                    </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-
-            {phase.moduleIds.length === 0 && (
-              <p className="t-sm mt-4 c-tx3">
-                {tr('jr.buildsoon', lang)}
-              </p>
-            )}
-          </>
+        {phase.moduleIds.length === 0 && (
+          <p className="t-sm mt-4 c-tx3">
+            {tr('jr.buildsoon', lang)}
+          </p>
         )}
       </div>
-
-      </div>
-    </m.li>
+    </div>
   );
 };
 
