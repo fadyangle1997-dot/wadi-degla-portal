@@ -600,6 +600,15 @@ describe('🔴 accessibility contracts (sprint 07)', () => {
     }
   });
 
+  it('an unavailable button keeps a readable label', () => {
+    // The trainer's «جاهز» measured 2.09:1 through the old .45 fade; the
+    // label is the one thing that says what is unavailable.
+    const rule = css.match(/\.btn:disabled,[^{]*\{([^}]*)\}/)?.[1] ?? '';
+    expect(rule).toMatch(/color:var\(--tx0\)/);
+    expect(rule).not.toMatch(/opacity/);
+    expect(css).not.toMatch(/\.btn\[aria-disabled="true"\]\s*\{[^}]*opacity/);
+  });
+
   it('.t-title is a real rule, not a phantom class', () => {
     // It was used in eight components and defined nowhere: the call sites with
     // no inline colour rendered black on a warm-black card, 1.3:1.
