@@ -24,6 +24,7 @@ import { navFor } from '../domain/identity/access';
 import { useLang, langStore, t, tf, roleName as roleDisplayName, type Key } from '../app/i18n';
 import { WIDTH } from './designSystem';
 import { LoadingState, useModal } from './primitives';
+import { useOverlayParam } from '../app/overlayHistory';
 
 /** Icons are presentation only — the nav itself is built from permissions. */
 const ICONS: Record<string, React.ReactNode> = {
@@ -45,9 +46,10 @@ export const AppShell: React.FC<{
   const actor = identityStore.currentUser();
 
   // The Identity Center is a workspace overlay owned by the shell — not a route,
-  // not a ViewKind. It opens from the profile menu and dismisses back to the
-  // current page, leaving navigation state untouched.
-  const [identityOpen, setIdentityOpen] = React.useState(false);
+  // not a ViewKind. It opens from the profile menu over whatever page is open,
+  // in the URL as `?panel=profile`, so Back closes it and leaves the page be.
+  const [panel, openPanel, closePanel] = useOverlayParam('panel');
+  const identityOpen = panel === 'profile';
 
   const lang = useLang();
   // Built-in roles are translated; a custom role shows the name the admin gave it.
@@ -134,7 +136,7 @@ export const AppShell: React.FC<{
               name — calm, and unmistakably this platform rather than a social
               app, because the role stays and no status decoration appears. */}
           <div className="shell-identity">
-            <ProfileMenu name={actor?.name ?? '—'} role={roleName} onOpenProfile={() => setIdentityOpen(true)} />
+            <ProfileMenu name={actor?.name ?? '—'} role={roleName} onOpenProfile={() => openPanel('profile')} />
           </div>
         </div>
       </header>
@@ -156,7 +158,7 @@ export const AppShell: React.FC<{
         {children}
       </div>
 
-      {identityOpen && <ProfileOverlay label={t('pf.title', lang)} onClose={() => setIdentityOpen(false)} />}
+      {identityOpen && <ProfileOverlay label={t('pf.title', lang)} onClose={closePanel} />}
     </div>
   );
 };
@@ -469,7 +471,7 @@ const TextSizeChoice: React.FC = () => {
 /** The profile opens over the page: a dialog, so it takes focus, closes on
  *  Escape or its × and gives focus back to the menu that opened it. */
 const ProfileOverlay: React.FC<{ label: string; onClose: () => void }> = ({ label, onClose }) => {
-  const ref = useModal<HTMLDivElement>(onClose);
+  const ref = useModal<HTMLDivElement>(onClose, undefined, true);
   return (
     <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label}
       style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'var(--void)', overflowY: 'auto', outline: 'none' }}>

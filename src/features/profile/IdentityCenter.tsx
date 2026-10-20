@@ -16,11 +16,11 @@ import React, { useMemo } from 'react';
 import { m } from 'motion/react';
 import { User2, MapPin, BadgeCheck, GraduationCap, Award, Clock } from 'lucide-react';
 import { useIdentity, identityStore } from '../../app/identity/identityStore';
-import { useProgress, learningProgress, moduleLessonsDone, isModuleUnlocked } from '../../app/progress';
-import { useTraining, trainingStore, traineeIdOrNull, reviewOf } from '../../app/training/trainingStore';
+import { useProgress, learningProgress } from '../../app/progress';
+import { useTraining, trainingStore, traineeIdOrNull } from '../../app/training/trainingStore';
+import { phaseContextFor, useTodaysMission } from '../../app/journeyContext';
 import { readinessFromOwnEvents } from '../../app/analytics/dashboardStore';
-import { currentPhase, dayPosition, PROGRAM, type PhaseContext } from '../../domain/journey/program';
-import { nextAction } from '../../domain/journey/nextAction';
+import { currentPhase, dayPosition, PROGRAM } from '../../domain/journey/program';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent, CloseButton } from '../../ui/primitives';
 import { useLang, t as tr, tf } from '../../app/i18n';
@@ -38,12 +38,8 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
   const me = identityStore.currentUser();
   const traineeId = me?.id ?? '';
 
-  const ctx: PhaseContext = useMemo(() => ({
-    isModuleApproved: id => reviewOf(t, (traineeIdOrNull() ?? ''), id).status === 'ready',
-    isModuleWaiting: id => reviewOf(t, (traineeIdOrNull() ?? ''), id).status === 'waiting',
-    isModuleStarted: id => moduleLessonsDone(p, id) > 0,
-    isModuleUnlocked: id => isModuleUnlocked(p, id),
-  }), [t, p]);
+  // The same bridge the home screen and the roadmap use (app/journeyContext).
+  const ctx = useMemo(() => phaseContextFor(p, t, traineeIdOrNull() ?? ''), [t, p]);
 
   const phase = currentPhase(ctx);
   const lang = useLang();
@@ -55,9 +51,9 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
     return readinessFromOwnEvents(traineeId, own);
   }, [traineeId]);
 
-  // Next step — derived from the SAME nextAction the home screen resolves, so
-  // the profile can never disagree with the path about what comes next.
-  const next = useMemo(() => nextAction(p, t, traineeId), [p, t, traineeId]);
+  // Next step — today's mission, from the SAME resolver the home screen and
+  // the roadmap read, so the profile can never give a third answer.
+  const next = useTodaysMission().primary;
   // The module title is Arabic content, so it is declared as such inside the
   // translated sentence.
   const withTitle = (key: 'pf.resume' | 'pf.exam' | 'pf.submit' | 'pf.improve') =>
@@ -70,6 +66,8 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
       case 'needs_submission': return withTitle('pf.submit');
       case 'rejected_review': return withTitle('pf.improve');
       case 'all_done': return tr('pf.alldone', lang);
+      case 'readiness': return tr('jr.readytitle', lang);
+      case 'decision_review': return tr('jr.reviewtitle', lang);
       default: return null;
     }
   })();

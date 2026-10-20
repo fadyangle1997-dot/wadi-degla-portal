@@ -7,7 +7,7 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { m, AnimatePresence } from 'motion/react';
-import { HelpCircle, Lightbulb, Sparkles, ArrowRight, ClipboardCheck } from 'lucide-react';
+import { HelpCircle, Lightbulb, Sparkles, ArrowRight, ChevronLeft, ClipboardCheck } from 'lucide-react';
 import type { Lesson } from '../../domain/types/content';
 import { Button, Eyebrow, Callout, OptionButton, ScreenHeader, ProgressRail, Capsule, SpineWell } from '../../ui/primitives';
 import { lessonSkillTouches, LEVEL_LABEL } from '../../app/skills';
@@ -115,6 +115,14 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
   const [commitment, setCommitment] = useState<string | null>(null);
   const stage = stages[idx] ?? 'done';
   const next = () => setIdx(i => Math.min(i + 1, stages.length - 1));
+  // «السابق» re-reads what came before. It never steps into the quiz or back
+  // past it: the quiz records each question's FIRST answer for spaced
+  // retrieval, and a second «first» answer would change that schedule. The
+  // closing screen has its own ways on.
+  const quizAt = stages.indexOf('quiz');
+  const floor = quizAt >= 0 && idx > quizAt ? quizAt + 1 : 0;
+  const canGoBack = idx > floor && stage !== 'quiz' && stage !== 'done';
+  const prev = () => setIdx(i => Math.max(i - 1, floor));
   const ruleRefs = useMemo(() => lesson.points.flatMap(p => (p.rule ? [p.rule] : [])), [lesson]);
   const headingRef = useRef<HTMLDivElement>(null);
 
@@ -519,6 +527,11 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
             </m.section>
           )}
         </AnimatePresence>
+        {canGoBack && (
+          <div className="focus-col lesson-steps">
+            <Button variant="ghost" onClick={prev}><ChevronLeft size={16} className="icon-dir" aria-hidden /> السابق</Button>
+          </div>
+        )}
       </main>
     </div>
   );

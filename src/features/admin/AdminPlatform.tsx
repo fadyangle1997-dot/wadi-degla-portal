@@ -14,23 +14,26 @@ import { useIdentity, useCan, identityStore } from '../../app/identity/identityS
 import { useTraining, trainingStore } from '../../app/training/trainingStore';
 import { detectOperationalIssues, summarizeIssues, type OperationalIssue, type Severity } from '../../domain/operations/health';
 import { adminStats } from '../../domain/operations/adminStats';
-import { filterAudit, latestAudit, describeAudit, auditActions, auditExportRows, type AuditFilter } from '../../domain/operations/audit';
+import { filterAudit, latestAudit, describeAudit, auditActions, auditExportRows, actionOf, auditKey, type AuditFilter } from '../../domain/operations/audit';
 import { Button, Eyebrow, EmptyState, Card, Toast, ArabicContent, ConfirmDialog, PageHeader, SectionNav, SectionHeader, MetricStrip, Metric, Brief, Meter, DataTable, Status, Num, FormField, type Column } from '../../ui/primitives';
 import { loadDemoScenario, clearDemoTraining } from '../../app/demo/demoScenario';
 import { fade } from '../../ui/motion';
 import { AdminView } from './AdminView';
 import { OrganizationPanel } from './OrganizationPanel';
 import { WIDTH } from '../../ui/designSystem';
-import { useOrganization } from '../../app/organization/orgStore';
+import { useOrganization, orgStore } from '../../app/organization/orgStore';
 import { branchNameOf } from '../../domain/organization';
 import { useLang, t, tf, iso, type Key } from '../../app/i18n';
+import { overlayParams } from '../../app/overlayHistory';
+import { leaveGuard } from '../../app/leaveGuard';
 
 type Tab = 'dashboard' | 'inbox' | 'org' | 'audit' | 'users';
 
 export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const lang = useLang();
   const canDo = useCan();
-  const [tab, setTab] = useState<Tab>('dashboard');
+  // A link to an account (#/admin?user=…) opens on the users tab.
+  const [tab, setTab] = useState<Tab>(() => (overlayParams().has('user') || overlayParams().has('create') ? 'users' : 'dashboard'));
   // An inbox fix that names a person opens that person's account, not the top
   // of a list of everyone.
   const [focusUser, setFocusUser] = useState<string | null>(null);
@@ -56,7 +59,7 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const header = (
     <PageHeader crumbs={[t('crumb.academy', lang), t('nav.admin', lang)]} title={t('ad.platform', lang)}
       nav={<SectionNav label={t('ad.sections', lang)} items={visibleTabs} active={current.id}
-        onChange={(id: string) => { setFocusUser(null); setTab(id as Tab); }} />} />
+        onChange={(id: string) => leaveGuard.ask(() => { setFocusUser(null); setTab(id as Tab); })} />} />
   );
 
   return (
@@ -253,7 +256,12 @@ const OperationalInbox: React.FC<{ onGoToUser: (userId: string | undefined) => v
 const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
   const lang = useLang();
   const { users } = useIdentity();
-  const log = identityStore.auditLog();
+  // Account changes and governance changes to the organisation, in one log.
+  // Both logs are replaced, never mutated, when an event is appended.
+  useOrganization();
+  const accountLog = identityStore.auditLog();
+  const orgLog = orgStore.auditLog();
+  const log = useMemo(() => [...accountLog, ...orgLog], [accountLog, orgLog]);
   const [filter, setFilter] = useState<AuditFilter>({});
   const nameOf = useMemo(() => {
     const map = new Map(users.map(u => [u.id, u.name]));
@@ -271,8 +279,8 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
   const exportCsv = () => {
     const rows = auditExportRows(matching, nameOf);
     const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
-    const csv = ['\uFEFF' + ['at', 'actor', 'action', 'detail'].join(','),
-      ...rows.map(r => [new Date(r.at).toISOString(), r.actor, r.action, r.detail].map(cell).join(','))].join('\r\n');
+    const csv = ['\uFEFF' + ['at', 'actor', 'action', 'target', 'before', 'after', 'detail'].join(','),
+      ...rows.map(r => [new Date(r.at).toISOString(), r.actor, r.action, r.target, r.before, r.after, r.detail].map(cell).join(','))].join('\r\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url;
@@ -291,7 +299,7 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
   const columns: Column<Ev>[] = [
     { id: 'what', header: t('ad.col.what', lang), cell: e => <span className="c-tx1">{describeAudit(e, nameOf)}</span> },
     { id: 'when', header: t('ad.col.when', lang), sortValue: e => e.at, cell: e => <span className="t-sm"><Num>{when(e.at)}</Num></span> },
-    { id: 'type', header: t('ad.col.type', lang), cell: e => <span className="t-label" lang="en" dir="ltr">{e.type}</span> },
+    { id: 'type', header: t('ad.col.type', lang), cell: e => <span className="t-label" lang="en" dir="ltr">{actionOf(e)}</span> },
   ];
 
   return (
@@ -321,7 +329,7 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
           <EmptyState title={t('ad.noevents', lang)} body={t('ad.noeventsbody', lang)} />
         ) : (
           <DataTable caption={t('ad.audittitle', lang)} columns={columns} rows={shown}
-            rowKey={e => `${e.at}:${e.type}:${'userId' in e ? String(e.userId) : ''}`} initialSort={{ id: 'when', dir: 'desc' }} />
+            rowKey={auditKey} initialSort={{ id: 'when', dir: 'desc' }} />
         )}
         {matching.length > CAP && <p className="t-sm mt-3 mb-0">{tf('ad.showing', { n: CAP }, lang)}</p>}
       </div>

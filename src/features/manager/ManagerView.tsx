@@ -24,6 +24,7 @@ import { useLang, t as tr, tf, iso } from '../../app/i18n';
 import { NeedsAttention, UnitsTable } from './NeedsAttention';
 import { CollapsibleRoster, EmployeeGrid } from './EmployeeRoster';
 import { EmployeeTimeline } from './EmployeeTimeline';
+import { useOverlayParam } from '../../app/overlayHistory';
 
 export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const lang = useLang();
@@ -31,7 +32,9 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const d = useDashboard();
   const t = useTraining();
   const { users } = useIdentity();
-  const [drill, setDrill] = useState<string | null>(null);
+  // The open employee file lives in the URL (#/manager?file=…): Back closes
+  // it before it leaves the dashboard, and a link can open it.
+  const [drill, setDrill, closeDrill] = useOverlayParam('file');
   // Which unit an executive has drilled into. Local state, not a route: the
   // list it seeds from is already scope-filtered, so there is no id in a URL
   // to tamper with (the pattern that caused the ReadinessReportView IDOR).
@@ -158,7 +161,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
           </>
         )}
 
-        {drill && <EmployeeTimeline employeeId={drill} onClose={() => setDrill(null)} />}
+        {drill && <EmployeeTimeline employeeId={drill} onClose={closeDrill} />}
       </m.main>
     </div>
   );

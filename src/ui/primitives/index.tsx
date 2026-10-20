@@ -374,7 +374,7 @@ export const ErrorState: React.FC<{
    Leaving a flow that holds unsaved work asks first — from its own exit
    control and from the browser's Back alike (through leaveGuard). Returns the
    way to ask and the dialog to render. Without work to lose it never asks. */
-export function useExitFlow(holding: boolean, copy: { title: string; body: string }) {
+export function useExitFlow(holding: boolean, copy: { title: string; body: string; leaveLabel?: string; stayLabel?: string }) {
   const lang = useLang();
   const [asking, setAsking] = useState(false);
   const proceedRef = useRef<() => void>(() => undefined);
@@ -389,7 +389,7 @@ export function useExitFlow(holding: boolean, copy: { title: string; body: strin
   };
   const dialog = (
     <ConfirmDialog open={asking} title={copy.title} body={copy.body}
-      confirmLabel={t('as.leave', lang)} cancelLabel={t('as.stay', lang)} initialFocus="cancel"
+      confirmLabel={copy.leaveLabel ?? t('as.leave', lang)} cancelLabel={copy.stayLabel ?? t('as.stay', lang)} initialFocus="cancel"
       onConfirm={() => { setAsking(false); proceedRef.current(); }} onCancel={() => setAsking(false)} />
   );
   return { leave, dialog };

@@ -87,7 +87,8 @@ test('unsaved work asks before it is lost — from Back and from the browser', a
   await toAcademy(page);
   await page.goto('/#/review');
   await page.getByRole('textbox').fill('عضو جه بصورة بطاقة بس');
-  await page.getByRole('button', { name: 'ارجع لرحلتي' }).click();
+  // Opened from the academy, the debrief goes back there, and says so.
+  await page.getByRole('button', { name: 'ارجع للمسار' }).click();
   const ask = page.getByRole('dialog', { name: /تسيب المراجعة/ });
   await expect(ask).toBeVisible();
   await expect(ask.getByRole('button', { name: 'كمّل' })).toBeFocused();
@@ -175,4 +176,35 @@ test('a decision without its reason asks for the reason, next to the box', async
   await file.getByRole('button', { name: 'جاهز للعمل' }).click();
   await expect(file.getByText(/اكتب سبب القرار الأول/)).toBeVisible();
   await expect(file.getByLabel('مبرر قرار الجاهزية')).toBeFocused();
+});
+
+test('a lesson steps back to what came before, but never back into its quiz', async ({ page }) => {
+  await signIn(page, 'ahmed.m');
+  await openTodaysLesson(page);
+  const main = page.locator('main');
+  const previous = main.getByRole('button', { name: 'السابق' });
+  const stage = page.locator('.lesson-stage');
+  // The first stage has nothing before it.
+  await expect(previous).toHaveCount(0);
+  await expect(stage).toContainText('خطوة 1 من');
+
+  // One step on, «السابق» appears and returns to the stage before.
+  await main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' }).last().click();
+  await expect(previous).toBeVisible();
+  await expect(stage).toContainText('خطوة 2 من');
+  await previous.click();
+  await expect(stage).toContainText('خطوة 1 من');
+  await expect(previous).toHaveCount(0);
+
+  // Inside the quiz, and after it, there is no way back into it.
+  for (let i = 0; i < 40 && !/اتأكد إنك فهمت/.test(await main.innerText()); i++) {
+    await settle(page);
+    const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' });
+    const rows = main.getByRole('button', { name: 'مطلوب', exact: true });
+    if (await forward.count()) await forward.last().click({ timeout: 2000 }).catch(() => {});
+    else if (await rows.count()) { for (const r of await rows.all()) await r.click({ timeout: 2000 }).catch(() => {}); }
+    else await main.locator('button.option-idle:enabled').first().click({ timeout: 2000 }).catch(() => {});
+  }
+  await expect(main.getByText(/اتأكد إنك فهمت/)).toBeVisible();
+  await expect(previous).toHaveCount(0);
 });

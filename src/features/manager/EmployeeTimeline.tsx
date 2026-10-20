@@ -8,9 +8,10 @@ import { moduleById } from '../../content/registry';
 import { DECISION_LABEL, readinessScore } from '../../domain/evaluation';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, Eyebrow, StatusBadge, ArabicContent, CloseButton, ConfirmDialog, Toast, InlineError, FormField, useModal } from '../../ui/primitives';
+import { Button, Eyebrow, StatusBadge, ArabicContent, CloseButton, ConfirmDialog, Toast, InlineError, FormField, useModal, useExitFlow } from '../../ui/primitives';
 import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
 import { useLang, t as tr, tf, type Key } from '../../app/i18n';
+import { leaveGuard } from '../../app/leaveGuard';
 
 const moduleName = (id: string) => moduleById(id)?.title ?? id;
 
@@ -21,10 +22,26 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
   // Readiness stations and coaching notes change the log but not the snapshot.
   useTrainingEvents();
   const canDo = useCan();
-  // Focus in, Tab kept inside, Escape closes, focus back to the row.
-  const dialogRef = useModal<HTMLDivElement>(onClose);
   const user = users.find(u => u.id === employeeId);
   const name = user?.name ?? employeeId;
+  // The rationale lives here, not in the decision panel, because every way
+  // out of the file must know about it: ×, Escape, the scrim, the report
+  // link, and the browser's or phone's Back (through leaveGuard).
+  const [rationale, setRationale] = React.useState('');
+  const typed = rationale.trim();
+  const { dialog } = useExitFlow(typed.length > 0, {
+    title: tf('mg.leaveask', { name }, lang),
+    body: tf('mg.leavebody', { name, why: typed.length > 80 ? `${typed.slice(0, 80)}…` : typed }, lang),
+    leaveLabel: tr('mg.leavego', lang),
+    stayLabel: tr('mg.leavestay', lang),
+  });
+  // Anything else typed inside the file (the manager's station-6 observation)
+  // holds the leave guard too; closing asks every holder that opened inside
+  // the file, innermost first, each naming what it would lose.
+  const depthAtOpen = React.useRef(leaveGuard.depth());
+  const close = () => leaveGuard.ask(onClose, depthAtOpen.current);
+  // Focus in, Tab kept inside, Escape closes (asking first), focus back to the row.
+  const dialogRef = useModal<HTMLDivElement>(close, undefined, true);
   const trainer = user?.trainerId ? users.find(u => u.id === user.trainerId) : undefined;
   const events = (trainingStore.events() as readonly OrgEvent[]).filter(e => e.employeeId === employeeId);
 
@@ -66,14 +83,14 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
   const hasEvidence = report.evaluationsCount > 0;
 
   return (
-    <div className="dialog-scrim" onClick={onClose}>
+    <div className="dialog-scrim" onClick={close}>
       <div ref={dialogRef} tabIndex={-1} className="dialog" role="dialog" aria-modal="true" aria-label={`${tr('mg.filetitle', lang)} ${name}`} onClick={e => e.stopPropagation()} style={{ maxWidth: 560, outline: 'none' }}>
 
         {/* header */}
         <div className="row items-center gap-3">
           <h2 className="t-h3 m-0 grow">{name}</h2>
           <Button variant="ghost" onClick={() => { window.location.hash = `#/readiness-report/${employeeId}`; }}>{tr('mg.report', lang)}</Button>
-          <CloseButton onClick={onClose} label={tr('mg.close', lang)} />
+          <CloseButton onClick={close} label={tr('mg.close', lang)} />
         </div>
 
         {/* ── LAYER 1 · THE VERDICT — "do I need to act?" ── */}
@@ -132,8 +149,10 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
         )}
 
         {/* ── decision panel — the manager's action, unchanged ── */}
-        <FinalDecisionPanel employeeId={employeeId} t={t} canDecide={canDo('readiness.decide')} />
+        <FinalDecisionPanel employeeId={employeeId} t={t} canDecide={canDo('readiness.decide')}
+          rationale={rationale} setRationale={setRationale} />
       </div>
+      {dialog}
     </div>
   );
 };
@@ -144,9 +163,11 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
  * trainee is. Reuses the training store's decideReadiness + the shared
  * programCompletion rule — no new state, no parallel workflow.
  */
-const FinalDecisionPanel: React.FC<{ employeeId: string; t: ReturnType<typeof useTraining>; canDecide: boolean }> = ({ employeeId, t, canDecide }) => {
+const FinalDecisionPanel: React.FC<{
+  employeeId: string; t: ReturnType<typeof useTraining>; canDecide: boolean;
+  rationale: string; setRationale: (v: string) => void;
+}> = ({ employeeId, t, canDecide, rationale, setRationale }) => {
   const lang = useLang();
-  const [rationale, setRationale] = React.useState('');
   const existing = finalDecisionOf(t, employeeId);
   const complete = isProgramComplete(t, employeeId);
   const { approved, total } = approvedModuleCount(t, employeeId);

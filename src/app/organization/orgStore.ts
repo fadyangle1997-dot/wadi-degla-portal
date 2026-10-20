@@ -1,16 +1,23 @@
 /**
  * Organization store — reactive layer over the Area/Branch roster (ADR-001
  * pattern, mirroring progressStore). Views call semantic actions; every
- * mutation persists and notifies. The Admin Area Assignment SCREEN is
- * explicitly out of scope for this sprint ("do not redesign the UI yet") —
- * this file is the foundation it will call into.
+ * mutation persists and notifies.
+ *
+ * Governance: every mutation also appends one structured audit event
+ * (domain/organization/audit) — who, what, which area or branch, before and
+ * after, and the ids whose visibility it touched. Like the identity log it
+ * requires a signed-in actor: an unattributed change to who sees what is
+ * refused, never recorded as nobody's.
  */
 import { useSyncExternalStore } from 'react';
 import type { Area, Branch } from '../../domain/organization';
+import { orgEventFor, type OrgAuditEvent } from '../../domain/organization/audit';
+import { identityStore } from '../identity/identityStore';
 import { AREA_SEED, BRANCH_SEED } from './orgSeed';
 
 const AREAS_KEY = 'wda.org.areas.v1';
 const BRANCHES_KEY = 'wda.org.branches.v1';
+const AUDIT_KEY = 'wda.org.audit.v1';
 
 interface OrgState {
   readonly areas: readonly Area[];
@@ -33,12 +40,22 @@ function isBranchArray(v: unknown): v is Branch[] {
   return Array.isArray(v) && v.every(b => b && typeof b === 'object' && typeof (b as Partial<Branch>).id === 'string');
 }
 
-function persist(state: OrgState): boolean {
+function persist(state: OrgState, log: readonly OrgAuditEvent[]): boolean {
   try {
     localStorage.setItem(AREAS_KEY, JSON.stringify(state.areas));
     localStorage.setItem(BRANCHES_KEY, JSON.stringify(state.branches));
+    localStorage.setItem(AUDIT_KEY, JSON.stringify(log));
     return true;
   } catch { return false; }
+}
+/** Only well-formed events survive a read: an audit log is evidence. */
+function loadLog(): OrgAuditEvent[] {
+  const raw = read<unknown>(AUDIT_KEY);
+  return Array.isArray(raw)
+    ? raw.filter((e): e is OrgAuditEvent => !!e && typeof e === 'object'
+        && typeof (e as OrgAuditEvent).id === 'string' && typeof (e as OrgAuditEvent).action === 'string'
+        && typeof (e as OrgAuditEvent).actorId === 'string' && typeof (e as OrgAuditEvent).at === 'number')
+    : [];
 }
 function load(): OrgState {
   const rawAreas = read<unknown>(AREAS_KEY);
@@ -52,11 +69,26 @@ function load(): OrgState {
 }
 
 let state: OrgState = load();
+let log: readonly OrgAuditEvent[] = loadLog();
 let healthy = true;
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach(l => l());
-const apply = (next: OrgState) => { state = next; healthy = persist(state); notify(); };
 const uid = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
+/** Commit one change: the roster and its governance event, together or not at all. */
+const apply = (next: OrgState) => {
+  const actor = identityStore.currentUser();
+  if (!actor) throw new Error('organisation: no signed-in user — governance changes must be attributable');
+  const event = orgEventFor(state, next, {
+    id: uid('org-ev'), at: Date.now(), actorId: actor.id,
+    nameOf: id => identityStore.userById(id)?.name ?? id,
+  });
+  if (!event) return;   // nothing changed: nothing to record
+  state = next;
+  log = [...log, event];
+  healthy = persist(state, log);
+  notify();
+};
 
 export const orgStore = {
   get: () => state,
@@ -82,11 +114,11 @@ export const orgStore = {
    *  reorganized. This is the cascade the brief's "no leaks" concern implies:
    *  an orphaned branch must resolve to unassigned, never linger pointing at
    *  a deleted area. */
-  deleteArea: (areaId: string) =>
-    apply({
-      areas: state.areas.filter(a => a.id !== areaId),
-      branches: state.branches.map(b => b.areaId === areaId ? { ...b, areaId: null } : b),
-    }),
+  deleteArea: (areaId: string) => {
+    // One event per consequence: each branch leaving, then the area itself.
+    for (const b of state.branches.filter(x => x.areaId === areaId)) orgStore.transferBranch(b.id, null);
+    apply({ ...state, areas: state.areas.filter(a => a.id !== areaId) });
+  },
 
   /** Admin: assign or clear who manages an area. `null` clears it — an area
    *  with no manager is a valid, visible state (not an error), same as a
@@ -106,7 +138,11 @@ export const orgStore = {
   setBranchStatus: (branchId: string, status: Branch['status']) =>
     apply({ ...state, branches: state.branches.map(b => b.id === branchId ? { ...b, status } : b) }),
 
-  reset: () => apply({ areas: AREA_SEED, branches: BRANCH_SEED }),
+  /** The governance log, oldest first. */
+  auditLog: (): readonly OrgAuditEvent[] => log,
+
+  /** Tests only: back to the seed, without a governance event — no person did it. */
+  reset: () => { state = { areas: AREA_SEED, branches: BRANCH_SEED }; log = []; healthy = persist(state, log); notify(); },
 };
 
 export const useOrganization = (): OrgState =>

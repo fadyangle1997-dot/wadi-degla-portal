@@ -39,7 +39,9 @@ export function toHash(v: View): string {
 }
 
 export function parseHash(hash: string): View {
-  const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  // An overlay open over the screen rides in the query (`#/manager?file=…`,
+  // see overlayHistory); the screen itself is the path before it.
+  const parts = hash.replace(/^#\/?/, '').split('?')[0]!.split('/').filter(Boolean);
   switch (parts[0]) {
     case 'welcome': return { kind: 'welcome' };
     case 'journey': return { kind: 'journey' };

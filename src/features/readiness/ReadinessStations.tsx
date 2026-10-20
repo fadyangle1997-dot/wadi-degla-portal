@@ -15,7 +15,7 @@ import {
   EVALUATION_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS,
   type EvaluationDimension, type EvaluationDecision, type ConductObservations,
 } from '../../domain/evaluation';
-import { Button, ArabicContent, Status } from '../../ui/primitives';
+import { Button, ArabicContent, Status, useExitFlow } from '../../ui/primitives';
 import { ReadinessTrack } from './ReadinessTrack';
 import { useLang, t as tr, tf, type Key } from '../../app/i18n';
 
@@ -107,6 +107,16 @@ const StationForm: React.FC<{
   const [scores, setScores] = useState<Partial<Record<EvaluationDimension, number>>>(
     () => Object.fromEntries(station.measures.map(d => [d, initial?.[d] ?? 70])));
   const [observation, setObservation] = useState(initialObservation);
+  // Scores moved or an observation typed is evidence: leaving it — the file's
+  // ×, Escape, Back, another screen — asks first and says what goes.
+  const dirty = observation.trim() !== initialObservation.trim()
+    || station.measures.some(d => (scores[d] ?? 70) !== (initial?.[d] ?? 70));
+  const { dialog } = useExitFlow(dirty, {
+    title: tf('rd.leaveask', { station: station.title }, lang),
+    body: tr('rd.leavebody', lang),
+    leaveLabel: tr('rd.leavego', lang),
+    stayLabel: tr('rd.leavestay', lang),
+  });
   const problem = stationAssessmentProblem(station, scores, observation);
   const obsId = `obs-${station.id}`;
   const [tried, setTried] = useState(false);
@@ -141,6 +151,7 @@ const StationForm: React.FC<{
           <ClipboardCheck size={16} /> {tr('rd.save', lang)}
         </Button>
       </div>
+      {dialog}
     </div>
   );
 };

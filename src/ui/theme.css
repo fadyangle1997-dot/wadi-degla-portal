@@ -429,6 +429,16 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .crumbs li { font-size:.875rem; font-weight:600; color:var(--tx2); }
 .crumb-link { display:inline-flex; align-items:center; min-height:24px; color:var(--tx2); text-decoration:none; border-radius:var(--r-sm); }
 .crumb-link:hover { color:var(--tx0); text-decoration:underline; text-underline-offset:4px; }
+/* A secondary act under a mission: available today, never a second button.
+   Underlined so it reads as an action without competing with the primary. */
+.quiet-act { display:inline-flex; align-items:center; gap:var(--sp-2); min-height:24px; padding:0; border:0; background:none;
+  font:inherit; color:var(--tx0); cursor:pointer; text-decoration:underline; text-underline-offset:4px; border-radius:var(--r-sm); }
+.quiet-act:hover { text-decoration-thickness:2px; }
+/* A staged change: picked, not saved. The field and the sentence under it
+   carry the attention colour until Save or Cancel. */
+.field[data-staged] { border-color:var(--attn); }
+.staged-change { display:flex; flex-direction:column; gap:var(--sp-3); padding:var(--sp-3) var(--sp-4);
+  background:var(--s-2); border:1px solid var(--attn-line); border-inline-start:3px solid var(--attn); border-radius:var(--r-sm); }
 .crumbs li + li::before { content:"/"; margin-inline-end:var(--sp-2); color:var(--tx3); font-weight:400; }
 .crumbs li[aria-current="page"] { color:var(--g1); }
 .page-header-row { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:var(--sp-4); }
@@ -604,6 +614,8 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 /* The lesson's current stage, at the end of its bar. On a phone the bar and
    the lesson title already fill the row; the stage stays for screen readers. */
 .lesson-stage { white-space:nowrap; }
+/* «السابق» sits under the stage, quiet, never beside the stage's own «next». */
+.lesson-steps { padding-top:var(--sp-4); padding-bottom:var(--sp-6); }
 @media (max-width: 559px) { .lesson-stage { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } }
 
 /* ASSESSMENT MODE — the room an exam or a boss battle opens into. The void,

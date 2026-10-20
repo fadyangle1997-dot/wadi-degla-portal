@@ -78,7 +78,7 @@ const FINAL_TONE = { ready: 'ready', extend: 'attn', reject: 'risk' } as const;
 
 interface DimRow { d: EvaluationDimension; score: number; floor: number; critical: boolean }
 
-export const ReadinessResult: React.FC<{ standing: ReadinessStanding; onExit: () => void }> = ({ standing, onExit }) => {
+export const ReadinessResult: React.FC<{ standing: ReadinessStanding; onExit: () => void; exitLabel?: string }> = ({ standing, onExit, exitLabel = 'رجوع لرحلتي' }) => {
   const { outcome, track, conduct, managerDecision, phaseOpen, certified } = standing;
   const shown = demonstratedCount(track);
   const missing = outcome.stationsMissing.length;
@@ -131,7 +131,7 @@ export const ReadinessResult: React.FC<{ standing: ReadinessStanding; onExit: ()
       <PageHeader crumbs={[<a key="a" href="#/" className="crumb-link">الأكاديمية</a>, <a key="j" href="#/roadmap" className="crumb-link">رحلتي</a>, 'تقييم الجاهزية']}
         title="جاهزيتك للعمل المستقل"
         lead={<><Num>{shown}</Num> من <Num>{STATIONS.length}</Num> محطات اتثبتت · التقييم في اليوم 54–60</>}
-        actions={<Button variant="ghost" onClick={onExit}><ArrowRight size={16} className="icon-dir" /> رجوع لرحلتي</Button>} />
+        actions={<Button variant="ghost" onClick={onExit}><ArrowRight size={16} className="icon-dir" /> {exitLabel}</Button>} />
 
       <Brief prominent tone={brief.tone} title={brief.title} body={brief.body}
         eyebrow={<Status tone={certified ? 'ready' : missing > 0 ? 'neutral' : outcome.decision === 'ready' ? 'ready' : outcome.decision === 'extend' ? 'attn' : outcome.decision === 'not_ready' ? 'risk' : 'info'}>

@@ -119,10 +119,59 @@ test('an area needs a name, is acknowledged when made, and a rename cancels with
   await expect(page.getByText('اكتب اسم المنطقة.')).toBeVisible();
   await name.fill('Giza Area');
   await page.keyboard.press('Enter');
-  await expect(page.getByText('اتعملت المنطقة')).toBeVisible();
+  await expect(page.getByRole('status').getByText('تم إنشاء Giza Area')).toBeVisible();
   await expect(page.locator('span.t-title', { hasText: 'Giza Area' })).toBeVisible();
 
   await page.getByRole('button', { name: 'غيّر اسم Cairo Area 1' }).click();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'غيّر اسم Cairo Area 1' })).toBeVisible();
+});
+
+/**
+ * An assignment changes who sees what, so a select stages instead of saving:
+ * the row says what will change, Save says what did, Cancel undoes the pick,
+ * and the change lands in the audit log as a structured governance event.
+ */
+test('moving a branch is staged, saved by name, and recorded in the audit log', async ({ page }) => {
+  await signIn(page, 'admin');
+  await page.getByRole('button', { name: 'المنظمة' }).click();
+  const select = page.getByRole('combobox', { name: 'منطقة فرع Maadi' });
+
+  // Pick, then cancel: nothing changed.
+  await select.selectOption({ label: 'Cairo Area 2' });
+  await expect(page.getByText('فرع Maadi هيتنقل من Cairo Area 1 إلى Cairo Area 2.')).toBeVisible();
+  await page.getByRole('button', { name: 'إلغاء' }).click();
+  await expect(select).toHaveValue('cairo-1');
+  await expect(page.getByText('مش محفوظ لسه:')).toBeHidden();
+
+  // Pick, then try to leave the tab: it asks first.
+  await select.selectOption({ label: 'Cairo Area 2' });
+  await page.getByRole('button', { name: 'سجل التدقيق' }).click();
+  const ask = page.getByRole('dialog', { name: 'تسيب تغييرات الهيكل من غير حفظ؟' });
+  await expect(ask).toContainText('فرع Maadi هيتنقل من Cairo Area 1 إلى Cairo Area 2.');
+  await ask.getByRole('button', { name: 'ارجع للتغييرات' }).click();
+  await expect(select).toHaveValue('cairo-2');
+
+  // Save: the confirmation names the change, not «saved».
+  await page.getByRole('button', { name: 'احفظ' }).click();
+  await expect(page.getByRole('status').getByText('تم نقل فرع Maadi إلى Cairo Area 2')).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'منطقة فرع Maadi' })).toHaveValue('cairo-2');
+
+  // The audit log reads it as a governance event: who, what, from, to.
+  await page.getByRole('button', { name: 'سجل التدقيق' }).click();
+  const log = page.getByRole('table', { name: 'سجل التدقيق' });
+  await expect(log.getByRole('row').filter({ hasText: 'org.branch_moved' })).toContainText('نقل فرع Maadi من Cairo Area 1 إلى Cairo Area 2');
+});
+
+test('changing an area manager is staged too, and named when saved', async ({ page }) => {
+  await signIn(page, 'admin');
+  await page.getByRole('button', { name: 'المنظمة' }).click();
+  const select = page.getByRole('combobox', { name: 'مدير منطقة Cairo Area 1' });
+  await select.selectOption({ label: '— مش متعيّن —' });
+  await expect(page.getByText(/هيتشال من إدارة Cairo Area 1/)).toBeVisible();
+  await page.getByRole('button', { name: 'احفظ' }).click();
+  await expect(page.getByRole('status').getByText(/تم إلغاء تعيين .+ من إدارة Cairo Area 1/)).toBeVisible();
+  await page.getByRole('button', { name: 'سجل التدقيق' }).click();
+  await expect(page.getByRole('table', { name: 'سجل التدقيق' }).getByRole('row').filter({ hasText: 'org.area_manager_changed' }))
+    .toContainText('غيّر مدير منطقة Cairo Area 1 من');
 });

@@ -34,6 +34,7 @@ import { moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
 import { leaveGuard } from './leaveGuard';
+import { consumed, pushUrl, replaceUrl, restore, settled } from './overlayHistory';
 import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents, useTraining } from './training/trainingStore';
 import { TRAINING_POLICY } from '../domain/policy';
 import { useLang, t, tf } from './i18n';
@@ -46,7 +47,10 @@ const initialView = (): View => {
 
 /** A lazily loaded screen: its own loading state, and its own error state —
  *  a failed chunk or render is the screen's problem, not a blank app. */
-const IMMERSIVE = new Set<View['kind']>(['lesson', 'exam', 'boss']);
+// Screens opened FROM the home screen or the roadmap, which return to wherever
+// they were opened from. Today's mission can open the debrief and the
+// readiness assessment from either screen, so they return the same way.
+const RETURNS_TO_ORIGIN = new Set<View['kind']>(['lesson', 'exam', 'boss', 'review', 'readiness']);
 
 const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <RouteBoundary onHome={() => { location.hash = '#/'; }}>
@@ -57,12 +61,12 @@ const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 /** The trainee's readiness, computed from the stations their trainer and manager recorded. */
-const TraineeReadiness: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+const TraineeReadiness: React.FC<{ onExit: () => void; exitLabel: string }> = ({ onExit, exitLabel }) => {
   const events = useTrainingEvents();
   const training = useTraining();
   const id = traineeIdOrNull() ?? '';
   const standing = readinessStanding(training, events, id, progressStore.hasOnboarded());
-  return <ReadinessResult standing={standing} onExit={onExit} />;
+  return <ReadinessResult standing={standing} onExit={onExit} exitLabel={exitLabel} />;
 };
 
 /** Redirects an unauthorised view to the identity's own landing page. */
@@ -140,12 +144,12 @@ export const App: React.FC = () => {
   const setView = (v: View, replace = false) => {
     // An immersive screen returns to where it was opened from: a lesson or a
     // boss opened from the roadmap went back to the path, a screen away.
-    if (IMMERSIVE.has(v.kind) && !IMMERSIVE.has(viewRef.current.kind)) {
+    if (RETURNS_TO_ORIGIN.has(v.kind) && !RETURNS_TO_ORIGIN.has(viewRef.current.kind)) {
       origin.current = viewRef.current.kind === 'roadmap' ? 'roadmap' : 'path';
     }
     setViewState(v);
-    if (replace) history.replaceState(null, '', toHash(v));
-    else history.pushState(null, '', toHash(v));
+    if (replace) replaceUrl(toHash(v));
+    else pushUrl(toHash(v));
   };
   const toPath = () => setView({ kind: 'path' });
   const origin = useRef<'path' | 'roadmap'>('path');
@@ -159,15 +163,19 @@ export const App: React.FC = () => {
   const viewRef = useRef(view);
   viewRef.current = view;
   useEffect(() => {
-    const onPop = () => {
+    const onPop = (e: Event) => {
+      // Back closed an overlay, or dismissed a confirmation: the screen stays.
+      if (consumed(e)) return;
       const next = parseHash(location.hash);
       // popstate and hashchange both fire for one Back; the second sees the
-      // screen already restored and must not ask twice.
+      // screen already restored and must not ask twice. An overlay moving in
+      // the query is the same screen too (overlayHistory handles it).
       if (toHash(next) === toHash(viewRef.current)) return;
-      if (!leaveGuard.active()) { setViewState(next); return; }
-      history.pushState(null, '', toHash(viewRef.current));
+      if (!leaveGuard.active()) { setViewState(next); settled(); return; }
+      // Put the screen back, with whatever overlay was open on it, and ask.
+      restore();
       leaveGuard.ask(() => {
-        history.pushState(null, '', toHash(next));
+        pushUrl(toHash(next));
         setViewState(next);
       });
     };
@@ -241,6 +249,8 @@ export const App: React.FC = () => {
   if (view.kind === 'journey') return inShell(<Lazy><ArabicContent><JourneyView onExit={toPath} /></ArabicContent></Lazy>);
   if (view.kind === 'roadmap') return inShell(
     <Lazy><TrainingJourney
+      onOpenLesson={openLesson}
+      onOpenExam={moduleId => setView({ kind: 'exam', moduleId })}
       onOpenReview={() => setView({ kind: 'review' })}
       onOpenReadiness={() => setView({ kind: 'readiness' })}
       onOpenBoss={bossId => setView({ kind: 'boss', bossId })}
@@ -258,14 +268,14 @@ export const App: React.FC = () => {
 
   // The daily debrief — one question at a time, immersive so nothing competes
   // with the thinking. Reachable from the journey once independent work begins.
-  if (view.kind === 'review') return <Lazy><ArabicContent><DecisionReview onExit={() => setView({ kind: 'roadmap' })} /></ArabicContent></Lazy>;
+  if (view.kind === 'review') return <Lazy><ArabicContent><DecisionReview onExit={toOrigin} exitLabel={originLabel()} /></ArabicContent></Lazy>;
 
   // Surfaces the readiness engine against REAL evidence. With no stations
   // assessed yet the engine truthfully reports what blocks certification —
   // that IS the answer to "where am I?", not a placeholder.
   if (view.kind === 'readiness') return inShell(
     <Lazy><ArabicContent>
-      <TraineeReadiness onExit={() => setView({ kind: 'roadmap' })} />
+      <TraineeReadiness onExit={toOrigin} exitLabel={originLabel()} />
     </ArabicContent></Lazy>,
   );
   /* Staff platforms are fully translated. Inside them, Arabic content (module
@@ -366,6 +376,8 @@ export const App: React.FC = () => {
     <PathView
       onOpenLesson={openLesson}
       onOpenExam={moduleId => setView({ kind: 'exam', moduleId })}
+      onOpenReview={() => setView({ kind: 'review' })}
+      onOpenReadiness={() => setView({ kind: 'readiness' })}
       onOpenBoss={bossId => setView({ kind: 'boss', bossId })}
     />
   );

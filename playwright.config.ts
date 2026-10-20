@@ -26,8 +26,8 @@ export default defineConfig({
     launchOptions: executablePath ? { executablePath } : {},
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] }, testIgnore: '**/responsive.e2e.ts' },
-    { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: '**/responsive.e2e.ts' },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'] }, testIgnore: ['**/responsive.e2e.ts', '**/phone-back.e2e.ts'] },
+    { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: ['**/responsive.e2e.ts', '**/phone-back.e2e.ts'] },
   ],
   webServer: {
     command: 'npx vite preview --port 4173 --strictPort',

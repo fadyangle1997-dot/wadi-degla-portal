@@ -130,21 +130,27 @@ describe('🔴 the journey is composed, not assembled', () => {
     expect(act).toBeGreaterThan(hero);
   });
 
+  // Today's mission is rendered by MissionBrief, from the resolver the home
+  // screen reads too (domain/journey/mission.ts) — the two screens used to
+  // rank their own acts and gave a trainee two different missions.
+  const brief = readFileSync(join(FEATURES, 'journey/MissionBrief.tsx'), 'utf-8');
+
   it('🔴 today promotes exactly ONE act — never a stack of equal cards', () => {
     // Three cards of identical width, padding and weight tell the trainee that
     // three things matter equally, which is never true — and forces them to read
     // all three to find the one. That is a dashboard grid rotated 90°.
-    expect(src).toContain('const primary = acts[0];');
-    expect(src).toContain('const secondary = acts.slice(1);');
-    // The promoted act owns the only button in the section.
     const section = src.slice(src.indexOf('ONE ACT, THEN QUIET'), src.indexOf('THE ROUTE + ITS LEDGER'));
-    expect((section.match(/<Button/g) ?? []).length, 'more than one button competes').toBe(1);
+    expect((section.match(/<MissionBrief /g) ?? []).length).toBe(1);
+    expect(section).not.toMatch(/<Button|<Card/);
+    // Each mission the brief can show owns at most one button.
+    const branches = brief.slice(brief.indexOf('const PrimaryMission')).split(/\n {2}if \(|\n {2}const isExam/);
+    for (const b of branches) expect((b.match(/<Button/g) ?? []).length, 'more than one button competes').toBeLessThanOrEqual(1);
   });
 
   it('secondary acts are lines, not cards — available is not due', () => {
-    const section = src.slice(src.indexOf('ONE ACT, THEN QUIET'), src.indexOf('THE ROUTE + ITS LEDGER'));
-    const secondary = section.slice(section.indexOf('secondary.length'));
-    expect(secondary).not.toContain('<Card');
+    const also = brief.slice(brief.indexOf('mission.also.length'), brief.indexOf('const PrimaryMission'));
+    expect(also).toContain('className="quiet-act');
+    expect(also).not.toMatch(/<Card|<Button/);
   });
 
   it('at most one accent surface exists', () => {
@@ -153,8 +159,11 @@ describe('🔴 the journey is composed, not assembled', () => {
   });
 
   it('🚫 nothing renders above an empty space', () => {
-    // A heading with nothing under it is worse than no heading.
-    expect(src).toContain('{primary && (');
+    // A heading with nothing under it is worse than no heading: the mission
+    // always has a primary (a wait or «all done» is still an answer), and the
+    // «also today» line renders only when something is in it.
+    expect(readFileSync(join(FEATURES, '../domain/journey/mission.ts'), 'utf-8')).toContain('const primary = acts[0] ?? study;');
+    expect(brief).toContain('{mission.also.length > 0 && (');
     // Retrieval moved to the dashboard in sprint 02 — the same guard now lives
     // where the card does, in PathView, and the journey no longer mounts it.
     expect(src).not.toContain('<TodayRetrieval');
@@ -162,10 +171,12 @@ describe('🔴 the journey is composed, not assembled', () => {
   });
 
   it('priority lives in code, not in render order', () => {
-    // The gate — qualification — outranks the debrief, which outranks study.
-    const acts = src.slice(src.indexOf('const acts = useMemo'), src.indexOf('const primary'));
-    expect(acts.indexOf('READINESS_PHASE_DAY')).toBeLessThan(acts.indexOf('REVIEW_STARTS_ON_DAY'));
-    expect(acts).toContain('gate: true');
+    // Work the trainee must do outranks the qualification gate, which outranks
+    // the debrief; the ranking is the domain's (and unit-tested there).
+    const rank = readFileSync(join(FEATURES, '../domain/journey/mission.ts'), 'utf-8');
+    const body = rank.slice(rank.indexOf('export function todaysMission'));
+    expect(body.indexOf('URGENT.includes')).toBeLessThan(body.indexOf('READINESS_PHASE_DAY'));
+    expect(body.indexOf('READINESS_PHASE_DAY')).toBeLessThan(body.indexOf('REVIEW_STARTS_ON_DAY'));
   });
 });
 

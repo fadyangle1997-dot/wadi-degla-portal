@@ -1,4 +1,4 @@
-import { test, expect, signIn, finishLesson, settle, openTodaysLesson, toAcademy, expectAccessible } from './fixtures';
+import { test, expect, signIn, signOut, finishLesson, settle, openTodaysLesson, toAcademy, expectAccessible } from './fixtures';
 
 test.describe('trainee', () => {
   test('a new trainee is welcomed first, then has today\'s task on the academy', async ({ page }) => {
@@ -69,7 +69,7 @@ test('finishes a whole unit, sits the exam, and sees the result', async ({ page 
     if (await main.getByRole('button', { name: /ارجع للمسار/ }).isVisible()) break;
     const option = main.locator('button.option-idle:enabled');
     if (await option.count()) { await option.first().click({ timeout: 2000 }).catch(() => {}); continue; }
-    const forward = main.locator('button.btn:enabled');
+    const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' });
     if (await forward.count()) { await forward.last().click({ timeout: 2000 }).catch(() => {}); continue; }
     await page.waitForTimeout(100);
   }
@@ -89,7 +89,7 @@ test('leaving a lesson keeps its place, and leaving its closing screen keeps it 
     await settle(page);
     const option = main.locator('button.option-idle:enabled');
     if (await option.count()) { await option.first().click(); await settle(page); }
-    await main.locator('button.btn:enabled').last().click();
+    await main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' }).last().click();
   }
   await settle(page);
   const where = await page.locator('.lesson-stage').innerText();
@@ -103,7 +103,7 @@ test('leaving a lesson keeps its place, and leaving its closing screen keeps it 
   for (let step = 0; step < 80; step++) {
     await settle(page);
     if (await main.getByRole('button', { name: 'ارجع للمسار' }).isVisible()) break;
-    const forward = main.locator('button.btn:enabled');
+    const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' });
     if (await forward.count()) { await forward.last().click({ timeout: 2000 }).catch(() => {}); continue; }
     const option = main.locator('button.option-idle:enabled');
     if (await option.count()) { await option.first().click({ timeout: 2000 }).catch(() => {}); continue; }
@@ -112,4 +112,36 @@ test('leaving a lesson keeps its place, and leaving its closing screen keeps it 
   }
   await page.keyboard.press('Escape');
   await expect(page.getByText('1 من 4 دروس')).toBeVisible();
+});
+
+/**
+ * «أعمل إيه دلوقتي؟» has one answer. The home screen and the roadmap both show
+ * today's mission; on day 33 they used to disagree (continue the lesson vs.
+ * the decision debrief). Every demo trainee, each at a different point of the
+ * programme, must read the same mission on both.
+ */
+test('the home screen and the roadmap give every trainee the same mission', async ({ page }) => {
+  test.setTimeout(120_000);
+  await signIn(page, 'admin');
+  await page.getByRole('button', { name: 'حمّل بيانات العرض' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'حمّل بيانات العرض' }).click();
+  await signOut(page);
+
+  const missionOf = async () => {
+    const region = page.getByRole('region', { name: 'مهمة النهارده' });
+    await expect(region).toBeVisible();
+    return (await region.getByRole('heading').first().innerText()).trim();
+  };
+  const seen = new Set<string>();
+  for (const trainee of ['mariam.a', 'omar.h', 'sara.m', 'youssef.a', 'nada.t', 'karim.s', 'menna.k', 'lina.h', 'fady.r', 'dina.s']) {
+    await signIn(page, trainee);
+    const home = await missionOf();
+    await page.goto('/#/roadmap');
+    expect(await missionOf(), trainee).toBe(home);
+    seen.add(home);
+    await signOut(page);
+  }
+  // The scenario spreads trainees across the programme; one answer for all of
+  // them would mean the check compared nothing.
+  expect(seen.size).toBeGreaterThan(2);
 });

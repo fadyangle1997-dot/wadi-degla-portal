@@ -13,15 +13,16 @@
  * Journey and never appears here.
  */
 import React from 'react';
-import { Play, GraduationCap, Clock, Check, Lock, Flag, ArrowRight } from 'lucide-react';
+import { Lock, Flag } from 'lucide-react';
 import { moduleById, MODULES } from '../../content/registry';
 import { useProgress, moduleLessonsDone, progressStore, currentCommitment } from '../../app/progress';
-import { useTraining, traineeIdOrNull, trainingStore } from '../../app/training/trainingStore';
+import { useTraining, traineeIdOrNull } from '../../app/training/trainingStore';
 import { identityStore } from '../../app/identity/identityStore';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { homeContext } from '../../domain/journey/nextAction';
-import { Card, Button, Eyebrow, StatusBadge, ProgressRail, ArabicContent, PageHeader, Brief } from '../../ui/primitives';
-import { phaseContextFor } from '../../app/journeyContext';
+import { Card, Eyebrow, StatusBadge, ProgressRail, ArabicContent, PageHeader } from '../../ui/primitives';
+import { phaseContextFor, useTodaysMission } from '../../app/journeyContext';
+import { MissionBrief } from '../journey/MissionBrief';
 import { PROGRAM, PROGRAM_DAYS, currentPhase, dayPosition } from '../../domain/journey/program';
 import { useLang, t as tr, tf, iso } from '../../app/i18n';
 import { WIDTH } from '../../ui/designSystem';
@@ -30,10 +31,12 @@ import { TodayRetrieval, dueToday } from '../journey/TodayRetrieval';
 interface Props {
   onOpenLesson: (moduleId: string, lessonId: string) => void;
   onOpenExam: (moduleId: string) => void;
+  onOpenReview: () => void;
+  onOpenReadiness: () => void;
   onOpenBoss?: (bossId: string) => void;  // accepted for compatibility; bosses live in the Journey now
 }
 
-export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
+export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenReview, onOpenReadiness }) => {
   const lang = useLang();
   const p = useProgress();
   const t = useTraining();
@@ -43,6 +46,8 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
   const trainerName = identityStore.userById(identityStore.currentUser()?.trainerId)?.name;
 
   const { action, currentModule, nextModule } = homeContext(p, t, traineeId);
+  // The mission comes from the one resolver the roadmap reads too.
+  const mission = useTodaysMission();
   const ctx = phaseContextFor(p, t, traineeId);
   const phase = currentPhase(ctx);
   const { day } = dayPosition(ctx);
@@ -89,7 +94,8 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
         <div className="workspace workspace--aside">
           <div className="stack gap-5">
             {/* The single next step: the brief, and the screen's one primary action. */}
-            <TodaysMission action={action} trainerName={trainerName} onOpenLesson={onOpenLesson} onOpenExam={onOpenExam} />
+            <MissionBrief mission={mission} trainerName={trainerName}
+              onOpenLesson={onOpenLesson} onOpenExam={onOpenExam} onOpenReview={onOpenReview} onOpenReadiness={onOpenReadiness} />
 
             {/* Yesterday's commitment, shown back to the trainee: what they chose and
                 when. Never «did you do it?» — the platform cannot know (ADR-004). */}
@@ -122,11 +128,8 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
                    something else (exam, waiting, rejected, retry); otherwise the brief
                    already states it. */
                 showQuestion={!(
-                  action.module?.id === currentModule.id
-                  && action.kind !== 'take_exam'
-                  && action.kind !== 'waiting_review'
-                  && action.kind !== 'rejected_review'
-                  && action.kind !== 'needs_submission'
+                  mission.primary.module?.id === currentModule.id
+                  && mission.primary.kind === 'resume_lesson'
                 )}
               />
             )}
@@ -135,81 +138,6 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam }) => {
         </div>
       </main>
     </div>
-  );
-};
-
-/** ① Today's Mission — resolves the single next action into one hero + one CTA. */
-const TodaysMission: React.FC<{
-  action: ReturnType<typeof homeContext>['action'];
-  trainerName?: string;
-  onOpenLesson: (moduleId: string, lessonId: string) => void;
-  onOpenExam: (moduleId: string) => void;
-}> = ({ action, trainerName, onOpenLesson, onOpenExam }) => {
-  const lang = useLang();
-  const m = action.module;
-
-  if (action.kind === 'all_done') {
-    return (
-      <Brief prominent eyebrow={<Eyebrow icon={<Check size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
-        title={tr('path.alldone', lang)} body={tr('db.nostep', lang)} />
-    );
-  }
-
-  if (action.kind === 'rejected_review') {
-    return (
-      <Brief prominent tone="risk" eyebrow={<Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
-        title={tr('path.needswork', lang)} body={tf('pv.rejectedbody', { m: m?.title ?? '' }, lang)}
-        action={
-          <Button onClick={() => { if (m?.lessons[0]) onOpenLesson(m.id, m.lessons[0].id); }}>
-            {tr('db.reviewunit', lang)} <ArrowRight size={16} className="icon-dir" />
-          </Button>
-        } />
-    );
-  }
-
-  if (action.kind === 'waiting_review') {
-    return (
-      <Brief prominent eyebrow={<Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
-        title={waitingForTrainer(trainerName)}
-        body={
-          /* Waiting is the trainee's job right now; these lines say what happened
-             and what to do meanwhile, so the wait does not read as stuck. */
-          <>
-            <p className="m-0">{tf('pv.waitingbody', { m: m?.title ?? '' }, lang)}</p>
-            <p className="m-0 c-tx3">{tr('db.waiting', lang)}</p>
-            <p className="m-0 c-tx3">{tr('db.meanwhile', lang)}</p>
-          </>
-        } />
-    );
-  }
-
-  // The exam passed and is recorded, but the submission never reached the
-  // trainer. Retry calls the same idempotent submitForReview.
-  if (action.kind === 'needs_submission') {
-    return (
-      <Brief prominent tone="attn" eyebrow={<Eyebrow icon={<Clock size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
-        title={tf('pv.submittitle', { m: m?.title ?? '' }, lang)} body={tr('db.retrysubmit', lang)}
-        action={
-          <Button onClick={() => { if (m) trainingStore.submitForReview(traineeIdOrNull() ?? '', m.id); }}>
-            {tr('db.submitrev', lang)} <ArrowRight size={16} className="icon-dir" />
-          </Button>
-        } />
-    );
-  }
-
-  const isExam = action.kind === 'take_exam';
-  return (
-    <Brief prominent eyebrow={<Eyebrow icon={isExam ? <GraduationCap size={13} /> : <Play size={13} />}>{tr('path.mission', lang)}</Eyebrow>}
-      title={isExam ? <>{tr('db.examof', lang)} <ArabicContent as="span">{m?.title}</ArabicContent></> : <>{tr('db.contunit', lang)} <ArabicContent as="span">«{m?.title}»</ArabicContent></>}
-      body={isExam ? tr('db.examintro', lang) : <p className="m-0"><ArabicContent as="span">{m?.bigQuestion}</ArabicContent></p>}
-      action={
-        <Button onClick={() => {
-          if (isExam && m) onOpenExam(m.id);
-          else if (action.lessonId && m) onOpenLesson(m.id, action.lessonId);
-        }}>
-          {isExam ? tr('db.startexam', lang) : tr('db.contlesson', lang)} <ArrowRight size={16} className="icon-dir" />
-        </Button>
-      } />
   );
 };
 

@@ -80,6 +80,13 @@ export function decisionUnanchored(r: DecisionReview): boolean {
 const DAY_MS = 24 * 60 * 60 * 1000;
 const dayOf = (t: number) => Math.floor(t / DAY_MS);
 
+/** Whether one of these filing times falls on the same local calendar day as
+ *  `now` — the debrief is daily, and the trainee's day is their local one. */
+export function filedOnDayOf(filedAt: readonly number[], now: number): boolean {
+  const today = new Date(now).toDateString();
+  return filedAt.some(at => new Date(at).toDateString() === today);
+}
+
 /** Distinct days covered by these reviews. */
 export function daysCovered(reviews: readonly DecisionReview[]): number {
   return new Set(reviews.map(r => dayOf(r.at))).size;

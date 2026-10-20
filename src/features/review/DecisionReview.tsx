@@ -40,7 +40,7 @@ const RATIONALE: Record<ReviewField, string> = {
 };
 
 
-export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }> = ({ onExit, exitLabel = t('nav.toroadmap', langStore.get()) }) => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [idx, setIdx] = useState(0);
   const [filed, setFiled] = useState(false);
@@ -85,7 +85,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
   if (filed) {
     return (
       <div className="min-h-screen">
-        <ScreenHeader onBack={onExit} backLabel={t('nav.toroadmap', langStore.get())} maxWidth={WIDTH.focus} leading={<Eyebrow>مراجعة اليوم</Eyebrow>} />
+        <ScreenHeader onBack={onExit} backLabel={exitLabel} maxWidth={WIDTH.focus} leading={<Eyebrow>مراجعة اليوم</Eyebrow>} />
         <m.section {...fade} className="focus-col text-center" style={{ paddingTop: 'var(--sp-8)' }}>
           <Check size={32} className="c-ready" />
           <h1 className="t-h2" style={{ margin: 'var(--sp-4) 0 var(--sp-2)' }}>اتسجّلت</h1>
@@ -94,7 +94,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
             المدرب هيشوفها ويعلّق. الحلقة بتتقفل لما تقرا تعليقه.
           </p>
           <div className="mt-6">
-            <Button variant="ghost" onClick={onExit}>{t('nav.toroadmap', langStore.get())}</Button>
+            <Button variant="ghost" onClick={onExit}>{exitLabel}</Button>
           </div>
         </m.section>
       </div>
@@ -103,7 +103,7 @@ export const DecisionReview: React.FC<{ onExit: () => void }> = ({ onExit }) => 
 
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={() => leave(onExit)} backLabel={t('nav.toroadmap', langStore.get())} maxWidth={WIDTH.focus}
+      <ScreenHeader onBack={() => leave(onExit)} backLabel={exitLabel} maxWidth={WIDTH.focus}
         leading={<Eyebrow>مراجعة اليوم · {idx + 1} من {REVIEW_FIELDS.length}</Eyebrow>} />
 
       <main className="focus-col">

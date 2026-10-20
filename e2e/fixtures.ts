@@ -89,7 +89,8 @@ export async function finishLesson(page: Page) {
     const back = main.getByRole('button', { name: 'ارجع للمسار' });
     if (await back.isVisible()) { await back.click({ timeout: 2000 }).catch(() => {}); continue; }
 
-    const forward = main.locator('button.btn:enabled');
+    // Forward only: «السابق» steps back and would walk the lesson in circles.
+    const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' });
     // A stage can be replaced between finding a button and clicking it, so
     // each click is short-lived and the loop looks again.
     if (await forward.count()) { await forward.last().click({ timeout: 2000 }).catch(() => {}); continue; }

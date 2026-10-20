@@ -10,7 +10,7 @@
  * Every change is permission-gated via can(); every consequential one is said
  * back before it is recorded; the signed-in admin cannot lock themself out.
  */
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { UserPlus, Check, KeyRound, Power, Archive } from 'lucide-react';
 import { useIdentity, identityStore, useCan } from '../../app/identity/identityStore';
 import { useOrganization } from '../../app/organization/orgStore';
@@ -19,9 +19,10 @@ import { usersWhoCan } from '../../domain/identity/scope';
 import { branchNameOf } from '../../domain/organization';
 import {
   Button, EmptyState, ConfirmDialog, Toast, SectionHeader, DataTable, Status, Initials, CloseButton, FormField,
-  useModal, type Column,
+  useModal, useExitFlow, type Column,
 } from '../../ui/primitives';
 import { WIDTH } from '../../ui/designSystem';
+import { useOverlayParam } from '../../app/overlayHistory';
 import { useLang, t, tf, roleName as roleDisplayName, type Key, type Lang } from '../../app/i18n';
 
 type Roles = ReturnType<typeof useIdentity>['roles'];
@@ -46,8 +47,13 @@ export const AdminView: React.FC<{ onExit: () => void; openUserId?: string | nul
   const { users, roles } = useIdentity();
   const { branches } = useOrganization();
   const canDo = useCan();
-  const [creating, setCreating] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(openUserId ?? null);
+  // Both panels live in the URL (#/admin?user=… / ?create=user): Back closes
+  // the panel before it leaves the page, and a link can open an account.
+  const [createParam, openCreate, closeCreate] = useOverlayParam('create');
+  const creating = createParam === 'user';
+  const [openId, openUser, closeUser] = useOverlayParam('user');
+  // An inbox fix that names a person arrives with that person's id.
+  useEffect(() => { if (openUserId) openUser(openUserId); }, [openUserId, openUser]);
   const [toast, setToast] = useState<{ msg: string; tone: 'ok' | 'error' } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -110,11 +116,11 @@ export const AdminView: React.FC<{ onExit: () => void; openUserId?: string | nul
       <section aria-labelledby="us-list">
         <SectionHeader id="us-list" title={t('us.list', lang)} count={active.length} description={t('us.listsub', lang)}
           action={canDo('users.create')
-            ? <Button onClick={() => setCreating(true)}><UserPlus size={16} aria-hidden /> {t('us.adduser', lang)}</Button>
+            ? <Button onClick={() => openCreate('user')}><UserPlus size={16} aria-hidden /> {t('us.adduser', lang)}</Button>
             : undefined} />
         <div className="mt-4">
           <DataTable caption={t('us.list', lang)} columns={columns} rows={rows} rowKey={r => r.u.id}
-            onOpen={r => setOpenId(r.u.id)}
+            onOpen={r => openUser(r.u.id)}
             rowTone={r => (r.disabled ? 'attn' : undefined)}
             initialSort={{ id: 'name', dir: 'asc' }}
             search={{ placeholder: t('us.search', lang), match: (r, q) => `${r.u.name} ${r.u.email ?? ''} ${r.branch}`.toLowerCase().includes(q) }}
@@ -137,13 +143,13 @@ export const AdminView: React.FC<{ onExit: () => void; openUserId?: string | nul
 
       {creating && (
         <CreateUserDialog roles={roles} branches={branches}
-          onClose={() => setCreating(false)}
-          onCreated={name => { setCreating(false); notify(tf('us.created', { name }, lang)); }}
+          onClose={closeCreate}
+          onCreated={name => { closeCreate(); notify(tf('us.created', { name }, lang)); }}
           onFailed={() => notify(t('err.save', lang), 'error')} />
       )}
       {open && (
         <UserPanel u={open} roles={roles} active={active} branches={branches} canDo={canDo} notify={notify}
-          onClose={() => setOpenId(null)} />
+          onClose={closeUser} />
       )}
       <Toast message={toast?.msg ?? null} tone={toast?.tone} />
     </main>
@@ -202,10 +208,14 @@ const CreateUserDialog: React.FC<{
   const [draft, setDraft] = useState<Draft>({ name: '', email: '', branchId: '' });
   const [roleId, setRoleId] = useState('employee');
   const [errors, setErrors] = useState<Errors>({});
-  const [askLeave, setAskLeave] = useState(false);
   const dirty = !!(draft.name.trim() || draft.email.trim() || draft.branchId);
-  const close = () => (dirty ? setAskLeave(true) : onClose());
-  const ref = useModal<HTMLDivElement>(close, () => document.getElementById('nu-name'));
+  // Every way out asks while something is typed: ×, Escape, the scrim,
+  // Cancel, and the browser's or phone's Back (through leaveGuard).
+  const { leave, dialog } = useExitFlow(dirty, {
+    title: t('us.leaveask', lang), body: t('us.leavebody', lang), leaveLabel: t('us.discard', lang), stayLabel: t('us.keepediting', lang),
+  });
+  const close = () => leave(onClose);
+  const ref = useModal<HTMLDivElement>(close, () => document.getElementById('nu-name'), true);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,9 +252,7 @@ const CreateUserDialog: React.FC<{
           </div>
         </form>
       </div>
-      <ConfirmDialog open={askLeave} title={t('us.leaveask', lang)} body={t('us.leavebody', lang)}
-        confirmLabel={t('us.discard', lang)} cancelLabel={t('us.keepediting', lang)} initialFocus="cancel"
-        onConfirm={() => { setAskLeave(false); onClose(); }} onCancel={() => setAskLeave(false)} />
+      {dialog}
     </div>
   );
 };
@@ -260,11 +268,13 @@ const UserPanel: React.FC<{
   const initial: Draft = { name: u.name, email: u.email ?? '', branchId: u.branchId ?? '' };
   const [draft, setDraft] = useState<Draft>(initial);
   const [errors, setErrors] = useState<Errors>({});
-  const [askLeave, setAskLeave] = useState(false);
   const [ask, setAsk] = useState<Ask | null>(null);
   const dirty = draft.name !== initial.name || draft.email !== initial.email || draft.branchId !== initial.branchId;
-  const close = () => (dirty ? setAskLeave(true) : onClose());
-  const ref = useModal<HTMLDivElement>(close);
+  const { leave, dialog } = useExitFlow(dirty, {
+    title: t('us.leaveask', lang), body: t('us.leavebody', lang), leaveLabel: t('us.discard', lang), stayLabel: t('us.keepediting', lang),
+  });
+  const close = () => leave(onClose);
+  const ref = useModal<HTMLDivElement>(close, undefined, true);
   const id = `up-${u.id}`;
 
   // The signed-in admin cannot disable, demote or archive themself here: the
@@ -405,9 +415,7 @@ const UserPanel: React.FC<{
       <ConfirmDialog open={copy !== null} danger={ask?.kind === 'disable' || ask?.kind === 'archive'}
         title={copy?.title ?? ''} body={copy?.body ?? ''} confirmLabel={copy?.label ?? ''}
         onConfirm={confirmAsk} onCancel={() => setAsk(null)} />
-      <ConfirmDialog open={askLeave} title={t('us.leaveask', lang)} body={t('us.leavebody', lang)}
-        confirmLabel={t('us.discard', lang)} cancelLabel={t('us.keepediting', lang)} initialFocus="cancel"
-        onConfirm={() => { setAskLeave(false); onClose(); }} onCancel={() => setAskLeave(false)} />
+      {dialog}
     </div>
   );
 };

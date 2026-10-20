@@ -7,16 +7,12 @@
  * of courses. Every status shown is derived from the existing stores via the
  * pure `phaseStatus` — nothing here stores or invents state.
  */
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { m } from 'motion/react';
-import { Check, Clock, Lock, PlayCircle, CircleDot, Flag, ArrowRight, Swords, Trophy } from 'lucide-react';
+import { Check, Clock, Lock, PlayCircle, CircleDot, Flag, Swords, Trophy } from 'lucide-react';
 import { JourneyMap } from './JourneyMap';
-import { REVIEW_STARTS_ON_DAY } from '../../domain/review';
+import { MissionBrief } from './MissionBrief';
 import { MODULES } from '../../content/registry';
-
-/** The qualification phase opens on day 54 — the programme's own timeline. */
-const READINESS_PHASE_DAY = 54;
-import { nextAction } from '../../domain/journey/nextAction';
 import { PROGRAM, PROGRAM_DAYS, phaseStatus, currentPhase, dayPosition, type JourneyPhase, type PhaseStatus, type PhaseContext } from '../../domain/journey/program';
 import { useProgress, moduleLessonsDone, learningProgress, approvalProgress } from '../../app/progress';
 import { useTraining, traineeIdOrNull } from '../../app/training/trainingStore';
@@ -24,7 +20,8 @@ import { identityStore } from '../../app/identity/identityStore';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { moduleById, bossBattlesAfter } from '../../content/registry';
 import { Eyebrow, StatusBadge, Button, Card, DayRing, ArabicContent, Num, Crumbs, CloseButton, useModal } from '../../ui/primitives';
-import { phaseContextFor } from '../../app/journeyContext';
+import { phaseContextFor, useTodaysMission } from '../../app/journeyContext';
+import { useOverlayParam } from '../../app/overlayHistory';
 import { useLang, t as tr, type Key } from '../../app/i18n';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
@@ -43,26 +40,26 @@ const STATUS_META: Record<PhaseStatus, { labelKey: Key; tone: 'ready' | 'attn' |
 
 export const TrainingJourney: React.FC<{
   onOpenModule: (moduleId: string) => void;
+  onOpenLesson: (moduleId: string, lessonId: string) => void;
+  onOpenExam: (moduleId: string) => void;
   onOpenBoss: (bossId: string) => void;
   onOpenReview: () => void;
   onOpenReadiness: () => void;
-}> = ({ onOpenModule, onOpenBoss, onOpenReview, onOpenReadiness }) => {
+}> = ({ onOpenModule, onOpenLesson, onOpenExam, onOpenBoss, onOpenReview, onOpenReadiness }) => {
   const lang = useLang();
   const p = useProgress();
 
   const t = useTraining();
 
+  // Today's mission, from the one resolver the home screen reads too: the two
+  // screens can never give a trainee two different answers to «أعمل إيه؟».
+  const mission = useTodaysMission();
+  // Only the mission's module gets the primary button inside a phase sheet.
+  const actionableModuleId = mission.primary.module?.id ?? null;
+
   // The context bridges stores → pure domain. All derivation lives in the domain.
-    // The one module to act on now, from the same nextAction() the home screen
-    // and profile use; only it gets the primary CTA.
-  const actionableModuleId = nextAction(p, t, traineeIdOrNull() ?? '').module?.id ?? null;
 
   const ctx = phaseContextFor(p, t, traineeIdOrNull() ?? '');
-
-  // Whether anything is due, computed BEFORE render: the heading «مهمة
-  // النهارده» must not appear above an empty space. The component itself
-  // renders null when nothing is due, so the parent has to know too — a
-  // heading with nothing under it is worse than no heading.
 
   const current = currentPhase(ctx);
   // The trainee's assigned trainer — named in the waiting state (same as PathView).
@@ -92,31 +89,10 @@ export const TrainingJourney: React.FC<{
   const pct = approvePct;  // the ring shows approval progress; learning progress
   void learningProgress;   // (available from the same module when a second indicator is wanted)
 
-  /**
-     * Today's acts, ranked: qualification outranks the debrief, which outranks
-     * ordinary study. Exactly one act is promoted; the rest become a line.
-     */
-  const acts = useMemo(() => ([
-    day >= READINESS_PHASE_DAY && {
-      gate: true,
-      title: tr('jr.readytitle', lang),
-      blurb: tr('jr.readyblurb', lang),
-      cta: tr('jr.readycta', lang),
-      open: onOpenReadiness,
-    },
-    day >= REVIEW_STARTS_ON_DAY && {
-      gate: false,
-      title: tr('jr.reviewtitle', lang),
-      blurb: tr('jr.reviewblurb', lang),
-      cta: tr('jr.reviewcta', lang),
-      open: onOpenReview,
-    },
-  ].filter(Boolean) as { gate: boolean; title: string; blurb: string; cta: string; open: () => void }[]),
-  [day, onOpenReadiness, onOpenReview, lang]);
-
-  const [openPhase, setOpenPhase] = useState<JourneyPhase | null>(null);
-  const primary = acts[0];
-  const secondary = acts.slice(1);
+  // The open phase lives in the URL (#/roadmap?phase=p3): Back closes the
+  // sheet before it leaves the roadmap, and a link can open it.
+  const [phaseId, openPhaseId, closePhase] = useOverlayParam('phase');
+  const openPhase = PROGRAM.find(ph => ph.id === phaseId) ?? null;
 
   return (
     <div className="min-h-screen">
@@ -152,38 +128,13 @@ export const TrainingJourney: React.FC<{
         </m.header>
 
         {/* ── ONE ACT, THEN QUIET ──────────────────────────────────────────
-            Whatever matters most today is rendered large and owns the only
-            button on the screen. Anything else available becomes a line: it is
-            available, not due, and a card would claim otherwise.
-
-            The section disappears entirely when nothing is due. An empty
-            «no tasks!» panel is noise dressed as feedback. */}
-        {primary && (
-          <m.section {...fade} className="mb-7">
-            <Card tone={primary.gate ? 'accent' : 'raised'} pad={6}>
-              <Eyebrow>{tr('db.mission', lang)}</Eyebrow>
-              <h2 className="t-h3" style={{ margin: 'var(--sp-3) 0', letterSpacing: '-.015em' }}>
-                {primary.title}
-              </h2>
-              <p className="t-sm c-tx2" style={{ margin: '0 0 var(--sp-5)', maxWidth: '54ch', lineHeight: 1.75 }}>
-                {primary.blurb}
-              </p>
-              <Button onClick={primary.open}>{primary.cta} <ArrowRight size={16} className="icon-dir" /></Button>
-            </Card>
-
-            {secondary.length > 0 && (
-              <div className="row wrap gap-4" style={{ padding: 'var(--sp-4) var(--sp-2) 0' }}>
-                {secondary.map(act => (
-                  <button key={act.title} type="button" onClick={act.open} className="quiet-act t-sm c-tx2 items-center gap-2"
-                    style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', font: 'inherit', display: 'inline-flex' }}
-                  >
-                    {act.title} <ArrowRight size={13} className="icon-dir" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </m.section>
-        )}
+            Today's mission owns the only primary button on the screen; anything
+            else due today is a quiet line under it. Same component, same
+            resolver as the home screen. */}
+        <m.div {...fade} className="mb-7">
+          <MissionBrief mission={mission} trainerName={trainerName}
+            onOpenLesson={onOpenLesson} onOpenExam={onOpenExam} onOpenReview={onOpenReview} onOpenReadiness={onOpenReadiness} />
+        </m.div>
 
         {/* Spaced retrieval lives on the dashboard, under today's mission, so it
             happens on the way to the day's work. Mounting it here too would ask the
@@ -205,7 +156,7 @@ export const TrainingJourney: React.FC<{
                 lessons: current?.id === phase.id ? currentLessons : null,
               };
             })}
-            onOpen={setOpenPhase} />
+            onOpen={ph => openPhaseId(ph.id)} />
         </section>
 
         {/* The ledger — derived, never stored. Deliberately does NOT repeat the
@@ -254,7 +205,7 @@ export const TrainingJourney: React.FC<{
         <PhaseSheet
           phase={openPhase}
           status={phaseStatus(openPhase, ctx)}
-          onClose={() => setOpenPhase(null)}
+          onClose={closePhase}
           onOpenModule={onOpenModule}
           onOpenBoss={onOpenBoss}
           ctx={ctx}
@@ -290,7 +241,7 @@ const PhaseSheet: React.FC<{
   const meta = STATUS_META[status];
   const label = status === 'waiting_trainer' ? waitingForTrainer(trainerName) : tr(meta.labelKey, lang);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const boxRef = useModal<HTMLDivElement>(onClose, () => titleRef.current);
+  const boxRef = useModal<HTMLDivElement>(onClose, () => titleRef.current, true);
   return (
     <div className="dialog-scrim" onClick={onClose}>
       <div ref={boxRef} className="dialog phase-sheet" role="dialog" aria-modal="true" aria-labelledby="phase-sheet-title"

@@ -1,10 +1,22 @@
 /**
- * Audit selectors — Phase 6B (projection over wda.identity.audit.v1, no new
- * storage). Composable filters + a human label per event + CSV-ready export
- * shape. Performance: filtering is lazy and callers render the latest N first.
+ * Audit selectors — Phase 6B. One projection over both administrative logs:
+ * account changes (wda.identity.audit) and governance changes to the
+ * organisation (wda.org.audit). Composable filters + a human label per event +
+ * CSV-ready export shape. Performance: filtering is lazy and callers render
+ * the latest N first.
  */
-import type { AuditEvent } from '../../app/identity/identityBackend';
+import type { AuditEvent as IdentityAuditEvent } from '../../app/identity/identityBackend';
 import type { User } from '../identity';
+import { describeOrgEvent, type OrgAuditEvent } from '../organization/audit';
+
+export type AuditEvent = IdentityAuditEvent | OrgAuditEvent;
+
+const isOrg = (e: AuditEvent): e is OrgAuditEvent => 'action' in e;
+/** The event's action name — `ROLE_CHANGED`, `org.branch_moved`. */
+export const actionOf = (e: AuditEvent): string => (isOrg(e) ? e.action : e.type);
+/** A key unique per event, for lists. */
+export const auditKey = (e: AuditEvent): string =>
+  isOrg(e) ? e.id : `${e.at}:${e.type}:${'userId' in e ? e.userId : e.type === 'USER_CREATED' ? e.user.id : ''}`;
 
 export interface AuditFilter {
   readonly actorId?: string;
@@ -17,6 +29,7 @@ export interface AuditFilter {
 
 /** Human, RTL-friendly description of an audit event. */
 export function describeAudit(e: AuditEvent, nameOf: (id: string) => string): string {
+  if (isOrg(e)) return describeOrgEvent(e, nameOf);
   const actor = nameOf(e.actorId);
   switch (e.type) {
     case 'USER_CREATED': return `${actor} أنشأ المستخدم ${e.user.name}`;
@@ -31,8 +44,10 @@ export function describeAudit(e: AuditEvent, nameOf: (id: string) => string): st
   }
 }
 
-const targetOf = (e: AuditEvent): string | undefined =>
-  e.type === 'USER_CREATED' ? e.user.id : 'userId' in e ? e.userId : undefined;
+/** Every id an event is about: its target, and for governance events every entity it touched. */
+const targetsOf = (e: AuditEvent): readonly string[] =>
+  isOrg(e) ? [e.target.id, ...e.refs.areaIds, ...e.refs.branchIds, ...e.refs.userIds]
+    : e.type === 'USER_CREATED' ? [e.user.id] : 'userId' in e ? [e.userId] : [];
 
 export function filterAudit(
   log: readonly AuditEvent[],
@@ -41,12 +56,12 @@ export function filterAudit(
 ): readonly AuditEvent[] {
   return log.filter(e => {
     if (filter.actorId && e.actorId !== filter.actorId) return false;
-    if (filter.action && e.type !== filter.action) return false;
-    if (filter.targetId && targetOf(e) !== filter.targetId) return false;
+    if (filter.action && actionOf(e) !== filter.action) return false;
+    if (filter.targetId && !targetsOf(e).includes(filter.targetId)) return false;
     if (filter.from && e.at < filter.from) return false;
     if (filter.to && e.at > filter.to) return false;
     if (filter.text) {
-      const hay = `${describeAudit(e, nameOf)} ${e.type}`.toLowerCase();
+      const hay = `${describeAudit(e, nameOf)} ${actionOf(e)}`.toLowerCase();
       if (!hay.includes(filter.text.toLowerCase())) return false;
     }
     return true;
@@ -58,15 +73,24 @@ export const latestAudit = (log: readonly AuditEvent[], n = 100): readonly Audit
   [...log].sort((a, b) => b.at - a.at).slice(0, n);
 
 /** CSV-ready rows (export backend consumes this — no new logic later). */
-export interface AuditRow { readonly at: number; readonly actor: string; readonly action: string; readonly detail: string; }
+export interface AuditRow {
+  readonly at: number; readonly actor: string; readonly action: string;
+  /** What the event changed, and from what to what, as it read at the time. */
+  readonly target: string; readonly before: string; readonly after: string;
+  readonly detail: string;
+}
 export function auditExportRows(log: readonly AuditEvent[], nameOf: (id: string) => string): readonly AuditRow[] {
   return [...log].sort((a, b) => b.at - a.at).map(e => ({
-    at: e.at, actor: nameOf(e.actorId), action: e.type, detail: describeAudit(e, nameOf),
+    at: e.at, actor: nameOf(e.actorId), action: actionOf(e),
+    target: isOrg(e) ? `${e.target.kind}:${e.target.id} (${e.target.name})` : targetsOf(e).map(nameOf).join(' '),
+    before: isOrg(e) ? e.beforeLabel ?? e.before ?? '' : '',
+    after: isOrg(e) ? e.afterLabel ?? e.after ?? '' : '',
+    detail: describeAudit(e, nameOf),
   }));
 }
 
 /** Distinct action types present in the log — for the filter dropdown. */
 export const auditActions = (log: readonly AuditEvent[]): readonly string[] =>
-  [...new Set(log.map(e => e.type))];
+  [...new Set(log.map(actionOf))];
 
 export type { User };
