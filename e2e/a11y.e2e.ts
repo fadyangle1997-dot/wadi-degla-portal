@@ -55,6 +55,11 @@ test('admin: the users ledger, an account panel, and a form showing its errors',
   await expectAccessible(page, 'users ledger');
   await page.getByRole('table', { name: 'المستخدمون' }).getByRole('button', { name: /Nabil Sherif/ }).click();
   await expectAccessible(page, 'account panel');
+  // A destructive confirm, open. axe leaves contrast inside the animated dialog
+  // as "needs review"; the label-on-risk pair is held by designSystem.test.ts.
+  await page.getByRole('button', { name: 'أرشفة', exact: true }).click();
+  await expectAccessible(page, 'destructive confirm');
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'إضافة مستخدم' }).click();
   await page.getByRole('dialog', { name: 'مستخدم جديد' }).getByRole('button', { name: 'إنشاء' }).click();

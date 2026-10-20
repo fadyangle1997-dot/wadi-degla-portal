@@ -689,6 +689,11 @@ describe('🔴 low vision: contrast on every surface, status told apart by every
     }
   });
 
+  it('a destructive confirm is a light fill with black text', () => {
+    expect(ratio(tok('--void'), tok('--risk'))).toBeGreaterThanOrEqual(7);
+    expect(css).toMatch(/\.btn-primary\.btn-destroy[^{]*\{[^}]*background:var\(--risk\); color:var\(--void\)/);
+  });
+
   it('a field\'s edge clears 3:1, so the control can be found', () => {
     for (const s of ['--void', '--s-2', '--s-1'].map(tok)) expect(ratio(tok('--line-ctl'), s)).toBeGreaterThanOrEqual(3);
     expect(css).toMatch(/\.field \{[^}]*border:1px solid var\(--line-ctl\)/);

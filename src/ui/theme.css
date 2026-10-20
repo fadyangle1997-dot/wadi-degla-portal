@@ -426,6 +426,9 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 /* A destructive action at rest: the risk colour on the outline and the word,
    never a red slab next to ordinary choices. */
 .btn-danger { color:var(--risk); border-color:var(--risk-line); }
+/* The confirm of a destructive dialog: the risk colour as a fill, and a light
+   fill takes black text (8.2:1). White on it read 2.4:1. */
+.btn-primary.btn-destroy, .btn-primary.btn-destroy:hover:not(:disabled) { background:var(--risk); color:var(--void); }
 
 /* ============================================================
    PAGE STRUCTURE — where am I, what matters, what next.

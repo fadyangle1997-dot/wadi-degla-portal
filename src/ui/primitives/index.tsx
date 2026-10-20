@@ -279,8 +279,7 @@ const ConfirmDialogOpen: React.FC<ConfirmDialogProps> = ({ title, body, confirmL
         <h2 className="t-h3 m-0">{title}</h2>
         <p className="t-sm" style={{ margin: 'var(--sp-3) 0 var(--sp-5)' }}>{body}</p>
         <div className="row gap-3 justify-start wrap">
-          <Button ref={confirmRef} onClick={onConfirm}
-            style={danger ? { background: 'var(--risk)', borderColor: 'var(--risk)', color: '#fff' } : undefined}>
+          <Button ref={confirmRef} onClick={onConfirm} className={danger ? 'btn-destroy' : undefined}>
             {confirmLabel}
           </Button>
           <Button ref={cancelRef} variant="ghost" onClick={onCancel}>{cancelLabel ?? t('dlg.cancel', langStore.get())}</Button>
