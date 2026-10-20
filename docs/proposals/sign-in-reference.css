@@ -1,0 +1,63 @@
+/* Option B for the sign-in (owner reference, 2026-10-20). NOT loaded by the app.
+   Applied over the v3 door markup for the Phase 1 review; kept here so it survives
+   until the owner chooses between A (built) and B. If B is chosen, it moves into
+   src/ui/system-v3.css and the gold test gets a sign-in-only exception. */
+/* The owner's reference, applied to the Arabic-first door: static gold spheres
+   on black, one tall frosted card holding the crest, the name, the welcome
+   line and the form, underline fields, a gold gradient action. Kept from the
+   v3 rules: visible labels, AAA text, no motion, a solid card when the reader
+   asks for less transparency. */
+:root[data-system="v3"] .door {
+  position: relative; overflow: hidden; background-color: #050403;
+  background-image:
+    radial-gradient(circle 150px at 3% 0%, #EFE2BA 0%, #D3BA86 38%, #B99D62 80%, #A48A52 96%, transparent 97%),
+    radial-gradient(circle 118px at 70% 17%, #EFE2BA 0%, #D3BA86 38%, #B99D62 80%, #A48A52 96%, transparent 97%),
+    radial-gradient(circle 215px at 31% 57%, #EFE2BA 0%, #D3BA86 38%, #B99D62 80%, #A48A52 96%, transparent 97%),
+    radial-gradient(circle 92px at 76% 83%, #EFE2BA 0%, #D3BA86 38%, #B99D62 80%, #A48A52 96%, transparent 97%);
+}
+@media (max-width: 639px) {
+  :root[data-system="v3"] .door {
+    background-image:
+      radial-gradient(circle 84px at 100% 2%, #EFE2BA 0%, #D3BA86 38%, #B99D62 80%, #A48A52 96%, transparent 97%),
+      radial-gradient(circle 64px at 2% 20%, #EFE2BA 0%, #D3BA86 38%, #B99D62 80%, #A48A52 96%, transparent 97%),
+      radial-gradient(circle 118px at -6% 66%, #EFE2BA 0%, #D3BA86 38%, #B99D62 80%, #A48A52 96%, transparent 97%),
+      radial-gradient(circle 56px at 100% 80%, #EFE2BA 0%, #D3BA86 38%, #B99D62 80%, #A48A52 96%, transparent 97%);
+  }
+}
+/* The card is the whole door: brand and form together, as in the reference. */
+:root[data-system="v3"] .door-main {
+  width: min(440px, calc(100% - 32px)); margin: var(--sp-4) auto; gap: var(--sp-5);
+  padding: var(--sp-7) var(--sp-5) var(--sp-6); border-radius: 32px;
+  background: rgba(30, 27, 22, .7); border: 1px solid rgba(255, 244, 222, .16);
+  -webkit-backdrop-filter: blur(30px) saturate(1.05); backdrop-filter: blur(30px) saturate(1.05);
+  box-shadow: 0 40px 80px -40px rgba(0, 0, 0, .9);
+}
+@media (min-width: 640px) { :root[data-system="v3"] .door-main { padding: var(--sp-8) var(--sp-6) var(--sp-7); } }
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-system="v3"] .door-main { background: #1A1612; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+:root[data-system="v3"] .door-title { font-size: var(--fs-7); line-height: 1.25; color: var(--text-strong); text-wrap: balance; }
+:root[data-system="v3"] .door-lead { font-size: var(--fs-2); }
+:root[data-system="v3"] .door-panel { max-width: none; padding: 0; background: none; border: 0; box-shadow: none; }
+:root[data-system="v3"] .door-panel-title { display: none; }
+/* Underline fields: a cream rule (≥ 3:1 on the glass wherever the light shows through). */
+:root[data-system="v3"] .door .field {
+  background: transparent; border: 0; border-bottom: 1px solid #E3D9CC; border-radius: 0;
+  padding-inline: 2px; box-shadow: none;
+}
+:root[data-system="v3"] .door .field:hover { border-bottom-color: #FEDEA0; }
+:root[data-system="v3"] .door .field:focus-visible { outline: none; border-bottom: 2px solid #FEDEA0; }
+:root[data-system="v3"] .door .field[aria-invalid="true"] { border-bottom: 2px solid var(--risk); box-shadow: none; }
+:root[data-system="v3"] .door-eye { top: 2px; }
+/* The gradient action, kept on the light side of the gold so its ink label stays AAA. */
+:root[data-system="v3"] .door-submit {
+  background: linear-gradient(100deg, #CCAB6C 0%, #E3C98E 55%, #FEDEA0 100%);
+  box-shadow: 0 14px 28px -16px rgba(204, 171, 108, .7);
+}
+:root[data-system="v3"] .door-submit:hover:not(:disabled) { background: #FEDEA0; }
+:root[data-system="v3"] .door-foot { position: relative; }
+
+/* Controls outside the card never sit on bare light. */
+:root[data-system="v3"] .door-bar .pill { background: rgba(5, 4, 3, .72); }
+:root[data-system="v3"] .door-foot { background: transparent; }
+:root[data-system="v3"] .door-alert { background: #1C1311; }
