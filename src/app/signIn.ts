@@ -7,17 +7,18 @@ import { authenticate } from './demo/credentials';
 import { identityStore } from './identity/identityStore';
 import { can, type Permission } from '../domain/identity';
 import { landingFor, type PlatformView } from '../domain/identity/access';
+import { t } from './i18n';
 
 export type SignInResult = { readonly error: string } | { readonly landing: PlatformView };
 
 export function signInWithDemo(username: string, password: string): SignInResult {
   const account = authenticate(username, password);
-  if (!account) return { error: 'Incorrect username or password.' };
+  if (!account) return { error: t('door.err.wrong') };
   identityStore.signIn(account.id);
   const landing = landingFor((p: Permission) => can(identityStore.currentUser(), identityStore.get().roles, p));
   if (!landing) {
     identityStore.signOut();
-    return { error: 'This account has no platform access. Contact your administrator.' };
+    return { error: t('door.err.noaccess') };
   }
   return { landing };
 }

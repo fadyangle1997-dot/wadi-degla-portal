@@ -69,7 +69,7 @@ export const AppShell: React.FC<{
   const actions = useActionCenter();
 
   return (
-    <div className="shell-root min-h-screen" data-collapsed={railCollapsed || undefined} style={{ background: 'var(--void)' }}>
+    <div className="shell-root min-h-screen" data-collapsed={railCollapsed || undefined}>
       {/* Skip link (WCAG 2.4.1): invisible until focused, it lets keyboard users
           jump past the rail, nav and header controls on every screen. */}
       {/* The URL hash is the router: following #wda-main navigated to «home».
@@ -179,7 +179,7 @@ export const AppShell: React.FC<{
 const Avatar: React.FC<{ name: string; size?: 34 | 48 }> = ({ name, size = 34 }) => (
   <span
     aria-hidden
-    className="no-shrink items-center justify-center c-g1" style={{ width: size, height: size, borderRadius: '50%', display: 'inline-flex', background: 'var(--s0)', border: '1px solid var(--g3)', fontSize: size === 48 ? '1rem' : '.875rem', fontWeight: 600, letterSpacing: '.02em' }}
+    className={`avatar avatar--${size}`}
   >
     {initialsOf(name)}
   </span>
@@ -319,7 +319,7 @@ const ActionCenter: React.FC<{
           // 44×44: the platform's touch-target minimum (as .icon-btn and .pill).
           // Circular to match the avatar beside it.
           display: 'inline-flex', width: 44, height: 44, background: 'none',
-          border: '1px solid var(--line)', borderRadius: 'var(--r-full)', cursor: 'pointer',
+          border: '1px solid var(--edge-hairline)', borderRadius: 'var(--r-full)', cursor: 'pointer',
         }}
       >
         <Bell size={16} aria-hidden />
@@ -337,7 +337,7 @@ const ActionCenter: React.FC<{
       {open && (
         <div role={n === 0 ? 'status' : 'menu'} className="ac-panel" style={{
           position: 'absolute', insetInlineEnd: 0, top: 'calc(100% + var(--sp-2))',
-          minWidth: 260, background: 'var(--s-1)', border: '1px solid var(--line-2)',
+          minWidth: 260, background: 'var(--surface-panel)', border: '1px solid var(--edge-panel)',
           borderRadius: 'var(--r-md)', boxShadow: 'var(--e-floating)', overflow: 'hidden', zIndex: 30,
         }}>
           {n === 0 ? (
@@ -372,7 +372,7 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
         onClick={() => setOpen(v => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="items-center gap-3" style={{ display: 'inline-flex', background: 'none', border: 'none', cursor: 'pointer', padding: 'var(--sp-1)', borderRadius: 'var(--r-md)' }}
+        className="items-center gap-3" style={{ display: 'inline-flex', background: 'none', border: 'none', color: 'var(--text-strong)', cursor: 'pointer', padding: 'var(--sp-1)', borderRadius: 'var(--r-md)' }}
       >
         {/* Avatar leads (48px — presence), then greeting above name. The role
             moves into the dropdown: three stacked lines in a header is density,
@@ -395,7 +395,7 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
           className="pm-menu"
           style={{
             position: 'absolute', insetInlineEnd: 0, top: 'calc(100% + var(--sp-2))',
-            minWidth: 220, background: 'var(--s-1)', border: '1px solid var(--line-2)',
+            minWidth: 220, background: 'var(--surface-panel)', border: '1px solid var(--edge-panel)',
             borderRadius: 'var(--r-md)', boxShadow: 'var(--e-floating)', overflow: 'hidden',
             zIndex: 30,
           }}
@@ -404,7 +404,7 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
             <div className="t-sm c-tx0" style={{ fontWeight: 600 }}>{name}</div>
             <div className="t-label c-tx3 mt-1">{role}</div>
           </div>
-          <div style={{ height: 1, background: 'var(--line)' }} />
+          <div style={{ height: 1, background: 'var(--edge-hairline)' }} />
           {onOpenProfile && (
             <button
               role="menuitem"
@@ -474,7 +474,7 @@ const ProfileOverlay: React.FC<{ label: string; onClose: () => void }> = ({ labe
   const ref = useModal<HTMLDivElement>(onClose, undefined, true);
   return (
     <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={label}
-      style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'var(--void)', overflowY: 'auto', outline: 'none' }}>
+      style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'var(--surface-room)', overflowY: 'auto', outline: 'none' }}>
       <React.Suspense fallback={<div style={{ padding: 'var(--sp-6) var(--sp-5)' }}><LoadingState /></div>}>
         <IdentityCenter onClose={onClose} />
       </React.Suspense>

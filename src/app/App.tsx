@@ -35,6 +35,7 @@ import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLesso
 import { parseHash, toHash, type View } from './router';
 import { leaveGuard } from './leaveGuard';
 import { consumed, pushUrl, replaceUrl, restore, settled } from './overlayHistory';
+import { useSystemV3 } from '../ui/systemScope';
 import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents, useTraining } from './training/trainingStore';
 import { TRAINING_POLICY } from '../domain/policy';
 import { useLang, t, tf } from './i18n';
@@ -138,6 +139,9 @@ export const App: React.FC = () => {
   useIdentity();
   const signedIn = identityStore.currentUser() !== null;
   const p = useProgress();
+  // The v3 benchmark covers the trainee's dashboard and a lesson (and the
+  // sign-in screen, which holds the scope itself); everything else stays v2.
+  useSystemV3(signedIn && (view.kind === 'path' || view.kind === 'lesson'));
 
   // A redirect REPLACES the entry it refused: pushing it left a Back button
   // that returned to the refused URL, which redirected again — a trap.

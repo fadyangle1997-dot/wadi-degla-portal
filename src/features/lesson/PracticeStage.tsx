@@ -23,31 +23,21 @@ export const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }>
           const showResult = checked;
           const isRight = showResult && mark === it.correct;
           return (
-            <div key={i} style={{
-              padding: 'var(--sp-4)', borderRadius: 'var(--r-md)', background: 'var(--s-1)',
-              border: `1px solid ${showResult ? (isRight ? 'var(--ready)' : 'var(--risk)') : 'var(--line-2)'}`,
-            }}>
+            <div key={i} className="practice-item" data-result={showResult ? (isRight ? 'right' : 'wrong') : undefined}>
               <div className="row items-center gap-3 wrap">
                 <span className="t-body grow" style={{ minWidth: 'min(100%, 200px)' }}>{it.text}</span>
                 <div className="row gap-2">
                   {[{ v: true, label: 'مطلوب' }, { v: false, label: 'مش مطلوب' }].map(b => (
                     <button key={String(b.v)} type="button" disabled={checked} aria-current={mark === b.v ? 'true' : undefined}
                       onClick={() => setMarks(m => ({ ...m, [i]: b.v }))}
-                      style={{
-                        padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--r-full)', fontWeight: 600,
-                        fontFamily: 'var(--font-body)', cursor: checked ? 'default' : 'pointer', minHeight: 44,
-                        background: mark === b.v ? 'var(--g2)' : 'transparent',
-                        color: mark === b.v ? 'var(--on-gold)' : 'var(--tx2)',
-                        border: `1px solid ${mark === b.v ? 'var(--g2)' : 'var(--line-2)'}`,
-                        transition: 'all .15s var(--ease)',
-                      }}>
+                      className="choice-chip">
                       {b.label}
                     </button>
                   ))}
                 </div>
               </div>
               {showResult && (
-                <p className="t-sm mt-3" style={{ color: isRight ? 'var(--ready)' : 'var(--risk)' }} role="status">
+                <p className={`t-sm mt-3 ${isRight ? 'c-ready' : 'c-risk'}`} role="status">
                   {isRight ? '✓ ' : '✕ '}{it.feedback}
                 </p>
               )}

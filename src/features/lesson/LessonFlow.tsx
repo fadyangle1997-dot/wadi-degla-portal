@@ -22,7 +22,7 @@ import { DeclarationMatrix } from './DeclarationMatrix';
 import { AgeEligibilityTimeline } from './AgeEligibilityTimeline';
 import { RenewalPenaltyTiers } from './RenewalPenaltyTiers';
 import { CheckBeforeActFlow } from './CheckBeforeActFlow';
-import { fade } from '../../ui/motion';
+import { fade, achieve } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 
 type Stage = 'challenge' | 'ask' | 'predict' | 'learn' | 'reflect' | 'office' | 'coach' | 'mistakes' | 'dialogue' | 'comms' | 'produce' | 'practice' | 'quiz' | 'commit' | 'done';
@@ -129,7 +129,10 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
   useEffect(() => {
     // Focus management: move focus to the stage container so screen-reader and
     // keyboard users land at the new content, not on the old button (Phase 2 §6).
-    headingRef.current?.focus();
+    // A new stage starts at its top: focusing alone scrolled the stage's first
+    // lines under the sticky lesson bar on a phone.
+    window.scrollTo({ top: 0 });
+    headingRef.current?.focus({ preventScroll: true });
   }, [stage]);
 
   useEffect(() => {
@@ -183,7 +186,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
           {stage === 'challenge' && lesson.pro?.openingChallenge && (
             <m.section key="challenge" {...fade} className="focus-col stack grow justify-center">
               <Eyebrow icon={<HelpCircle size={13} />}>موقف في المكتب</Eyebrow>
-              <h1 className="t-h1 measure mt-4">{lesson.pro.openingChallenge}</h1>
+              <h1 className="t-h2 measure mt-4">{lesson.pro.openingChallenge}</h1>
               {/* The trainee's own question, under the situation that provokes
                   it — one beat, one screen. Splitting them would open the
                   lesson twice with the same emotion. */}
@@ -200,7 +203,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
           {stage === 'ask' && (
             <m.section key="ask" {...fade} className="focus-col stack grow justify-center">
               <Eyebrow icon={<HelpCircle size={13} />}>سؤال بيقابلك في الشغل</Eyebrow>
-              <h1 className="t-h1 measure mt-4">{lesson.employeeQuestion}</h1>
+              <h1 className="t-h2 measure mt-4">{lesson.employeeQuestion}</h1>
               <div className="mt-6">
                 <Callout tone="objective">{lesson.objective}</Callout>
               </div>
@@ -459,7 +462,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
           )}
 
           {stage === 'done' && (
-            <m.section key="done" {...fade} className="focus-col stack grow justify-center">
+            <m.section key="done" {...achieve} className="focus-col stack grow justify-center">
               {/* THE HERO — capability, never completion. «You finished» rewards
                   attendance; «tomorrow you can» rewards becoming. The whole
                   screen is sized so the eye lands here first and only here. */}
@@ -473,9 +476,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
               {/* The golden rule, second and last time — spaced repetition
                   inside one lesson is how a line survives a year. */}
               {lesson.pro?.goldenRule && (
-                <p className="t-lead measure mt-5 text-center c-g1" style={{ marginInline: 'auto' }}>
-                  {lesson.pro.goldenRule}
-                </p>
+                <p className="golden-rule">{lesson.pro.goldenRule}</p>
               )}
 
               {/* Everything practical drops to a quiet block: present, findable,

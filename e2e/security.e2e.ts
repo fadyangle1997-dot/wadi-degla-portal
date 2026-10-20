@@ -1,17 +1,17 @@
-import { test, expect, signIn } from './fixtures';
+import { test, expect, signIn, usernameField, passwordField, signInButton } from './fixtures';
 
 test('a wrong password is refused without saying which half was wrong', async ({ page }) => {
   await page.goto('/');
-  await page.getByLabel('Username').fill('ahmed.m');
-  await page.getByLabel('Password', { exact: true }).fill('not-the-password');
-  await page.getByRole('button', { name: /sign in/i }).click();
-  await expect(page.getByText('Incorrect username or password.')).toBeVisible();
-  await expect(page.getByLabel('Username')).toBeVisible();
+  await usernameField(page).fill('ahmed.m');
+  await passwordField(page).fill('not-the-password');
+  await signInButton(page).click();
+  await expect(page.getByText('اسم المستخدم أو كلمة السر مش صح. جرّب تاني.')).toBeVisible();
+  await expect(usernameField(page)).toBeVisible();
 });
 
 test('a signed-out deep link shows the sign-in screen', async ({ page }) => {
   await page.goto('/#/admin');
-  await expect(page.getByLabel('Username')).toBeVisible();
+  await expect(usernameField(page)).toBeVisible();
 });
 
 test('a trainee who types an admin URL is sent back to their own landing', async ({ page }) => {

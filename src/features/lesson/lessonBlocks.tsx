@@ -6,7 +6,7 @@ import { Card, SpineWell } from '../../ui/primitives';
 /** A rule — the sentence that decides whether a member is served right tomorrow. */
 export const RuleObject: React.FC<{ text: string }> = ({ text }) => (
   <SpineWell>
-    <p className="t-body measure m-0 c-tx0" style={{ fontWeight: 500, lineHeight: 1.75 }}>{text}</p>
+    <p className="rule-text">{text}</p>
   </SpineWell>
 );
 
@@ -30,12 +30,12 @@ export const DialogueBlock: React.FC<{
   why: string;
   whyLabel: string;
 }> = ({ tone, label, lines, why, whyLabel }) => {
-  const accent = tone === 'wrong' ? 'var(--risk)' : 'var(--ready)';
+  const accent = tone === 'wrong' ? 'c-risk' : 'c-ready';
   return (
     // A transcript composes from Card like every other surface; only the
     // two-speaker arrangement inside is its own.
     <Card tone="default" pad={4}>
-      <div className="t-label mb-3" style={{ color: accent }}>
+      <div className={`t-label mb-3 ${accent}`}>
         {label}
       </div>
       <div className="stack gap-3">
@@ -44,14 +44,14 @@ export const DialogueBlock: React.FC<{
             <span className="t-label no-shrink c-tx3" style={{ minWidth: 44, paddingTop: 'var(--sp-1)' }}>
               {l.speaker === 'member' ? 'العضو' : 'إنت'}
             </span>
-            <span className="t-body grow" style={{ padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--r-sm)', background: l.speaker === 'staff' ? 'var(--s0)' : 'var(--s-2)', border: '1px solid var(--line)' }}>{l.line}</span>
+            <span className={`t-body dialogue-line dialogue-line--${l.speaker}`}>{l.line}</span>
           </div>
         ))}
       </div>
       {/* The verdict on the exchange. Separated by space, not by a divider —
           negative space groups; a rule line only draws attention to itself. */}
-      <div className="mt-4" style={{ paddingTop: 'var(--sp-3)', borderTop: '1px solid var(--line)' }}>
-        <div className="t-label mb-2" style={{ color: accent }}>{whyLabel}</div>
+      <div className="dialogue-verdict">
+        <div className={`t-label mb-2 ${accent}`}>{whyLabel}</div>
         <p className="t-sm measure m-0 c-tx2">{why}</p>
       </div>
     </Card>

@@ -1,4 +1,4 @@
-import { test, expect, signIn, signOut, finishLesson, settle, openTodaysLesson, toAcademy, expectAccessible } from './fixtures';
+import { test, expect, signIn, signOut, finishLesson, settle, openTodaysLesson, toAcademy, expectAccessible, usernameField } from './fixtures';
 
 test.describe('trainee', () => {
   test('a new trainee is welcomed first, then has today\'s task on the academy', async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe('trainee', () => {
     await openTodaysLesson(page);
     await finishLesson(page);
     await page.reload();
-    await expect(page.getByLabel('Username')).toBeHidden();
+    await expect(usernameField(page)).toBeHidden();
     await expect(page.getByText('1 من 4 دروس')).toBeVisible();
   });
 

@@ -55,3 +55,18 @@ test.describe('at 320px — the narrowest phone WCAG reflow asks for', () => {
     await expectAccessible(page, 'account panel at 320');
   });
 });
+
+test.describe('the v3 benchmark at 320px with 125% text', () => {
+  test.use({ viewport: { width: 320, height: 720 } });
+  test('the door, the dashboard and a lesson reflow without sideways scroll', async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem('wda.text.v1', 'xl'); } catch { /* ignore */ } });
+    await page.goto('/');
+    await noSidewaysScroll(page);
+    await signIn(page, 'ahmed.m');
+    await toAcademy(page);
+    await noSidewaysScroll(page);
+    await page.goto('/#/lesson/m1/l1-where');
+    await expect(page.locator('main h1').first()).toBeVisible();
+    await noSidewaysScroll(page);
+  });
+});

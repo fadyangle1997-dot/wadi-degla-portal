@@ -22,23 +22,23 @@ describe('UI smoke', () => {
     // landing — instead of mutating an admin into a trainee to fake it.
     identityStore.signOut();
     render(<App />);
-    // The door is English by design; the academy behind it is Arabic RTL.
-    expect(screen.getByText('Wadi Degla Academy')).toBeTruthy();
-    expect(screen.getByText('Membership Training Platform')).toBeTruthy();
+    // The door is Arabic first: the academy's name and what it is for.
+    expect(screen.getByRole('heading', { level: 1, name: 'أكاديمية وادي دجلة' })).toBeTruthy();
+    expect(screen.getByText('منصة تدريب فريق العضويات')).toBeTruthy();
 
     // Sign-in requires credentials — an empty submit must not open the academy.
-    fireEvent.click(screen.getByText(/Sign In/));
-    expect(screen.getByText(/Enter your username and password/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'ادخل' }));
+    expect(screen.getByText('اكتب اسم المستخدم.')).toBeTruthy();
 
     // Wrong credentials must NOT open the academy.
-    fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'ahmed.m' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrong' } });
-    fireEvent.click(screen.getByText(/Sign In/));
-    expect(screen.getByText(/Incorrect username or password/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('اسم المستخدم'), { target: { value: 'ahmed.m' } });
+    fireEvent.change(screen.getByLabelText('كلمة السر'), { target: { value: 'wrong' } });
+    fireEvent.click(screen.getByRole('button', { name: 'ادخل' }));
+    expect(screen.getByText(/اسم المستخدم أو كلمة السر مش صح/)).toBeTruthy();
 
     // The real ones do.
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Welcome@123' } });
-    fireEvent.click(screen.getByText(/Sign In/));
+    fireEvent.change(screen.getByLabelText('كلمة السر'), { target: { value: 'Welcome@123' } });
+    fireEvent.click(screen.getByRole('button', { name: 'ادخل' }));
     // Sign-in settles asynchronously (loading state), then the academy opens.
     await waitFor(() => expect(screen.getByText('مهمة النهارده')).toBeTruthy());
   });
@@ -64,8 +64,8 @@ describe('sign-in — the door', () => {
 
   it('uses USERNAME, never email — per the brief', () => {
     render(<App />);
-    expect(screen.getByLabelText('Username')).toBeTruthy();
-    expect(screen.queryByLabelText(/email/i)).toBeNull();
+    expect(screen.getByLabelText('اسم المستخدم')).toBeTruthy();
+    expect(screen.queryByLabelText(/email|إيميل/i)).toBeNull();
     expect(screen.queryByPlaceholderText(/@/)).toBeNull();
   });
 
@@ -73,43 +73,61 @@ describe('sign-in — the door', () => {
     // A placeholder disappears the moment you type. Screen readers and anyone
     // who looks away mid-form lose the field's identity with it.
     render(<App />);
-    expect(screen.getByLabelText('Username')).toBeTruthy();
-    expect(screen.getByLabelText('Password')).toBeTruthy();
-    expect(screen.getByText('Remember me')).toBeTruthy();
-    expect(screen.getByText('Forgot password?')).toBeTruthy();
+    expect(screen.getByLabelText('اسم المستخدم').getAttribute('placeholder')).toBeNull();
+    expect(screen.getByLabelText('كلمة السر').getAttribute('placeholder')).toBeNull();
+    expect(screen.getByRole('button', { name: 'نسيت كلمة السر؟' })).toBeTruthy();
+  });
+
+  it('🚫 offers no control that does nothing — «Remember me» never worked', () => {
+    render(<App />);
+    expect(screen.queryByRole('checkbox')).toBeNull();
   });
 
   it('password field is masked', () => {
     render(<App />);
-    expect(screen.getByLabelText('Password').getAttribute('type')).toBe('password');
+    expect(screen.getByLabelText('كلمة السر').getAttribute('type')).toBe('password');
   });
 
-  it('Enter submits — the form is keyboard-complete', () => {
+  it('Enter submits — the fields sit in a real form with a submit button', () => {
     render(<App />);
-    fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'ahmed.m' } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Welcome@123' } });
-    fireEvent.keyDown(screen.getByLabelText('Password'), { key: 'Enter' });
-    expect(screen.queryByText(/Enter your username/)).toBeNull();
+    const user = screen.getByLabelText('اسم المستخدم');
+    const form = user.closest('form')!;
+    expect(form).toBeTruthy();
+    expect(form.querySelector('button[type="submit"]')).toBeTruthy();
+    fireEvent.change(user, { target: { value: 'ahmed.m' } });
+    fireEvent.change(screen.getByLabelText('كلمة السر'), { target: { value: 'Welcome@123' } });
+    fireEvent.submit(form);
+    expect(screen.queryByText('اكتب اسم المستخدم.')).toBeNull();
   });
 
-  it('🔴 the error is announced, not just coloured', () => {
-    // Colour alone excludes anyone who cannot see it.
+  it('🔴 a missing field is said under it, tied to it, and focus moves there', () => {
+    // Colour alone excludes anyone who cannot see it; a message nobody is
+    // taken to is a message nobody reads.
     render(<App />);
-    fireEvent.click(screen.getByText(/Sign In/));
-    const live = document.querySelector('[aria-live="polite"]');
-    expect(live?.textContent).toContain('Enter your username');
+    fireEvent.click(screen.getByRole('button', { name: 'ادخل' }));
+    const user = screen.getByLabelText('اسم المستخدم');
+    expect(user.getAttribute('aria-invalid')).toBe('true');
+    expect(document.getElementById(user.getAttribute('aria-describedby')!)?.textContent).toContain('اكتب اسم المستخدم.');
+    expect(document.activeElement).toBe(user);
   });
 
-  it('the door is LTR while the academy behind it is RTL — deliberate seam', () => {
+  it('🔴 a wrong password is announced, not just shown', () => {
     render(<App />);
-    expect(document.querySelector('.signin')?.getAttribute('dir')).toBe('ltr');
+    fireEvent.change(screen.getByLabelText('اسم المستخدم'), { target: { value: 'ahmed.m' } });
+    fireEvent.change(screen.getByLabelText('كلمة السر'), { target: { value: 'wrong' } });
+    fireEvent.click(screen.getByRole('button', { name: 'ادخل' }));
+    expect(document.querySelector('[aria-live="polite"]')?.textContent).toContain('مش صح');
   });
 
-  it('🚫 ambient light is decorative — never announced', () => {
+  it('the door follows the product language — it never forces its own direction', () => {
     render(<App />);
-    for (const orb of document.querySelectorAll('.signin-orb')) {
-      expect(orb.getAttribute('aria-hidden')).toBe('true');
-    }
+    expect(document.querySelector('.door')?.getAttribute('dir')).toBeNull();
+    expect(document.documentElement.dataset.system).toBe('v3');
+  });
+
+  it('🚫 nothing decorative is drawn — no light orbs behind the form', () => {
+    render(<App />);
+    expect(document.querySelector('.signin-orb')).toBeNull();
   });
 });
 
@@ -164,7 +182,7 @@ describe('🔴 the session is the permission boundary', () => {
     identityStore.signOut();
     render(<App />);
     // Only the door renders. No shell, no nav, no data.
-    expect(screen.getByText('Wadi Degla Academy')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'أكاديمية وادي دجلة' })).toBeTruthy();
     expect(screen.queryByText('مهمة النهارده')).toBeNull();
   });
 });
@@ -265,32 +283,32 @@ describe('show-password toggle', () => {
 
   it('starts hidden — the field is a password field by default', () => {
     render(<App />);
-    expect(screen.getByLabelText('Password').getAttribute('type')).toBe('password');
+    expect(screen.getByLabelText('كلمة السر').getAttribute('type')).toBe('password');
   });
 
   it('🔴 toggling reveals and re-hides WITHOUT losing what was typed', () => {
     // The input is never unmounted — only its type flips — so focus and value
     // survive the toggle. That is the whole point of doing it this way.
     render(<App />);
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Welcome@123' } });
-    fireEvent.click(screen.getByLabelText('Show password'));
-    expect(screen.getByLabelText('Password').getAttribute('type')).toBe('text');
-    expect(screen.getByLabelText<HTMLInputElement>('Password').value).toBe('Welcome@123');
-    fireEvent.click(screen.getByLabelText('Hide password'));
-    expect(screen.getByLabelText('Password').getAttribute('type')).toBe('password');
+    fireEvent.change(screen.getByLabelText('كلمة السر'), { target: { value: 'Welcome@123' } });
+    fireEvent.click(screen.getByLabelText('اظهر كلمة السر'));
+    expect(screen.getByLabelText('كلمة السر').getAttribute('type')).toBe('text');
+    expect(screen.getByLabelText<HTMLInputElement>('كلمة السر').value).toBe('Welcome@123');
+    fireEvent.click(screen.getByLabelText('اخفي كلمة السر'));
+    expect(screen.getByLabelText('كلمة السر').getAttribute('type')).toBe('password');
   });
 
   it('announces its state to screen readers via aria-pressed', () => {
     render(<App />);
-    const btn = screen.getByLabelText('Show password');
+    const btn = screen.getByLabelText('اظهر كلمة السر');
     expect(btn.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(btn);
-    expect(screen.getByLabelText('Hide password').getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByLabelText('اخفي كلمة السر').getAttribute('aria-pressed')).toBe('true');
   });
 
   it('🚫 the toggle is a button, never a submit — it must not sign you in', () => {
     render(<App />);
-    expect(screen.getByLabelText('Show password').getAttribute('type')).toBe('button');
+    expect(screen.getByLabelText('اظهر كلمة السر').getAttribute('type')).toBe('button');
   });
 });
 
@@ -323,9 +341,9 @@ describe('profile menu — sign out', () => {
 
   const signIn = (username: string, password: string) => {
     render(<App />);
-    fireEvent.change(screen.getByLabelText('Username'), { target: { value: username } });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: password } });
-    fireEvent.click(screen.getByText(/Sign In/));
+    fireEvent.change(screen.getByLabelText('اسم المستخدم'), { target: { value: username } });
+    fireEvent.change(screen.getByLabelText('كلمة السر'), { target: { value: password } });
+    fireEvent.click(screen.getByRole('button', { name: 'ادخل' }));
   };
 
   it('🔴 signing out returns to the login screen', async () => {
@@ -334,7 +352,7 @@ describe('profile menu — sign out', () => {
     fireEvent.click(screen.getByRole('button', { name: /القائمة الشخصية/ }));
     fireEvent.click(screen.getByRole('menuitem', { name: /تسجيل الخروج/ }));
     // back at the door: the username field exists again
-    await waitFor(() => expect(screen.getByLabelText('Username')).toBeTruthy());
+    await waitFor(() => expect(screen.getByLabelText('اسم المستخدم')).toBeTruthy());
   });
 
   it('the menu opens and closes on Escape', () => {
@@ -350,6 +368,6 @@ describe('profile menu — sign out', () => {
     signIn('trainer.adel', 'Welcome@123');
     fireEvent.click(screen.getByRole('button', { name: /القائمة الشخصية/ }));
     fireEvent.click(screen.getByRole('menuitem', { name: /تسجيل الخروج/ }));
-    await waitFor(() => expect(screen.getByLabelText('Username')).toBeTruthy());
+    await waitFor(() => expect(screen.getByLabelText('اسم المستخدم')).toBeTruthy());
   });
 });

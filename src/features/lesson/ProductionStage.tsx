@@ -39,11 +39,11 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
         {/* You face a PERSON, not a line. The gap between what they DO and what
             they WANT is where every beginner mistake lives. */}
         {arch && (
-          <div className="mb-5" style={{ border: '1px solid var(--line-2)', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
-            <div className="t-label" style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-2)', borderBottom: '1px solid var(--line)' }}>
+          <div className="archetype">
+            <div className="t-label archetype-head">
               مين قدّامك · {arch.name}
             </div>
-            <div className="stack gap-3" style={{ padding: 'var(--sp-4)' }}>
+            <div className="stack gap-3 archetype-body">
               <Row k="بيعمل إيه" v={arch.does} />
               <Row k="عايز إيه فعلاً" v={arch.wants} accent />
               <Row k="الفخ بتاعه" v={arch.trap} risk />
@@ -100,8 +100,8 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
 
       <div className="stack gap-2">
         {p.criteria.map((c, i) => (
-          <label key={i} className="row-hover row gap-3 items-start" style={{ padding: 'var(--sp-3)', borderRadius: 'var(--r-sm)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={checked[i] === true} className="mt-1" style={{ width: 17, height: 17, accentColor: 'var(--g2)' }}
+          <label key={i} className="row-hover row gap-3 items-start check-row">
+            <input type="checkbox" checked={checked[i] === true} className="check-box"
               onChange={e => { setChecked(v => ({ ...v, [i]: e.target.checked })); setReviewed(false); }} />
             <span className="t-sm grow">{c}</span>
           </label>
@@ -163,7 +163,9 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
 /** One labelled line inside the archetype brief. */
 const Row: React.FC<{ k: string; v: string; accent?: boolean; risk?: boolean }> = ({ k, v, accent, risk }) => (
   <div className="row gap-3 items-start">
-    <span className="t-label no-shrink" style={{ minWidth: 92, color: risk ? 'var(--risk)' : accent ? 'var(--g1)' : 'var(--tx3)' }}>{k}</span>
+    {/* What they really want is the line to act on: it reads strongest by
+        weight, not by gold; the trap keeps the risk colour. */}
+    <span className={`t-label no-shrink archetype-key${risk ? ' archetype-key--risk' : ''}${accent ? ' archetype-key--want' : ''}`}>{k}</span>
     <span className="t-sm grow c-tx1">{v}</span>
   </div>
 );

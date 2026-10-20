@@ -18,9 +18,9 @@ import { Eyebrow, PricesNote } from '../../ui/primitives';
 
 /* ---------- shared presentation ---------- */
 const ExampleCard: React.FC<{ title: string; result: CalculationResult }> = ({ title, result }) => (
-  <div style={{ background: 'linear-gradient(180deg, var(--s0), var(--s-1))', border: '1px solid rgba(var(--g2-rgb),.28)', borderRadius: 'var(--r-lg)', padding: 'var(--sp-5)' }}>
+  <div className="example-card">
     <Eyebrow icon={<Sparkles size={13} />}>{title} — محسوب مباشرة من المحرك</Eyebrow>
-    <p className="t-num t-h2 c-g1" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>
+    <p className="example-total">
       {result.total}<span className="t-sm c-tx2" style={{ marginInlineStart: 'var(--sp-2)' }}>ج.م</span>
     </p>
     {result.lines.length > 0 && (
@@ -57,7 +57,7 @@ const CancellationCard: React.FC = () => (
   <Card tone="raised" pad={5}>
     <Eyebrow>سياسة الإلغاء المعتمدة</Eyebrow>
     <p className="t-body" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>
-      بدون أسباب: أول <b className="t-num c-g1">{CANCELLATION_POLICY.noReasonWindowDays}</b> يوم من التعاقد.
+      بدون أسباب: أول <b className="t-num">{CANCELLATION_POLICY.noReasonWindowDays}</b> يوم من التعاقد.
     </p>
     <p className="t-sm">
       بعدها: {CANCELLATION_POLICY.afterWindow.acceptedReasons.join(' · ')} — بمستند رسمي. {CANCELLATION_POLICY.afterWindow.refundNote}

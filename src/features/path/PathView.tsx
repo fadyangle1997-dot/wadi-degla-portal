@@ -13,6 +13,8 @@
  * Journey and never appears here.
  */
 import React from 'react';
+import { m } from 'motion/react';
+import { paperIn } from '../../ui/motion';
 import { Lock, Flag } from 'lucide-react';
 import { moduleById, MODULES } from '../../content/registry';
 import { useProgress, moduleLessonsDone, progressStore, currentCommitment } from '../../app/progress';
@@ -93,9 +95,13 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
 
         <div className="workspace workspace--aside">
           <div className="stack gap-5">
-            {/* The single next step: the brief, and the screen's one primary action. */}
-            <MissionBrief mission={mission} trainerName={trainerName}
-              onOpenLesson={onOpenLesson} onOpenExam={onOpenExam} onOpenReview={onOpenReview} onOpenReadiness={onOpenReadiness} />
+            {/* The single next step: the brief, and the screen's one primary action.
+                The paper arrives with a short critically damped rise — the one
+                spring on this screen; everything else changes with plain easing. */}
+            <m.div {...paperIn}>
+              <MissionBrief mission={mission} trainerName={trainerName}
+                onOpenLesson={onOpenLesson} onOpenExam={onOpenExam} onOpenReview={onOpenReview} onOpenReadiness={onOpenReadiness} />
+            </m.div>
 
             {/* Yesterday's commitment, shown back to the trainee: what they chose and
                 when. Never «did you do it?» — the platform cannot know (ADR-004). */}
@@ -104,7 +110,7 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
                 <Eyebrow icon={<Flag size={13} />}>
                   {commitment.daysAgo === 0 ? tr('db.committoday', lang) : commitment.daysAgo === 1 ? tr('db.commitysdy', lang) : `${tr('db.commitdays', lang)} ${commitment.daysAgo} ${tr('db.daysago', lang)}`}
                 </Eyebrow>
-                <p className="t-body c-tx0" style={{ margin: 'var(--sp-2) 0 0' }}>{commitment.text}</p>
+                <p className="t-body c-tx0 mt-2 mb-0">{commitment.text}</p>
               </Card>
             )}
 
@@ -189,7 +195,7 @@ const NextModulePreview: React.FC<{ moduleId: string }> = ({ moduleId }) => {
   return (
     /* No opacity on locked cards: opacity multiplies every child's contrast
        below the floor. Colour and the lock icon say «locked». */
-    <div className="row items-center gap-3" style={{ padding: 'var(--sp-4) var(--sp-5)', border: '1px solid var(--line)', borderRadius: 'var(--r-lg)', background: 'var(--s-2)' }}>
+    <div className="row items-center gap-3 locked-preview">
       <Lock size={16} className="c-tx3 no-shrink" />
       <div className="grow">
         <span className="t-label c-tx3">{tr('db.nextunit', lang)}</span>

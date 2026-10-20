@@ -195,8 +195,11 @@ describe('🔴 the lesson has a real hero — remove it and the screen changes',
     // SpineWell now lives in shared primitives (extracted from LessonFlow).
     const primitives = readFileSync(join(FEATURES, '../ui/primitives/index.tsx'), 'utf-8');
     const well = primitives.slice(primitives.indexOf('export const SpineWell'));
-    expect(well).toContain("background: 'var(--s-2)'");
-    expect(well).toMatch(/insetInlineStart: 0[^}]*width: 3/);
+    expect(well).toContain('className={`spine spine--${spine}`}');
+    // The look is a class, so a scoped system can restyle it: sunk, with a spine.
+    const css = readFileSync(join(FEATURES, '../ui/theme.css'), 'utf-8');
+    expect(css).toMatch(/\.spine \{[^}]*background:var\(--s-2\)/);
+    expect(css).toMatch(/\.spine-bar \{[^}]*inset-inline-start:0[^}]*width:3px/);
   });
 
   it('🚫 the example never out-weighs the rule', () => {

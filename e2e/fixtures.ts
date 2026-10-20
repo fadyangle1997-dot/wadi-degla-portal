@@ -36,12 +36,17 @@ export async function settle(page: Page) {
   }));
 }
 
+/** The door's fields, in whichever product language is chosen (Arabic first). */
+export const usernameField = (page: Page) => page.getByLabel(/^(اسم المستخدم|Username)$/);
+export const passwordField = (page: Page) => page.getByLabel(/^(كلمة السر|Password)$/);
+export const signInButton = (page: Page) => page.getByRole('button', { name: /^(ادخل|Sign in)$/ });
+
 export async function signIn(page: Page, username: string, password = passwordFor(username)) {
   await page.goto('/');
-  await page.getByLabel('Username').fill(username);
-  await page.getByLabel('Password', { exact: true }).fill(password);
-  await page.getByRole('button', { name: /sign in/i }).click();
-  await expect(page.getByLabel('Username')).toBeHidden();
+  await usernameField(page).fill(username);
+  await passwordField(page).fill(password);
+  await signInButton(page).click();
+  await expect(usernameField(page)).toBeHidden();
   await settle(page);
 }
 
@@ -73,7 +78,7 @@ export async function toAcademy(page: Page) {
 export async function signOut(page: Page) {
   await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
   await page.getByRole('menuitem', { name: 'تسجيل الخروج' }).click();
-  await expect(page.getByLabel('Username')).toBeVisible();
+  await expect(usernameField(page)).toBeVisible();
 }
 
 /**

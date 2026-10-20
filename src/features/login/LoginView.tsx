@@ -1,191 +1,169 @@
 /**
- * Sign-in — the first impression.
+ * Sign-in — the door (v3 benchmark).
  *
- * This screen has one job before a single word is read: say «premium club»,
- * not «admin console». Everything else in the academy is a working surface;
- * this is the door.
- *
- * ── DESIGN NOTES ─────────────────────────────────────────────────────────
- * • The reference's floating spheres are rebuilt as what they actually are
- *   here — club lighting behind glass. Warm, slow, and deliberately behind the
- *   card: ambient light frames a form, it never competes with it.
- * • Glass over a warm surface (#34312F) rather than the app's cool near-black,
- *   with an opaque-enough base so the card still reads where backdrop-filter
- *   is unsupported.
- * • Underline fields, not boxes. Boxes are forms; underlines are stationery —
- *   and there are only two of them, so the structure is obvious without chrome.
- * • The gold is the academy's existing gold family. This is one identity lit
- *   differently, not a second design language.
+ * Arabic first and unmistakably Wadi Degla: the crest, the academy's name set
+ * in its own face (Alexandria) as the one brand moment, and a single panel
+ * with two fields and one gold action. Nothing glows, nothing drifts, no
+ * gradient, no uppercase English: a club's door is confident because it is
+ * quiet. It is the way in, not a marketing page.
  *
  * ── LANGUAGE ─────────────────────────────────────────────────────────────
- * English, and `dir="ltr"`, per the brief. The academy behind this door is
- * Arabic RTL — the seam is deliberate, and the screen is scoped so nothing
- * about the RTL app changes.
+ * The door speaks the product language (Arabic unless the person chose
+ * English, which the switch at the top offers). The document's lang and dir
+ * follow the choice, so a screen reader voices the right language.
  *
  * ── ACCESSIBILITY ────────────────────────────────────────────────────────
- * Real <label for> (not placeholders as labels), 44px+ targets, visible
- * focus rings on every control, Enter submits, errors announced via
- * aria-live, and ambient motion drops entirely under prefers-reduced-motion.
+ * Visible labels (never placeholders), username and current-password
+ * autocomplete, Enter submits (a real form), a missing field is said under
+ * that field and focus moves to it, a wrong password is announced politely,
+ * the reveal toggle states its state, and every target is 44px or more.
+ *
+ * «Remember me» is not here: it never did anything (see the controls audit),
+ * and a control that does nothing is a broken promise. Whether to build it
+ * is an open product decision.
  */
-import React, { useState } from 'react';
-import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Loader2, Eye, EyeOff, X } from 'lucide-react';
 import { BrandLogo } from '../../ui/BrandLogo';
+import { useSystemV3 } from '../../ui/systemScope';
+import { useLang, langStore, t } from '../../app/i18n';
 
-/** Returns an error message, or null when the credentials are accepted. */
 /** Returns an error message, or null when the credentials are accepted. */
 interface Props { onSignIn: (username: string, password: string) => string | null }
 
+type FieldErrors = { user?: string; pass?: string };
+
 export const LoginView: React.FC<Props> = ({ onSignIn }) => {
+  useSystemV3(true);
+  const lang = useLang();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [failure, setFailure] = useState('');
+  const [helpOpen, setHelpOpen] = useState(false);
+  const userRef = useRef<HTMLInputElement>(null);
+  const passRef = useRef<HTMLInputElement>(null);
 
-  const submit = () => {
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (busy) return;
-    if (!username.trim() || !password.trim()) {
-      setError('Enter your username and password to continue.');
-      return;
-    }
-    setError('');
+    const missing: FieldErrors = {
+      user: username.trim() ? undefined : t('door.err.user', lang),
+      pass: password ? undefined : t('door.err.pass', lang),
+    };
+    setFieldErrors(missing);
+    setFailure('');
+    // Focus goes to the first field that needs something; its description reads the reason.
+    if (missing.user) { userRef.current?.focus(); return; }
+    if (missing.pass) { passRef.current?.focus(); return; }
     setBusy(true);
-    // The door decides nothing about WHERE you go — it only decides whether it
-    // opens. Routing is derived from permissions, one layer up.
-    const failure = onSignIn(username.trim(), password);
-    if (failure) { setError(failure); setBusy(false); }
+    // The door decides only whether it opens. Where it opens onto is derived
+    // from permissions, one layer up.
+    const error = onSignIn(username.trim(), password);
+    if (error) { setFailure(error); setBusy(false); }
   };
 
+  const other = lang === 'ar' ? 'en' : 'ar';
+
   return (
-    <div
-      className="signin row relative min-h-screen items-center justify-center"
-      /* The mirror of the Arabic island: this screen is English and LTR in
-         BOTH modes by design, so it declares both — `lang` beside `dir`, or a
-         screen reader in Arabic mode announces «Sign In» with Arabic phonetics.
-         Semantics only: not one pixel of this screen moves. */
-      lang="en"
-      dir="ltr"
-      onKeyDown={e => { if (e.key === 'Enter') submit(); }}
-      style={{ overflow: 'hidden', padding: 'var(--sp-6) var(--sp-5)' }}
-    >
-      {/* Ambient club light — behind everything, never on the reading path. */}
-      <span aria-hidden className="signin-orb" style={{ width: 340, height: 340, top: '-8%', left: '-10%', background: '#CCAB6C', animationDelay: '0s' }} />
-      <span aria-hidden className="signin-orb" style={{ width: 260, height: 260, top: '18%', right: '-6%', background: '#B38922', animationDelay: '-9s', opacity: .38 }} />
-      <span aria-hidden className="signin-orb" style={{ width: 300, height: 300, bottom: '-12%', right: '12%', background: '#FEDEA0', animationDelay: '-17s', opacity: .3 }} />
+    <div className="door">
+      <header className="door-bar">
+        <button type="button" className="pill" onClick={() => langStore.toggle()} aria-label={t('lang.aria', lang)}>
+          <span lang={other}>{t('lang.switch', lang)}</span>
+        </button>
+      </header>
 
-      {/* A CSS entrance, not Motion: the sign-in screen paints before the
-          animation engine has loaded, so it must not start invisible. */}
-      <main className="enter-rise stack relative w-full items-center"
-        style={{ maxWidth: 420 }}
-      >
-        <BrandLogo size={104} />
+      <main className="door-main">
+        <div className="door-brand">
+          <BrandLogo size={88} />
+          <h1 className="door-title">{t('brand.name', lang)}</h1>
+          <p className="door-lead">{t('door.lead', lang)}</p>
+        </div>
 
-        <h1 className="text-center" style={{ margin: 'var(--sp-6) 0 var(--sp-2)', fontSize: 'clamp(1.5rem, 4vw, 1.85rem)', fontWeight: 600, letterSpacing: '-.015em', color: 'var(--sg-tx)', lineHeight: 1.25 }}>
-          Wadi Degla Academy
-        </h1>
-        <p className="m-0 text-center" style={{ fontSize: '.875rem', fontWeight: 500, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--sg-gold-soft)' }}>
-          Membership Training Platform
-        </p>
-
-        <section
-          className="signin-card w-full mt-7"
-          // --r-lg, the card radius: the sign-in card has its own colours but shares
-          // the spatial scale.
-          style={{ padding: 'var(--sp-7) var(--sp-6)', borderRadius: 'var(--r-lg)' }}
-        >
-          <div className="stack gap-5">
-            <div>
-              <label htmlFor="signin-user" className="block mb-2" style={labelStyle}>Username</label>
-              <input
-                id="signin-user" className="signin-field" type="text" autoComplete="username"
-                value={username} onChange={e => { setUsername(e.target.value); setError(''); }}
-                placeholder="your.username" autoFocus
-              />
-            </div>
-
-            <div>
-              <label htmlFor="signin-pass" className="block mb-2" style={labelStyle}>Password</label>
-              <div className="relative">
-                <input
-                  id="signin-pass" className="signin-field" type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  value={password} onChange={e => { setPassword(e.target.value); setError(''); }}
-                  placeholder="••••••••"
-                  style={{ paddingInlineEnd: 'var(--sp-6)' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  aria-pressed={showPassword}
-                  aria-controls="signin-pass"
-                  className="signin-eye"
-                  tabIndex={0}
-                >
-                  {showPassword ? <EyeOff size={22} aria-hidden /> : <Eye size={22} aria-hidden />}
-                </button>
-              </div>
-            </div>
-
-            <div className="row items-center justify-between gap-3 wrap">
-              <label className="row items-center gap-2" style={{ cursor: 'pointer', minHeight: 44, fontSize: '.9375rem', color: 'var(--sg-tx-dim)' }}>
-                <input
-                  type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}
-                  style={{ width: 17, height: 17, accentColor: 'var(--sg-gold)', cursor: 'pointer' }}
-                />
-                Remember me
-              </label>
-              <button type="button" className="signin-link" onClick={() => setError('Contact your department administrator to reset your password.')}>
-                Forgot password?
-              </button>
-            </div>
-
-            {/* Announced, never a colour-only signal. */}
-            <div aria-live="polite" style={{ minHeight: error ? 'auto' : 0 }}>
-              {error && (
-                <p className="m-0" style={{ fontSize: '.9375rem', color: 'var(--sg-gold-light)', lineHeight: 1.6 }}>
-                  {error}
-                </p>
+        <section className="door-panel" aria-labelledby="door-panel-title">
+          <h2 id="door-panel-title" className="door-panel-title">{t('door.title', lang)}</h2>
+          <form className="door-form" noValidate onSubmit={submit}>
+            <DoorField id="signin-user" label={t('door.user', lang)} error={fieldErrors.user}>
+              {p => (
+                <input {...p} ref={userRef} className="field" type="text" dir="auto" autoComplete="username"
+                  autoCapitalize="none" spellCheck={false} autoFocus value={username}
+                  onChange={e => { setUsername(e.target.value); setFieldErrors(f => ({ ...f, user: undefined })); setFailure(''); }} />
               )}
+            </DoorField>
+
+            <DoorField id="signin-pass" label={t('door.pass', lang)} error={fieldErrors.pass}>
+              {p => (
+                <div className="door-secret">
+                  {/* No dir="auto" here: the reveal button sits at the field's
+                      inline end, so the field keeps the page's direction (a
+                      Latin password flipped it to LTR and ran under the eye). */}
+                  <input {...p} ref={passRef} className="field" type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password" value={password}
+                    onChange={e => { setPassword(e.target.value); setFieldErrors(f => ({ ...f, pass: undefined })); setFailure(''); }} />
+                  {/* The input is never replaced, only its type flips: what was
+                      typed and the caret survive the toggle. */}
+                  <button type="button" className="door-eye" onClick={() => setShowPassword(v => !v)}
+                    aria-label={t(showPassword ? 'door.hide' : 'door.show', lang)} aria-pressed={showPassword}
+                    aria-controls="signin-pass">
+                    {showPassword ? <EyeOff size={22} aria-hidden /> : <Eye size={22} aria-hidden />}
+                  </button>
+                </div>
+              )}
+            </DoorField>
+
+            <button type="button" className="text-action door-help" aria-expanded={helpOpen} aria-controls="door-help"
+              onClick={() => setHelpOpen(v => !v)}>
+              {t('door.forgot', lang)}
+            </button>
+            {helpOpen && <p id="door-help" className="door-note">{t('door.forgothelp', lang)}</p>}
+
+            {/* A wrong password belongs to no single field: it is announced here. */}
+            <div aria-live="polite" className="door-live">
+              {failure && <p className="door-alert">{failure}</p>}
             </div>
 
-            <button type="button" className="signin-btn items-center justify-center gap-2" onClick={submit} disabled={busy} aria-busy={busy}
-              style={{ display: 'inline-flex' }}>
-              {busy
-                ? <><Loader2 size={16} className="spin" /> Signing in…</>
-                : <>Sign In <ArrowRight size={16} /></>}
+            <button type="submit" className="btn btn-primary door-submit" disabled={busy} aria-busy={busy}>
+              {busy ? <><Loader2 size={16} className="spin" aria-hidden /> {t('door.busy', lang)}</> : t('door.submit', lang)}
             </button>
-          </div>
+          </form>
         </section>
 
-        <p className="mt-6 text-center" style={{ fontSize: '.875rem', color: 'var(--sg-tx-dim)', letterSpacing: '.02em' }}>
-          Official Membership Operations Academy · Internal use only
-        </p>
-
         {/* Development-only role switcher — statically dropped from prod builds. */}
-        {import.meta.env.DEV && <DevPanel onFill={(u, p) => { setUsername(u); setPassword(p); setError(''); }} />}
+        {import.meta.env.DEV && <DevPanel onFill={(u, p) => { setUsername(u); setPassword(p); setFieldErrors({}); setFailure(''); }} />}
       </main>
+
+      <footer className="door-foot">{t('door.foot', lang)}</footer>
     </div>
   );
 };
 
-const labelStyle: React.CSSProperties = {
-  fontSize: '.8125rem', fontWeight: 500, letterSpacing: '.1em',
-  textTransform: 'uppercase', color: 'var(--sg-tx-dim)',
-};
+/**
+ * A field on the door: the same contract as the shared FormField (visible
+ * label, error under the field tied by aria-describedby, aria-invalid,
+ * aria-required), written here so the first screen does not download the
+ * whole primitives module before anyone has signed in.
+ */
+type DoorControl = { id: string; 'aria-invalid'?: true; 'aria-describedby'?: string; 'aria-required': true };
+const DoorField: React.FC<{ id: string; label: string; error?: string; children: (p: DoorControl) => React.ReactNode }> = ({ id, label, error, children }) => (
+  <div className="form-field">
+    <label htmlFor={id} className="form-label">{label}</label>
+    {children({ id, 'aria-invalid': error ? true : undefined, 'aria-describedby': error ? `${id}-err` : undefined, 'aria-required': true })}
+    {error && <p id={`${id}-err`} className="form-error"><X size={13} aria-hidden /> {error}</p>}
+  </div>
+);
 
 /** DEV ONLY — fills a demo credential. Statically dropped from prod builds. */
 const DevPanel: React.FC<{ onFill: (u: string, p: string) => void }> = ({ onFill }) => (
-  <div className="row mt-5 gap-2 wrap justify-center">
+  <div className="row gap-3 wrap justify-center" lang="en" dir="ltr">
     {[
       ['ahmed.m', 'Welcome@123', 'trainee'],
       ['trainer.adel', 'Welcome@123', 'trainer'],
       ['manager.nabil', 'Welcome@123', 'manager'],
       ['admin', 'Admin@2026', 'admin'],
     ].map(([u, pw, label]) => (
-      <button key={u} type="button" className="signin-link" onClick={() => onFill(u!, pw!)}
-        style={{ fontSize: '.8125rem', opacity: .45 }}>
+      <button key={u} type="button" className="text-action" onClick={() => onFill(u!, pw!)}>
         dev · {label}
       </button>
     ))}

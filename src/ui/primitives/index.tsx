@@ -23,16 +23,10 @@ import { useModal } from './useModal';
 export const Capsule: React.FC<{ children: React.ReactNode; label?: string; style?: Pick<React.CSSProperties, 'position' | 'insetInlineEnd' | 'insetInlineStart' | 'bottom' | 'top'> }> = ({ children, label, style }) => (
   <span
     aria-label={label}
-    /* `display` lives in the CSS class: an inline display would outrank the
-       media query that hides this capsule on phones. */
+    /* Its look lives in the CSS class (a media query can reach it); only the
+       position it rides at is the caller's. */
     className="capsule"
-    style={{
-      background: 'var(--s0)', border: '1px solid var(--line-2)',
-      borderRadius: 'var(--r-full)', padding: 'var(--sp-1) var(--sp-3)',
-      fontSize: '.875rem', fontWeight: 600, color: 'var(--g1)',
-      boxShadow: 'var(--e-raised)', whiteSpace: 'nowrap',
-      ...style,
-    }}
+    style={style}
   >
     {children}
   </span>
@@ -51,15 +45,6 @@ export const Capsule: React.FC<{ children: React.ReactNode; label?: string; styl
  */
 type CardTone = 'default' | 'raised' | 'accent' | 'quiet';
 
-const CARD_TONE: Record<CardTone, React.CSSProperties> = {
-  /* Filled, not outlined: a surface is told apart by its fill, the way the
-     reference's tiles are. Hairlines stay for tables and ledgers. */
-  default: { background: 'var(--s-1)', border: '1px solid transparent' },
-  raised:  { background: 'var(--s0)',  border: '1px solid transparent', boxShadow: 'var(--e-raised)' },
-  accent:  { background: 'var(--s0)',  border: '1px solid var(--g3)',     boxShadow: 'var(--e-raised)' },
-  quiet:   { background: 'transparent', border: '1px solid var(--line)' },
-};
-
 export const Card: React.FC<
   Omit<React.HTMLAttributes<HTMLDivElement>, 'style'> & {
     tone?: CardTone;
@@ -68,16 +53,10 @@ export const Card: React.FC<
     /** Layout only — margin, width, grid placement. Never surface properties. */
     layout?: Pick<React.CSSProperties, 'margin' | 'marginBottom' | 'marginTop' | 'width' | 'maxWidth' | 'gridColumn' | 'flex'>;
   }
-> = ({ tone = 'default', pad = 5, layout, children, ...p }) => (
-  <div
-    style={{
-      ...CARD_TONE[tone],
-      borderRadius: 'var(--r-lg)',
-      padding: `var(--sp-${pad})`,
-      ...layout,
-    }}
-    {...p}
-  >
+> = ({ tone = 'default', pad = 5, layout, children, className, ...p }) => (
+  /* Filled, not outlined: a surface is told apart by its fill (theme.css,
+     .card--*). Hairlines stay for tables and ledgers. */
+  <div className={`card card--${tone} card--pad-${pad}${className ? ` ${className}` : ''}`} style={layout} {...p}>
     {children}
   </div>
 );
@@ -98,21 +77,13 @@ export const Button = React.forwardRef<HTMLButtonElement, BtnProps>(function But
 
 /* ---------------- callout ---------------- */
 type Tone = 'note' | 'objective' | 'warning' | 'summary';
-const TONES: Record<Tone, { c: string; bg: string; label: string }> = {
-  objective: { c: 'var(--g2)', bg: 'rgba(var(--g2-rgb),.07)', label: 'الهدف' },
-  note: { c: 'var(--info)', bg: 'var(--info-bg)', label: 'ملاحظة' },
-  warning: { c: 'var(--attn)', bg: 'var(--attn-bg)', label: 'انتبه' },
-  summary: { c: 'var(--ready)', bg: 'var(--ready-bg)', label: 'الخلاصة' },
-};
-export const Callout: React.FC<{ tone: Tone; title?: string; children: React.ReactNode }> = ({ tone, title, children }) => {
-  const t = TONES[tone];
-  return (
-    <div style={{ background: t.bg, borderRight: `2px solid ${t.c}`, borderRadius: 'var(--r-sm)', padding: 'var(--sp-4) var(--sp-5)' }}>
-      <div className="t-label mb-2" style={{ color: t.c }}>{title ?? t.label}</div>
-      <div className="t-body">{children}</div>
-    </div>
-  );
-};
+const TONE_LABEL: Record<Tone, string> = { objective: 'الهدف', note: 'ملاحظة', warning: 'انتبه', summary: 'الخلاصة' };
+export const Callout: React.FC<{ tone: Tone; title?: string; children: React.ReactNode }> = ({ tone, title, children }) => (
+  <div className={`callout callout--${tone}`}>
+    <div className="t-label mb-2 callout-label">{title ?? TONE_LABEL[tone]}</div>
+    <div className="t-body">{children}</div>
+  </div>
+);
 
 /* ---------------- feedback block (answered → explanation → continue) ----------------
    Owns aria-live and moves focus to the continue button — the SAME behaviour in
@@ -225,9 +196,9 @@ export const ScreenHeader: React.FC<{
 
 /* ---------------- progress rail ---------------- */
 export const ProgressRail: React.FC<{ total: number; current: number }> = ({ total, current }) => (
-  <div className="row gap-1" aria-hidden>
+  <div className="prail" aria-hidden>
     {Array.from({ length: total }, (_, i) => (
-      <div key={i} className="grow" style={{ height: 4, borderRadius: 'var(--r-full)', background: i < current ? 'var(--g3)' : i === current ? 'var(--g2)' : 'var(--line-2)', transition: 'background .3s var(--ease)' }} />
+      <div key={i} className="prail-seg" data-state={i < current ? 'done' : i === current ? 'now' : 'todo'} />
     ))}
   </div>
 );
@@ -500,9 +471,9 @@ export const Skeleton: React.FC<{ height?: number; width?: string }> = ({ height
  * without the logo.
  */
 export const SpineWell: React.FC<{ children: React.ReactNode; spine?: 'rule' | 'risk'; label?: React.ReactNode }> = ({ children, spine = 'rule', label }) => (
-  <div className="relative" style={{ background: 'var(--s-2)', borderRadius: 'var(--r-md)', padding: 'var(--sp-4) var(--sp-5)', overflow: 'hidden' }}>
-    <span aria-hidden style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: 3, background: spine === 'risk' ? 'var(--risk)' : 'var(--g2)' }} />
-    {label && <div className="t-label mb-2" style={{ color: spine === 'risk' ? 'var(--risk)' : 'var(--g1)' }}>{label}</div>}
+  <div className={`spine spine--${spine}`}>
+    <span aria-hidden className="spine-bar" />
+    {label && <div className="t-label mb-2 spine-label">{label}</div>}
     {children}
   </div>
 );

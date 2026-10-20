@@ -516,7 +516,9 @@ describe('🔴 direction comes from the language, not from patches', () => {
     const primitives = readFileSync(new URL('../primitives/index.tsx', import.meta.url), 'utf-8');
     const login = readFileSync(new URL('../../features/login/LoginView.tsx', import.meta.url), 'utf-8');
     expect(primitives).toMatch(/<Tag lang="ar" dir="rtl"/);        // Arabic content island
-    expect(login).toMatch(/lang="en"\n {6}dir="ltr"/);            // English sign-in island
+    // The sign-in is no longer an English island: it speaks the product
+    // language, so its root declares no direction of its own.
+    expect(login).toMatch(/<div className="door">/);
   });
 
   it('the Arabic island declares language, direction and isolation', () => {
@@ -576,7 +578,9 @@ describe('🔴 accessibility contracts (sprint 07)', () => {
   it('a skip link is the first stop, and it has a target', () => {
     expect(shell).toContain('href="#wda-main"');
     expect(shell).toContain('id="wda-main"');
-    expect(css).toMatch(/\.skip-link:focus-visible \{ top:/);
+    // Off-screen by its own height (it wraps at 125% on a phone), on-screen on focus.
+    expect(css).toMatch(/\.skip-link \{[^}]*transform: translate\(-50%, calc\(-100% - var\(--sp-3\)\)\)/);
+    expect(css).toMatch(/\.skip-link:focus-visible \{ transform: translate\(-50%, var\(--sp-3\)\)/);
   });
 
   it('the page has ONE banner: the screen bar is a named nav, not a second header', () => {

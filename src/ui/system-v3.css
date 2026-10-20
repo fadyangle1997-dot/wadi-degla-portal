@@ -1,0 +1,337 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   SYSTEM v3 — the Phase 1 benchmark: sign-in, the trainee's dashboard, a lesson.
+
+   Every override below is keyed to html[data-system="v3"], which only those
+   screens set (ui/systemScope.ts); the rest of the product keeps v2 until the
+   benchmark is reviewed. Classes that only these screens use (.door-*, the
+   lesson's blocks) are unscoped and built from role tokens, which take their
+   v3 values inside the scope.
+
+   The approved decisions, each one place:
+   · display face  — Alexandria for titles, questions, figures, brand moments;
+                     IBM Plex Sans Arabic stays the text face and every control
+   · type scale    — nine steps (theme.css --fs-1…9), switched at 640px, never clamp
+   · gold budget   — only through --accent-action|progress|selected|brand|emphasis
+   · surfaces      — Room, Panel, Paper, Floating; no glass, no gradient surfaces
+   · field edge    — #8D6C1A (3:1 on every surface), brightening on hover/focus
+   · motion        — restrained easing; critically damped springs only in JS
+   Arabic never takes letter-spacing, at any step.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── The display face ─────────────────────────────────────────────────────────
+   One weight, two subsets: Arabic 600 and Latin 600 (its figures are tabular,
+   for KPIs) — 26 KB in all. Every display step in the scale is 600, so a
+   second weight would be paid for and never seen. Only Arabic 600 is
+   preloaded (vite.config.ts). */
+@font-face {
+  font-family: 'Alexandria'; font-style: normal; font-weight: 600; font-display: swap;
+  src: url('@fontsource/alexandria/files/alexandria-arabic-600-normal.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF,
+    U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+@font-face {
+  font-family: 'Alexandria'; font-style: normal; font-weight: 600; font-display: swap;
+  src: url('@fontsource/alexandria/files/alexandria-latin-600-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ── Roles, re-pointed for v3 ────────────────────────────────────────────────
+   The only place in this file a palette value or a raw colour is allowed. */
+:root[data-system="v3"] {
+  --surface-room: var(--void);
+  --surface-field: var(--s-2);
+  --surface-panel: var(--s-1);
+  --surface-panel-nested: var(--s0);
+  --surface-paper: var(--paper);
+  --text-strong: var(--tx0);
+  --text-on-paper: var(--ink);
+  --text-on-action: var(--on-gold);
+  --edge-hairline: var(--line);
+  --edge-panel: var(--line-2);
+  /* 4.02 on the room, 3.61 in a panel, 3.00 nested: 3:1 everywhere. */
+  --edge-control: #8D6C1A;
+  /* The edge brightens under the pointer, so affordance goes up, not down. */
+  --edge-control-hover: var(--g1);
+  --placeholder: var(--paper-2);
+
+  /* An action or a choice carries its label ON the gold, so it takes the
+     champagne step: dark ink on #CCAB6C is 7.7:1 (AAA); on #B38922 it was
+     5.28:1. Earned progress is a mark with no label, and keeps the deeper gold. */
+  --accent-action: var(--g1);
+  --accent-action-hover: var(--g0);
+  --accent-progress: var(--g2);
+  --accent-progress-soft: var(--g3);
+  --accent-selected: var(--g1);
+  --accent-brand: var(--g1);
+  --accent-emphasis: var(--g1);
+  --focus-ring: var(--g1);
+
+  --font-display: 'Alexandria', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  /* Measured on the build: at 1.0 and 1.1 the Arabic descenders of the big
+     steps (ي، ج، ق) touched the next line. 1.2 is the tightest that clears. */
+  --lh-8: 1.2;
+  --lh-9: 1.2;
+  /* Alexandria's x-height over its em (0.531). While it loads, Plex is scaled
+     to the same x-height, so a heading does not jump when the face arrives. */
+  --display-adjust: 0.531;
+
+  /* Radii by role: control 12, panel 24, paper and sheet 32. */
+  --r-control: 12px;
+  --r-panel: 24px;
+  --r-paper: 32px;
+
+  /* Elevation: a panel carries a 1px warm light on its top edge; a contact
+     shadow only when it lifts; paper sits on a soft, deep shadow. */
+  --panel-light: inset 0 1px 0 rgba(255, 236, 204, .05);
+  --e-contact: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 20px -12px rgba(0, 0, 0, .7);
+  --e-paper: inset 0 1px 0 rgba(255, 255, 255, .55), 0 2px 6px rgba(0, 0, 0, .35), 0 32px 64px -32px rgba(0, 0, 0, .95);
+
+  /* Material texture: a static warm grain on the room, fine tooth on paper. */
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 .9  0 0 0 0 .75  0 0 0 .05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --tooth: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .4  0 0 0 0 .32  0 0 0 0 .2  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>");
+}
+
+/* ── Room ─────────────────────────────────────────────────────────────────── */
+:root[data-system="v3"] body,
+:root[data-system="v3"] .shell-root { background: var(--grain), var(--surface-room); }
+
+/* ── Type ─────────────────────────────────────────────────────────────────── */
+:root[data-system="v3"] body { font-size: var(--fs-3); line-height: var(--lh-3); }
+:root[data-system="v3"] :is(.t-display, .t-h1, .t-h2, .t-h3, .t-metric, .t-score) {
+  font-family: var(--font-display); font-weight: 600; letter-spacing: 0;
+  font-size-adjust: var(--display-adjust);
+}
+/* Phones first; from 640px each title steps up once. */
+:root[data-system="v3"] .t-display { font-size: var(--fs-7); line-height: var(--lh-7); }
+:root[data-system="v3"] .t-h1 { font-size: var(--fs-6); line-height: var(--lh-6); }
+:root[data-system="v3"] .t-h2 { font-size: var(--fs-5); line-height: var(--lh-5); }
+:root[data-system="v3"] .t-h3 { font-size: var(--fs-5); line-height: var(--lh-5); }
+:root[data-system="v3"] .t-score { font-size: var(--fs-7); line-height: var(--lh-7); font-variant-numeric: tabular-nums lining-nums; }
+:root[data-system="v3"] .t-metric { font-size: var(--fs-7); line-height: var(--lh-7); font-variant-numeric: tabular-nums lining-nums; }
+@media (min-width: 640px) {
+  :root[data-system="v3"] .t-display { font-size: var(--fs-8); line-height: var(--lh-8); }
+  :root[data-system="v3"] .t-h1 { font-size: var(--fs-7); line-height: var(--lh-7); }
+  :root[data-system="v3"] .t-h2 { font-size: var(--fs-6); line-height: var(--lh-6); }
+  :root[data-system="v3"] .t-score { font-size: var(--fs-8); line-height: var(--lh-8); }
+}
+:root[data-system="v3"] .t-lead { font-size: var(--fs-4); line-height: var(--lh-4); }
+:root[data-system="v3"] .t-body { font-size: var(--fs-3); line-height: var(--lh-3); }
+:root[data-system="v3"] .t-sm { font-size: var(--fs-2); line-height: var(--lh-2); }
+:root[data-system="v3"] :is(.t-label, .t-eyebrow, .form-label, .form-hint, .form-error) { font-size: var(--fs-1); line-height: var(--lh-1); }
+/* Eyebrows, crumbs and minor labels leave gold: they are white, and their
+   weight carries them. */
+:root[data-system="v3"] .t-eyebrow { color: var(--text-strong); }
+:root[data-system="v3"] .crumbs li[aria-current="page"] { color: var(--text-strong); }
+:root[data-system="v3"] .page-lead { font-size: var(--fs-4); line-height: var(--lh-4); }
+:root[data-system="v3"] .capsule { color: var(--text-strong); }
+
+/* The skip link is drawn off-screen on every shell page; at 700 it alone made
+   the browser fetch a 62 KB weight the v3 screens never show. It is keyboard
+   feedback, so it takes the focus colour: dark ink on it reads 9:1. */
+:root[data-system="v3"] .skip-link { font-weight: 600; background: var(--focus-ring); }
+
+/* ── Focus — functional, outside the gold budget ──────────────────────────── */
+:root[data-system="v3"] :focus-visible { outline-color: var(--focus-ring); }
+
+/* ── Controls ─────────────────────────────────────────────────────────────── */
+:root[data-system="v3"] .btn {
+  font-size: var(--fs-2);
+  transition: background var(--dur-150) var(--ease-standard), border-color var(--dur-150) var(--ease-standard),
+    color var(--dur-150) var(--ease-standard), transform var(--dur-100) var(--ease-standard);
+}
+:root[data-system="v3"] .btn-primary { background: var(--accent-action); color: var(--text-on-action); }
+:root[data-system="v3"] .btn-primary:hover:not(:disabled) { background: var(--accent-action-hover); }
+:root[data-system="v3"] .btn-ghost { border-color: var(--edge-control); }
+:root[data-system="v3"] .btn-ghost:hover:not(:disabled) { border-color: var(--edge-control-hover); background: var(--surface-panel-nested); }
+:root[data-system="v3"] :is(.pill, .back-btn, .icon-btn) {
+  transition: background var(--dur-150) var(--ease-standard), border-color var(--dur-150) var(--ease-standard),
+    color var(--dur-150) var(--ease-standard), transform var(--dur-100) var(--ease-standard);
+}
+
+/* Fields: a bronze edge that passes 3:1 on every surface. Seven states. */
+:root[data-system="v3"] .field {
+  background: var(--surface-field); border: 1px solid var(--edge-control); border-radius: var(--r-control);
+  font-weight: 500; transition: border-color var(--dur-150) var(--ease-standard), box-shadow var(--dur-150) var(--ease-standard);
+}
+:root[data-system="v3"] .field:hover { border-color: var(--edge-control-hover); }
+:root[data-system="v3"] .field:focus-visible { border-color: var(--edge-control-hover); outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* An error reads as a 2px risk edge without the box changing size. */
+:root[data-system="v3"] .field[aria-invalid="true"] { border-color: var(--risk); box-shadow: inset 0 0 0 1px var(--risk); }
+:root[data-system="v3"] .field:disabled { opacity: 1; background: transparent; border-style: dashed; }
+:root[data-system="v3"] .field::placeholder { color: var(--placeholder); font-weight: 400; }
+
+/* Answer options: a panel you can press; the edge brightens under the pointer. */
+:root[data-system="v3"] .option {
+  background: var(--surface-panel); border-color: var(--edge-panel); box-shadow: var(--panel-light);
+  transition: background var(--dur-150) var(--ease-standard), border-color var(--dur-150) var(--ease-standard);
+}
+:root[data-system="v3"] .option-idle:hover { border-color: var(--edge-control-hover); background: var(--surface-panel-nested); }
+
+/* ── Panel ────────────────────────────────────────────────────────────────── */
+:root[data-system="v3"] .card { border-radius: var(--r-panel); }
+:root[data-system="v3"] :is(.card--default, .card--accent) {
+  background: var(--surface-panel); border-color: var(--edge-hairline); box-shadow: var(--panel-light);
+}
+:root[data-system="v3"] .card--raised {
+  background: var(--surface-panel); border-color: var(--edge-hairline); box-shadow: var(--panel-light), var(--e-contact);
+}
+:root[data-system="v3"] .card--quiet { background: transparent; border-color: var(--edge-hairline); box-shadow: none; }
+:root[data-system="v3"] .card .card { background: var(--surface-panel-nested); }
+:root[data-system="v3"] .locked-preview { background: transparent; border-color: var(--edge-hairline); border-radius: var(--r-panel); }
+
+/* Callout and SpineWell become Panel variants: a leading label, no coloured
+   side bar. Status keeps its colour in the label, where it carries meaning. */
+:root[data-system="v3"] .callout {
+  background: var(--surface-panel); border: 1px solid var(--edge-hairline); border-radius: var(--r-md);
+  box-shadow: var(--panel-light);
+}
+:root[data-system="v3"] .callout--objective .callout-label { color: var(--text-strong); }
+:root[data-system="v3"] .spine { background: var(--surface-field); border: 1px solid var(--edge-hairline); }
+:root[data-system="v3"] .spine-bar { display: none; }
+:root[data-system="v3"] .spine-label { color: var(--text-strong); }
+:root[data-system="v3"] .spine--risk .spine-label { color: var(--risk); }
+
+/* Progress: what was earned is gold; what is left is a hairline. */
+:root[data-system="v3"] .prail-seg { background: var(--edge-panel); transition: background var(--dur-300) var(--ease-standard); }
+:root[data-system="v3"] .prail-seg[data-state="done"] { background: var(--accent-progress); }
+:root[data-system="v3"] .prail-seg[data-state="now"] { background: var(--accent-progress-soft); }
+
+/* ── Paper ────────────────────────────────────────────────────────────────────
+   The one thing to read and act on. Cream with fine tooth, black ink, a soft
+   deep shadow, no side bar. At most one per screen. */
+:root[data-system="v3"] .brief {
+  background: var(--tooth), var(--surface-paper); border-radius: var(--r-paper); box-shadow: var(--e-paper);
+  padding: var(--sp-5);
+}
+@media (min-width: 640px) { :root[data-system="v3"] .brief { padding: var(--sp-6); } }
+:root[data-system="v3"] .brief::before { display: none; }
+:root[data-system="v3"] .brief .t-eyebrow { color: var(--text-on-paper); }
+/* A tone is said by the label's ink, not by an edge. */
+:root[data-system="v3"] .brief[data-tone="attn"] .t-eyebrow { color: var(--attn); }
+:root[data-system="v3"] .brief[data-tone="risk"] .t-eyebrow { color: var(--risk); }
+:root[data-system="v3"] .brief .brief-text > .t-sm { font-size: var(--fs-3); line-height: var(--lh-3); }
+:root[data-system="v3"] .brief .btn-primary { background: var(--text-on-paper); color: var(--on-ink); }
+:root[data-system="v3"] .brief .btn-primary:hover:not(:disabled) { background: #2E2722; }
+:root[data-system="v3"] .brief :focus-visible { outline-color: var(--text-on-paper); }
+
+/* ── Floating ─────────────────────────────────────────────────────────────── */
+:root[data-system="v3"] :is(.dialog, .pm-menu, .ac-panel) {
+  background: var(--surface-panel); border-color: var(--edge-panel);
+  box-shadow: var(--panel-light), 0 32px 80px -24px rgba(0, 0, 0, .9);
+}
+
+/* ── Navigation ───────────────────────────────────────────────────────────────
+   Where you are: a gold marker, the label stays white. */
+:root[data-system="v3"] .shell-header { border-color: var(--edge-hairline); }
+:root[data-system="v3"] .rail-toggle { font-size: var(--fs-2); }
+:root[data-system="v3"] .shell-brand-name { font-family: var(--font-display); font-weight: 600; font-size-adjust: var(--display-adjust); }
+:root[data-system="v3"] .shell-nav .pill[aria-current="page"] { color: var(--text-strong); border-color: var(--accent-selected); }
+@media (min-width: 1100px) {
+  :root[data-system="v3"] .shell-nav .pill[aria-current="page"] { background: var(--surface-panel); border-color: transparent; }
+  :root[data-system="v3"] .shell-nav .pill[aria-current="page"]::before { width: 3px; background: var(--accent-selected); }
+}
+:root[data-system="v3"] .tabbar-item--on { position: relative; color: var(--text-strong); }
+:root[data-system="v3"] .tabbar-item--on::before {
+  content: ""; position: absolute; top: 0; left: 32%; right: 32%; height: 3px;
+  border-radius: 0 0 3px 3px; background: var(--accent-selected);
+}
+:root[data-system="v3"] .avatar { color: var(--text-strong); border-color: var(--edge-panel); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   The door — sign-in. Arabic first, the crest and the academy's name in its
+   own face; one panel with two fields and one gold action. No light effects,
+   no gradient, no shouting English: confidence is the quiet.
+   ════════════════════════════════════════════════════════════════════════════ */
+.door { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; }
+.door-bar { display: flex; justify-content: flex-end; padding: var(--sp-3) var(--sp-4); }
+.door-main {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--sp-6); padding: var(--sp-3) var(--sp-4) var(--sp-6);
+}
+.door-brand { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); text-align: center; }
+.door-title {
+  margin: var(--sp-2) 0 0; font-family: var(--font-display); font-weight: 600; letter-spacing: 0;
+  font-size: var(--fs-7); line-height: var(--lh-7); color: var(--accent-brand);
+  font-size-adjust: var(--display-adjust);
+}
+.door-lead { margin: 0; font-size: var(--fs-4); line-height: var(--lh-4); color: var(--text-strong); }
+.door-panel {
+  width: 100%; max-width: 440px; padding: var(--sp-5) var(--sp-4);
+  background: var(--surface-panel); border: 1px solid var(--edge-hairline); border-radius: var(--r-panel);
+  box-shadow: var(--panel-light), var(--e-contact);
+}
+.door-panel-title {
+  margin: 0 0 var(--sp-4); font-family: var(--font-display); font-weight: 600; letter-spacing: 0;
+  font-size: var(--fs-5); line-height: var(--lh-5); color: var(--text-strong); font-size-adjust: var(--display-adjust);
+}
+.door-form { display: flex; flex-direction: column; gap: var(--sp-4); }
+.door-form .field { width: 100%; min-height: 48px; font-size: var(--fs-2); }
+.door-secret { position: relative; }
+.door-secret .field { padding-inline-end: 52px; }
+.door-eye {
+  position: absolute; inset-inline-end: 2px; top: 2px; width: 44px; height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 0; border-radius: var(--r-control); color: var(--text-strong); cursor: pointer;
+}
+.door-eye:hover { background: var(--surface-panel-nested); }
+.door-help { align-self: flex-start; }
+.door-note { margin: 0; font-size: var(--fs-1); line-height: var(--lh-1); color: var(--text-strong); }
+.door-live:empty { position: absolute; }   /* out of the flow, still in the tree */
+.door-alert { margin: 0; padding: var(--sp-3) var(--sp-4); border: 1px solid var(--risk-line); border-radius: var(--r-control);
+  font-size: var(--fs-2); line-height: var(--lh-2); font-weight: 600; color: var(--risk); }
+.door-submit { width: 100%; min-height: 52px; }
+.door-foot { padding: var(--sp-4); text-align: center; font-size: var(--fs-1); line-height: var(--lh-1); color: var(--text-strong); }
+@media (min-width: 640px) {
+  .door-bar { padding: var(--sp-4) var(--sp-5); }
+  .door-main { gap: var(--sp-7); }
+  .door-title { font-size: var(--fs-8); line-height: var(--lh-8); }
+  .door-panel { padding: var(--sp-6); }
+}
+@media (min-width: 960px) {
+  .door-title { font-size: var(--fs-9); line-height: var(--lh-9); }
+}
+/* A link that is an action: underlined, never gold. */
+.text-action {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none;
+  font: inherit; font-size: var(--fs-2); color: var(--text-strong); cursor: pointer;
+  text-decoration: underline; text-underline-offset: 4px;
+}
+.text-action:hover { text-decoration-thickness: 2px; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   The lesson's own blocks (lesson routes are always in the v3 scope).
+   ════════════════════════════════════════════════════════════════════════════ */
+/* A rule is an object: set in the display face, sunk in its well. */
+.rule-text { margin: 0; max-width: var(--measure); font-family: var(--font-display); font-weight: 600;
+  font-size: var(--fs-4); line-height: var(--lh-4); color: var(--text-strong); font-size-adjust: var(--display-adjust); }
+.golden-rule { margin: var(--sp-5) auto 0; max-width: var(--measure); text-align: center;
+  font-family: var(--font-display); font-weight: 600; font-size: var(--fs-5); line-height: var(--lh-5);
+  color: var(--text-strong); font-size-adjust: var(--display-adjust); }
+.example-card { padding: var(--sp-5); border: 1px solid var(--edge-panel); border-radius: var(--r-panel);
+  background: var(--surface-panel-nested); box-shadow: var(--panel-light); }
+.example-total { margin: var(--sp-3) 0 var(--sp-2); font-family: var(--font-display); font-weight: 600;
+  font-size: var(--fs-6); line-height: var(--lh-6); color: var(--text-strong); font-variant-numeric: tabular-nums lining-nums; }
+.dialogue-line { flex: 1; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--edge-hairline); border-radius: var(--r-sm); background: var(--surface-field); }
+.dialogue-line--staff { background: var(--surface-panel-nested); }
+.dialogue-verdict { margin-top: var(--sp-4); padding-top: var(--sp-3); border-top: 1px solid var(--edge-hairline); }
+.archetype { margin-bottom: var(--sp-5); border: 1px solid var(--edge-panel); border-radius: var(--r-md); overflow: hidden; }
+.archetype-head { padding: var(--sp-3) var(--sp-4); background: var(--surface-field); border-bottom: 1px solid var(--edge-hairline); }
+.archetype-body { padding: var(--sp-4); }
+.archetype-key { min-width: 92px; color: var(--text-strong); }
+.archetype-key--risk { color: var(--risk); }
+.archetype-key--want { font-weight: 700; }
+.check-row { padding: var(--sp-3); border-radius: var(--r-sm); cursor: pointer; }
+.check-box { width: 17px; height: 17px; margin-top: var(--sp-1); accent-color: var(--accent-selected); }
+.practice-item { padding: var(--sp-4); border: 1px solid var(--edge-panel); border-radius: var(--r-md); background: var(--surface-panel); }
+.practice-item[data-result="right"] { border-color: var(--ready); }
+.practice-item[data-result="wrong"] { border-color: var(--risk); }
+/* One of two, chosen: the chosen chip takes the selected gold, its label dark. */
+.choice-chip {
+  min-height: 44px; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--edge-control); border-radius: var(--r-full);
+  background: transparent; color: var(--text-strong); font-family: var(--font-text); font-size: var(--fs-2); font-weight: 600; cursor: pointer;
+  transition: background var(--dur-150) var(--ease-standard), border-color var(--dur-150) var(--ease-standard), color var(--dur-150) var(--ease-standard);
+}
+.choice-chip:hover:not(:disabled) { border-color: var(--edge-control-hover); }
+.choice-chip[aria-current="true"] { background: var(--accent-selected); border-color: var(--accent-selected); color: var(--text-on-action); }
+.choice-chip:disabled { cursor: default; }

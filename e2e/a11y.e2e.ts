@@ -1,4 +1,4 @@
-import { test, expect, signIn, expectAccessible, toAcademy, openTodaysLesson } from './fixtures';
+import { test, expect, signIn, expectAccessible, toAcademy, openTodaysLesson, usernameField } from './fixtures';
 
 // Contrast is a property of the settled screen: reduced motion drops the
 // movement, and expectAccessible's settle() waits out the opacity fades that
@@ -7,7 +7,7 @@ test.use({ reducedMotion: 'reduce' });
 
 test('sign-in screen', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByLabel('Username')).toBeVisible();
+  await expect(usernameField(page)).toBeVisible();
   await expectAccessible(page, 'sign-in');
 });
 

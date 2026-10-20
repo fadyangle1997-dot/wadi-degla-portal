@@ -155,6 +155,62 @@
   --font-body:'Inter','IBM Plex Sans Arabic', system-ui, sans-serif;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROLES — what a colour, a size or a curve is FOR.
+   Components read roles; the palette above feeds roles and nothing else.
+   These are the v2 values, so a component moved onto roles looks exactly as
+   it did. The v3 system (system-v3.css) re-points the roles inside its scope.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Surfaces: Room (the page), Panel (data and work), Paper (the one thing to
+     read and act on), Floating (sheets, dialogs, menus). */
+  --surface-room: var(--void);
+  --surface-field: var(--s-2);
+  --surface-panel: var(--s-1);
+  --surface-panel-nested: var(--s0);
+  --surface-paper: var(--paper);
+  --text-strong: var(--tx0);
+  --text-on-paper: var(--ink);
+  --text-on-action: var(--on-gold);
+  --edge-hairline: var(--line);
+  --edge-panel: var(--line-2);
+  --edge-control: var(--line-ctl);
+  --edge-control-hover: var(--line-3);
+
+  /* Gold, by meaning. Five roles and nothing else may be gold:
+     action (the one thing to do), progress (what was earned), selected (where
+     you are), brand (this is Wadi Degla), emphasis (the one figure that needs
+     a decision). Focus is functional and sits outside the budget. */
+  --accent-action: var(--g2);
+  --accent-action-hover: var(--g1);
+  --accent-progress: var(--g2);
+  --accent-progress-soft: var(--g3);
+  --accent-selected: var(--g2);
+  --accent-brand: var(--g1);
+  --accent-emphasis: var(--g1);
+  --focus-ring: var(--g2);
+
+  /* Type: nine steps, all rem, so the reader's text size scales them together. */
+  --font-display: var(--font-body);
+  --font-text: var(--font-body);
+  --fs-1: .875rem;   --lh-1: 1.5;    /* Caption */
+  --fs-2: 1rem;      --lh-2: 1.6;    /* Small */
+  --fs-3: 1.0625rem; --lh-3: 1.85;   /* Body */
+  --fs-4: 1.1875rem; --lh-4: 1.7;    /* Lead */
+  --fs-5: 1.375rem;  --lh-5: 1.4;    /* Title */
+  --fs-6: 1.75rem;   --lh-6: 1.3;    /* Heading */
+  --fs-7: 2.25rem;   --lh-7: 1.2;    /* Page */
+  --fs-8: 3rem;      --lh-8: 1.1;    /* Display */
+  --fs-9: 4rem;      --lh-9: 1;      /* Hero */
+
+  /* Motion: restrained by default. Springs are JS-only (ui/motion.ts) and
+     reserved for paper entering and earned moments. */
+  --dur-100: 100ms; --dur-150: 150ms; --dur-200: 200ms; --dur-300: 300ms; --dur-400: 400ms;
+  --ease-standard: cubic-bezier(.22,.61,.36,1);
+  --ease-enter: cubic-bezier(0,0,.2,1);
+  --ease-exit: cubic-bezier(.4,0,1,1);
+}
+
 
 * { box-sizing:border-box; }
 html { -webkit-text-size-adjust:100%; }
@@ -272,8 +328,54 @@ body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--fon
    for actions and «you are here». */
 .t-eyebrow { font-size:0.875rem; font-weight:600; color:var(--g1); }
 
-/* Capsule — base layout only, so a media query can still reach it. */
-.capsule { display:inline-flex; align-items:center; }
+/* Capsule — a small raised marker riding on another shape. */
+.capsule { display:inline-flex; align-items:center; background:var(--s0); border:1px solid var(--line-2);
+  border-radius:var(--r-full); padding:var(--sp-1) var(--sp-3); font-size:.875rem; font-weight:600;
+  color:var(--g1); box-shadow:var(--e-raised); white-space:nowrap; }
+
+/* The shell's room, and the person's initials beside their name. */
+.shell-root { background:var(--surface-room); }
+.avatar { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; border-radius:50%;
+  background:var(--s0); border:1px solid var(--g3); color:var(--g1); font-weight:600; letter-spacing:.02em; }
+.avatar--34 { width:34px; height:34px; font-size:.875rem; }
+.avatar--48 { width:48px; height:48px; font-size:1rem; }
+
+/* Card — the surface's tones as classes, so a scoped system can restyle them. */
+.card { border:1px solid transparent; border-radius:var(--r-lg); }
+.card--default { background:var(--s-1); }
+.card--raised { background:var(--s0); box-shadow:var(--e-raised); }
+.card--accent { background:var(--s0); border-color:var(--g3); box-shadow:var(--e-raised); }
+.card--quiet { background:transparent; border-color:var(--line); }
+.card--pad-4 { padding:var(--sp-4); }
+.card--pad-5 { padding:var(--sp-5); }
+.card--pad-6 { padding:var(--sp-6); }
+
+/* Callout — a labelled note with its tone on the edge. */
+.callout { border-right:2px solid; border-radius:var(--r-sm); padding:var(--sp-4) var(--sp-5); }
+.callout--objective { background:rgba(var(--g2-rgb),.07); border-right-color:var(--g2); }
+.callout--note { background:var(--info-bg); border-right-color:var(--info); }
+.callout--warning { background:var(--attn-bg); border-right-color:var(--attn); }
+.callout--summary { background:var(--ready-bg); border-right-color:var(--ready); }
+.callout--objective .callout-label { color:var(--g2); }
+.callout--note .callout-label { color:var(--info); }
+.callout--warning .callout-label { color:var(--attn); }
+.callout--summary .callout-label { color:var(--ready); }
+
+/* SpineWell — a sunk well with a spine on the reading edge. */
+.spine { position:relative; background:var(--s-2); border-radius:var(--r-md); padding:var(--sp-4) var(--sp-5); overflow:hidden; }
+.spine-bar { position:absolute; inset-inline-start:0; top:0; bottom:0; width:3px; background:var(--g2); }
+.spine--risk .spine-bar { background:var(--risk); }
+.spine-label { color:var(--g1); }
+.spine--risk .spine-label { color:var(--risk); }
+
+/* Progress rail — segments, earned ones filled. */
+.prail { display:flex; gap:var(--sp-1); }
+.prail-seg { flex:1; height:4px; border-radius:var(--r-full); background:var(--line-2); transition:background .3s var(--ease); }
+.prail-seg[data-state="done"] { background:var(--g3); }
+.prail-seg[data-state="now"] { background:var(--g2); }
+
+/* A locked step: told apart by colour and a lock, never by opacity. */
+.locked-preview { padding:var(--sp-4) var(--sp-5); border:1px solid var(--line); border-radius:var(--r-lg); background:var(--s-2); }
 
 /* The shell's header row — sized here so the narrow-phone rule below can reach it. */
 .shell-header-row { padding: var(--sp-3) var(--sp-5); gap: var(--sp-4); }
@@ -296,12 +398,14 @@ body { margin:0; background:var(--void); color:var(--tx1); font-family:var(--fon
 .skip-link {
   /* Physical left: translateX(-50%) is physical too, so a logical start
      put the link off-centre in RTL. */
-  position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+  /* Hidden by its own height, not a fixed offset: at 125% text on a 320px
+     phone the label wraps to two lines and a -100px top let it peek in. */
+  position: fixed; top: 0; left: 50%; transform: translate(-50%, calc(-100% - var(--sp-3)));
   z-index: 100; padding: var(--sp-3) var(--sp-5); border-radius: var(--r-sm);
   background: var(--g2); color: var(--void); font-weight: 700; text-decoration: none;
-  transition: top .18s var(--ease);
+  transition: transform .18s var(--ease);
 }
-.skip-link:focus-visible { top: var(--sp-3); outline: 2px solid var(--g0); outline-offset: 2px; }
+.skip-link:focus-visible { transform: translate(-50%, var(--sp-3)); outline: 2px solid var(--g0); outline-offset: 2px; }
 #wda-main:focus { outline: none; }
 
 /* Directional icons flip in RTL only, so «continue» points where the reader
@@ -570,7 +674,12 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   --g0:var(--gold-ink); --g1:var(--gold-ink);
   --ready:#226B5C; --attn:#9A4F1E; --risk:#A23A50; --info:#3E5F82;
   --line:rgba(30,25,21,.12); --line-2:rgba(30,25,21,.2); --line-3:rgba(30,25,21,.3);
-  --s-2:var(--paper-2); --s-1:var(--paper-2); --s0:#D8CDBF; color:var(--ink); }
+  --s-2:var(--paper-2); --s-1:var(--paper-2); --s0:#D8CDBF; color:var(--ink);
+  /* Roles resolve where they are declared (the root), so the sheet re-points
+     them as well: a component reading a role reads the paper's ink. */
+  --text-strong:var(--ink); --accent-brand:var(--gold-ink); --accent-emphasis:var(--gold-ink);
+  --edge-hairline:rgba(30,25,21,.12); --edge-panel:rgba(30,25,21,.2);
+  --surface-field:var(--paper-2); --surface-panel:var(--paper-2); --surface-panel-nested:#D8CDBF; }
 /* The tone is a short rule set into the sheet's reading edge, not a border. */
 .brief::before { content:""; position:absolute; inset-inline-start:0; top:var(--sp-5); bottom:var(--sp-5);
   width:4px; border-start-end-radius:4px; border-end-end-radius:4px; background:var(--gold-ink); }
@@ -820,147 +929,8 @@ details > summary { min-block-size:44px; cursor:pointer; }
 .field:focus-visible { outline: 2px solid var(--g2); outline-offset: 1px; border-color: var(--g2); }
 .spin { animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-/* Entrance for screens that paint before Motion loads (the sign-in screen).
-   Same distance and timing as ui/motion `fade`; the global reduced-motion
-   rule collapses it. */
-@keyframes rise-in { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
-.enter-rise { animation: rise-in .32s cubic-bezier(.22,1,.36,1) both; }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
 
-/* ── SIGN-IN SURFACE ────────────────────────────────────────────────────────
-   The app's palette is a cool near-black; the sign-in asks for the warmer
-   gold-lit surface of a club, not a console. These tokens are SCOPED to the
-   sign-in so the identity stays one system — the same gold family the whole
-   academy already uses, just lit differently for the one screen that has to
-   say «premium club» before a single word is read.
-   Global tokens are untouched: nothing else in the app shifts.            */
-/* The --sg-* tokens are now ALIASES of the root, not a second palette.
-   They existed so the door could be warm without disturbing the app; the app
-   is warm now. Kept as aliases so the sign-in markup is untouched, and so it
-   is impossible for the door and the room to drift apart again — change the
-   root and both move. */
-.signin {
-  --sg-bg: var(--void);
-  --sg-surface: var(--s0);
-  --sg-gold: var(--g2);
-  --sg-gold-soft: var(--g1);
-  --sg-gold-light: var(--g0);
-  --sg-glass: rgba(28, 24, 20, .7);
-  --sg-glass-line: rgba(254, 222, 160, .14);
-  --sg-tx: var(--tx0);
-  --sg-tx-dim: var(--tx2);
-
-  background: var(--sg-bg);
-}
-
-/* Ambient light. Inspired by the reference's floating spheres, rebuilt as
-   what they actually are here: club lighting behind glass — soft, warm, and
-   slow enough that it never competes with the form. */
-.signin-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(58px);
-  opacity: .5;
-  pointer-events: none;
-  will-change: transform;
-  animation: sg-drift 26s ease-in-out infinite alternate;
-}
-@keyframes sg-drift {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to   { transform: translate3d(2.2rem, -1.6rem, 0) scale(1.06); }
-}
-
-/* Glassmorphism, with a real fallback: without backdrop-filter support the
-   card must still be readable, so the base colour is opaque enough to carry
-   the text on its own. */
-.signin-card {
-  background: var(--sg-glass);
-  border: 1px solid var(--sg-glass-line);
-  box-shadow:
-    0 1px 0 rgba(254, 222, 160, .07) inset,
-    0 32px 64px -28px rgba(0, 0, 0, .8);
-}
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .signin-card { backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15); }
-}
-
-.signin-field {
-  width: 100%;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid rgba(254, 222, 160, .2);
-  border-radius: 0;
-  color: var(--sg-tx);
-  font: inherit;
-  font-size: 1.0625rem;
-  padding: 12px 2px;
-  min-height: 46px;
-  transition: border-color .22s ease;
-}
-.signin-field::placeholder { color: var(--sg-gold-soft); }
-.signin-field:hover { border-bottom-color: rgba(254, 222, 160, .38); }
-.signin-field:focus {
-  outline: none;
-  border-bottom-color: var(--sg-gold-light);
-}
-/* Keyboard users get a visible ring — the underline alone is not enough. */
-.signin-field:focus-visible { box-shadow: 0 2px 0 var(--sg-gold-light); }
-
-.signin-eye {
-  position: absolute;
-  inset-inline-end: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;               /* comfortable touch target, no layout shift */
-  background: none;
-  border: 0;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  color: var(--sg-tx-dim);
-  transition: color var(--t-fast) var(--ease);
-}
-.signin-eye:hover { color: var(--sg-gold-light); }
-.signin-eye:focus-visible { outline: 2px solid var(--sg-gold-light); outline-offset: 2px; color: var(--sg-gold-light); }
-
-.signin-btn {
-  width: 100%;
-  min-height: 52px;
-  border: 0;
-  border-radius: 999px;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 600;
-  font-size: 1.0625rem;
-  letter-spacing: .04em;
-  color: #241B05;
-  background: linear-gradient(100deg, var(--sg-gold) 0%, var(--sg-gold-soft) 52%, var(--sg-gold-light) 100%);
-  /* Same contact shadow as .btn-primary — the door and the room cannot own
-     two different ideas of what a gold button does to the light. */
-  box-shadow: 0 6px 18px -12px rgba(179, 137, 34, .45);
-  transition: transform .18s ease, box-shadow .22s ease, filter .22s ease;
-}
-.signin-btn:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 8px 22px -12px rgba(179, 137, 34, .6); }
-.signin-btn:active:not(:disabled) { transform: translateY(1px); }
-.signin-btn:focus-visible { outline: 2px solid var(--sg-gold-light); outline-offset: 3px; }
-.signin-btn:disabled { opacity: .6; cursor: default; }
-
-.signin-link {
-  background: none; border: 0; padding: 6px 2px; min-height: 44px; cursor: pointer;
-  color: var(--sg-gold-soft); font: inherit; font-size: .875rem;
-  border-radius: 6px; transition: color .18s ease;
-}
-.signin-link:hover { color: var(--sg-gold-light); }
-.signin-link:focus-visible { outline: 2px solid var(--sg-gold-light); outline-offset: 2px; }
-
-/* Respect the setting. Ambient motion is the first thing to go. */
-@media (prefers-reduced-motion: reduce) {
-  .signin-orb { animation: none; }
-  .signin-btn { transition: none; }
-}
 
 /* Route + ledger. Mobile-first: one column, ledger after the route so the
    next step stays on screen. From 900px a second column appears and the
