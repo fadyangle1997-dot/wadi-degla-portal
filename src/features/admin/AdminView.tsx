@@ -246,6 +246,9 @@ const CreateUserDialog: React.FC<{
               </select>
             )}
           </FormField>
+          {/* How the person will get in — said before the account exists, so
+              nobody waits for a password the platform never sends. */}
+          <p className="t-sm c-tx2 m-0" role="note">{t('us.signinnote', lang)}</p>
           <div className="form-actions">
             <Button type="submit"><Check size={16} aria-hidden /> {t('us.create', lang)}</Button>
             <Button type="button" variant="ghost" onClick={close}>{t('us.cancel', lang)}</Button>

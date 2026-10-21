@@ -6,14 +6,16 @@
  * (welcome/lesson/exam/boss) bypass the shell entirely (handled in App).
  */
 import React from 'react';
-import { TrendingUp, GraduationCap, Route, ClipboardList, LayoutDashboard, ShieldCheck, User2, Bell } from 'lucide-react';
+import { TrendingUp, GraduationCap, Route, ClipboardList, LayoutDashboard, ShieldCheck, User2, Bell, BookOpen, MessageSquareText } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import { LogOut, Languages, Type } from 'lucide-react';
 import { textSizeStore, useTextSize, TEXT_SIZES } from '../app/textSize';
 import { initialsOf } from '../domain/identity/display';
 const IdentityCenter = React.lazy(() => import('../features/profile/IdentityCenter').then(m => ({ default: m.IdentityCenter })));
 import { useCan, useIdentity, identityStore } from '../app/identity/identityStore';
-import { useTraining, reviewOf, traineeIdOrNull } from '../app/training/trainingStore';
+import { useTraining, useTrainingEvents, reviewOf, traineeIdOrNull } from '../app/training/trainingStore';
+import { filedReviews, unseenComments, reviewsAwaitingComment } from '../domain/review';
+import { reviewSeen } from '../app/reviewSeen';
 import { useProgress } from '../app/progress';
 import { nextAction } from '../domain/journey/nextAction';
 import { scopeOf, visibleLearners } from '../domain/identity/scope';
@@ -23,13 +25,16 @@ import type { View } from '../app/router';
 import { navFor } from '../domain/identity/access';
 import { useLang, langStore, t, tf, roleName as roleDisplayName, type Key } from '../app/i18n';
 import { WIDTH } from './designSystem';
-import { LoadingState, useModal } from './primitives';
+import { LoadingState, useModal, Content, tx } from './primitives';
+import { displayNameOf } from '../domain/identity';
 import { useOverlayParam } from '../app/overlayHistory';
+import { unitsAwaitingYou, reviewsAwaitingYou, itemsNeedYou } from '../app/plural';
 
 /** Icons are presentation only — the nav itself is built from permissions. */
 const ICONS: Record<string, React.ReactNode> = {
   path: <GraduationCap size={16} />,
   roadmap: <Route size={16} />,
+  journey: <BookOpen size={16} />,
   skills: <TrendingUp size={16} />,
   trainer: <ClipboardList size={16} />,
   manager: <LayoutDashboard size={16} />,
@@ -126,7 +131,7 @@ export const AppShell: React.FC<{
               {/* The other language, written in that language and declared as such. */}
               <span className="lang-label" lang={lang === 'ar' ? 'en' : 'ar'}>{t('lang.switch', lang)}</span>
             </button>
-            <ActionCenter items={actions} onNavigate={onNavigate} />
+            <ActionCenter now={actions.now} before={actions.before} />
           </div>
 
           {/* Identity, not just a role — and the anchor for sign-out. A
@@ -136,7 +141,7 @@ export const AppShell: React.FC<{
               name — calm, and unmistakably this platform rather than a social
               app, because the role stays and no status decoration appears. */}
           <div className="shell-identity">
-            <ProfileMenu name={actor?.name ?? '—'} role={roleName} onOpenProfile={() => openPanel('profile')} />
+            <ProfileMenu name={actor ? displayNameOf(actor, lang) : '—'} role={roleName} onOpenProfile={() => openPanel('profile')} canReview={canDo('academy.learn')} />
           </div>
         </div>
       </header>
@@ -206,54 +211,92 @@ const greeting = (l: 'ar' | 'en'): string =>
  */
 
 /**
- * What actually needs this person today — DERIVED, never stored.
+ * The bell — two lists, both DERIVED from the logs, never stored:
  *
- * A bell with a badge that no real state feeds is a decoration that lies, so
- * every item below comes from a calculation the platform already performs for
- * its own screens:
- *   trainee → nextAction() says the trainer sent work back, or a submission
- *             never landed
- *   trainer → units sitting in the review queue
- *   manager → programmes finished and waiting on a readiness decision
+ *   محتاج انتباهك دلوقتي  what needs this person now (the badge counts these)
+ *     trainee → the trainer sent work back, a submission never landed, or the
+ *               trainer commented on a review since they last read «مراجعاتي»
+ *     trainer → units waiting for a practical assessment, reviews waiting for
+ *               the comment the trainee was promised
+ *   اللي حصل قبل كده      what happened lately, newest first: approvals,
+ *                         returns, comments, decisions — or, for a trainer,
+ *                         exams passed and reviews filed by their trainees
  *
- * Zero new events, zero new storage. When nothing qualifies the list is empty
- * and the bell renders with no badge — silence is a valid answer.
+ * Not a feed: no likes, no replies, nothing accumulates beyond the last few.
+ * Only «seen» for review comments is remembered, on this device (reviewSeen).
  */
-const useActionCenter = (): readonly { key: string; label: string; view: View['kind'] }[] => {
+interface BellItem { key: string; label: React.ReactNode; go: () => void; at?: number }
+const HISTORY_SIZE = 6;
+
+const useActionCenter = (): { now: readonly BellItem[]; before: readonly BellItem[] } => {
   const canDo = useCan();
   const t = useTraining();
   const p = useProgress();
+  const events = useTrainingEvents();
   const { users, roles } = useIdentity();
   const lang = useLang();
 
   return React.useMemo(() => {
-    const out: { key: string; label: string; view: View['kind'] }[] = [];
+    const now: BellItem[] = [];
+    const before: BellItem[] = [];
     const me = identityStore.currentUser();
-    if (!me) return out;
+    if (!me) return { now, before };
+    const go = (hash: string) => () => { location.hash = hash; };
+    const title = (moduleId: string) => <Content>{MODULES.find(m => m.id === moduleId)?.title ?? moduleId}</Content>;
 
     // Trainee — their own path is the only thing in scope.
     if (canDo('academy.learn')) {
       const id = traineeIdOrNull();
       if (id) {
         const a = nextAction(p, t, id);
-        if (a.kind === 'rejected_review') out.push({ key: 'rejected', label: tf('ac.rejected', {}, lang), view: 'path' });
-        if (a.kind === 'needs_submission') out.push({ key: 'submit', label: tf('ac.submit', {}, lang), view: 'path' });
+        if (a.kind === 'rejected_review') now.push({ key: 'rejected', label: tf('ac.rejected', {}, lang), go: go('#/') });
+        if (a.kind === 'needs_submission') now.push({ key: 'submit', label: tf('ac.submit', {}, lang), go: go('#/') });
+        const reviews = filedReviews(events, id);
+        if (unseenComments(reviews, reviewSeen.get(id)) > 0) now.push({ key: 'comment', label: tf('ac.comment', {}, lang), go: go('#/reviews') });
+
+        for (const e of events) {
+          if (!('employeeId' in e) || e.employeeId !== id) continue;
+          if (e.type === 'EVALUATION_RECORDED') {
+            const ok = e.decision === 'ready';
+            before.push({ key: `ev:${e.at}`, at: e.at, go: go('#/roadmap'),
+              label: tx(ok ? 'ac.h.approved' : 'ac.h.returned', { m: title(e.moduleId) }, lang) });
+          } else if (e.type === 'REVIEW_COACHED') {
+            before.push({ key: `rc:${e.at}`, at: e.at, go: go('#/reviews'), label: tf('ac.h.comment', {}, lang) });
+          } else if (e.type === 'FINAL_READINESS_DECIDED') {
+            before.push({ key: `fd:${e.at}`, at: e.at, go: go('#/readiness'), label: tf('ac.h.decision', {}, lang) });
+          }
+        }
       }
     }
 
-    // Trainer — units waiting on their evaluation, scoped to their own learners.
+    // Trainer — scoped to their own learners.
     if (canDo('training.review')) {
       const scope = scopeOf(me, canDo, orgStore.get());
       const learners = visibleLearners(users, roles, scope);
+      const ids = learners.map(u => u.id);
       const waiting = learners.reduce(
         (n, e) => n + MODULES.filter(m => reviewOf(t, e.id, m.id).status === 'waiting').length, 0);
-      if (waiting > 0) out.push({ key: 'queue', label: tf('ac.queue', { n: waiting }, lang), view: 'trainer' });
+      if (waiting > 0) now.push({ key: 'queue', label: unitsAwaitingYou(waiting, lang), go: go('#/trainer') });
+      const reviews = reviewsAwaitingComment(events, ids).length;
+      if (reviews > 0) now.push({ key: 'reviews', label: reviewsAwaitingYou(reviews, lang), go: go('#/trainer') });
+
+      const name = (uid: string) => { const u = learners.find(x => x.id === uid); return u ? displayNameOf(u, lang) : uid; };
+      for (const e of events) {
+        if (!('employeeId' in e) || !ids.includes(e.employeeId)) continue;
+        if (e.type === 'UNIT_SUBMITTED_FOR_REVIEW') {
+          before.push({ key: `us:${e.employeeId}:${e.at}`, at: e.at, go: go(`#/trainee/${e.employeeId}`),
+            label: tx('ac.h.submitted', { name: <bdi>{name(e.employeeId)}</bdi>, m: title(e.moduleId) }, lang) });
+        } else if (e.type === 'DECISION_REVIEW_FILED') {
+          before.push({ key: `rf:${e.employeeId}:${e.at}`, at: e.at, go: go(`#/trainee/${e.employeeId}?review=${e.at}`),
+            label: tx('ac.h.filed', { name: <bdi>{name(e.employeeId)}</bdi> }, lang) });
+        }
+      }
     }
 
-    return out;
-  }, [canDo, t, p, users, roles, lang]);
+    before.sort((a, b) => (b.at ?? 0) - (a.at ?? 0));
+    return { now, before: before.slice(0, HISTORY_SIZE) };
+  }, [canDo, t, p, events, users, roles, lang]);
 };
-
 
 /**
  * ActionCenter — a bell, and a short list of things that already need doing.
@@ -298,14 +341,23 @@ function useMenu() {
   return { open, setOpen, rootRef, triggerRef };
 }
 
-const ActionCenter: React.FC<{
-  items: readonly { key: string; label: string; view: View['kind'] }[];
-  onNavigate: (v: View['kind']) => void;
-}> = ({ items, onNavigate }) => {
+const ActionCenter: React.FC<{ now: readonly BellItem[]; before: readonly BellItem[] }> = ({ now, before }) => {
   const lang = useLang();
   const { open, setOpen, rootRef, triggerRef } = useMenu();
 
-  const n = items.length;
+  const n = now.length;
+  const item = (it: BellItem, urgent: boolean) => (
+    <button key={it.key} role="menuitem" className="row-hover row items-center gap-3 w-full text-start c-tx1"
+      onClick={() => { setOpen(false); it.go(); }}
+      style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 48 }}>
+      {/* Now: a filled warning dot. Before: no dot — history asks nothing. */}
+      {urgent && <span aria-hidden className="no-shrink" style={{ width: 6, height: 6, borderRadius: 'var(--r-full)', background: 'var(--attn)' }} />}
+      <span className="grow">
+        <span className="t-sm">{it.label}</span>
+        {it.at && <span className="t-label c-tx3 block">{new Date(it.at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'long' })}</span>}
+      </span>
+    </button>
+  );
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -313,7 +365,7 @@ const ActionCenter: React.FC<{
         onClick={() => setOpen(v => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={n === 0 ? t('ac.label.none', lang) : tf('ac.count', { n }, lang)}
+        aria-label={n === 0 ? t('ac.label.none', lang) : itemsNeedYou(n, lang)}
         className="relative items-center justify-center c-tx1"
         style={{
           // 44×44: the platform's touch-target minimum (as .icon-btn and .pill).
@@ -335,34 +387,30 @@ const ActionCenter: React.FC<{
       </button>
 
       {open && (
-        <div role={n === 0 ? 'status' : 'menu'} className="ac-panel" style={{
+        <div role="menu" aria-label={t('ac.now', lang)} className="ac-panel" style={{
           position: 'absolute', insetInlineEnd: 0, top: 'calc(100% + var(--sp-2))',
-          minWidth: 260, background: 'var(--surface-panel)', border: '1px solid var(--edge-panel)',
+          minWidth: 280, maxWidth: 'min(360px, calc(100vw - 32px))', background: 'var(--surface-panel)', border: '1px solid var(--edge-panel)',
           borderRadius: 'var(--r-md)', boxShadow: 'var(--e-floating)', overflow: 'hidden', zIndex: 30,
         }}>
-          {n === 0 ? (
-            <p className="t-sm m-0 c-tx3" style={{ padding: 'var(--sp-4)' }}>
-              {t('ac.none', lang)}
-            </p>
-          ) : items.map(it => (
-            <button
-              key={it.key}
-              role="menuitem"
-              className="row-hover row items-center gap-3 w-full text-start c-tx1"
-              onClick={() => { setOpen(false); onNavigate(it.view); }}
-              style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 48 }}
-            >
-              <span aria-hidden className="no-shrink" style={{ width: 6, height: 6, borderRadius: 'var(--r-full)', background: 'var(--attn)' }} />
-              <span className="t-sm">{it.label}</span>
-            </button>
-          ))}
+          <div role="group" aria-labelledby="ac-now">
+            <p id="ac-now" role="presentation" className="ac-head">{t('ac.now', lang)}</p>
+            {n === 0
+              ? <div role="menuitem" aria-disabled="true" tabIndex={-1} className="t-sm c-tx3" style={{ padding: 'var(--sp-2) var(--sp-4) var(--sp-3)' }}>{t('ac.nothingnow', lang)}</div>
+              : now.map(it => item(it, true))}
+          </div>
+          {before.length > 0 && (
+            <div role="group" aria-labelledby="ac-before" className="ac-before">
+              <p id="ac-before" role="presentation" className="ac-head">{t('ac.before', lang)}</p>
+              {before.map(it => item(it, false))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 };
 
-const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => void }> = ({ name, role, onOpenProfile }) => {
+const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => void; canReview?: boolean }> = ({ name, role, onOpenProfile, canReview }) => {
   const { open, setOpen, rootRef, triggerRef } = useMenu();
 
   return (
@@ -416,6 +464,15 @@ const ProfileMenu: React.FC<{ name: string; role: string; onOpenProfile?: () => 
             >
               <User2 size={16} aria-hidden />
               <span className="t-sm">{t('menu.profile', langStore.get())}</span>
+            </button>
+          )}
+          {/* Where the trainer's comments on the daily reviews come back. */}
+          {canReview && (
+            <button role="menuitem" className="row-hover row items-center gap-3 w-full text-start c-tx1"
+              onClick={() => { setOpen(false); location.hash = '#/reviews'; }}
+              style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 48 }}>
+              <MessageSquareText size={16} aria-hidden />
+              <span className="t-sm">{t('menu.reviews', langStore.get())}</span>
             </button>
           )}
           <button

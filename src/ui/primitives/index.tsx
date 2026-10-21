@@ -8,7 +8,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, X, ChevronLeft, Info } from 'lucide-react';
 import { WIDTH } from '../designSystem';
-import { t, langStore, useLang } from '../../app/i18n';
+import { t, langStore, useLang, type Key, type Lang } from '../../app/i18n';
 import { leaveGuard } from '../../app/leaveGuard';
 import { useModal } from './useModal';
 
@@ -149,6 +149,34 @@ export const ArabicContent: React.FC<{
   </Tag>
 );
 
+/**
+ * Learning content quoted inside interface text. Unit titles, rules and
+ * people's names are written in Arabic and are not translated; inside an
+ * English sentence they stay marked as Arabic, so they read — and are read
+ * aloud — as a quotation, not as a half-translated string.
+ */
+export const Content: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <bdi lang="ar" dir="rtl" className="ar-content">{children}</bdi>
+);
+
+/**
+ * A translated sentence with nodes in its {placeholders} — tf() for when a
+ * placeholder holds content: tx('pv.waitingbody', { m: <Content>…</Content> }, lang).
+ */
+export const tx = (key: Key, vars: Readonly<Record<string, React.ReactNode>>, l: Lang): React.ReactNode =>
+  t(key, l).split(/\{(\w+)\}/g).map((part, i) =>
+    i % 2 ? <React.Fragment key={i}>{vars[part] ?? ''}</React.Fragment> : part);
+
+/**
+ * Said once, in English, where content is read: the interface is translated,
+ * the training material is not. Without it an English reader meets Arabic
+ * titles and cannot tell a choice from a gap.
+ */
+export const ContentLanguageNote: React.FC = () => {
+  const lang = useLang();
+  return lang === 'en' ? <p className="t-sm c-tx2 m-0" role="note">{t('lang.contentnote', lang)}</p> : null;
+};
+
 /* ---------------- screen header ---------------- */
 export const ScreenHeader: React.FC<{
   onBack?: () => void;
@@ -213,11 +241,14 @@ const BADGE = {
   info: { c: 'var(--info)', b: 'var(--info-line)' },
   gold: { c: 'var(--g1)', b: 'rgba(var(--g2-rgb),.35)' },
   neutral: { c: 'var(--tx2)', b: 'var(--line-2)' },
+  // Waiting on someone else: neutral ink, dashed edge — reads apart from
+  // `neutral` without relying on colour (ui/statusSemantics).
+  pending: { c: 'var(--tx1)', b: 'var(--line-3)' },
 };
 export const StatusBadge: React.FC<{ tone: keyof typeof BADGE; children: React.ReactNode; icon?: React.ReactNode }> = ({ tone, children, icon }) => {
   const t = BADGE[tone];
   return (
-    <span className="items-center gap-1" style={{ display: 'inline-flex', padding: 'var(--sp-1) var(--sp-3)', borderRadius: 'var(--r-full)', border: `1px solid ${t.b}`, color: t.c, fontSize: '.875rem', fontWeight: 600 }}>
+    <span className="items-center gap-1" style={{ display: 'inline-flex', padding: 'var(--sp-1) var(--sp-3)', borderRadius: 'var(--r-full)', border: `1px ${tone === 'pending' ? 'dashed' : 'solid'} ${t.b}`, color: t.c, fontSize: '.875rem', fontWeight: 600 }}>
       {icon}{children}
     </span>
   );
@@ -419,19 +450,6 @@ export const Toast: React.FC<{ message: string | null; tone?: 'ok' | 'error' }> 
 /** A failure next to the control that caused it, with the work still in place. */
 export const InlineError: React.FC<{ message: string | null }> = ({ message }) =>
   message ? <p role="alert" className="t-sm c-risk m-0">{message}</p> : null;
-
-/* ---------------- skill bar ---------------- */
-export const SkillBar: React.FC<{ pct: number; segments?: number }> = ({ pct, segments = 8 }) => {
-  const filled = Math.round(pct * segments);
-  return (
-    <div role="progressbar" aria-valuenow={Math.round(pct * 100)} aria-valuemin={0} aria-valuemax={100}
-      className="row gap-1">
-      {Array.from({ length: segments }, (_, i) => (
-        <span key={i} className="grow" style={{ height: 6, borderRadius: 'var(--r-full)', background: i < filled ? 'var(--g2)' : 'var(--line-2)', transition: 'background .3s var(--ease)' }} />
-      ))}
-    </div>
-  );
-};
 
 /* ---------------- empty & loading states ---------------- */
 /**

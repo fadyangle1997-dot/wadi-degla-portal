@@ -21,11 +21,11 @@ import { useProgress, moduleLessonsDone, progressStore, currentCommitment } from
 import { useTraining, traineeIdOrNull } from '../../app/training/trainingStore';
 import { identityStore } from '../../app/identity/identityStore';
 import { waitingForTrainer } from '../../domain/training/statusWording';
-import { homeContext } from '../../domain/journey/nextAction';
-import { Card, Eyebrow, StatusBadge, ProgressRail, ArabicContent, PageHeader } from '../../ui/primitives';
-import { phaseContextFor, useTodaysMission } from '../../app/journeyContext';
+import { progression } from '../../domain/journey/progression';
+import { Card, Eyebrow, StatusBadge, ProgressRail, ArabicContent, PageHeader, ContentLanguageNote } from '../../ui/primitives';
+import { useTodaysMission } from '../../app/journeyContext';
 import { MissionBrief } from '../journey/MissionBrief';
-import { PROGRAM, PROGRAM_DAYS, currentPhase, dayPosition } from '../../domain/journey/program';
+import { PROGRAM, PROGRAM_DAYS, unitPlace } from '../../domain/journey/program';
 import { useLang, t as tr, tf, iso } from '../../app/i18n';
 import { WIDTH } from '../../ui/designSystem';
 import { TodayRetrieval, dueToday } from '../journey/TodayRetrieval';
@@ -47,12 +47,9 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
   const traineeId = traineeIdOrNull() ?? '';
   const trainerName = identityStore.userById(identityStore.currentUser()?.trainerId)?.name;
 
-  const { action, currentModule, nextModule } = homeContext(p, t, traineeId);
-  // The mission comes from the one resolver the roadmap reads too.
+  // Position and mission come from the one resolver the roadmap reads too.
+  const { action, currentModule, nextModule, phase, day } = progression(p, t, traineeId);
   const mission = useTodaysMission();
-  const ctx = phaseContextFor(p, t, traineeId);
-  const phase = currentPhase(ctx);
-  const { day } = dayPosition(ctx);
   const startedCurrent = currentModule ? moduleLessonsDone(p, currentModule.id) > 0 : false;
   // The promise they made at the end of the last lesson, read back where the
   // work actually starts. Derived from the event log — nothing new stored here.
@@ -92,6 +89,7 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
               {trainerName && <> · {tr('home.trainer', lang)} {trainerName}</>}
             </>
           ) : tr('path.alldone', lang)} />
+        <ContentLanguageNote />
 
         <div className="workspace workspace--aside">
           <div className="stack gap-5">
@@ -161,12 +159,15 @@ const CurrentModuleCard: React.FC<{
 }> = ({ moduleId, waiting, trainerName, done, showQuestion }) => {
   const lang = useLang();
   const m = moduleById(moduleId);
+  const place = unitPlace(moduleId);
   if (!m) return null;
 
   return (
     <Card>
       <div className="row items-center gap-3">
-        <Eyebrow>{m.code} · <ArabicContent as="span">{m.timeline}</ArabicContent></Eyebrow>
+        {/* Position and days from the programme itself — not the unit's code
+            or its authored timeline text, which could drift from it. */}
+        {place && <Eyebrow>{tf('db.unitwhen', { n: iso(place.n), total: iso(place.total), a: iso(place.dayStart), b: iso(place.dayEnd) }, lang)}</Eyebrow>}
         <div className="grow" />
         {waiting && <StatusBadge tone="attn">{waitingForTrainer(trainerName)}</StatusBadge>}
       </div>

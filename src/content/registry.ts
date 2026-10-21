@@ -3,8 +3,12 @@
  * The UI reads the academy from here; nothing hard-codes module lists.
  * Adding a unit = add its data file and register it here. Nothing else.
  *
- * Curriculum order is derived from each module's `order` field so a reorder
- * is a one-number change, never a structural edit.
+ * Curriculum order is derived from each module's `order` field, and that
+ * order IS the programme's: m1 → m2.1–m2.4 → m3 → m4 → m5 → m6, the same
+ * sequence the phases in domain/journey/program.ts list. Every `order` is
+ * unique — two units once shared an order, the sort interleaved the
+ * programme (m3 before m2.3), and the dashboard, the next step and the demo
+ * seed all walked the wrong sequence. A contract test holds both rules.
  */
 import type { Module, BossBattle } from '../domain/types/content';
 export { JOURNEY_STAGES } from './journey';

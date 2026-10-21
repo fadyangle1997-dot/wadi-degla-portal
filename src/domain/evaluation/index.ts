@@ -40,12 +40,18 @@ export type EvaluationDecision =
   | 'not_ready'         // غير جاهز — must repeat
   | 'escalate';         // تصعيد للمدير — beyond the trainer's authority
 
-/** Arabic labels for the four decisions — defined once, used everywhere. */
-export const DECISION_LABEL: Record<EvaluationDecision, string> = {
-  ready: 'جاهز',
+/**
+ * What a trainer's UNIT evaluation decided, in words. These are unit outcomes —
+ * approving a unit opens the next one — so none of them says «جاهز»: readiness
+ * for independent work belongs to the readiness assessment alone
+ * (domain/readiness/status). The engine's verdict over the stations has its
+ * own words (i18n `rd.dec.*`).
+ */
+export const UNIT_DECISION_LABEL: Record<EvaluationDecision, string> = {
+  ready: 'اتعتمدت الوحدة',
   extend: 'تمديد',
-  not_ready: 'غير جاهز',
-  escalate: 'تصعيد للمدير',
+  not_ready: 'يعيد الوحدة',
+  escalate: 'اتصعّدت للمدير',
 };
 
 /**

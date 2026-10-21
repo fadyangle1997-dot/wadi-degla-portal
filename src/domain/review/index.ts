@@ -107,3 +107,63 @@ export function reviewHealth(
   if (covered === 0) return 'silent';
   return covered / windowDays >= 0.6 ? 'healthy' : 'gap';
 }
+
+/* ---------------- the feedback loop ---------------- */
+
+/** A trainer's comment on one filed review (REVIEW_COACHED). */
+export interface ReviewComment {
+  readonly trainerId: string;
+  readonly comment: string;
+  readonly at: number;
+}
+
+/** A filed review and the trainer's comments on it, oldest comment first. */
+export interface FiledReview extends DecisionReview {
+  readonly comments: readonly ReviewComment[];
+}
+
+type LogEvent = { readonly type: string; readonly employeeId?: string; readonly at: number };
+type FiledEvent = LogEvent & DecisionReview & { readonly type: 'DECISION_REVIEW_FILED' };
+type CoachedEvent = LogEvent & { readonly type: 'REVIEW_COACHED'; readonly trainerId: string; readonly reviewAt: number; readonly comment: string };
+
+const isFiled = (e: LogEvent): e is FiledEvent => e.type === 'DECISION_REVIEW_FILED';
+const isCoached = (e: LogEvent): e is CoachedEvent => e.type === 'REVIEW_COACHED';
+
+/**
+ * One trainee's reviews with the trainer's comments, newest review first. A
+ * comment belongs to the review whose filing time it names (`reviewAt`).
+ */
+export function filedReviews(events: readonly LogEvent[], employeeId: string): readonly FiledReview[] {
+  const comments = new Map<number, ReviewComment[]>();
+  for (const e of events) {
+    if (!isCoached(e) || e.employeeId !== employeeId) continue;
+    const list = comments.get(e.reviewAt) ?? [];
+    list.push({ trainerId: e.trainerId, comment: e.comment, at: e.at });
+    comments.set(e.reviewAt, list);
+  }
+  return events
+    .filter((e): e is FiledEvent => isFiled(e) && e.employeeId === employeeId)
+    .map(e => ({
+      employeeId, situation: e.situation, decision: e.decision, policy: e.policy,
+      communication: e.communication, improvement: e.improvement, at: e.at,
+      comments: comments.get(e.at) ?? [],
+    }))
+    .sort((a, b) => b.at - a.at);
+}
+
+/**
+ * The trainer's review queue: filed reviews no trainer has commented on yet,
+ * oldest first — the trainee was promised a comment, so the longest wait leads.
+ */
+export function reviewsAwaitingComment(
+  events: readonly LogEvent[], employeeIds: readonly string[],
+): readonly FiledReview[] {
+  return employeeIds
+    .flatMap(id => filedReviews(events, id).filter(r => r.comments.length === 0))
+    .sort((a, b) => a.at - b.at);
+}
+
+/** Comments the trainee has not opened yet — what the bell says is new. */
+export function unseenComments(reviews: readonly FiledReview[], seenUntil: number): number {
+  return reviews.reduce((n, r) => n + r.comments.filter(c => c.at > seenUntil).length, 0);
+}

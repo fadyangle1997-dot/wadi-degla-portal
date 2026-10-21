@@ -8,7 +8,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { m } from 'motion/react';
-import { ShieldCheck, GraduationCap, TrendingUp, AlertTriangle, Users2, Gavel } from 'lucide-react';
+import { ShieldCheck, TrendingUp, AlertTriangle, Users2, Gavel, Clock } from 'lucide-react';
 import { useCan, useIdentity, identityStore } from '../../app/identity/identityStore';
 import { scopeOf } from '../../domain/identity/scope';
 import { useDashboard } from '../../app/analytics/dashboardStore';
@@ -21,6 +21,8 @@ import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
 import { useLang, t as tr, tf, iso } from '../../app/i18n';
+import { tone, FORMAL_READINESS, FOLLOW_UP, UNIT_REVIEW } from '../../ui/statusSemantics';
+import { staffCount } from '../../app/plural';
 import { NeedsAttention, UnitsTable } from './NeedsAttention';
 import { CollapsibleRoster, EmployeeGrid } from './EmployeeRoster';
 import { EmployeeTimeline } from './EmployeeTimeline';
@@ -104,7 +106,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
       <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         <PageHeader crumbs={[tr('crumb.academy', lang), tr('nav.manager', lang)]}
           title={scopeTitle}
-          lead={noData ? tr('mg.sub', lang) : tf('mg.lead', { n: iso(s.activeTrainees), r: iso(`${s.avgReadiness}%`), a: iso(attention) }, lang)} />
+          lead={noData ? tr('mg.sub', lang) : tf('mg.lead', { n: staffCount(s.activeTrainees, lang), r: iso(`${s.avgPerformance}%`), c: iso(s.certified), a: iso(attention) }, lang)} />
 
         {noData ? (
           <EmptyState icon={<Users2 />} title={tr('mg.nodata', lang)}
@@ -115,15 +117,19 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 names the scope truthfully: an organisation roll-up is not a
                 «branch». */}
             <MetricStrip label={scope.kind === 'organization' ? tr('mg.orghealth', lang) : scope.kind === 'area' ? tr('mg.areahealth', lang) : tr('mg.branchhealth', lang)}>
-              <Metric icon={<ShieldCheck size={13} />} label={tr('mg.readiness', lang)} value={`${s.avgReadiness}%`}
-                context={tr(scope.kind === 'organization' ? 'mg.avgorg' : scope.kind === 'area' ? 'mg.avgarea' : 'mg.avgbranch', lang)} tone={s.avgReadiness >= 80 ? 'ready' : s.avgReadiness >= 65 ? 'attn' : 'risk'} />
-              <Metric icon={<GraduationCap size={13} />} label={tr('mg.readystaff', lang)} value={`${Math.round(s.certificationRate * 100)}%`}
-                context={tr('mg.finishedok', lang)} />
+              {/* Practical performance is an indicator from unit evaluations;
+                  «اتعتمدوا» counts only the readiness assessment's certified. */}
+              <Metric icon={<TrendingUp size={13} />} label={tr('mg.k.perf', lang)} value={`${s.avgPerformance}%`}
+                context={tr(scope.kind === 'organization' ? 'mg.avgorg' : scope.kind === 'area' ? 'mg.avgarea' : 'mg.avgbranch', lang)} />
+              <Metric icon={<ShieldCheck size={13} />} label={tr('mg.k.certified', lang)} value={s.certified}
+                context={tf('mg.k.certifiedctx', { n: iso(s.certified), t: iso(s.activeTrainees) }, lang)}
+                tone={s.certified > 0 ? tone(FORMAL_READINESS.certified) : undefined} />
               <Metric icon={<Users2 size={13} />} label={tr('mg.staff', lang)} value={s.activeTrainees} context={tr(scope.kind === 'organization' ? 'mg.inorg' : scope.kind === 'area' ? 'mg.inarea' : 'mg.inbranch', lang)} />
               <Metric icon={<AlertTriangle size={13} />} label={tr('mg.needsfollow', lang)} value={attention}
-                context={tr('mg.needyou', lang)} tone={s.needsImmediate > 0 ? 'risk' : s.needsAttention > 0 ? 'attn' : 'ready'} />
-              <Metric icon={<TrendingUp size={13} />} label={tr('mg.awaitreview', lang)} value={s.waitingForTrainer}
-                context={tr('mg.attrainer', lang)} tone={s.waitingForTrainer > 0 ? 'attn' : undefined} />
+                context={tr('mg.needyou', lang)}
+                tone={s.needsImmediate > 0 ? tone(FOLLOW_UP.needs_immediate_attention) : s.needsAttention > 0 ? tone(FOLLOW_UP.needs_attention) : undefined} />
+              <Metric icon={<Clock size={13} />} label={tr('mg.awaitreview', lang)} value={s.waitingForTrainer}
+                context={tr('mg.attrainer', lang)} tone={s.waitingForTrainer > 0 ? tone(UNIT_REVIEW.waiting) : undefined} />
             </MetricStrip>
 
             {/* The manager's single most urgent decision: staff who finished

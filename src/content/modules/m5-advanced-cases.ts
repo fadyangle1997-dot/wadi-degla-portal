@@ -36,7 +36,7 @@ import { SKILLS } from '../skills';
 
 export const moduleAdvancedCases: Module = {
   id: 'm5',
-  order: 5,
+  order: 8,
   code: 'M5',
   title: 'الحالات المتقدمة والمحاكاة',
   bigQuestion: 'الحالة اللي قدّامي مش في الكتاب. أقرر إزاي؟',

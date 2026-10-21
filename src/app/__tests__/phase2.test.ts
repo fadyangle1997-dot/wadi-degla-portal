@@ -4,7 +4,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import { parseHash, toHash } from '../router';
-import { skillProgress } from '../skills';
+import { skillStandings, STEP_LABEL } from '../skills';
+import { t } from '../i18n';
 import { EMPTY_PROGRESS, reduce } from '../backend';
 import { MODULES } from '../../content/registry';
 
@@ -25,25 +26,35 @@ describe('hash router (Phase 2 §5)', () => {
   });
 });
 
-describe('skill derivation (Phase 2 §3)', () => {
-  it('zero progress → every skill at 0', () => {
-    for (const s of skillProgress(EMPTY_PROGRESS)) expect(s.earned).toBe(0);
+describe('skill standing — one three-level scale', () => {
+  it('zero progress → every skill at «لسه»', () => {
+    for (const s of skillStandings(EMPTY_PROGRESS)) expect(s.step).toBe(0);
   });
-  it('completing a lesson raises exactly the skills it touches', () => {
-    const m = MODULES[0]!;
-    const lesson = m.lessons[0]!;
+  it('completing a lesson moves exactly the skills it touches, to the level it declares', () => {
+    const lesson = MODULES[0]!.lessons[0]!;
     const p = reduce(EMPTY_PROGRESS, { type: 'LESSON_COMPLETED', lessonId: lesson.id, at: 1 });
-    const before = new Map(skillProgress(EMPTY_PROGRESS).map(s => [s.id, s.earned]));
-    const touched = new Set(lesson.skills.map(t => t.skill));
-    for (const s of skillProgress(p)) {
-      if (touched.has(s.id)) expect(s.earned).toBeGreaterThan(before.get(s.id) ?? 0);
-      else expect(s.earned).toBe(before.get(s.id) ?? 0);
+    const touched = new Map(lesson.skills.map(t => [t.skill, t.level]));
+    const STEP = { introduced: 1, practiced: 2, mastered: 3 } as const;
+    for (const s of skillStandings(p)) {
+      const lvl = touched.get(s.id);
+      expect(s.step).toBe(lvl ? STEP[lvl] : 0);
     }
   });
-  it('completing ALL lessons → every skill at 100%', () => {
+  it('completing ALL lessons → every skill at the level expected of it, and no further', () => {
     let p = EMPTY_PROGRESS;
     for (const m of MODULES) for (const l of m.lessons) p = reduce(p, { type: 'LESSON_COMPLETED', lessonId: l.id, at: 1 });
-    for (const s of skillProgress(p)) expect(s.pct).toBe(1);
+    for (const s of skillStandings(p)) expect(s.step).toBe(s.target);
+  });
+  it('the expected level is the curriculum\'s, not a fixed top: some skills are only introduced', () => {
+    const all = skillStandings(EMPTY_PROGRESS);
+    expect(all.every(s => s.target >= 1 && s.target <= 3)).toBe(true);
+    expect(all.some(s => s.target < 3)).toBe(true);
+  });
+  it('each skill belongs to the programme phase that first builds it', () => {
+    for (const s of skillStandings(EMPTY_PROGRESS)) expect(s.phaseId).toMatch(/^p\d$/);
+  });
+  it('the UI says the same level words the domain does', () => {
+    for (const n of [0, 1, 2, 3] as const) expect(t(`sk.step${n}`, 'ar')).toBe(STEP_LABEL[n]);
   });
 });
 

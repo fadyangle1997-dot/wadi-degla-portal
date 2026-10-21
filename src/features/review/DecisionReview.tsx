@@ -28,6 +28,7 @@ import { trainingStore, currentTraineeId } from '../../app/training/trainingStor
 import { Button, Eyebrow, ScreenHeader, InlineError, useExitFlow } from '../../ui/primitives';
 import { t, langStore } from '../../app/i18n';
 import { fade } from '../../ui/motion';
+import { toHash } from '../../app/router';
 import { WIDTH } from '../../ui/designSystem';
 
 /** Why each link is being asked — shown once, at the moment it matters. */
@@ -90,10 +91,13 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
           <Check size={32} className="c-ready" />
           <h1 className="t-h2" style={{ margin: 'var(--sp-4) 0 var(--sp-2)' }}>اتسجّلت</h1>
           {/* No congratulation. Filing a debrief is the job, not an achievement. */}
+          {/* The promise is kept now: the review lands in the trainer's queue,
+              their comment comes back to «مراجعاتي» and to the bell. */}
           <p className="t-body c-tx2">
-            المدرب هيشوفها ويعلّق. الحلقة بتتقفل لما تقرا تعليقه.
+            وصلت لقايمة المدرب. تعليقه هيوصلك في «مراجعاتي» وهتلاقيه في الجرس.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 row gap-3 justify-center wrap">
+            <Button onClick={() => { location.hash = toHash({ kind: 'reviews' }); }}>مراجعاتي</Button>
             <Button variant="ghost" onClick={onExit}>{exitLabel}</Button>
           </div>
         </m.section>

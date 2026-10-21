@@ -10,6 +10,10 @@
  * as topic lists — a phase earns its place only if it changes what the trainee
  * can safely do. Phases whose modules aren't built yet declare `moduleIds: []`;
  * they are honestly reported as `planned`, never faked as available.
+ *
+ * Every built unit belongs to exactly one phase, and the phases list them in
+ * the curriculum's order (MODULES). The readiness phase holds m6, the week
+ * that prepares the assessment; the six stations open once m6 is approved.
  */
 
 export type PhaseStatus =
@@ -130,7 +134,7 @@ export const PROGRAM: readonly JourneyPhase[] = [
       'اعتماد المدير — سلطة الجاهزية التشغيلية، وقرار منفصل',
       'الاتنين لازم يقولوا «جاهز» — توقيع واحد مش تأهيل',
     ],
-    moduleIds: [],
+    moduleIds: ['m6'],
     milestone: true,
   },
 ];
@@ -158,6 +162,22 @@ export function phaseStatus(phase: JourneyPhase, ctx: PhaseContext): PhaseStatus
   return 'locked';
 }
 
+/** The phase a built unit belongs to. */
+export const phaseOfModule = (moduleId: string): JourneyPhase | null =>
+  PROGRAM.find(p => p.moduleIds.includes(moduleId)) ?? null;
+
+/**
+ * Where a unit sits in the programme, for people: «الوحدة 3 من 9», days from
+ * its phase. Units carry an internal code (M2.3) for content authors; screens
+ * say its position instead.
+ */
+export function unitPlace(moduleId: string): { n: number; total: number; dayStart: number; dayEnd: number } | null {
+  const order = PROGRAM.flatMap(p => p.moduleIds);
+  const phase = phaseOfModule(moduleId);
+  const i = order.indexOf(moduleId);
+  return phase && i >= 0 ? { n: i + 1, total: order.length, dayStart: phase.dayStart, dayEnd: phase.dayEnd } : null;
+}
+
 /** The one phase the trainee should act on now — the answer to "where am I?". */
 export function currentPhase(ctx: PhaseContext): JourneyPhase | null {
   const active = PROGRAM.find(p => {
@@ -174,9 +194,17 @@ export function programProgress(ctx: PhaseContext): number {
   return built.filter(ctx.isModuleApproved).length / built.length;
 }
 
-/** Days remaining, estimated from the furthest phase the trainee has reached. */
-export function dayPosition(ctx: PhaseContext): { day: number; remaining: number } {
-  const cur = currentPhase(ctx);
-  const day = cur ? cur.dayStart : PROGRAM_DAYS;
+/**
+ * The programme day, estimated from where the trainee stands — never from the
+ * calendar. It sits inside the current phase's day range and moves through it
+ * as that phase's units are approved: a trainee three units into the
+ * transactions phase is not on its first day. Done → the last day.
+ */
+export function dayPosition(ctx: PhaseContext, phase: JourneyPhase | null = currentPhase(ctx)): { day: number; remaining: number } {
+  const cur = phase;
+  if (!cur) return { day: PROGRAM_DAYS, remaining: 0 };
+  const approved = cur.moduleIds.filter(ctx.isModuleApproved).length;
+  const share = cur.moduleIds.length ? approved / cur.moduleIds.length : 0;
+  const day = cur.dayStart + Math.floor(share * (cur.dayEnd - cur.dayStart));
   return { day, remaining: Math.max(0, PROGRAM_DAYS - day) };
 }

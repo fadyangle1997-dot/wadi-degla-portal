@@ -34,9 +34,10 @@ export interface DataTableProps<R> {
   /** Opens a row. With it, the first column becomes the row's one button. */
   onOpen?: (row: R) => void;
   /**
-   * The open button's accessible name, when its visible content is not enough.
-   * It must contain that visible text (WCAG 2.5.3); the row's other facts are
-   * read from its cells.
+   * What opening the row does, or the one fact its visible content leaves
+   * out — read after that content («Karim Saad · مستنية تقييمك — افتح ملف
+   * المتدرب»). It is appended, never a replacement, so the button's name
+   * always starts with the text a person sees on it (WCAG 2.5.3).
    */
   rowLabel?: (row: R) => string;
   /** A spine on the row's reading edge: this row needs something. */
@@ -154,8 +155,9 @@ export function DataTable<R>({
                       return (
                         <th key={c.id} role="rowheader" scope="row">
                           {onOpen ? (
-                            <button type="button" className="dt-open" onClick={() => onOpen(r)}
-                              aria-label={rowLabel?.(r)}>{c.cell(r)}</button>
+                            <button type="button" className="dt-open" onClick={() => onOpen(r)}>
+                              {c.cell(r)}{rowLabel && <span className="sr-only"> — {rowLabel(r)}</span>}
+                            </button>
                           ) : c.cell(r)}
                         </th>
                       );

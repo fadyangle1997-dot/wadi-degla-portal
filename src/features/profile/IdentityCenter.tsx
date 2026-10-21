@@ -18,9 +18,11 @@ import { User2, MapPin, BadgeCheck, GraduationCap, Award, Clock } from 'lucide-r
 import { useIdentity, identityStore } from '../../app/identity/identityStore';
 import { useProgress, learningProgress } from '../../app/progress';
 import { useTraining, trainingStore, traineeIdOrNull } from '../../app/training/trainingStore';
-import { phaseContextFor, useTodaysMission } from '../../app/journeyContext';
-import { readinessFromOwnEvents } from '../../app/analytics/dashboardStore';
-import { currentPhase, dayPosition, PROGRAM } from '../../domain/journey/program';
+import { useTodaysMission } from '../../app/journeyContext';
+import { progression } from '../../domain/journey/progression';
+import { readinessReport } from '../../domain/readiness/report';
+import { formalLabel, performanceText } from '../readiness/labels';
+import { PROGRAM } from '../../domain/journey/program';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent, CloseButton } from '../../ui/primitives';
 import { useLang, t as tr, tf } from '../../app/i18n';
@@ -28,7 +30,7 @@ import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 import { branchNameOf } from '../../domain/organization';
 import { useOrganization } from '../../app/organization/orgStore';
-import { MODULES } from '../../content/registry';
+import { dayCount } from '../../app/plural';
 
 export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { users } = useIdentity();
@@ -38,18 +40,16 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
   const me = identityStore.currentUser();
   const traineeId = me?.id ?? '';
 
-  // The same bridge the home screen and the roadmap use (app/journeyContext).
-  const ctx = useMemo(() => phaseContextFor(p, t, traineeIdOrNull() ?? ''), [t, p]);
-
-  const phase = currentPhase(ctx);
+  // The same position the home screen and the roadmap read.
+  const { phase, day, remaining } = useMemo(() => progression(p, t, traineeIdOrNull() ?? ''), [t, p]);
   const lang = useLang();
-  const { day, remaining } = dayPosition(ctx);
   const learnPct = Math.round(learningProgress(p) * 100);
 
-  const readiness = useMemo(() => {
-    const own = (trainingStore.events() as readonly OrgEvent[]).filter(e => e.employeeId === traineeId);
-    return readinessFromOwnEvents(traineeId, own);
-  }, [traineeId]);
+  // Three concepts, three figures: units approved (programme progress), the
+  // trainer's practical evaluations, and the readiness assessment's status.
+  const { performance, formal, programme } = useMemo(
+    () => readinessReport(t, trainingStore.events() as readonly OrgEvent[], traineeId),
+    [t, traineeId]);
 
   // Next step — today's mission, from the SAME resolver the home screen and
   // the roadmap read, so the profile can never give a third answer.
@@ -108,7 +108,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
               </div>
               {phase && (
                 <div className="mt-3">
-                  <StatusBadge tone="info"><ArabicContent as="span">{phase.title}</ArabicContent></StatusBadge>
+                  <StatusBadge tone="neutral"><ArabicContent as="span">{phase.title}</ArabicContent></StatusBadge>
                 </div>
               )}
             </div>
@@ -135,7 +135,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
                 <span className="pf-dot" aria-hidden>·</span>
                 {tf('pf.dayof', { d: day }, lang)}
                 <span className="pf-dot" aria-hidden>·</span>
-                {tf('pf.daysleft', { n: remaining }, lang)}
+                {tf('pf.daysleft', { days: dayCount(remaining, lang) }, lang)}
               </p>
             </div>
           </div>
@@ -158,8 +158,9 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
             {/* Three measures, not four: approval shows x/y, so the denominator
                 answers «how much is left?». */}
             <StatCard label={tr('db.completion', lang)} value={`${learnPct}%`} sub={tr('pf.lessonsdone', lang)} />
-            <StatCard label={tr('pf.unitsapp', lang)} value={`${readiness.approvedModules}/${MODULES.length}`} sub={tr('pf.fromtrainer', lang)} />
-            <StatCard label={tr('db.readiness', lang)} value={readiness.readinessIndex > 0 ? `${readiness.readinessIndex}%` : '—'} sub={readiness.readinessIndex > 0 ? tr('pf.lastassess', lang) : tr('pf.noassess', lang)} />
+            <StatCard label={tr('pf.unitsapp', lang)} value={`${programme.approved}/${programme.total}`} sub={tr('pf.fromtrainer', lang)} />
+            <StatCard label={tr('perf.title', lang)} value={performanceText(performance)} sub={performance.score !== null ? tr('perf.latest', lang) : tr('perf.none', lang)} />
+            <StatCard words label={tr('fr.title', lang)} value={formalLabel(formal, lang)} sub={formal.status === 'not_open' ? tf('fr.not_open.body', { a: programme.approved, b: programme.total }, lang) : ''} />
           </div>
         </section>
 
@@ -217,10 +218,11 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
 
 /** A single fact, stated plainly. Reused across the journey and performance
  *  sections — same shape, so the eye reads them as one family. */
-const StatCard: React.FC<{ label: string; value: string; sub: string }> = ({ label, value, sub }) => (
+const StatCard: React.FC<{ label: string; value: string; sub: string; words?: boolean }> = ({ label, value, sub, words }) => (
   <Card tone="quiet" pad={5}>
     <div className="t-label c-tx3">{label}</div>
-    <div className="t-h3 t-num" style={{ margin: 'var(--sp-1) 0' }}>{value}</div>
+    {/* A status in words is prose, not a figure: no numeric isolation. */}
+    <div className={words ? 't-title' : 't-h3 t-num'} style={{ margin: 'var(--sp-1) 0' }}>{value}</div>
     <div className="t-label c-tx3">{sub}</div>
   </Card>
 );

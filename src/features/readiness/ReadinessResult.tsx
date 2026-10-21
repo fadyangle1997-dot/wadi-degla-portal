@@ -34,7 +34,7 @@ import type { ReadinessStanding } from '../../domain/readiness/track';
 import { demonstratedCount, nextStation } from '../../domain/readiness/track';
 import { READINESS_FLOORS, CRITICAL_DIMENSIONS, STATIONS } from '../../domain/readiness';
 import {
-  EVALUATION_DIMENSIONS, DECISION_LABEL, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS,
+  EVALUATION_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS,
   type EvaluationDecision, type EvaluationDimension,
 } from '../../domain/evaluation';
 import {
@@ -42,6 +42,9 @@ import {
 } from '../../ui/primitives';
 import { ReadinessTrack } from './ReadinessTrack';
 import { WIDTH } from '../../ui/designSystem';
+import { FormalStatus, formalLabel } from './labels';
+import { tone, ENGINE_DECISION } from '../../ui/statusSemantics';
+import { t as tr } from '../../app/i18n';
 
 /** Each outcome states plainly what it is, and what happens next. */
 const OUTCOME: Record<EvaluationDecision, {
@@ -79,7 +82,11 @@ const FINAL_TONE = { ready: 'ready', extend: 'attn', reject: 'risk' } as const;
 interface DimRow { d: EvaluationDimension; score: number; floor: number; critical: boolean }
 
 export const ReadinessResult: React.FC<{ standing: ReadinessStanding; onExit: () => void; exitLabel?: string }> = ({ standing, onExit, exitLabel = 'رجوع لرحلتي' }) => {
-  const { outcome, track, conduct, managerDecision, phaseOpen, certified } = standing;
+  const { outcome, track, conduct, managerDecision, phaseOpen, certified, formal } = standing;
+  // Until the assessment opens there is nothing to judge, so nothing is shown
+  // as judged: no «القرار في النظام: غير جاهز», no table of dashes.
+  const judged = formal.status === 'awaiting_decision' || formal.status === 'certified'
+    || formal.status === 'extended' || formal.status === 'not_ready';
   const shown = demonstratedCount(track);
   const missing = outcome.stationsMissing.length;
   const next = nextStation(track);
@@ -102,8 +109,12 @@ export const ReadinessResult: React.FC<{ standing: ReadinessStanding; onExit: ()
                 {next && <p className="m-0 c-tx1">المحطة الجاية: <strong>{next.station.title}</strong> · {next.station.assessor === 'manager' ? 'مع المدير' : 'مع المدرب'}</p>}
               </>
             : 'الست محطات بتتعمل في آخر أسبوع من البرنامج (اليوم 54–60). اللي بتتعلّمه دلوقتي هو اللي هيتقاس فيها.' }
-      : { tone: OUTCOME[outcome.decision].tone, title: OUTCOME[outcome.decision].headline,
-          body: <><p className="m-0">{OUTCOME[outcome.decision].meaning}</p><p className="m-0 c-tx1">{OUTCOME[outcome.decision].next}</p></> };
+      // Every station is in. Until the manager decides, this is the stations'
+      // verdict — never «جاهز للعمل المستقل» on its own: one signature is not
+      // a qualification.
+      : { tone: OUTCOME[outcome.decision].tone,
+          title: formal.status === 'awaiting_decision' ? `نتيجة المحطات: ${OUTCOME[outcome.decision].headline}` : formalLabel(formal, 'ar'),
+          body: <><p className="m-0">{managerDecision?.rationale || OUTCOME[outcome.decision].meaning}</p><p className="m-0 c-tx1">{formal.status === 'awaiting_decision' ? OUTCOME[outcome.decision].next : ''}</p></> };
 
   const dims: DimRow[] = (Object.keys(EVALUATION_DIMENSIONS) as EvaluationDimension[]).map(d => ({
     d, score: outcome.scores[d], floor: READINESS_FLOORS[d], critical: CRITICAL_DIMENSIONS.includes(d),
@@ -134,9 +145,7 @@ export const ReadinessResult: React.FC<{ standing: ReadinessStanding; onExit: ()
         actions={<Button variant="ghost" onClick={onExit}><ArrowRight size={16} className="icon-dir" /> {exitLabel}</Button>} />
 
       <Brief prominent tone={brief.tone} title={brief.title} body={brief.body}
-        eyebrow={<Status tone={certified ? 'ready' : missing > 0 ? 'neutral' : outcome.decision === 'ready' ? 'ready' : outcome.decision === 'extend' ? 'attn' : outcome.decision === 'not_ready' ? 'risk' : 'info'}>
-          {certified ? 'معتمد من المدرب والمدير' : missing > 0 ? 'لسه ما اتحسمش' : `قرار المحطات: ${DECISION_LABEL[outcome.decision]}`}
-        </Status>} />
+        eyebrow={<FormalStatus f={formal} lang="ar" />} />
 
       <div className="workspace workspace--aside region">
         <section aria-labelledby="rd-track">
@@ -180,27 +189,35 @@ export const ReadinessResult: React.FC<{ standing: ReadinessStanding; onExit: ()
         </aside>
       </div>
 
-      <div className="stack gap-8 region">
-        <section aria-labelledby="rd-why">
-          <SectionHeader id="rd-why" title="على أي أساس" description="أسباب محرك الجاهزية نفسها — كل سبب راجع لقاعدة." />
-          <ul className="ruled-list mt-3">
-            {outcome.reasons.map(r => <li key={r}>{r}</li>)}
-          </ul>
-        </section>
+      {/* The engine's reasons and the KPI table are evidence of a judgement;
+          before the assessment opens there is none to show. */}
+      {formal.open && (
+        <div className="stack gap-8 region">
+          <section aria-labelledby="rd-why">
+            <SectionHeader id="rd-why" title="على أي أساس" description="أسباب محرك الجاهزية نفسها — كل سبب راجع لقاعدة." />
+            <ul className="ruled-list mt-3">
+              {outcome.reasons.map(r => <li key={r}>{r}</li>)}
+            </ul>
+          </section>
 
-        <section aria-labelledby="rd-dims">
-          <SectionHeader id="rd-dims" title="المحاور الرسمية"
-            description={<>الإجمالي الموزون <Num>{outcome.overall}%</Num> · الحرجة: مراجعة المستندات، تطبيق اللائحة، الدقة.</>} />
-          <div className="mt-3">
-            <DataTable caption="المحاور الرسمية" columns={columns} rows={dims} rowKey={r => r.d}
-              rowTone={r => observed(r.d) && r.score < r.floor ? (r.critical ? 'risk' : 'attn') : undefined} />
-          </div>
-        </section>
-      </div>
+          <section aria-labelledby="rd-dims">
+            <SectionHeader id="rd-dims" title="المحاور الرسمية"
+              description={<>الحرجة: مراجعة المستندات، تطبيق اللائحة، الدقة.{judged && <> · الإجمالي الموزون <Num>{outcome.overall}%</Num></>}</>} />
+            <div className="mt-3">
+              <DataTable caption="المحاور الرسمية" columns={columns} rows={dims} rowKey={r => r.d}
+                rowTone={r => observed(r.d) && r.score < r.floor ? (r.critical ? 'risk' : 'attn') : undefined} />
+            </div>
+          </section>
+        </div>
+      )}
 
-      <p className="t-sm mt-8 mb-0">
-        القرار في النظام: {DECISION_LABEL[outcome.decision]} · مبني على أدلة من <Num>{STATIONS.length - missing}</Num> من <Num>{STATIONS.length}</Num> محطات.
-      </p>
+      {judged && (
+        <p className="t-sm mt-8 mb-0 row items-center gap-2 wrap">
+          <span>{tr('fr.engine', 'ar')}:</span>
+          <Status tone={tone(ENGINE_DECISION[outcome.decision])}>{tr(`rd.dec.${outcome.decision}`, 'ar')}</Status>
+          <span>· مبني على أدلة من <Num>{STATIONS.length - missing}</Num> من <Num>{STATIONS.length}</Num> محطات.</span>
+        </p>
+      )}
     </main>
   );
 };

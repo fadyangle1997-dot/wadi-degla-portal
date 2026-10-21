@@ -29,7 +29,7 @@ import { SKILLS } from '../skills';
 
 export const moduleRepresentation: Module = {
   id: 'm3',
-  order: 3,
+  order: 6,
   code: 'M3',
   title: 'تمثيل وادي دجلة',
   bigQuestion: 'إزاي أطبّق اللائحة وأنا بمثّل النادي صح؟',

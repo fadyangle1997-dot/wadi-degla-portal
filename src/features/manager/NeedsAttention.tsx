@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
 import { useIdentity } from '../../app/identity/identityStore';
-import { readinessFromOwnEvents, groupByEmployee } from '../../app/analytics/dashboardStore';
+import { performanceFromOwnEvents, groupByEmployee } from '../../app/analytics/dashboardStore';
 import { orgSummary } from '../../domain/analytics/organization';
 import { trainingStore } from '../../app/training/trainingStore';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { ArabicContent, DataTable, SectionHeader, Status, Meter, type Column } from '../../ui/primitives';
 import { useLang, t as tr } from '../../app/i18n';
+import { tone, rowTone, FOLLOW_UP, UNIT_REVIEW, SEVERITY } from '../../ui/statusSemantics';
 
 /* ---------------- 1 · Needs Your Attention ----------------
    Actionable operational issues only, ordered by urgency (critical → warning
@@ -32,23 +33,28 @@ const attentionOf = (s: UnitRow['s']) => s.needsAttention + s.needsImmediate;
 
 export const UnitsTable: React.FC<{ units: readonly UnitRow[]; onOpen: (id: string) => void }> = ({ units, onOpen }) => {
   const lang = useLang();
-  const tone = (u: UnitRow) => attentionOf(u.s) > 0 ? 'risk' as const : u.s.waitingForTrainer > 0 ? 'attn' as const : 'ready' as const;
+  // One meaning per colour (ui/statusSemantics): people needing intervention
+  // are risk, units waiting on a trainer are pending, the rest say nothing.
+  const semantic = (u: UnitRow) => attentionOf(u.s) > 0
+    ? (u.s.needsImmediate > 0 ? FOLLOW_UP.needs_immediate_attention : FOLLOW_UP.needs_attention)
+    : u.s.waitingForTrainer > 0 ? UNIT_REVIEW.waiting : 'neutral' as const;
   const state = (u: UnitRow) => attentionOf(u.s) > 0 ? `${attentionOf(u.s)} ${tr('mg.needint', lang)}`
     : u.s.waitingForTrainer > 0 ? `${u.s.waitingForTrainer} ${tr('mg.awaitreview', lang)}` : tr('mg.stable', lang);
   const columns: Column<UnitRow>[] = [
     { id: 'name', header: tr('mg.col.branch', lang), sortValue: u => u.name, cell: u => <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{u.name}</span> },
-    { id: 'state', header: tr('dt.status', lang), sortValue: u => attentionOf(u.s) * 100 + u.s.waitingForTrainer, cell: u => <Status tone={tone(u)}>{state(u)}</Status> },
+    { id: 'state', header: tr('dt.status', lang), sortValue: u => attentionOf(u.s) * 100 + u.s.waitingForTrainer, cell: u => <Status tone={tone(semantic(u))}>{state(u)}</Status> },
     {
-      id: 'readiness', header: tr('mg.readiness', lang), align: 'end', sortValue: u => u.s.avgReadiness,
-      cell: u => <span className="row items-center gap-2 justify-end"><Meter value={u.s.avgReadiness} tone={tone(u) === 'ready' ? 'gold' : tone(u)} /><span className="t-num c-tx0">{u.s.avgReadiness}%</span></span>,
+      // A quantity: the progress accent, whatever the unit's status.
+      id: 'performance', header: tr('perf.title', lang), align: 'end', sortValue: u => u.s.avgPerformance,
+      cell: u => <span className="row items-center gap-2 justify-end"><Meter value={u.s.avgPerformance} /><span className="t-num c-tx0">{u.s.avgPerformance}%</span></span>,
     },
-    { id: 'ready', header: tr('mg.readystaff', lang), align: 'end', sortValue: u => u.s.certificationRate, cell: u => <span className="t-num">{Math.round(u.s.certificationRate * 100)}%</span> },
+    { id: 'certified', header: tr('mg.k.certified', lang), align: 'end', sortValue: u => u.s.certified, cell: u => <span className="t-num">{u.s.certified}</span> },
     { id: 'people', header: tr('mg.staff', lang), align: 'end', sortValue: u => u.people, cell: u => <span className="t-num">{u.people}</span> },
   ];
   return (
     <DataTable caption={tr('mg.branches', lang)} columns={columns} rows={units} rowKey={u => u.id}
-      onOpen={u => onOpen(u.id)} rowLabel={u => `${u.name} · ${state(u)}`}
-      rowTone={u => tone(u) === 'ready' ? undefined : tone(u)} />
+      onOpen={u => onOpen(u.id)} rowLabel={u => state(u)}
+      rowTone={u => rowTone(semantic(u))} />
   );
 };
 
@@ -63,7 +69,7 @@ export const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: 
     // existing per-employee timestamp — so no waiting-state is recomputed here.
     const grouped = groupByEmployee(trainingStore.events() as readonly OrgEvent[]);
     const lastSeen = (id?: string) =>
-      id ? (readinessFromOwnEvents(id, grouped.get(id) ?? []).lastEvaluatedAt ?? 0) : 0;
+      id ? (performanceFromOwnEvents(id, grouped.get(id) ?? []).lastEvaluatedAt ?? 0) : 0;
     const sevRank = { critical: 0, warning: 1, info: 2 } as const;
     return all
       .filter(i => i.targetUserId && inScope.has(i.targetUserId))
@@ -71,7 +77,7 @@ export const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: 
       .slice(0, 6);
   }, [users, inScope]);
 
-  const sevTone = { critical: 'risk', warning: 'attn', info: 'info' } as const;
+  const sevKey = { critical: 'ad.sevcritical', warning: 'ad.sevwarning', info: 'ad.sevinfo' } as const;
   /** Only critical and warning are an ASK; info is a state of the world. */
   const urgent = issues.filter(i => i.severity !== 'info').length;
 
@@ -79,7 +85,10 @@ export const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: 
   const columns: Column<Issue>[] = [
     // health.ts messages already start with the person's name.
     { id: 'detail', header: tr('mg.detail', lang), cell: i => <ArabicContent as="span" className="t-sm c-tx1">{i.message}</ArabicContent> },
-    { id: 'action', header: tr('dt.action', lang), cell: i => <Status tone={sevTone[i.severity]}><ArabicContent as="span">{i.action}</ArabicContent></Status> },
+    { id: 'severity', header: tr('mg.col.severity', lang), cell: i => <Status tone={tone(SEVERITY[i.severity])}>{tr(sevKey[i.severity], lang)}</Status> },
+    // The recommendation is advice, so it reads as text — it used to wear a
+    // status chip and look like a button. The row itself opens the file.
+    { id: 'step', header: tr('mg.col.step', lang), cell: i => <ArabicContent as="span" className="t-sm c-tx2">{i.action}</ArabicContent> },
   ];
 
   return (
@@ -95,7 +104,7 @@ export const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: 
         <p className="t-sm c-tx3">{tr('mg.allgood', lang)}</p>
       ) : (
         <DataTable caption={tr('mg.tofollow', lang)} columns={columns} rows={issues} rowKey={i => i.id}
-          onOpen={i => i.targetUserId && onInspect(i.targetUserId)} rowLabel={i => i.message}
+          onOpen={i => i.targetUserId && onInspect(i.targetUserId)} rowLabel={() => tr('mg.openthefile', lang)}
           rowTone={i => i.severity === 'critical' ? 'risk' : i.severity === 'warning' ? 'attn' : undefined} />
       )}
     </section>

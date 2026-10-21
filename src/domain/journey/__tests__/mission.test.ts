@@ -57,6 +57,12 @@ describe('todaysMission — the ranking', () => {
     expect(m.also.map(a => a.kind)).toEqual(['decision_review']);
   });
 
+  it('a certified trainee has finished: the mission says so, and nothing else is due', () => {
+    const m = todaysMission({ study: { kind: 'all_done' }, day: 60, reviewFiledToday: false, certified: true });
+    expect(m.primary.kind).toBe('certified');
+    expect(m.also).toEqual([]);
+  });
+
   it('the readiness day is the readiness phase\'s own first day', () => {
     expect(READINESS_PHASE_DAY).toBe(54);
   });

@@ -3,9 +3,11 @@ import { ShieldCheck } from 'lucide-react';
 import { useCan, useIdentity } from '../../app/identity/identityStore';
 import { trainingStore, useTraining, finalDecisionOf, useTrainingEvents } from '../../app/training/trainingStore';
 import { isProgramComplete, approvedModuleCount } from '../../domain/journey/programCompletion';
-import { operationalReadinessReport } from '../../domain/readiness/report';
+import { readinessReport } from '../../domain/readiness/report';
+import { FormalStatus, FollowUpStatus, performanceText } from '../readiness/labels';
+import { tone, GAP } from '../../ui/statusSemantics';
 import { moduleById } from '../../content/registry';
-import { DECISION_LABEL, readinessScore } from '../../domain/evaluation';
+import { UNIT_DECISION_LABEL } from '../../domain/evaluation';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { Button, Eyebrow, StatusBadge, ArabicContent, CloseButton, ConfirmDialog, Toast, InlineError, FormField, useModal, useExitFlow } from '../../ui/primitives';
@@ -45,42 +47,25 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
   const trainer = user?.trainerId ? users.find(u => u.id === user.trainerId) : undefined;
   const events = (trainingStore.events() as readonly OrgEvent[]).filter(e => e.employeeId === employeeId);
 
-  // Layer 1+2 evidence — the same engines the full report and dashboard read.
-  const evals = events
-    .filter(e => e.type === 'EVALUATION_RECORDED')
-    .map(e => ({ scores: e.scores, decision: e.decision, at: e.at }));
-  const report = operationalReadinessReport(t, employeeId, evals);
+  // The same composition the full report reads: the readiness assessment is
+  // the answer, practical performance is evidence, never the other way round.
+  const report = readinessReport(t, trainingStore.events(), employeeId);
+  const perf = report.performance;
   const issues = detectOperationalIssues(users, trainingStore.events())
     .filter(i => i.targetUserId === employeeId);
   const isOrphan = issues.some(i => i.kind === 'orphan_user');
-
-  // Readiness trend — direction, not the raw number (Layer 2). Built from the
-  // per-evaluation readiness score already computed by the shared engine.
-  const trend = evals
-    .filter(e => e.scores)
-    .map(e => readinessScore(e.scores!));
-  const trendDir = trend.length < 2 ? 'flat'
-    : trend[trend.length - 1]! > trend[0]! ? 'up'
-    : trend[trend.length - 1]! < trend[0]! ? 'down' : 'flat';
-
-  const verdictMeta = {
-    ready: { label: tr('mg.vready', lang), tone: 'ready' as const },
-    ready_with_conditions: { label: tr('mg.vcond', lang), tone: 'attn' as const },
-    extend: { label: tr('mg.vextend', lang), tone: 'attn' as const },
-    not_ready: { label: tr('mg.vnot', lang), tone: 'risk' as const },
-  }[report.verdict];
-  const riskMeta = { low: { label: tr('mg.risklow', lang), tone: 'ready' as const }, medium: { label: tr('mg.riskmed', lang), tone: 'attn' as const }, high: { label: tr('mg.riskhigh', lang), tone: 'risk' as const } }[report.risk];
 
   // Module names, decision labels and free-text reasons are Arabic content
   // inside a translated sentence, so each is declared as Arabic.
   const label = (e: OrgEvent): React.ReactNode =>
     e.type === 'UNIT_SUBMITTED_FOR_REVIEW' ? <>{tr('mg.submitted', lang)} <ArabicContent as="span">«{moduleName(e.moduleId!)}»</ArabicContent> {tr('mg.forreview', lang)}</>
-      : e.type === 'EVALUATION_RECORDED' ? <>{tr('mg.evaluation', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)} — {DECISION_LABEL[e.decision!] ?? e.decision}</ArabicContent></>
+      : e.type === 'EVALUATION_RECORDED' ? <>{tr('mg.evaluation', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)} — {UNIT_DECISION_LABEL[e.decision!] ?? e.decision}</ArabicContent></>
       : e.type === 'TRAINING_EXTENDED' ? <>{tr('mg.extended', lang)} <ArabicContent as="span">{e.reason ?? ''}</ArabicContent></>
       : e.type === 'LESSON_REOPENED' ? tr('mg.reopened', lang)
       : tr('mg.coachnote', lang);
 
-  const hasEvidence = report.evaluationsCount > 0;
+  const hasEvidence = perf.evaluations > 0;
+  const needsFollow = perf.followUp === 'needs_attention' || perf.followUp === 'needs_immediate_attention';
 
   return (
     <div className="dialog-scrim" onClick={close}>
@@ -93,45 +78,47 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
           <CloseButton onClick={close} label={tr('mg.close', lang)} />
         </div>
 
-        {/* ── LAYER 1 · THE VERDICT — "do I need to act?" ── */}
+        {/* ── LAYER 1 · THE ANSWER — the readiness assessment, one status ── */}
         <div className="row mt-4 wrap gap-2 items-center">
-          <StatusBadge tone={verdictMeta.tone}>{verdictMeta.label}</StatusBadge>
-          <StatusBadge tone={riskMeta.tone}>{riskMeta.label}</StatusBadge>
+          <span className="t-label c-tx3">{tr('fr.title', lang)}</span>
+          <FormalStatus f={report.formal} lang={lang} />
+          {needsFollow && <FollowUpStatus s={perf.followUp} lang={lang} />}
           {isOrphan && <StatusBadge tone="risk">{tr('mg.orphan', lang)}</StatusBadge>}
-          {hasEvidence && <span className="t-label t-num c-tx3" style={{ marginInlineStart: 'auto' }}>{tr('mg.readiness', lang)} {report.overall}%</span>}
         </div>
 
-        {!hasEvidence && (
-          <p className="t-sm mt-3 c-tx3">
-            {tr('mg.noassess', lang)}
-          </p>
-        )}
-
-        {/* ── LAYER 2 · THE EVIDENCE — "on what basis?" ── */}
-        {hasEvidence && (
-          <div className="stack mt-4 gap-3">
-            <div className="row items-center gap-2">
-              <span className="t-label c-tx3">{tr('mg.trend', lang)}</span>
-              <StatusBadge tone={trendDir === 'up' ? 'ready' : trendDir === 'down' ? 'risk' : 'neutral'}>
-                {trendDir === 'up' ? tr('mg.improving', lang) : trendDir === 'down' ? tr('mg.declining', lang) : tr('mg.stable', lang)}
-              </StatusBadge>
-            </div>
-            {report.developmentAreas.length > 0 && (
-              <div>
-                <span className="t-label c-tx3">{tr('mg.needsimp', lang)}</span>
-                <div className="row mt-2 wrap gap-2">
-                  {report.developmentAreas.map(a => (
-                    <StatusBadge key={a.dimension} tone={a.critical ? 'risk' : 'attn'}>{a.label}</StatusBadge>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="row items-center gap-2">
-              <span className="t-label c-tx3">{tr('mg.responsible', lang)}</span>
-              <span className="t-sm">{trainer?.name ?? tr('mg.unassigned', lang)}</span>
-            </div>
+        {/* ── LAYER 2 · THE EVIDENCE — practical performance, named as such ── */}
+        <div className="stack mt-4 gap-3">
+          <div className="row items-center gap-2 wrap">
+            <span className="t-label c-tx3">{tr('perf.title', lang)}</span>
+            <span className="t-num t-sm c-tx0">{performanceText(perf)}</span>
+            <span className="t-label c-tx3">{hasEvidence ? tr('perf.latest', lang) : tr('perf.none', lang)}</span>
           </div>
-        )}
+          {hasEvidence && (
+            <>
+              <div className="row items-center gap-2">
+                <span className="t-label c-tx3">{tr('perf.trend', lang)}</span>
+                {/* A direction, not a verdict: neutral, with its word. */}
+                <StatusBadge tone="neutral">
+                  {perf.trend === 'up' ? tr('mg.improving', lang) : perf.trend === 'down' ? tr('mg.declining', lang) : tr('mg.stable', lang)}
+                </StatusBadge>
+              </div>
+              {perf.gaps.length > 0 && (
+                <div>
+                  <span className="t-label c-tx3">{tr('mg.needsimp', lang)}</span>
+                  <div className="row mt-2 wrap gap-2">
+                    {perf.gaps.map(a => (
+                      <StatusBadge key={a.dimension} tone={tone(GAP[a.critical ? 'critical' : 'developmental'])}>{a.label}</StatusBadge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+          <div className="row items-center gap-2">
+            <span className="t-label c-tx3">{tr('mg.responsible', lang)}</span>
+            <span className="t-sm">{trainer?.name ?? tr('mg.unassigned', lang)}</span>
+          </div>
+        </div>
 
         {/* ── LAYER 3 · CONTEXT — the timeline, folded below the verdict ── */}
         {events.length > 0 && (
@@ -150,6 +137,7 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
 
         {/* ── decision panel — the manager's action, unchanged ── */}
         <FinalDecisionPanel employeeId={employeeId} t={t} canDecide={canDo('readiness.decide')}
+          canCertify={report.formal.canCertify}
           rationale={rationale} setRationale={setRationale} />
       </div>
       {dialog}
@@ -165,8 +153,10 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
  */
 const FinalDecisionPanel: React.FC<{
   employeeId: string; t: ReturnType<typeof useTraining>; canDecide: boolean;
+  /** «جاهز للعمل» certifies only with the stations' verdict behind it. */
+  canCertify: boolean;
   rationale: string; setRationale: (v: string) => void;
-}> = ({ employeeId, t, canDecide, rationale, setRationale }) => {
+}> = ({ employeeId, t, canDecide, canCertify, rationale, setRationale }) => {
   const lang = useLang();
   const existing = finalDecisionOf(t, employeeId);
   const complete = isProgramComplete(t, employeeId);
@@ -196,6 +186,7 @@ const FinalDecisionPanel: React.FC<{
   // A decision needs its reason first; the buttons stay live and ask for it.
   const [needWhy, setNeedWhy] = React.useState(false);
   const ask = (d: 'ready' | 'extend' | 'reject') => {
+    if (d === 'ready' && !canCertify) return;
     if (!rationale.trim()) { setNeedWhy(true); document.getElementById(`mg-why-${employeeId}`)?.focus(); return; }
     setPending(d);
   };
@@ -214,7 +205,7 @@ const FinalDecisionPanel: React.FC<{
             // `undefined!.tone` would take the whole manager screen down over a
             // cosmetic label. Fall back to the raw value instead.
             const meta = DECISION_META[existing.decision];
-            return <StatusBadge tone={meta?.tone ?? 'info'}>{meta?.label ?? existing.decision}</StatusBadge>;
+            return <StatusBadge tone={meta?.tone ?? 'neutral'}>{meta?.label ?? existing.decision}</StatusBadge>;
           })()}
           {existing.rationale && <span className="t-sm c-tx2">{existing.rationale}</span>}
         </div>
@@ -243,8 +234,13 @@ const FinalDecisionPanel: React.FC<{
             {p => <textarea {...p} value={rationale} rows={2} className="field w-full" style={{ resize: 'vertical' }}
               onChange={e => { setRationale(e.target.value); setNeedWhy(false); }} />}
           </FormField>
+          {!canCertify && <p id={`mg-cert-${employeeId}`} className="t-sm c-tx2 m-0">{tr('fr.cantcertify', lang)}</p>}
           <div className="row gap-2 wrap">
-            <Button onClick={() => ask('ready')}>{tr('mg.decready', lang)}</Button>
+            {/* aria-disabled, not disabled: it stays reachable, and the line
+                above says what opens it. isCertified needs the stations'
+                verdict too, so a «جاهز» recorded without it certified nothing. */}
+            <Button onClick={() => ask('ready')} aria-disabled={!canCertify || undefined}
+              aria-describedby={!canCertify ? `mg-cert-${employeeId}` : undefined}>{tr('mg.decready', lang)}</Button>
             <Button variant="ghost" onClick={() => ask('extend')}>{tr('mg.decextend', lang)}</Button>
             <Button variant="ghost" className="btn-danger" onClick={() => ask('reject')}>{tr('mg.decreject', lang)}</Button>
           </div>

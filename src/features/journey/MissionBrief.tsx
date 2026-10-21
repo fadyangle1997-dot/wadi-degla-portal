@@ -5,12 +5,12 @@
  * act that is available, never a second mission.
  */
 import React from 'react';
-import { Play, GraduationCap, Clock, Check, ArrowRight, ShieldCheck, NotebookPen } from 'lucide-react';
+import { Play, GraduationCap, Clock, Check, ArrowRight, ShieldCheck, NotebookPen, Award } from 'lucide-react';
 import type { Mission, TodaysMission } from '../../domain/journey/mission';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { trainingStore, traineeIdOrNull } from '../../app/training/trainingStore';
-import { Button, Eyebrow, ArabicContent, Brief } from '../../ui/primitives';
-import { useLang, t as tr, tf } from '../../app/i18n';
+import { Button, Eyebrow, ArabicContent, Brief, Content, tx } from '../../ui/primitives';
+import { useLang, t as tr } from '../../app/i18n';
 
 export interface MissionHandlers {
   onOpenLesson: (moduleId: string, lessonId: string) => void;
@@ -46,6 +46,19 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string } & Missi
   const m = action.module;
   const eyebrow = (icon: React.ReactNode) => <Eyebrow icon={icon}>{tr('path.mission', lang)}</Eyebrow>;
 
+  // The end of the programme, said as one: the manager's decision is the
+  // record, and what stays with the trainee is where to find it and the reference.
+  if (action.kind === 'certified') {
+    return (
+      <Brief prominent eyebrow={<Eyebrow icon={<Award size={13} />}>{tr('mi.certifiedeyebrow', lang)}</Eyebrow>}
+        title={tr('mi.certified', lang)} body={tr('mi.certifiedbody', lang)}
+        action={<div className="row wrap items-center gap-4">
+          <Button onClick={onOpenReadiness}>{tr('mi.certifiedcta', lang)} <ArrowRight size={16} className="icon-dir" /></Button>
+          <a href="#/journey" className="quiet-act t-sm">{tr('nav.reference', lang)}</a>
+        </div>} />
+    );
+  }
+
   if (action.kind === 'readiness') {
     return (
       <Brief prominent eyebrow={eyebrow(<ShieldCheck size={13} />)}
@@ -69,7 +82,7 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string } & Missi
   if (action.kind === 'rejected_review') {
     return (
       <Brief prominent tone="risk" eyebrow={eyebrow(<Clock size={13} />)}
-        title={tr('path.needswork', lang)} body={tf('pv.rejectedbody', { m: m?.title ?? '' }, lang)}
+        title={tr('path.needswork', lang)} body={tx('pv.rejectedbody', { m: <Content>{m?.title}</Content> }, lang)}
         action={
           <Button onClick={() => { if (m?.lessons[0]) onOpenLesson(m.id, m.lessons[0].id); }}>
             {tr('db.reviewunit', lang)} <ArrowRight size={16} className="icon-dir" />
@@ -86,9 +99,9 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string } & Missi
           /* Waiting is the trainee's job right now; these lines say what happened
              and what to do meanwhile, so the wait does not read as stuck. */
           <>
-            <p className="m-0">{tf('pv.waitingbody', { m: m?.title ?? '' }, lang)}</p>
+            <p className="m-0">{tx('pv.waitingbody', { m: <Content>{m?.title}</Content> }, lang)}</p>
             <p className="m-0 c-tx3">{tr('db.waiting', lang)}</p>
-            <p className="m-0 c-tx3">{tr('db.meanwhile', lang)}</p>
+            <p className="m-0 c-tx3">{tx('db.meanwhile', { skills: <a href="#/skills">{tr('nav.skills', lang)}</a> }, lang)}</p>
           </>
         } />
     );
@@ -99,7 +112,7 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string } & Missi
   if (action.kind === 'needs_submission') {
     return (
       <Brief prominent tone="attn" eyebrow={eyebrow(<Clock size={13} />)}
-        title={tf('pv.submittitle', { m: m?.title ?? '' }, lang)} body={tr('db.retrysubmit', lang)}
+        title={tx('pv.submittitle', { m: <Content>{m?.title}</Content> }, lang)} body={tr('db.retrysubmit', lang)}
         action={
           <Button onClick={() => { if (m) trainingStore.submitForReview(traineeIdOrNull() ?? '', m.id); }}>
             {tr('db.submitrev', lang)} <ArrowRight size={16} className="icon-dir" />
@@ -111,7 +124,7 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string } & Missi
   const isExam = action.kind === 'take_exam';
   return (
     <Brief prominent eyebrow={eyebrow(isExam ? <GraduationCap size={13} /> : <Play size={13} />)}
-      title={isExam ? <>{tr('db.examof', lang)} <ArabicContent as="span">{m?.title}</ArabicContent></> : <>{tr('db.contunit', lang)} <ArabicContent as="span">«{m?.title}»</ArabicContent></>}
+      title={isExam ? tx('db.examof', { m: <Content>{m?.title}</Content> }, lang) : <>{tr('db.contunit', lang)} <Content>«{m?.title}»</Content></>}
       body={isExam ? tr('db.examintro', lang) : <p className="m-0"><ArabicContent as="span">{m?.bigQuestion}</ArabicContent></p>}
       action={
         <Button onClick={() => {

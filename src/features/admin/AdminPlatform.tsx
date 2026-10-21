@@ -23,9 +23,11 @@ import { OrganizationPanel } from './OrganizationPanel';
 import { WIDTH } from '../../ui/designSystem';
 import { useOrganization, orgStore } from '../../app/organization/orgStore';
 import { branchNameOf } from '../../domain/organization';
-import { useLang, t, tf, iso, type Key } from '../../app/i18n';
+import { tone, SEVERITY, type SemanticTone } from '../../ui/statusSemantics';
+import { useLang, t, tf, type Key } from '../../app/i18n';
 import { overlayParams } from '../../app/overlayHistory';
 import { leaveGuard } from '../../app/leaveGuard';
+import { eventCount, issuesNeedAction } from '../../app/plural';
 
 type Tab = 'dashboard' | 'inbox' | 'org' | 'audit' | 'users';
 
@@ -107,7 +109,7 @@ const OperationalDashboard: React.FC<{ onOpenInbox: () => void }> = ({ onOpenInb
       {/* The next step, when there is one: the inbox holds every issue with its fix. */}
       {urgent > 0 && (
         <div className="mt-6">
-          <Brief tone={sev.critical ? 'risk' : 'attn'} title={tf('ad.brief', { n: iso(urgent) }, lang)} body={t('ad.briefbody', lang)}
+          <Brief tone={sev.critical ? 'risk' : 'attn'} title={issuesNeedAction(urgent, lang)} body={t('ad.briefbody', lang)}
             action={<Button onClick={onOpenInbox}>{t('ad.openinbox', lang)}</Button>} />
         </div>
       )}
@@ -197,10 +199,12 @@ const Coverage: React.FC<{ label: string; pct: number }> = ({ label, pct }) => {
 };
 
 /* ---------------- operational inbox ---------------- */
-const SEV_META: Record<Severity, { icon: React.ReactNode; tone: 'risk' | 'attn' | 'info'; labelKey: Key }> = {
-  critical: { icon: <AlertOctagon size={16} />, tone: 'risk', labelKey: 'ad.sevcritical' },
-  warning: { icon: <AlertTriangle size={16} />, tone: 'attn', labelKey: 'ad.sevwarning' },
-  info: { icon: <Info size={16} />, tone: 'info', labelKey: 'ad.sevinfo' },
+// Colours come from the one semantic table (ui/statusSemantics): information
+// is neutral, never blue.
+const SEV_META: Record<Severity, { icon: React.ReactNode; tone: SemanticTone; labelKey: Key }> = {
+  critical: { icon: <AlertOctagon size={16} />, tone: tone(SEVERITY.critical), labelKey: 'ad.sevcritical' },
+  warning: { icon: <AlertTriangle size={16} />, tone: tone(SEVERITY.warning), labelKey: 'ad.sevwarning' },
+  info: { icon: <Info size={16} />, tone: tone(SEVERITY.info), labelKey: 'ad.sevinfo' },
 };
 
 const OperationalInbox: React.FC<{ onGoToUser: (userId: string | undefined) => void }> = ({ onGoToUser }) => {
@@ -331,7 +335,7 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
           <DataTable caption={t('ad.audittitle', lang)} columns={columns} rows={shown}
             rowKey={auditKey} initialSort={{ id: 'when', dir: 'desc' }} />
         )}
-        {matching.length > CAP && <p className="t-sm mt-3 mb-0">{tf('ad.showing', { n: CAP }, lang)}</p>}
+        {matching.length > CAP && <p className="t-sm mt-3 mb-0">{tf('ad.showing', { events: eventCount(CAP, lang) }, lang)}</p>}
       </div>
       <Toast message={toast} />
     </section>

@@ -117,6 +117,12 @@ export type UserStatus = 'active' | 'disabled' | 'archived';
 export interface User {
   readonly id: string;
   readonly name: string;
+  /**
+   * The name as its owner writes it in another script — «Karim Samir» next to
+   * «كريم سمير». Entered by a person, never transliterated by the platform;
+   * absent, `name` is shown as written in every language.
+   */
+  readonly displayName?: Readonly<Partial<Record<'ar' | 'en', string>>>;
   readonly email?: string;
   readonly branchId?: string;
   readonly roleId: string;
@@ -128,6 +134,10 @@ export interface User {
   readonly createdAt: number;
   readonly updatedAt: number;
 }
+
+/** The name to show in an interface language: the owner's own spelling, else as entered. */
+export const displayNameOf = (u: Pick<User, 'name' | 'displayName'>, lang: 'ar' | 'en'): string =>
+  u.displayName?.[lang]?.trim() || u.name;
 
 /* ---------------- authorization (the ONLY question UI may ask) ---------------- */
 /**

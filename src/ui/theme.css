@@ -598,6 +598,9 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .status--attn .status-dot { background:var(--attn); }
 .status--risk .status-dot { background:var(--risk); }
 .status--info .status-dot { background:var(--info); }
+/* pending — waiting on someone else: a hollow dot, so it reads apart from
+   neutral without colour (ui/statusSemantics.ts). */
+.status--pending .status-dot { background:transparent; box-shadow:inset 0 0 0 1.5px var(--tx2); }
 .status--gold .status-dot { background:var(--g2); }
 
 /* ============================================================
@@ -1498,3 +1501,69 @@ details > summary { min-block-size:44px; cursor:pointer; }
   .jr-hero .dayring > *:last-child { display: none; }
 }
 @media (max-width: 380px) { .jr-hero .dayring { --ring: 100px; } .jr-hero .dayring-day { font-size: 2rem; } }
+
+/* ── Readiness report (Phase 0.5) ── */
+.report-facts { display:grid; grid-template-columns:auto 1fr; gap:var(--sp-2) var(--sp-5); align-items:center; margin:0; }
+.report-meter { width:140px; height:5px; border-radius:var(--r-full); background:var(--line-2); overflow:hidden; flex:none; }
+.report-meter > span { display:block; height:100%; border-radius:var(--r-full); background:var(--g2); }
+.report-meter > span[data-below] { background:var(--risk); }
+@media (max-width:480px) { .report-meter { width:88px; } }
+/* The bell's two lists (AppShell ActionCenter). */
+.ac-head { margin: 0; padding: var(--sp-3) var(--sp-4) var(--sp-1); font-size: var(--fs-1); font-weight: 600; color: var(--tx2); }
+.ac-before { border-top: 1px solid var(--edge-hairline, var(--line)); }
+
+/* ── Practical assessment: one KPI by behaviour (RubricPick) ── */
+.rubric { border: 1px solid var(--line-2); border-radius: var(--r-md); padding: var(--sp-4); margin: 0; min-width: 0; }
+.rubric[data-missing] { border-color: var(--risk-line); }
+.rubric-legend { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2) var(--sp-3); padding: 0 var(--sp-2); font-weight: 600; color: var(--tx0); }
+.rubric-critical { font-size: var(--fs-1); font-weight: 600; color: var(--tx2); }
+.rubric-state { font-size: var(--fs-1); font-weight: 400; color: var(--tx2); }
+.rubric-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--sp-2); margin-top: var(--sp-3); }
+.rubric-option { position: relative; display: grid; gap: var(--sp-1); padding: var(--sp-3); border: 1px solid var(--line-2); border-radius: var(--r-md); cursor: pointer; min-height: 44px; }
+.rubric-option:hover { border-color: var(--line-3); }
+.rubric-option[data-checked] { border-color: var(--g2); box-shadow: inset 0 0 0 1px var(--g2); }
+.rubric-option input { position: absolute; inset-block-start: var(--sp-3); inset-inline-end: var(--sp-3); width: 18px; height: 18px; accent-color: var(--g2); margin: 0; }
+.rubric-option input:focus-visible { outline: 2px solid var(--focus-ring, var(--g1)); outline-offset: 2px; }
+.rubric-level { font-size: var(--fs-1); font-weight: 600; color: var(--tx0); padding-inline-end: var(--sp-5); }
+.rubric-desc { font-size: var(--fs-1); line-height: var(--lh-1, 1.6); color: var(--tx1); }
+.pa-lesson { padding: var(--sp-4) var(--sp-5); background: var(--s-2); border: 1px solid var(--line); border-radius: var(--r-md); }
+.pa-list, .tp-list { margin: var(--sp-2) 0 0; padding-inline-start: var(--sp-5); display: grid; gap: var(--sp-2); }
+.pa-decide { padding-top: var(--sp-5); border-top: 1px solid var(--line); }
+
+/* ── Trainee profile and «مراجعاتي» ── */
+.tp-review { display: grid; gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); border: 1px solid var(--line-2); border-radius: var(--r-md); }
+.tp-review[data-open] { border-style: dashed; }
+.tp-chain { display: grid; grid-template-columns: max-content 1fr; gap: var(--sp-2) var(--sp-4); margin: 0; }
+@media (max-width: 480px) { .tp-chain { grid-template-columns: 1fr; gap: var(--sp-1); } .tp-chain dd { margin-bottom: var(--sp-2); } }
+.tp-comment { padding: var(--sp-3) var(--sp-4); background: var(--s-2); border-radius: var(--r-md); }
+.clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ── «المرجع» (JourneyView) ── */
+.ref-search { display: grid; gap: var(--sp-2); max-width: 520px; }
+.ref-search-field { position: relative; display: block; }
+.ref-search-field > svg { position: absolute; inset-inline-start: var(--sp-3); top: 50%; transform: translateY(-50%); color: var(--tx2); }
+.ref-search-field > input { padding-inline-start: calc(var(--sp-3) * 2 + 16px); }
+.ref-lesson { border: 1px solid var(--line-2); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); }
+.ref-lesson > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1); }
+.ref-journey { list-style: none; padding: 0; }
+.ref-stage { display: flex; gap: var(--sp-4); padding: var(--sp-4) var(--sp-5); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--s-1); }
+.ref-stage[data-mine] { border-color: rgba(var(--g2-rgb), .4); }
+.ref-stage-n { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--line-2); font-size: var(--fs-1); color: var(--tx2); }
+.ref-stage[data-mine] .ref-stage-n { background: var(--g2); border-color: var(--g2); color: var(--on-gold); }
+
+/* ── «مهاراتك» — overview → phase → skill ── */
+.sk-focus { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--sp-4); }
+.sk-panel { display: grid; gap: var(--sp-3); align-content: start; padding: var(--sp-4) var(--sp-5); border: 1px solid var(--line-2); border-radius: var(--r-md); }
+.sk-phase { border: 1px solid var(--line-2); border-radius: var(--r-md); }
+.sk-phase > summary { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); min-height: 48px; cursor: pointer; }
+.sk-list { list-style: none; margin: 0; padding: 0 var(--sp-4) var(--sp-3); display: grid; gap: var(--sp-1); }
+.sk-skill > summary { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); min-height: 44px; padding: var(--sp-2) 0; cursor: pointer; border-top: 1px solid var(--line); }
+.sk-steps { display: inline-flex; gap: 3px; }
+.sk-steps > span { width: 18px; height: 6px; border-radius: var(--r-full); background: var(--line-2); }
+.sk-steps > span[data-on] { background: var(--tx1); }
+.sk-level { min-width: 7.5em; }
+.sk-detail { display: grid; gap: var(--sp-2); padding: 0 0 var(--sp-3); }
+
+/* A person's name is one unit: a narrow column wraps the line under it,
+   never «Mariam» over «Atef». */
+.person-name { white-space: nowrap; }

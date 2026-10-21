@@ -6,8 +6,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
-  employeeReadiness, readinessFromOwnEvents, groupByEmployee, type TrainingEventLike,
-} from '../employee';
+  practicalPerformance as employeeReadiness, performanceFromOwnEvents as readinessFromOwnEvents, groupByEmployee, type TrainingEventLike,
+} from '../../performance';
 import { orgSummary } from '../organization';
 import { ALL_DIMENSIONS, type Scores } from '../../evaluation';
 
@@ -49,9 +49,9 @@ describe('P0-2 correctness — grouped derivation equals naive scan', () => {
     const sum = orgSummary(events, ids);
     expect(sum.activeTrainees).toBe(50);
     // every employee has exactly one evaluation → evaluated denominator = 50
-    expect(sum.avgReadiness).toBeGreaterThan(0);
-    expect(sum.certificationRate).toBeGreaterThanOrEqual(0);
-    expect(sum.certificationRate).toBeLessThanOrEqual(1);
+    expect(sum.avgPerformance).toBeGreaterThan(0);
+    expect(sum.certifiedRate).toBeGreaterThanOrEqual(0);
+    expect(sum.certifiedRate).toBeLessThanOrEqual(1);
   });
 });
 

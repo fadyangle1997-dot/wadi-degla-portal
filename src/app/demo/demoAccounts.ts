@@ -75,19 +75,34 @@ export function seedTraineeProgress(account: DemoAccount): void {
     const reached = () => overallProgress(progressOf(account.id)) >= (account.progress ?? 0) - 0.001;
 
     // Curriculum order until the target is reached; returns early by design.
+    // The waiting trainee ends on a whole unit, submitted and unapproved: the
+    // unit whose end lands nearest the target (a unit is its lessons plus its
+    // exam, the same steps learningProgress counts).
+    const waits = account.scenario === 'waiting_review';
+    const steps = MODULES.reduce((n, m) => n + m.lessons.length + 1, 0);
+    const waitOn = (() => {
+      let at = 0, best = MODULES[0]!.id, gap = Infinity;
+      for (const m of MODULES) {
+        at += m.lessons.length + 1;
+        const g = Math.abs(at / steps - (account.progress ?? 0));
+        if (g < gap) { gap = g; best = m.id; }
+      }
+      return best;
+    })();
+    const stop = () => !waits && reached();
     const learn = () => {
       for (const m of MODULES) {
         asTrainee();
         for (const l of m.lessons) {
-          if (reached()) return;
+          if (stop()) return;
           progressStore.completeLesson(l.id);
         }
-        if (reached()) return;
+        if (stop()) return;
         progressStore.recordExam(m.id, pass);
         trainingStore.submitForReview(account.id, m.id);
 
-        // The "waiting for trainer" scenario stops with the last unit unapproved.
-        if (account.scenario === 'waiting_review' && reached()) return;
+        // The "waiting for trainer" scenario stops with that unit unapproved.
+        if (waits && m.id === waitOn) return;
         asTrainer();
         approve(account.id, m.id);
         if (reached()) return;

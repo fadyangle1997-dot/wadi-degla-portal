@@ -2,8 +2,9 @@ import { test, expect, signIn, signOut } from './fixtures';
 
 /**
  * The readiness decision end to end: the trainer's five stations (seeded by
- * the demo scenario), the manager's interview recorded live, the engine's
- * verdict, the manager's final decision, and the trainee seeing the result.
+ * the demo scenario), the manager's interview recorded live, the stations'
+ * result, and the trainee seeing the same thing. The stations' result is not
+ * the decision: until the manager decides, every screen says it is awaited.
  */
 test('trainer stations + manager interview produce a readiness verdict the trainee sees', async ({ page }) => {
   await signIn(page, 'admin');
@@ -26,12 +27,16 @@ test('trainer stations + manager interview produce a readiness verdict the train
   await signIn(page, 'manager.nabil');
   await page.locator('main').getByRole('button', { name: /Menna Kamal/ }).first().click();
   const file = page.getByRole('dialog');
-  await expect(file).toContainText('مش جاهز لسه');
+  await expect(file).toContainText('جاري — 5 من 6 محطات');
   await file.getByRole('button', { name: 'قيّم' }).click();
+  // No level is pre-picked: each KPI is judged by the behaviour seen.
+  for (const kpi of await file.locator('fieldset.rubric').all()) await kpi.locator('label.rubric-option').nth(3).click();
   await file.getByLabel('الملاحظة — شفت إيه بالظبط؟').fill('شرحت ليه رفضت الحالة والخطر التشغيلي بوضوح.');
   await file.getByRole('button', { name: 'سجّل المحطة' }).click();
+  // Six of six: the stations' result is in, and the decision is still the manager's.
   await expect(file).toContainText('جاهز للعمل المستقل');
-  await expect(file).toContainText('6 من 6 محطات');
+  await expect(file).toContainText('مستني قرار المدير');
+  await expect(file).not.toContainText('من 6 محطات');
   await page.keyboard.press('Escape');
   await expect(file).toBeHidden();
   await signOut(page);
@@ -39,5 +44,7 @@ test('trainer stations + manager interview produce a readiness verdict the train
   // Trainee: the readiness screen reads the same evidence.
   await signIn(page, 'menna.k');
   await page.goto('/#/readiness');
-  await expect(page.getByText('جاهز للعمل المستقل').first()).toBeVisible();
+  const main = page.locator('main');
+  await expect(main).toContainText('جاهز للعمل المستقل');
+  await expect(main).toContainText('مستني قرار المدير');
 });

@@ -7,11 +7,11 @@ import type { EvaluationDecision } from '../../evaluation';
 import { describe, it, expect } from 'vitest';
 import { ALL_DIMENSIONS, type Scores } from '../../evaluation';
 import {
-  employeeReadiness, readinessConfidence, classifyHealth, type TrainingEventLike,
-} from '../employee';
+  practicalPerformance as employeeReadiness, performanceConfidence as readinessConfidence, classifyFollowUp, type TrainingEventLike,
+} from '../../performance';
 import {
   orgSummary, trainerAnalytics, mostDifficultModules, mostDifficultRules,
-  mostReopenedLessons, trainingEffectiveness, certificationTrend,
+  mostReopenedLessons, trainingEffectiveness, unitApprovalTrend as certificationTrend,
 } from '../organization';
 
 const s = (n: number): Scores => Object.fromEntries(ALL_DIMENSIONS.map(d => [d, n])) as Scores;
@@ -35,18 +35,18 @@ describe('readinessConfidence — same index, different trust', () => {
   });
 });
 
-describe('classifyHealth — domain-owned, coaching not punishing', () => {
-  it('ready when approved and strong', () => {
-    expect(classifyHealth({ readinessIndex: 88, extensions: 0, hasOpenImprovement: false, evaluations: 2 })).toBe('ready');
+describe('classifyFollowUp — domain-owned, coaching not punishing', () => {
+  it('strong — never «ready» — when the score is high', () => {
+    expect(classifyFollowUp({ score: 88, extensions: 0, hasOpenImprovement: false, evaluations: 2 })).toBe('strong');
   });
   it('immediate attention on repeated extensions', () => {
-    expect(classifyHealth({ readinessIndex: 70, extensions: 2, hasOpenImprovement: false, evaluations: 2 })).toBe('needs_immediate_attention');
+    expect(classifyFollowUp({ score: 70, extensions: 2, hasOpenImprovement: false, evaluations: 2 })).toBe('needs_immediate_attention');
   });
   it('attention on an open improvement', () => {
-    expect(classifyHealth({ readinessIndex: 72, extensions: 0, hasOpenImprovement: true, evaluations: 1 })).toBe('needs_attention');
+    expect(classifyFollowUp({ score: 72, extensions: 0, hasOpenImprovement: true, evaluations: 1 })).toBe('needs_attention');
   });
   it('on_track before any evaluation', () => {
-    expect(classifyHealth({ readinessIndex: 0, extensions: 0, hasOpenImprovement: false, evaluations: 0 })).toBe('on_track');
+    expect(classifyFollowUp({ score: 0, extensions: 0, hasOpenImprovement: false, evaluations: 0 })).toBe('on_track');
   });
 });
 
@@ -57,13 +57,13 @@ describe('employeeReadiness — derived from events', () => {
   ];
   it('uses the latest evaluation for the index and counts approvals', () => {
     const r = employeeReadiness(events, 'e1');
-    expect(r.readinessIndex).toBe(85);
+    expect(r.score).toBe(85);
     expect(r.approvedModules).toBe(2);
-    expect(r.health).toBe('ready');
+    expect(r.followUp).toBe('strong'); // a strong score is never «ready»
   });
   it('unknown employee → zeroed, on_track', () => {
     const r = employeeReadiness(events, 'ghost');
-    expect(r.readinessIndex).toBe(0);
+    expect(r.score).toBeNull();
     expect(r.evaluations).toBe(0);
   });
 });
@@ -78,7 +78,8 @@ describe('orgSummary — the executive overview', () => {
   it('counts health buckets, waiting, and rates', () => {
     const sum = orgSummary(events, ['e1', 'e2', 'e3']);
     expect(sum.activeTrainees).toBe(3);
-    expect(sum.ready).toBe(1);
+    expect(sum.strong).toBe(1);
+    expect(sum.certified).toBe(0); // no readiness assessment on the log
     expect(sum.waitingForTrainer).toBe(1);
     expect(sum.firstPassRate).toBe(0.5); // e1 approved first, e2 not
     expect(sum.extensionRate).toBeCloseTo(1 / 3, 5);

@@ -46,7 +46,7 @@ describe('UI smoke', () => {
   it('every lesson mounts LessonFlow without render-phase errors', () => {
     for (const m of MODULES) for (const l of m.lessons) {
       const { unmount } = render(
-        <LessonFlow lesson={l} unitCode={m.code} moduleId={m.id}
+        <LessonFlow lesson={l} unitLabel="الوحدة 1 من 9" moduleId={m.id}
           lessonIndex={m.lessons.indexOf(l)} lessonCount={m.lessons.length}
           nextStep={null} onComplete={() => {}} onExit={() => {}} />,
       );

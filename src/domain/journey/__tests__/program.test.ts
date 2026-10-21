@@ -45,7 +45,8 @@ describe('program shape matches the official 60-day guide', () => {
 describe('phase status is derived, never stored', () => {
   it('a phase with no built content reports planned — not available', () => {
     // Honesty rule: unbuilt phases must never look actionable.
-    const unbuilt = PROGRAM.find(p => p.moduleIds.length === 0)!;
+    // Every phase is built today, so the rule is held on a synthetic one.
+    const unbuilt = { ...PROGRAM[0]!, id: 'unbuilt', moduleIds: [] };
     expect(phaseStatus(unbuilt, ctx({ isModuleUnlocked: () => true }))).toBe('planned');
   });
 

@@ -9,7 +9,8 @@ import type { EvaluationDecision } from '../evaluation';
  * array reference so 100k events are traversed once, not per render.
  */
 import { readinessScore, type Scores } from '../evaluation';
-import { readinessFromOwnEvents, groupByEmployee, type HealthState, type TrainingEventLike } from './employee';
+import { performanceFromOwnEvents, groupByEmployee, type FollowUpState, type TrainingEventLike } from '../performance';
+import { isCertifiedOnLog } from '../readiness/status';
 
 export interface OrgEvent extends TrainingEventLike {
   readonly trainerId?: string;
@@ -23,20 +24,24 @@ export interface OrgEvent extends TrainingEventLike {
 /* ---------------- executive summary ---------------- */
 export interface OrgSummary {
   readonly activeTrainees: number;
-  readonly ready: number;
+  /** Follow-up buckets, from practical performance (domain/performance). */
+  readonly strong: number;
   readonly onTrack: number;
   readonly needsAttention: number;
   readonly needsImmediate: number;
   readonly waitingForTrainer: number;
-  readonly avgReadiness: number;
+  /** Mean practical-performance score of the evaluated — an indicator, not readiness. */
+  readonly avgPerformance: number;
   readonly avgConfidence: number;
-  readonly certificationRate: number;   // 0..1
+  /** Certified for independent work by the readiness assessment (both signatures). */
+  readonly certified: number;
+  readonly certifiedRate: number;       // 0..1
   readonly extensionRate: number;       // 0..1
-  readonly firstPassRate: number;       // 0..1 approved on first evaluation
+  readonly firstPassRate: number;       // 0..1 unit approved on its first evaluation
 }
 
-const HEALTH_KEYS: Record<HealthState, keyof Pick<OrgSummary, 'ready' | 'onTrack' | 'needsAttention' | 'needsImmediate'>> = {
-  ready: 'ready', on_track: 'onTrack', needs_attention: 'needsAttention', needs_immediate_attention: 'needsImmediate',
+const FOLLOW_KEYS: Record<FollowUpState, keyof Pick<OrgSummary, 'strong' | 'onTrack' | 'needsAttention' | 'needsImmediate'>> = {
+  strong: 'strong', on_track: 'onTrack', needs_attention: 'needsAttention', needs_immediate_attention: 'needsImmediate',
 };
 
 /** All employee ids that appear in the training log. */
@@ -48,17 +53,19 @@ export function orgSummary(events: readonly OrgEvent[], knownEmployeeIds?: reado
   // O(n): group the event log by employee ONCE, then derive each picture from
   // that employee's own slice in O(1) — never re-scanning the global log.
   const grouped = groupByEmployee(events);
-  const pictures = ids.map(id => readinessFromOwnEvents(id, grouped.get(id) ?? []));
+  const pictures = ids.map(id => performanceFromOwnEvents(id, grouped.get(id) ?? []));
 
-  const counts = { ready: 0, onTrack: 0, needsAttention: 0, needsImmediate: 0 };
-  let readinessSum = 0, confidenceSum = 0, evaluated = 0;
+  const counts = { strong: 0, onTrack: 0, needsAttention: 0, needsImmediate: 0 };
+  let scoreSum = 0, confidenceSum = 0, evaluated = 0;
   for (const pic of pictures) {
-    counts[HEALTH_KEYS[pic.health]]++;
-    if (pic.evaluations > 0) { readinessSum += pic.readinessIndex; confidenceSum += pic.confidence; evaluated++; }
+    counts[FOLLOW_KEYS[pic.followUp]]++;
+    if (pic.score !== null) { scoreSum += pic.score; confidenceSum += pic.confidence; evaluated++; }
   }
 
   const waitingForTrainer = countWaiting(events);
-  const certified = pictures.filter(p => p.health === 'ready').length;
+  // Certified means what the readiness assessment says, read off each
+  // trainee's own slice of the log — never a strong practical score.
+  const certified = ids.filter(id => isCertifiedOnLog(grouped.get(id) ?? [], id)).length;
   const extended = pictures.filter(p => p.extensions > 0).length;
 
   // first-pass: employees whose FIRST evaluation was «جاهز»
@@ -74,9 +81,10 @@ export function orgSummary(events: readonly OrgEvent[], knownEmployeeIds?: reado
     activeTrainees: ids.length,
     ...counts,
     waitingForTrainer,
-    avgReadiness: evaluated ? Math.round(readinessSum / evaluated) : 0,
+    avgPerformance: evaluated ? Math.round(scoreSum / evaluated) : 0,
     avgConfidence: evaluated ? Math.round(confidenceSum / evaluated) : 0,
-    certificationRate: ids.length ? certified / ids.length : 0,
+    certified,
+    certifiedRate: ids.length ? certified / ids.length : 0,
     extensionRate: ids.length ? extended / ids.length : 0,
     firstPassRate: firstEval.size ? firstPass / firstEval.size : 0,
   };
@@ -175,7 +183,7 @@ export function trainerAnalytics(events: readonly OrgEvent[]): readonly TrainerA
 export function trainingEffectiveness(summary: OrgSummary, events: readonly OrgEvent[]): number {
   const ruleCompliance = avgDimension(events, 'ruleCompliance') / 100;
   const parts = [
-    { v: summary.certificationRate, w: 0.30 },
+    { v: summary.certifiedRate, w: 0.30 },   // certified by the readiness assessment
     { v: summary.firstPassRate, w: 0.25 },
     { v: ruleCompliance, w: 0.25 },
     { v: 1 - summary.extensionRate, w: 0.20 },
@@ -191,7 +199,8 @@ export function avgDimension(events: readonly OrgEvent[], dim: keyof Scores): nu
 
 /* ---------------- certification trend (improving over time?) ---------------- */
 /** Approvals per calendar week — the trend that tells if things get better. */
-export function certificationTrend(events: readonly OrgEvent[]): readonly { week: number; approvals: number }[] {
+/** Unit approvals per week — the pace of trainer sign-offs (not certification). */
+export function unitApprovalTrend(events: readonly OrgEvent[]): readonly { week: number; approvals: number }[] {
   const WEEK = 7 * 86_400_000;
   const approvals = events.filter(e => e.type === 'EVALUATION_RECORDED' && e.decision === 'ready');
   if (approvals.length === 0) return [];

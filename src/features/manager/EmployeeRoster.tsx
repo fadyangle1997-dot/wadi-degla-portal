@@ -1,19 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import { useIdentity } from '../../app/identity/identityStore';
-import { readinessFromOwnEvents, groupByEmployee } from '../../app/analytics/dashboardStore';
-import { trainingStore, useTraining, reviewOf } from '../../app/training/trainingStore';
-import { currentPhase, type PhaseContext } from '../../domain/journey/program';
+import { performanceFromOwnEvents, groupByEmployee } from '../../app/analytics/dashboardStore';
+import { trainingStore, useTraining } from '../../app/training/trainingStore';
+import { progression } from '../../domain/journey/progression';
+import { progressOf } from '../../app/progress';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import type { HealthState } from '../../domain/analytics/employee';
-import { ArabicContent, DataTable, Status, Meter, Initials, type Column } from '../../ui/primitives';
-import { useLang, t as tr, type Key, type Lang } from '../../app/i18n';
-
-const HEALTH_META: Record<HealthState, { labelKey: Key; tone: 'ready' | 'info' | 'attn' | 'risk' }> = {
-  ready: { labelKey: 'mg.stready', tone: 'ready' },
-  on_track: { labelKey: 'mg.stontrack', tone: 'info' },
-  needs_attention: { labelKey: 'mg.stattention', tone: 'attn' },
-  needs_immediate_attention: { labelKey: 'mg.stimmediate', tone: 'risk' },
-};
+import type { FollowUpState } from '../../domain/performance';
+import { formalReadiness, type FormalReadinessStatus } from '../../domain/readiness/status';
+import { isProgramComplete } from '../../domain/journey/programCompletion';
+import { FormalStatus, FollowUpStatus, formalLabel, performanceText } from '../readiness/labels';
+import { rowTone, FOLLOW_UP } from '../../ui/statusSemantics';
+import { ArabicContent, DataTable, Meter, Initials, type Column } from '../../ui/primitives';
+import { useLang, t as tr, type Lang } from '../../app/i18n';
 
 /* ---------------- employee card grid ----------------
    Each card carries only what the manager needs to triage one employee:
@@ -62,7 +60,10 @@ export const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: st
         name: u?.name ?? id,
         trainer: u?.trainerId ? (userOf.get(u.trainerId)?.name ?? '—') : tr('mg.unassigned', lang),
         stage: currentStageLabel(t, id, lang),
-        r: readinessFromOwnEvents(id, own),
+        // Two concepts, two columns: the trainer's practical evaluations, and
+        // the readiness assessment — never one number standing for both.
+        r: performanceFromOwnEvents(id, own),
+        fr: formalReadiness(own, id, isProgramComplete(t, id)),
         lastAt: last?.at,
       };
     });
@@ -76,7 +77,7 @@ export const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: st
         <span className="row items-center gap-3">
           <Initials name={r.name} />
           <span className="stack" style={{ minWidth: 0 }}>
-            <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{r.name}</span>
+            <span className="t-sm c-tx0 person-name" style={{ fontWeight: 500 }}>{r.name}</span>
             {/* The stage comes from the curriculum, so it stays Arabic. */}
             <ArabicContent as="span" className="t-label c-tx3">{r.stage}</ArabicContent>
           </span>
@@ -84,19 +85,25 @@ export const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: st
       ),
     },
     {
-      id: 'readiness', header: tr('mg.readiness', lang), align: 'end', sortValue: r => r.r.readinessIndex,
+      id: 'performance', header: tr('perf.title', lang), align: 'end', sortValue: r => r.r.score ?? -1,
       cell: r => (
         <span className="row items-center gap-2 justify-end">
-          <Meter value={r.r.readinessIndex} tone={meterTone(r.r.health)} />
-          <span className="t-num c-tx0">{r.r.readinessIndex}%</span>
+          {/* A quantity, not a verdict: the meter is the progress accent; the
+              follow-up chip beside it carries the status. */}
+          {r.r.score !== null && <Meter value={r.r.score} />}
+          <span className="t-num c-tx0">{performanceText(r.r)}</span>
         </span>
       ),
     },
     {
-      id: 'status', header: tr('dt.status', lang), sortValue: r => rank(r.r.health),
-      cell: r => <Status tone={HEALTH_META[r.r.health].tone}>{tr(HEALTH_META[r.r.health].labelKey, lang)}</Status>,
+      id: 'status', header: tr('dt.status', lang), sortValue: r => rank(r.r.followUp),
+      cell: r => <FollowUpStatus s={r.r.followUp} lang={lang} />,
     },
-    { id: 'trainer', header: tr('mg.col.trainer', lang), sortValue: r => r.trainer, cell: r => <span className="t-sm">{r.trainer}</span> },
+    {
+      id: 'readiness', header: tr('mg.col.readiness', lang), sortValue: r => formalRank(r.fr.status),
+      cell: r => <FormalStatus f={r.fr} lang={lang} />,
+    },
+    { id: 'trainer', header: tr('mg.col.trainer', lang), sortValue: r => r.trainer, cell: r => <span className="t-sm person-name">{r.trainer}</span> },
     {
       id: 'last', header: tr('mg.col.last', lang), sortValue: r => r.lastAt ?? 0,
       cell: r => <span className="t-sm c-tx2">{r.lastAt ? relativeDay(r.lastAt, lang) : tr('mg.notstarted', lang)}</span>,
@@ -110,34 +117,29 @@ export const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: st
       rows={rows}
       rowKey={r => r.id}
       onOpen={r => onInspect(r.id)}
-      rowTone={r => r.r.health === 'needs_immediate_attention' ? 'risk' : r.r.health === 'needs_attention' ? 'attn' : undefined}
+      rowTone={r => rowTone(FOLLOW_UP[r.r.followUp])}
+      rowLabel={r => formalLabel(r.fr, lang)}
       initialSort={{ id: 'status', dir: 'desc' }}
       search={{ placeholder: tr('mg.search', lang), match: (r, q) => r.name.toLowerCase().includes(q) }}
       filters={[
-        { id: 'attention', label: tr('mg.f.attention', lang), test: r => r.r.health === 'needs_attention' || r.r.health === 'needs_immediate_attention' },
-        { id: 'ready', label: tr('mg.f.ready', lang), test: r => r.r.health === 'ready' },
+        { id: 'attention', label: tr('mg.f.attention', lang), test: r => r.r.followUp === 'needs_attention' || r.r.followUp === 'needs_immediate_attention' },
+        { id: 'certified', label: tr('mg.f.certified', lang), test: r => r.fr.status === 'certified' },
       ]}
       empty={<p className="t-sm c-tx3">{tr('mg.nostaff', lang)}</p>}
     />
   );
 };
 
-/** On track reads as gold progress; the other states keep their status hue. */
-const meterTone = (h: HealthState) =>
-  h === 'ready' ? 'ready' : h === 'needs_attention' ? 'attn' : h === 'needs_immediate_attention' ? 'risk' : 'gold';
+const rank = (h: FollowUpState) => ({ needs_immediate_attention: 3, needs_attention: 2, on_track: 1, strong: 0 }[h]);
 
-const rank = (h: HealthState) => ({ needs_immediate_attention: 3, needs_attention: 2, on_track: 1, ready: 0 }[h]);
+/** Whose move it is first: a decision waiting, then work under way, then done. */
+const formalRank = (s: FormalReadinessStatus) =>
+  ({ awaiting_decision: 5, in_progress: 4, extended: 3, not_ready: 2, certified: 1, not_open: 0 }[s]);
 
-/** The employee's current stage label — read from the same journey engine the
- *  roadmap uses. No new calculation; just the phase title, or a graduation note. */
+/** The employee's current stage label — the same position the trainee's own
+ *  dashboard shows (domain/journey/progression), or a graduation note. */
 const currentStageLabel = (t: ReturnType<typeof useTraining>, id: string, lang: Lang): string => {
-  const ctx: PhaseContext = {
-    isModuleApproved: mid => reviewOf(t, id, mid).status === 'ready',
-    isModuleWaiting: mid => reviewOf(t, id, mid).status === 'waiting',
-    isModuleStarted: () => false,
-    isModuleUnlocked: () => true,
-  };
-  const phase = currentPhase(ctx);
+  const { phase } = progression(progressOf(id), t, id);
   return phase ? phase.title : tr('mg.programdone', lang);
 };
 

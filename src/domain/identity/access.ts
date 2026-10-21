@@ -23,8 +23,11 @@ export const PLATFORM_ACCESS = {
   lesson: 'academy.learn',
   exam: 'academy.learn',
   boss: 'academy.learn',
+  reviews: 'academy.learn',
   // Staff platforms.
   trainer: 'training.review',
+  assess: 'training.review',
+  trainee: 'training.review',
   manager: 'reports.view',
   // The full readiness report opens from the manager's employee file; it was
   // missing here, so every visit was refused and redirected — a dead link.
@@ -58,6 +61,8 @@ const NAV_ORDER: readonly { readonly view: PlatformView; readonly label: string 
   { view: 'path', label: 'nav.academy' },
   { view: 'roadmap', label: 'nav.journey' },
   { view: 'skills', label: 'nav.skills' },
+  // One discoverable home for the operational rules and the file's journey.
+  { view: 'journey', label: 'nav.reference' },
   { view: 'trainer', label: 'nav.trainer' },
   { view: 'manager', label: 'nav.manager' },
   { view: 'admin', label: 'nav.admin' },

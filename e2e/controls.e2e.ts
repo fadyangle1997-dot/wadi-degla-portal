@@ -64,22 +64,41 @@ test('the employee file closes with its ×, back on the row that opened it', asy
   await expect(row).toBeFocused();
 });
 
-test('an evaluation can be cancelled, and a decision is said back before it is recorded', async ({ page }) => {
+test('a practical assessment starts unassessed, says a decision back, and asks before its picks are lost', async ({ page }) => {
   await loadDemo(page);
   await signIn(page, 'trainer.samir');
   await page.getByRole('button', { name: 'قيّم دلوقتي' }).first().click();
-  const panel = page.getByRole('region', { name: /تقييم عملي/ });
-  await expect(panel).toBeVisible();
-  await panel.getByRole('button', { name: 'إلغاء' }).click();
-  await expect(panel).toBeHidden();
+  await expect(page).toHaveURL(/#\/assess\//);
+  await expect(page.getByText('قيّمت 0 من 7')).toBeVisible();
 
-  await page.getByRole('button', { name: 'قيّم دلوقتي' }).first().click();
-  await panel.getByRole('button', { name: 'تمديد — أيام إضافية' }).click();
+  // Nothing picked: a decision cannot be asked for, and every KPI says why.
+  // aria-disabled, not disabled: it stays reachable and, pressed, says why.
+  const extend = page.getByRole('button', { name: 'تمديد — أيام إضافية' });
+  await expect(extend).toHaveAttribute('aria-disabled', 'true');
+  await extend.click({ force: true });
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByText('اختار مستوى للمؤشر ده قبل القرار.')).toHaveCount(7);
+
+  // Seven levels picked, the decision is said back before it is recorded.
+  for (const group of await page.locator('fieldset.rubric').all()) await group.locator('label.rubric-option').nth(1).click();
+  await expect(page.getByText('قيّمت 7 من 7')).toBeVisible();
+  await expect(extend).not.toHaveAttribute('aria-disabled', 'true');
+  await extend.click();
   const confirm = page.getByRole('dialog', { name: /تأكيد القرار/ });
   await expect(confirm).toBeVisible();
   await confirm.getByRole('button', { name: 'إلغاء' }).click();
   await expect(confirm).toBeHidden();
-  await expect(panel).toBeVisible(); // nothing recorded, still deciding
+  await expect(page).toHaveURL(/#\/assess\//); // nothing recorded, still deciding
+
+  // Leaving with picks made asks first; staying keeps them.
+  await page.getByRole('button', { name: 'ارجع للوحة المدرب' }).click();
+  const ask = page.getByRole('dialog', { name: /تسيب تقييم/ });
+  await expect(ask).toBeVisible();
+  await ask.getByRole('button', { name: 'كمّل التقييم' }).click();
+  await expect(page.getByText('قيّمت 7 من 7')).toBeVisible();
+  await page.getByRole('button', { name: 'ارجع للوحة المدرب' }).click();
+  await page.getByRole('dialog', { name: /تسيب تقييم/ }).getByRole('button', { name: 'سيب التقييم' }).click();
+  await expect(page).toHaveURL(/#\/trainer/);
 });
 
 test('unsaved work asks before it is lost — from Back and from the browser', async ({ page }) => {
@@ -173,7 +192,12 @@ test('a decision without its reason asks for the reason, next to the box', async
   await signIn(page, 'manager.nabil');
   await page.locator('main').getByRole('button', { name: /Menna Kamal/ }).first().click();
   const file = page.getByRole('dialog');
-  await file.getByRole('button', { name: 'جاهز للعمل' }).click();
+  // Five of six stations: «جاهز للعمل» stays reachable but closed, and says why.
+  const ready = file.getByRole('button', { name: 'جاهز للعمل' });
+  await expect(ready).toHaveAttribute('aria-disabled', 'true');
+  await expect(file.getByText(/بيتفتح لما نتيجة المحطات تبقى «جاهز»/)).toBeVisible();
+  // A decision it can take still needs its reason first, next to the box.
+  await file.getByRole('button', { name: 'تمديد', exact: true }).click();
   await expect(file.getByText(/اكتب سبب القرار الأول/)).toBeVisible();
   await expect(file.getByLabel('مبرر قرار الجاهزية')).toBeFocused();
 });

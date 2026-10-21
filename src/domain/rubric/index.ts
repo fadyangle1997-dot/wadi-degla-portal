@@ -109,3 +109,29 @@ export function levelOf(score: number): RubricLevel {
 export function needsCalibration(a: RubricLevel, b: RubricLevel): boolean {
   return Math.abs(a - b) > 1;
 }
+
+/* ---------------- assessing with levels ---------------- */
+
+/**
+ * A trainer's picks so far. A KPI with no pick is NOT ASSESSED — never a
+ * default. The old forms opened every slider at 80 (stations at 70, exactly
+ * the critical floor) and could be submitted untouched, recording a judgement
+ * nobody made.
+ */
+export type LevelPicks = Readonly<Partial<Record<EvaluationDimension, RubricLevel>>>;
+
+/** The KPIs still without a level, in the order given. */
+export function unassessed(picks: LevelPicks, dims: readonly EvaluationDimension[]): readonly EvaluationDimension[] {
+  return dims.filter(d => picks[d] === undefined);
+}
+
+/**
+ * The engine's numbers from complete picks, or null while any KPI is
+ * unassessed — so an incomplete assessment cannot become a score at all.
+ */
+export function scoresFromLevels<D extends EvaluationDimension>(
+  picks: LevelPicks, dims: readonly D[],
+): Readonly<Record<D, number>> | null {
+  if (unassessed(picks, dims).length > 0) return null;
+  return Object.fromEntries(dims.map(d => [d, scoreOf(picks[d]!)])) as Record<D, number>;
+}

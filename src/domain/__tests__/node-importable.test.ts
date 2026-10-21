@@ -25,7 +25,13 @@ describe('src/domain runs in plain Node', () => {
 
   it('imports the readiness engine', async () => {
     const m = await import('../readiness/report');
-    expect(typeof m.operationalReadinessReport).toBe('function');
+    const status = await import('../readiness/status');
+    const perf = await import('../performance');
+    const prog = await import('../journey/progression');
+    expect(typeof m.readinessReport).toBe('function');
+    expect(typeof status.formalReadiness).toBe('function');
+    expect(typeof perf.practicalPerformance).toBe('function');
+    expect(typeof prog.progression).toBe('function');
   });
 
   it('imports the journey engine', async () => {

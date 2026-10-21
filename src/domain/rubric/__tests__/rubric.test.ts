@@ -68,3 +68,24 @@ describe('calibration — a floor must measure the trainee, not the assessor', (
     expect(needsCalibration(4, 2)).toBe(true);
   });
 });
+
+describe('assessing with levels — nothing is assessed until a trainer picks', () => {
+  it('an untouched assessment has every KPI unassessed and no score', async () => {
+    const { unassessed, scoresFromLevels } = await import('../index');
+    expect(unassessed({}, ALL_DIMENSIONS)).toEqual(ALL_DIMENSIONS);
+    expect(scoresFromLevels({}, ALL_DIMENSIONS)).toBeNull();
+  });
+
+  it('one KPI missing still blocks the score', async () => {
+    const { scoresFromLevels } = await import('../index');
+    const picks = Object.fromEntries(ALL_DIMENSIONS.slice(1).map(d => [d, 3]));
+    expect(scoresFromLevels(picks, ALL_DIMENSIONS)).toBeNull();
+  });
+
+  it('complete picks become the engine numbers through the rubric, not a guess', async () => {
+    const { scoresFromLevels } = await import('../index');
+    const picks = Object.fromEntries(ALL_DIMENSIONS.map(d => [d, 3]));
+    const scores = scoresFromLevels(picks, ALL_DIMENSIONS)!;
+    for (const d of ALL_DIMENSIONS) expect(scores[d]).toBe(LEVEL_SCORE[3]);
+  });
+});

@@ -12,16 +12,18 @@ import { STATIONS, type Station } from '../../domain/readiness';
 import { latestConduct, stationAssessmentProblem } from '../../domain/readiness/evidence';
 import { readinessStanding } from '../../domain/readiness/track';
 import {
-  EVALUATION_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS,
-  type EvaluationDimension, type EvaluationDecision, type ConductObservations,
+  CONDUCT_CHECKS, ALL_CONDUCT_CHECKS,
+  type EvaluationDimension, type ConductObservations,
 } from '../../domain/evaluation';
 import { Button, ArabicContent, Status, useExitFlow } from '../../ui/primitives';
 import { ReadinessTrack } from './ReadinessTrack';
+import { RubricPick } from '../trainer/RubricPick';
+import { levelOf, scoresFromLevels, type LevelPicks } from '../../domain/rubric';
+import { CRITICAL_DIMENSIONS } from '../../domain/readiness';
+import { FormalStatus } from './labels';
+import { tone, ENGINE_DECISION } from '../../ui/statusSemantics';
 import { useLang, t as tr, tf, type Key } from '../../app/i18n';
 
-const DECISION_TONE: Record<EvaluationDecision, 'ready' | 'attn' | 'risk' | 'info'> = {
-  ready: 'ready', extend: 'attn', not_ready: 'risk', escalate: 'info',
-};
 
 /** Staff only see readiness for trainees who finished the programme. */
 const useStanding = (employeeId: string) => {
@@ -30,17 +32,26 @@ const useStanding = (employeeId: string) => {
   return useMemo(() => readinessStanding(training, events, employeeId, true), [training, events, employeeId]);
 };
 
-/** The engine's verdict for one trainee, with the reasons behind it. */
+/**
+ * Where one trainee's readiness assessment stands, with the reasons behind it.
+ * While stations are missing it says so (the formal status); the engine's
+ * verdict is named only once there is evidence for it to be a verdict on.
+ */
 export const ReadinessOutcomeSummary: React.FC<{ employeeId: string }> = ({ employeeId }) => {
   const lang = useLang();
-  const { outcome } = useStanding(employeeId);
+  const { outcome, formal } = useStanding(employeeId);
   const done = STATIONS.length - outcome.stationsMissing.length;
   return (
     <div className="stack gap-2">
       <div className="row items-center gap-4 wrap">
-        <span className="t-label">{tr('rd.outcome', lang)}</span>
-        <Status tone={DECISION_TONE[outcome.decision]}>{tr(`rd.dec.${outcome.decision}` as Key, lang)}</Status>
-        <span className="t-sm t-num c-tx2">{tf('rd.progress', { n: done, total: STATIONS.length }, lang)}</span>
+        <span className="t-label">{tr('fr.title', lang)}</span>
+        <FormalStatus f={formal} lang={lang} />
+        {done === STATIONS.length && (
+          <>
+            <span className="t-label">{tr('rd.outcome', lang)}</span>
+            <Status tone={tone(ENGINE_DECISION[outcome.decision])}>{tr(`rd.dec.${outcome.decision}` as Key, lang)}</Status>
+          </>
+        )}
       </div>
       {outcome.reasons.map(r => (
         <ArabicContent key={r} as="div" className="t-sm c-tx2">{r}</ArabicContent>
@@ -97,6 +108,14 @@ export const StationAssessment: React.FC<{
   );
 };
 
+/**
+ * One station, assessed by behaviour on the KPIs it measures. Every KPI starts
+ * «لسه ما اتقيّمش» — the old sliders opened at 70, exactly the critical floor,
+ * and could be saved untouched. A re-assessment starts from the levels the
+ * last observation's scores correspond to (levelOf), so updating is not
+ * re-typing. Nothing saves until every KPI has a level and the observation
+ * that justifies it is written.
+ */
 const StationForm: React.FC<{
   station: Station;
   initial?: Readonly<Partial<Record<EvaluationDimension, number>>>;
@@ -104,19 +123,22 @@ const StationForm: React.FC<{
   onSave: (scores: Partial<Record<EvaluationDimension, number>>, observation: string) => void;
 }> = ({ station, initial, initialObservation, onSave }) => {
   const lang = useLang();
-  const [scores, setScores] = useState<Partial<Record<EvaluationDimension, number>>>(
-    () => Object.fromEntries(station.measures.map(d => [d, initial?.[d] ?? 70])));
+  const startPicks = useMemo<LevelPicks>(
+    () => Object.fromEntries(station.measures.flatMap(d => typeof initial?.[d] === 'number' ? [[d, levelOf(initial[d])]] : [])),
+    [station, initial]);
+  const [picks, setPicks] = useState<LevelPicks>(startPicks);
   const [observation, setObservation] = useState(initialObservation);
-  // Scores moved or an observation typed is evidence: leaving it — the file's
+  // Levels moved or an observation typed is evidence: leaving it — the file's
   // ×, Escape, Back, another screen — asks first and says what goes.
   const dirty = observation.trim() !== initialObservation.trim()
-    || station.measures.some(d => (scores[d] ?? 70) !== (initial?.[d] ?? 70));
+    || station.measures.some(d => picks[d] !== startPicks[d]);
   const { dialog } = useExitFlow(dirty, {
     title: tf('rd.leaveask', { station: station.title }, lang),
     body: tr('rd.leavebody', lang),
     leaveLabel: tr('rd.leavego', lang),
     stayLabel: tr('rd.leavestay', lang),
   });
+  const scores = scoresFromLevels(picks, station.measures) ?? {};
   const problem = stationAssessmentProblem(station, scores, observation);
   const obsId = `obs-${station.id}`;
   const [tried, setTried] = useState(false);
@@ -125,19 +147,11 @@ const StationForm: React.FC<{
   return (
     <div className="station-form stack gap-3">
       <ArabicContent as="div" className="t-sm measure c-tx2">{station.situation}</ArabicContent>
-      <div className="gap-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))' }}>
-        {station.measures.map(d => (
-          <label key={d} className="stack gap-1">
-            <ArabicContent as="span" className="t-sm">{EVALUATION_DIMENSIONS[d]}</ArabicContent>
-            <span className="row items-center gap-3">
-              <input type="range" min={0} max={100} value={scores[d] ?? 70} aria-label={EVALUATION_DIMENSIONS[d]}
-                onChange={e => setScores(s => ({ ...s, [d]: Number(e.target.value) }))}
-                className="grow" style={{ accentColor: 'var(--g2)', minHeight: 44 }} />
-              <span className="t-num t-sm" style={{ width: 'var(--sp-5)', textAlign: 'end' }}>{scores[d]}</span>
-            </span>
-          </label>
-        ))}
-      </div>
+      {station.measures.map(d => (
+        <RubricPick key={d} idPrefix={`st-${station.id}`} dimension={d} value={picks[d]} lang={lang}
+          critical={CRITICAL_DIMENSIONS.includes(d)} missing={tried && picks[d] === undefined}
+          onChange={level => setPicks(p => ({ ...p, [d]: level }))} />
+      ))}
       <label htmlFor={obsId} className="form-label">{tr('rd.observation', lang)}</label>
       <textarea id={obsId} className="field w-full" rows={2} dir="auto" value={observation} onChange={e => setObservation(e.target.value)}
         aria-invalid={showObs || undefined} aria-describedby={showObs ? `${obsId}-err` : undefined} aria-required
@@ -145,7 +159,13 @@ const StationForm: React.FC<{
       {showObs && <p id={`${obsId}-err`} className="form-error">{tr('rd.err.obs', lang)}</p>}
       <div>
         <Button onClick={() => {
-          if (problem !== null) { setTried(true); document.getElementById(obsId)?.focus(); return; }
+          if (problem !== null) {
+            setTried(true);
+            const first = station.measures.find(d => picks[d] === undefined);
+            if (first) document.getElementById(`st-${station.id}-${first}`)?.querySelector<HTMLInputElement>('input')?.focus();
+            else document.getElementById(obsId)?.focus();
+            return;
+          }
           onSave(scores, observation);
         }}>
           <ClipboardCheck size={16} /> {tr('rd.save', lang)}

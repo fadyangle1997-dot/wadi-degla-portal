@@ -13,7 +13,9 @@ import { Check, Clock, Lock, PlayCircle, CircleDot, Flag, Swords, Trophy } from 
 import { JourneyMap } from './JourneyMap';
 import { MissionBrief } from './MissionBrief';
 import { MODULES } from '../../content/registry';
-import { PROGRAM, PROGRAM_DAYS, phaseStatus, currentPhase, dayPosition, type JourneyPhase, type PhaseStatus, type PhaseContext } from '../../domain/journey/program';
+import { PROGRAM, PROGRAM_DAYS, phaseStatus, unitPlace, type JourneyPhase, type PhaseStatus, type PhaseContext } from '../../domain/journey/program';
+import { progression } from '../../domain/journey/progression';
+import { tone, PHASE } from '../../ui/statusSemantics';
 import { useProgress, moduleLessonsDone, learningProgress, approvalProgress } from '../../app/progress';
 import { useTraining, traineeIdOrNull } from '../../app/training/trainingStore';
 import { identityStore } from '../../app/identity/identityStore';
@@ -22,20 +24,20 @@ import { moduleById, bossBattlesAfter } from '../../content/registry';
 import { Eyebrow, StatusBadge, Button, Card, DayRing, ArabicContent, Num, Crumbs, CloseButton, useModal } from '../../ui/primitives';
 import { phaseContextFor, useTodaysMission } from '../../app/journeyContext';
 import { useOverlayParam } from '../../app/overlayHistory';
-import { useLang, t as tr, type Key } from '../../app/i18n';
+import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 // DayRing now lives in shared primitives (see import below).
 
 // Module-level, so it holds translation KEYS; the label is resolved inside
 // the component, where `lang` exists.
-const STATUS_META: Record<PhaseStatus, { labelKey: Key; tone: 'ready' | 'attn' | 'gold' | 'neutral'; color: string; icon: React.ReactNode }> = {
-  completed:       { labelKey: 'ps.completed',            tone: 'ready',   color: 'var(--ready)', icon: <Check size={13} /> },
-  waiting_trainer: { labelKey: 'ps.waiting',   tone: 'attn',    color: 'var(--attn)',  icon: <Clock size={13} /> },  // label overridden per-trainee via waitingForTrainer()
-  in_progress:     { labelKey: 'ps.inprogress', tone: 'gold',    color: 'var(--g2)',    icon: <CircleDot size={13} /> },
-  available:       { labelKey: 'ps.available',        tone: 'gold',    color: 'var(--g2)',    icon: <PlayCircle size={13} /> },
-  locked:          { labelKey: 'ps.locked',            tone: 'neutral', color: 'var(--line-3)', icon: <Lock size={13} /> },
-  planned:         { labelKey: 'ps.planned',       tone: 'neutral', color: 'var(--line-3)', icon: <Flag size={13} /> },
+const STATUS_META: Record<PhaseStatus, { labelKey: Key; color: string; icon: React.ReactNode }> = {
+  completed:       { labelKey: 'ps.completed',            color: 'var(--ready)', icon: <Check size={13} /> },
+  waiting_trainer: { labelKey: 'ps.waiting',   color: 'var(--attn)',  icon: <Clock size={13} /> },  // label overridden per-trainee via waitingForTrainer()
+  in_progress:     { labelKey: 'ps.inprogress', color: 'var(--g2)',    icon: <CircleDot size={13} /> },
+  available:       { labelKey: 'ps.available',        color: 'var(--g2)',    icon: <PlayCircle size={13} /> },
+  locked:          { labelKey: 'ps.locked',            color: 'var(--line-3)', icon: <Lock size={13} /> },
+  planned:         { labelKey: 'ps.planned',       color: 'var(--line-3)', icon: <Flag size={13} /> },
 };
 
 export const TrainingJourney: React.FC<{
@@ -60,15 +62,16 @@ export const TrainingJourney: React.FC<{
   // The context bridges stores → pure domain. All derivation lives in the domain.
 
   const ctx = phaseContextFor(p, t, traineeIdOrNull() ?? '');
-
-  const current = currentPhase(ctx);
+  // Position comes from the one calculation the dashboard reads.
+  const position = progression(p, t, traineeIdOrNull() ?? '');
+  const current = position.phase;
   // The trainee's assigned trainer — named in the waiting state (same as PathView).
   const trainerName = identityStore.userById(identityStore.currentUser()?.trainerId)?.name;
-  const { day, remaining } = dayPosition(ctx);
+  const { day, remaining } = position;
   // Derived from the SAME phaseStatus the rail renders — one source of truth
   // for "is this phase behind me", so the ledger can never disagree with the
   // route it sits next to.
-  const donePhases = PROGRAM.filter(ph => phaseStatus(ph, ctx) === 'completed').length;
+  const donePhases = position.phasesDone;
   // A phase counts as done only when every unit in it is approved, which takes
   // weeks. Lessons finished inside the current phase show the movement that is
   // also true, so a trainee who has started does not read «0 of 6» as nothing.
@@ -252,7 +255,7 @@ const PhaseSheet: React.FC<{
             <h2 id="phase-sheet-title" ref={titleRef} tabIndex={-1} className="t-h3" style={{ margin: 'var(--sp-2) 0' }}>
               <ArabicContent as="span">{phase.title}</ArabicContent>
             </h2>
-            <StatusBadge tone={meta.tone} icon={meta.icon}>{label}</StatusBadge>
+            <StatusBadge tone={tone(PHASE[status])} icon={meta.icon}>{label}</StatusBadge>
           </div>
           <CloseButton onClick={onClose} />
         </div>
@@ -267,6 +270,7 @@ const PhaseSheet: React.FC<{
         {phase.moduleIds.length > 0 && (
           <div className="stack mt-4 gap-2">
             {phase.moduleIds.map(id => {
+              const place = unitPlace(id);
               const m = moduleById(id);
               if (!m) return null;
               const approved = ctx.isModuleApproved(id);
@@ -277,7 +281,7 @@ const PhaseSheet: React.FC<{
                     so the module name reads as a sentence on a 390px phone. */}
                 <div className="stack gap-2">
                   <div className="row items-baseline gap-2">
-                    <span className="t-label c-tx2 no-shrink">{m.code}</span>
+                    {place && <span className="t-label c-tx2 no-shrink">{tf('jr.unitn', { n: iso(place.n) }, lang)}</span>}
                     <span className="t-sm grow" style={{ minWidth: 0 }}>{m.title}</span>
                   </div>
                   <div className="row items-center gap-3">

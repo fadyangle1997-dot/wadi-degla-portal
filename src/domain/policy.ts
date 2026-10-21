@@ -46,7 +46,7 @@ export const READINESS_WEIGHTS = {
 
 /** Health classification thresholds (0..100 readiness) — policy-driven. */
 export const HEALTH_POLICY = {
-  readyMin: 80,          // approved + strong readiness
+  strongMin: 80,         // strong practical performance (never "ready": see domain/performance)
   onTrackMin: 65,        // progressing healthily
   attentionMin: 50,      // needs attention below this band
   riskExtensions: 2,     // this many extensions → immediate attention

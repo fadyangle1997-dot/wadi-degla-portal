@@ -23,6 +23,9 @@ const JourneyView = lazy(() => import('../features/journey/JourneyView').then(m 
 const TrainingJourney = lazy(() => import('../features/journey/TrainingJourney').then(m => ({ default: m.TrainingJourney })));
 const SkillsView = lazy(() => import('../features/skills/SkillsView').then(m => ({ default: m.SkillsView })));
 const DecisionReview = lazy(() => import('../features/review/DecisionReview').then(m => ({ default: m.DecisionReview })));
+const PracticalAssessment = lazy(() => import('../features/trainer/PracticalAssessment').then(m => ({ default: m.PracticalAssessment })));
+const TraineeProfile = lazy(() => import('../features/trainer/TraineeProfile').then(m => ({ default: m.TraineeProfile })));
+const MyReviews = lazy(() => import('../features/review/MyReviews').then(m => ({ default: m.MyReviews })));
 const ReadinessResult = lazy(() => import('../features/readiness/ReadinessResult').then(m => ({ default: m.ReadinessResult })));
 const LessonFlow = lazy(() => import('../features/lesson/LessonFlow').then(m => ({ default: m.LessonFlow })));
 const ExamView = lazy(() => import('../features/exam/ExamView').then(m => ({ default: m.ExamView })));
@@ -31,6 +34,7 @@ import { readinessStanding } from '../domain/readiness/track';
 import { EmptyState, Button, Eyebrow, ScreenHeader, ArabicContent, LoadingState } from '../ui/primitives';
 import { RouteBoundary } from './RouteBoundary';
 import { moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
+import { unitPlace } from '../domain/journey/program';
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
 import { leaveGuard } from './leaveGuard';
@@ -250,7 +254,7 @@ export const App: React.FC = () => {
     <AppShell active={view.kind} onNavigate={k => setView({ kind: k } as View)}>{node}</AppShell>
   );
 
-  if (view.kind === 'journey') return inShell(<Lazy><ArabicContent><JourneyView onExit={toPath} /></ArabicContent></Lazy>);
+  if (view.kind === 'journey') return inShell(<Lazy><JourneyView onExit={toPath} /></Lazy>);
   if (view.kind === 'roadmap') return inShell(
     <Lazy><TrainingJourney
       onOpenLesson={openLesson}
@@ -268,7 +272,7 @@ export const App: React.FC = () => {
     const first = moduleById('m1') ?? moduleById('m2_1');
     const lesson = first?.lessons[0];
     if (first && lesson) openLesson(first.id, lesson.id); else toPath();
-  }} /></Lazy>);
+  }} onOpenLesson={openLesson} /></Lazy>);
 
   // The daily debrief — one question at a time, immersive so nothing competes
   // with the thinking. Reachable from the journey once independent work begins.
@@ -291,6 +295,11 @@ export const App: React.FC = () => {
   if (view.kind === 'trainer') return inShell(<Lazy><TrainerView onExit={toPath} /></Lazy>);
   if (view.kind === 'manager') return inShell(<Lazy><ManagerView onExit={toPath} /></Lazy>);
   if (view.kind === 'readiness_report') return inShell(<Lazy><ReadinessReportView employeeId={view.employeeId} onExit={() => setView({ kind: 'manager' })} /></Lazy>);
+  // The trainer's focused assessment: its own screen, no shell competing with it.
+  if (view.kind === 'assess') return <Lazy><PracticalAssessment employeeId={view.employeeId} moduleId={view.moduleId} onExit={() => setView({ kind: 'trainer' })} /></Lazy>;
+  if (view.kind === 'trainee') return inShell(<Lazy><TraineeProfile employeeId={view.employeeId} onExit={() => setView({ kind: 'trainer' })} /></Lazy>);
+  // Where the trainer's comments on the daily reviews come back.
+  if (view.kind === 'reviews') return inShell(<Lazy><MyReviews onExit={toPath} /></Lazy>);
 
   if (view.kind === 'lesson') {
     const m = moduleById(view.moduleId);
@@ -309,7 +318,7 @@ export const App: React.FC = () => {
       <Lazy><ArabicContent>
       <LessonFlow
         lesson={lesson}
-        unitCode={m.code}
+        unitLabel={(() => { const u = unitPlace(m.id); return u ? `الوحدة ${u.n} من ${u.total}` : ''; })()}
         moduleId={m.id}
         lessonIndex={li}
         lessonCount={m.lessons.length}

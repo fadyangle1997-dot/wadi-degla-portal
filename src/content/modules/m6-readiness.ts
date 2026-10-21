@@ -39,7 +39,7 @@ import { TRAINING_POLICY } from '../../domain/policy';
 
 export const moduleReadiness: Module = {
   id: 'm6',
-  order: 6,
+  order: 9,
   code: 'M6',
   title: 'تقييم الجاهزية المهنية',
   bigQuestion: 'أقدر أمثّل وادي دجلة لوحدي بكرة الصبح؟',

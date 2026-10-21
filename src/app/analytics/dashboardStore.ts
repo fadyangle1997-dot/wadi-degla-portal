@@ -12,9 +12,9 @@ import type { OrgEvent } from '../../domain/analytics/organization';
 import {
   orgSummary, trainerAnalytics, mostDifficultModules, mostDifficultRules,
   mostReopenedLessons, mostFrequentWeakSkills, mostCommonExtensionReasons,
-  trainingEffectiveness, certificationTrend,
+  trainingEffectiveness, unitApprovalTrend,
 } from '../../domain/analytics/organization';
-import { employeeReadiness, readinessFromOwnEvents, groupByEmployee } from '../../domain/analytics/employee';
+import { practicalPerformance, performanceFromOwnEvents, groupByEmployee } from '../../domain/performance';
 import { orgStore } from '../organization/orgStore';
 
 export interface DashboardModel {
@@ -26,7 +26,7 @@ export interface DashboardModel {
   readonly reopenedLessons: ReturnType<typeof mostReopenedLessons>;
   readonly weakSkills: ReturnType<typeof mostFrequentWeakSkills>;
   readonly extensionReasons: ReturnType<typeof mostCommonExtensionReasons>;
-  readonly trend: ReturnType<typeof certificationTrend>;
+  readonly trend: ReturnType<typeof unitApprovalTrend>;
   readonly employeeIds: readonly string[];
 }
 
@@ -67,10 +67,10 @@ export const useDashboard = (): DashboardModel => {
       reopenedLessons: mostReopenedLessons(events_),
       weakSkills: mostFrequentWeakSkills(events_),
       extensionReasons: mostCommonExtensionReasons(events_),
-      trend: certificationTrend(events_),
+      trend: unitApprovalTrend(events_),
       employeeIds,
     };
   }, [events, employeeIds]);
 };
 
-export { employeeReadiness, readinessFromOwnEvents, groupByEmployee };
+export { practicalPerformance, performanceFromOwnEvents, groupByEmployee };

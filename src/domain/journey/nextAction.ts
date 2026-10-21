@@ -12,9 +12,7 @@ import type { Progress } from '../../app/backend';
 import type { TrainingState } from '../../app/training/trainingStore';
 import { reviewOf } from '../training/selectors';
 import { MODULES } from '../../content/registry';
-import {
-  isModuleUnlocked, isModuleComplete, isLessonDone, examPassed,
-} from '../progress/selectors';
+import { isModuleUnlocked, isLessonDone, examPassed } from '../progress/selectors';
 import type { Module } from '../types/content';
 
 export type NextActionKind =
@@ -37,49 +35,51 @@ export interface NextAction {
 
 export interface HomeContext {
   readonly action: NextAction;
-  readonly currentModule: Module | null;  // the module in play (or first locked)
+  readonly currentModule: Module | null;  // the unit the next step is about (or the last)
   readonly nextModule: Module | null;      // the one after the current, for preview
 }
 
-/** The trainee's single next step, walking modules in program order. */
+/**
+ * The trainee's single next step, walking modules in programme order.
+ *
+ * A trainer rejection anywhere comes first — feedback that needs the trainee.
+ * Otherwise the walk stops at the first open unit with anything to say: a
+ * lesson to resume, an exam to take, a submission that never landed, or a wait
+ * on the trainer. The guidance is one unit at a time, in the programme's
+ * order, even where the unlock rules would let a sibling unit open early (the
+ * roadmap still lets a trainee open it); that rule is the programme's, and the
+ * unit in play below always follows it.
+ */
 export function nextAction(p: Progress, t: TrainingState, traineeId: string): NextAction {
-  // Highest priority: a trainer rejection anywhere. Feedback that requires the
-  // trainee to act comes before resuming or waiting — they need to see it first.
-  for (const m of MODULES) {
-    if (!isModuleUnlocked(p, m.id, t, traineeId)) continue;
-    const rs = reviewOf(t, traineeId, m.id).status;
-    if (rs === 'not_ready' || rs === 'extend') return { kind: 'rejected_review', module: m };
-  }
+  const open = MODULES.filter(m => isModuleUnlocked(p, m.id, t, traineeId));
+  const status = (m: Module) => reviewOf(t, traineeId, m.id).status;
 
-  for (const m of MODULES) {
-    if (!isModuleUnlocked(p, m.id, t, traineeId)) continue;
+  const rejected = open.find(m => status(m) === 'not_ready' || status(m) === 'extend');
+  if (rejected) return { kind: 'rejected_review', module: rejected };
 
-    // an unfinished lesson in this unlocked module → resume it
+  for (const m of open) {
     const nextLesson = m.lessons.find(l => !isLessonDone(p, l.id));
     if (nextLesson) return { kind: 'resume_lesson', module: m, lessonId: nextLesson.id };
-
-    // all lessons done but exam not passed → take the exam
     if (!examPassed(p, m.id)) return { kind: 'take_exam', module: m };
-
-    // exam passed, waiting on the trainer → surface the wait
-    const status = reviewOf(t, traineeId, m.id).status;
-    if (status === 'waiting') return { kind: 'waiting_review', module: m };
+    if (status(m) === 'waiting') return { kind: 'waiting_review', module: m };
     // An unsubmitted unit ('none') gets its own action, resubmitting, rather than
     // falling through to 'all_done' while nothing reached the trainer.
-    if (status === 'none') return { kind: 'needs_submission', module: m };
-    // otherwise ('ready'): this module is genuinely approved — keep walking
+    if (status(m) === 'none') return { kind: 'needs_submission', module: m };
+    // otherwise ('ready'): this unit is genuinely approved — keep walking
   }
   return { kind: 'all_done' };
 }
 
-/** Current module (first not-yet-complete unlocked, else first locked) + the one after. */
+/**
+ * The unit in play and the one after it. The unit in play is the one the next
+ * step is about, so the dashboard's unit card, the next step and the mission
+ * always name the same unit; once everything is approved it is the last unit.
+ */
 export function homeContext(p: Progress, t: TrainingState, traineeId: string): HomeContext {
   const action = nextAction(p, t, traineeId);
-
-  let currentIdx = MODULES.findIndex(m => isModuleUnlocked(p, m.id, t, traineeId) && !isModuleComplete(p, m.id));
-  if (currentIdx === -1) currentIdx = MODULES.findIndex(m => !isModuleComplete(p, m.id));
-  if (currentIdx === -1) currentIdx = MODULES.length - 1;  // everything done → last
-
+  const currentIdx = action.module
+    ? MODULES.findIndex(m => m.id === action.module!.id)
+    : MODULES.length - 1;
   return {
     action,
     currentModule: MODULES[currentIdx] ?? null,

@@ -105,7 +105,7 @@ export const Num: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <bdi className="num">{children}</bdi>
 );
 
-type Tone = 'ready' | 'attn' | 'risk' | 'info' | 'gold' | 'neutral';
+type Tone = 'ready' | 'attn' | 'risk' | 'pending' | 'info' | 'gold' | 'neutral';
 
 /**
  * A row of key figures, ruled by hairlines rather than boxed into tiles: the

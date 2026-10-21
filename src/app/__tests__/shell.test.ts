@@ -32,8 +32,9 @@ describe('RBAC matrix — each role sees only its own platform', () => {
     // the same academy.learn permission and always reachable — it just used to
     // live in PathView's own duplicate header instead of the one nav source.
     // Widened to reflect that, NOT to loosen the boundary: the assertion still
-    // proves a trainee sees the academy and nothing else.
-    expect(viewsOf('employee')).toEqual(['path', 'roadmap', 'skills']);
+    // proves a trainee sees the academy and nothing else. «المرجع» (the
+    // reference — the journey route that nothing linked to) joined in Phase 0.5.
+    expect(viewsOf('employee')).toEqual(['path', 'roadmap', 'skills', 'journey']);
   });
 });
 
@@ -150,8 +151,8 @@ describe('fail-closed guarantees — RBAC must never be bypassable', () => {
     const matrix: Record<string, readonly string[]> = {
       admin: ['admin'],
       manager: ['manager', 'readiness_report'],
-      trainer: ['trainer'],
-      employee: ['welcome', 'path', 'roadmap', 'skills', 'journey', 'lesson', 'exam', 'boss', 'review', 'readiness'],
+      trainer: ['trainer', 'assess', 'trainee'],
+      employee: ['welcome', 'path', 'roadmap', 'skills', 'journey', 'lesson', 'exam', 'boss', 'review', 'readiness', 'reviews'],
     };
     for (const [roleId, allowed] of Object.entries(matrix)) {
       const c = canOf(roleId);

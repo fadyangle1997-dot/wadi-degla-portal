@@ -11,6 +11,7 @@
  * nextAction() for study, REVIEW_STARTS_ON_DAY for the debrief, the readiness
  * phase's own first day for qualification — and this file only ranks them:
  *
+ *   0. certified — the programme is over     (the manager's final decision)
  *   1. the trainer sent work back            (nextAction: rejected_review)
  *   2. a submission that never landed         (nextAction: needs_submission)
  *   3. a lesson or exam to do                 (nextAction: resume_lesson / take_exam)
@@ -30,7 +31,7 @@ import { REVIEW_STARTS_ON_DAY } from '../review';
 /** The readiness phase opens on its own first day — the programme's timeline. */
 export const READINESS_PHASE_DAY = PROGRAM[PROGRAM.length - 1]!.dayStart;
 
-export type MissionKind = NextActionKind | 'readiness' | 'decision_review';
+export type MissionKind = NextActionKind | 'readiness' | 'decision_review' | 'certified';
 
 export interface Mission {
   readonly kind: MissionKind;
@@ -51,11 +52,18 @@ export interface MissionInput {
   readonly day: number;
   /** Whether today's decision debrief is already filed. */
   readonly reviewFiledToday: boolean;
+  /**
+   * Whether the manager has certified the trainee (domain/readiness/status).
+   * A certified trainee has finished: nothing is due, and the readiness act
+   * would otherwise keep asking them to qualify for what they already hold.
+   */
+  readonly certified?: boolean;
 }
 
 const URGENT: readonly NextActionKind[] = ['rejected_review', 'needs_submission', 'resume_lesson', 'take_exam'];
 
-export function todaysMission({ study, day, reviewFiledToday }: MissionInput): TodaysMission {
+export function todaysMission({ study, day, reviewFiledToday, certified = false }: MissionInput): TodaysMission {
+  if (certified) return { primary: { kind: 'certified' }, also: [] };
   const acts: Mission[] = [];
   if (URGENT.includes(study.kind)) acts.push(study);
   if (day >= READINESS_PHASE_DAY) acts.push({ kind: 'readiness' });

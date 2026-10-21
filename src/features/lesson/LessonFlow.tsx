@@ -38,7 +38,8 @@ const STAGE_LABEL: Record<Stage, string> = {
 
 interface Props {
   lesson: Lesson;
-  unitCode: string;
+  /** «الوحدة 3 من 9» — the unit's place in the programme, never its internal code. */
+  unitLabel: string;
   moduleId: string;
   /** Where this lesson sits in its unit — orientation, not decoration: a
    *  trainee mid-flow could see «M1» and a bar of unnamed segments and still
@@ -66,7 +67,7 @@ interface Props {
 }
 
 
-export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lessonIndex, lessonCount, nextStep, onCommit, onQuizAttempt, onComplete, onFinish, onExit, exitLabel = 'ارجع للمسار' }) => {
+export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lessonIndex, lessonCount, nextStep, onCommit, onQuizAttempt, onComplete, onFinish, onExit, exitLabel = 'ارجع للمسار' }) => {
   // Stage list derived from data — optional stages appear only when content exists.
   const stages = useMemo<Stage[]>(() => {
     const p = lesson.pro;
@@ -171,7 +172,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitCode, moduleId, lesson
         }
         leading={
           <span className="stack" style={{ minWidth: 0 }}>
-            <span className="t-label">{unitCode} · درس {lessonIndex + 1} من {lessonCount}</span>
+            <span className="t-label">{unitLabel} · درس {lessonIndex + 1} من {lessonCount}</span>
             <span className="t-sm c-tx1" style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '42vw' }}>
               {lesson.title}
             </span>

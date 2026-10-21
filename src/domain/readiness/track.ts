@@ -25,6 +25,7 @@ import {
   type Station, type ReadinessOutcome,
 } from './index';
 import { readinessInputOf, latestStationAssessments, type StationAssessedEvent } from './evidence';
+import { formalReadiness, type FormalReadiness } from './status';
 
 export type StationStage = 'not_started' | 'learning' | 'practicing' | 'demonstrated' | 'ready';
 
@@ -103,6 +104,8 @@ export interface ReadinessStanding {
   readonly managerDecision: FinalDecision | null;
   readonly phaseOpen: boolean;
   readonly certified: boolean;
+  /** The one status every screen shows for this assessment (./status). */
+  readonly formal: FormalReadiness;
 }
 
 /**
@@ -119,5 +122,6 @@ export function readinessStanding(
   const certified = isCertified(outcome.decision, managerDecision?.decision === 'ready' ? 'ready' : 'not_ready');
   const phaseOpen = isProgramComplete(t, employeeId);
   const track = readinessTrack(latestStationAssessments(events, employeeId), { started, phaseOpen, certified });
-  return { outcome, track, conduct: input.conduct, managerDecision, phaseOpen, certified };
+  const formal = formalReadiness(events, employeeId, phaseOpen);
+  return { outcome, track, conduct: input.conduct, managerDecision, phaseOpen, certified, formal };
 }

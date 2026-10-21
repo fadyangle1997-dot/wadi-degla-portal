@@ -27,7 +27,7 @@ import { SKILLS } from '../skills';
 
 export const moduleIndependence: Module = {
   id: 'm4',
-  order: 4,
+  order: 7,
   code: 'M4',
   title: 'الاستقلالية التدريجية',
   bigQuestion: 'إزاي أشتغل لوحدي من غير ما أغلط؟',
