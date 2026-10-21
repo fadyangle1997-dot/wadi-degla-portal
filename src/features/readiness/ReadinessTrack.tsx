@@ -16,7 +16,7 @@ import { STATION_STAGES } from '../../domain/readiness/track';
 import type { StationKind } from '../../domain/readiness';
 import { EVALUATION_DIMENSIONS } from '../../domain/evaluation';
 import { ArabicContent, Num } from '../../ui/primitives';
-import { useLang, t, type Key, type Lang } from '../../app/i18n';
+import { useLang, t, type Key, type Lang, dateLocale } from '../../app/i18n';
 
 const KIND: Record<StationKind, Key> = {
   case: 'tr.kind.case', file_review: 'tr.kind.file_review', live_encounter: 'tr.kind.live_encounter', interview: 'tr.kind.interview',
@@ -24,7 +24,7 @@ const KIND: Record<StationKind, Key> = {
 
 /** The day an observation was recorded: Arabic month names, Latin digits like the rest of the product. */
 const dateOf = (at: number, lang: Lang) =>
-  new Date(at).toLocaleDateString(lang === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'long' });
+  new Date(at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long' });
 
 /**
  * Where a station stands, as a word and four marks: one per stage after «not

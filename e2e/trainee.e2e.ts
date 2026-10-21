@@ -66,7 +66,7 @@ test('finishes a whole unit, sits the exam, and sees the result', async ({ page 
   await expect(page).toHaveURL(/#\/exam\/m1/);
   for (let i = 0; i < 60; i++) {
     await settle(page);
-    if (await main.getByRole('button', { name: /ارجع للمسار/ }).isVisible()) break;
+    if (await main.getByRole('button', { name: /^(تمام|Done)/ }).isVisible()) break;
     const option = main.locator('button.option-idle:enabled');
     if (await option.count()) { await option.first().click({ timeout: 2000 }).catch(() => {}); continue; }
     const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' });
@@ -102,7 +102,7 @@ test('leaving a lesson keeps its place, and leaving its closing screen keeps it 
   // Walk to the closing screen, then leave it with Escape instead of a button.
   for (let step = 0; step < 80; step++) {
     await settle(page);
-    if (await main.getByRole('button', { name: 'ارجع للمسار' }).isVisible()) break;
+    if (await main.getByRole('button', { name: /^(تمام|Done)$/ }).isVisible()) break;
     const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' });
     if (await forward.count()) { await forward.last().click({ timeout: 2000 }).catch(() => {}); continue; }
     const option = main.locator('button.option-idle:enabled');

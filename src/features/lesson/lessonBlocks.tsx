@@ -16,7 +16,7 @@ export const RuleObject: React.FC<{ text: string }> = ({ text }) => (
  * If everything is an object, nothing is.
  */
 export const SupportingPoint: React.FC<{ text: string }> = ({ text }) => (
-  <div className="row gap-3 items-start" style={{ padding: '0 var(--sp-2)' }}>
+  <div className="row gap-3 items-start px-2">
     <Check size={16} strokeWidth={2.5} className="c-tx3 mt-1 no-shrink" />
     <span className="t-body measure c-tx1">{text}</span>
   </div>
@@ -41,7 +41,7 @@ export const DialogueBlock: React.FC<{
       <div className="stack gap-3">
         {lines.map((l, i) => (
           <div key={i} className="row gap-3 items-start">
-            <span className="t-label no-shrink c-tx3" style={{ minWidth: 44, paddingTop: 'var(--sp-1)' }}>
+            <span className="t-label no-shrink c-tx3 dialogue-who">
               {l.speaker === 'member' ? 'العضو' : 'إنت'}
             </span>
             <span className={`t-body dialogue-line dialogue-line--${l.speaker}`}>{l.line}</span>
@@ -63,6 +63,6 @@ export const DialogueBlock: React.FC<{
 export const DoneRow: React.FC<{ label: string; body: string }> = ({ label, body }) => (
   <div>
     <span className="t-label c-tx3">{label}</span>
-    <p className="t-body measure" style={{ margin: 'var(--sp-2) 0 0' }}>{body}</p>
+    <p className="t-body measure mb-0 mt-2">{body}</p>
   </div>
 );

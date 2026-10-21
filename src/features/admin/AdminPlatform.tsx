@@ -24,7 +24,7 @@ import { WIDTH } from '../../ui/designSystem';
 import { useOrganization, orgStore } from '../../app/organization/orgStore';
 import { branchNameOf } from '../../domain/organization';
 import { tone, SEVERITY, type SemanticTone } from '../../ui/statusSemantics';
-import { useLang, t, tf, type Key } from '../../app/i18n';
+import { useLang, t, tf, type Key, dateLocale } from '../../app/i18n';
 import { overlayParams } from '../../app/overlayHistory';
 import { leaveGuard } from '../../app/leaveGuard';
 import { eventCount, issuesNeedAction } from '../../app/plural';
@@ -276,7 +276,7 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
   const matching = useMemo(() => filterAudit(log, filter, nameOf), [log, filter, nameOf]);
   const shown = useMemo(() => latestAudit(matching, CAP), [matching]);
   const [toast, setToast] = useState<string | null>(null);
-  const when = (at: number) => new Date(at).toLocaleString(lang === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+  const when = (at: number) => new Date(at).toLocaleString(dateLocale(lang), { dateStyle: 'medium', timeStyle: 'short' });
 
   // The export is real: every matching event, not just the visible page,
   // as a CSV that opens in Excel with its Arabic intact (UTF-8 BOM).

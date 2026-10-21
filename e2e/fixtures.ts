@@ -68,7 +68,8 @@ export async function toAcademy(page: Page) {
   if (/ابدأ أول درس/.test(await start.innerText())) {
     await start.click();
     await expect(page).toHaveURL(/#\/lesson\//);
-    // The lesson screen loads lazily: wait for its back control, then use it.
+    // The lesson screen loads lazily: wait for its Exit (it names where it
+    // goes: «خروج — ارجع للمسار»), then use it.
     await page.getByRole('button', { name: 'ارجع للمسار' }).first().click();
     await expect(page).not.toHaveURL(/#\/lesson\//);
   }
@@ -91,8 +92,9 @@ export async function finishLesson(page: Page) {
   for (let step = 0; step < 80; step++) {
     if (!/#\/lesson\//.test(page.url())) return;
     await settle(page);
-    const back = main.getByRole('button', { name: 'ارجع للمسار' });
-    if (await back.isVisible()) { await back.click({ timeout: 2000 }).catch(() => {}); continue; }
+    // The closing screen's Done finishes the lesson and returns.
+    const done = main.getByRole('button', { name: /^(تمام|Done)$/ });
+    if (await done.isVisible()) { await done.click({ timeout: 2000 }).catch(() => {}); continue; }
 
     // Forward only: «السابق» steps back and would walk the lesson in circles.
     const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' });

@@ -8,7 +8,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, X, ChevronLeft, Info } from 'lucide-react';
 import { WIDTH } from '../designSystem';
-import { t, langStore, useLang, type Key, type Lang } from '../../app/i18n';
+import { Icon } from '../Icon';
+import { t, iso, langStore, useLang, type Key, type Lang } from '../../app/i18n';
 import { leaveGuard } from '../../app/leaveGuard';
 import { useModal } from './useModal';
 
@@ -124,7 +125,7 @@ export const OptionButton: React.FC<{
     className={`option ${state === 'idle' ? 'option-idle' : ''} ${state === 'correct' ? 'option-correct' : ''} ${state === 'wrong' ? 'option-wrong' : ''}`}>
     {state === 'correct' ? <Check size={16} className="c-ready no-shrink" aria-hidden />
       : state === 'wrong' ? <X size={16} className="c-risk no-shrink" aria-hidden />
-      : state === 'dim' ? <span style={{ width: 17 }} /> : null}
+      : state === 'dim' ? <span className="option-spacer" /> : null}
     {text}
     {/* The mark is said, not only shown: green and red are not an answer. */}
     {state === 'correct' && <span className="sr-only"> — {t('opt.correct', langStore.get())}</span>}
@@ -397,45 +398,105 @@ export function useExitFlow(holding: boolean, copy: { title: string; body: strin
   return { leave, dialog };
 }
 
-/* ---------------- assessment mode ----------------
-   An exam or a boss battle opens into a different room: the void instead of
-   the page, no shell, one column, and a bar that names the mode and the unit,
-   shows how far along the attempt is, and offers one way out. Leaving after
-   an answer asks first. Nothing glows: a test reads as serious because the
-   room goes quiet, not because it is lit. */
-export const AssessmentMode: React.FC<{
-  /** What kind of test this is: «امتحان الوحدة», «محاكاة تشغيلية». */
-  mode: string;
-  /** The unit or scenario under test. */
-  title: string;
+/* ---------------- the focus room ----------------
+   Every flow that holds a person's attention from start to finish — a lesson,
+   the unit exam, the challenge, the daily review — opens into the same room:
+   no shell, one bar that says what this is and how far along it is, and the
+   same labelled Exit at the same place. Exit leaves the flow; it asks first
+   only when leaving would lose something. (Back navigates, Close dismisses an
+   overlay — neither is this.) Nothing glows: focus comes from quiet. */
+export const FlowRoom: React.FC<{
+  /** What kind of flow this is: «امتحان الوحدة», «درس 2 من 4». */
+  mode: React.ReactNode;
+  /** The unit, lesson or scenario. */
+  title: React.ReactNode;
   progress?: { total: number; current: number };
-  /** Present while leaving would lose something; then exit asks first. */
+  /** The rail's position in words, beside it (the lesson's stage name). */
+  progressLabel?: React.ReactNode;
+  /** Present while leaving would lose something; then Exit asks first. */
   leaveWarning?: { title: string; body: string };
   onExit: () => void;
+  /** Where Exit goes, read after its label: «خروج — ارجع للمسار». */
+  exitTo?: string;
+  /** For flows that move focus to their body on every step. */
+  mainRef?: React.Ref<HTMLElement>;
   children: React.ReactNode;
-}> = ({ mode, title, progress, leaveWarning, onExit, children }) => {
+}> = ({ mode, title, progress, progressLabel, leaveWarning, onExit, exitTo, mainRef, children }) => {
   const lang = useLang();
   const { leave, dialog } = useExitFlow(!!leaveWarning, leaveWarning ?? { title: '', body: '' });
-  const exit = () => leave(onExit);
   return (
-    <div className="assess">
-      <nav className="assess-bar" aria-label={t('as.bar', lang)}>
-        <div className="assess-bar-row">
-          <div className="assess-mode">
-            <span className="t-eyebrow">{mode}</span>
-            <span className="assess-title">{title}</span>
+    <div className="flow">
+      {/* The bar is interface, in the interface language, even when the flow
+          below is an Arabic content island (the lesson in English mode). */}
+      <nav className="flow-bar" aria-label={t('flow.bar', lang)} lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="flow-bar-row">
+          <div className="flow-id">
+            <span className="flow-mode">{mode}</span>
+            <span className="flow-title">{title}</span>
           </div>
-          <div className="assess-rail">{progress && <ProgressRail total={progress.total} current={progress.current} />}</div>
-          <button type="button" className="icon-btn" onClick={exit}>
-            <X size={16} aria-hidden />{t('as.exit', lang)}
+          <div className="flow-rail">
+            {progress && <ProgressRail total={progress.total} current={progress.current} />}
+            {progressLabel && <span className="flow-step">{progressLabel}</span>}
+          </div>
+          <button type="button" className="flow-exit" onClick={() => leave(onExit)}>
+            {t('as.exit', lang)}{exitTo && <span className="sr-only"> — {exitTo}</span>}
           </button>
         </div>
       </nav>
-      <main className="assess-body">{children}</main>
+      <main ref={mainRef} tabIndex={mainRef ? -1 : undefined} className="flow-body">{children}</main>
       {dialog}
     </div>
   );
 };
+
+/**
+ * A question and its answer, side by side when the room is wide enough —
+ * the prompt stays in view while the person answers — and stacked when it is
+ * not. The room decides by its own width (a container query), not the
+ * screen's, so the larger text sizes fall back to one column sooner.
+ */
+export const FlowSplit: React.FC<{ prompt: React.ReactNode; children: React.ReactNode }> = ({ prompt, children }) => (
+  <div className="flow-split">
+    <div className="flow-prompt">{prompt}</div>
+    <div className="flow-response">{children}</div>
+  </div>
+);
+
+/**
+ * An earned moment's mark, weighted by what it means: a task finished
+ * (a lesson, a review), an assessment passed, a unit approved, the programme
+ * completed. Gold here is the progress role — what was earned — and the
+ * words beside it carry the meaning.
+ */
+export const Achievement: React.FC<{ tier: 'task' | 'pass' | 'unit' | 'programme' }> = ({ tier }) => (
+  <span className={`achievement achievement--${tier}`} aria-hidden>
+    <svg className="achievement-ring" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" /></svg>
+    <Icon as={Check} size={tier === 'task' ? 'md' : tier === 'programme' ? 'hero' : 'lg'} />
+  </span>
+);
+
+/** A score as a share of the ring, and as a figure. The arc is gold only when the score passed. */
+export const ScoreRing: React.FC<{ score: number; passed: boolean }> = ({ score, passed }) => {
+  const pct = Math.round(Math.max(0, Math.min(1, score)) * 100);
+  return (
+    <div className="score-progress" data-passed={passed || undefined}>
+      <svg viewBox="0 0 120 120" aria-hidden>
+        <circle className="score-track" cx="60" cy="60" r="54" />
+        <circle className="score-arc" cx="60" cy="60" r="54" pathLength={100} strokeDasharray="100" strokeDashoffset={100 - pct} />
+      </svg>
+      <span className="score-num">{iso(`${pct}%`)}</span>
+    </div>
+  );
+};
+
+/**
+ * Paper in the focus room: the one object to read and act on — a case file
+ * before a challenge, a result after an assessment. Cream, black ink, one
+ * primary action in ink.
+ */
+export const PaperSheet: React.FC<{ labelledBy: string; children: React.ReactNode; className?: string }> = ({ labelledBy, children, className }) => (
+  <section aria-labelledby={labelledBy} className={className ? `paper-sheet ${className}` : 'paper-sheet'}>{children}</section>
+);
 
 /* ---------------- toast ---------------- */
 /** A passing confirmation, or — with tone="error" — a failure the person must

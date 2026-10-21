@@ -16,13 +16,12 @@ import { filedReviews, REVIEW_FIELDS, REVIEW_LABELS } from '../../domain/review'
 import { reviewSeen } from '../../app/reviewSeen';
 import { tone, UNIT_REVIEW } from '../../ui/statusSemantics';
 import { PageHeader, Status, Button, EmptyState, ArabicContent, ContentLanguageNote } from '../../ui/primitives';
-import { useLang, t, tf, type Lang } from '../../app/i18n';
+import { useLang, t, tf, type Lang, dateLocale } from '../../app/i18n';
 import { displayNameOf } from '../../domain/identity';
-import { WIDTH } from '../../ui/designSystem';
 import { toHash } from '../../app/router';
 
 const dateOf = (at: number, lang: Lang) =>
-  new Date(at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  new Date(at).toLocaleDateString(dateLocale(lang), { weekday: 'long', day: 'numeric', month: 'long' });
 
 export const MyReviews: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const events = useTrainingEvents();
@@ -36,7 +35,7 @@ export const MyReviews: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   useEffect(() => { reviewSeen.mark(id); }, [id, reviews.length]);
 
   return (
-    <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+    <main className="page-col page-col--read">
       <PageHeader crumbs={[<a key="a" href="#/" className="crumb-link">{t('crumb.academy', lang)}</a>, t('menu.reviews', lang)]}
         title={t('menu.reviews', lang)}
         lead={t('mr.lead', lang)}

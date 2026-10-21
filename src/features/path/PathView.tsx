@@ -18,7 +18,10 @@ import { paperIn } from '../../ui/motion';
 import { Lock, Flag } from 'lucide-react';
 import { moduleById, MODULES } from '../../content/registry';
 import { useProgress, moduleLessonsDone, progressStore, currentCommitment } from '../../app/progress';
-import { useTraining, traineeIdOrNull } from '../../app/training/trainingStore';
+import { useTraining, useTrainingEvents, traineeIdOrNull } from '../../app/training/trainingStore';
+import { approvalSeen } from '../../app/approvalSeen';
+import { displayNameOf } from '../../domain/identity';
+import type { FreshApproval, Certification } from '../journey/MissionBrief';
 import { identityStore } from '../../app/identity/identityStore';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { progression } from '../../domain/journey/progression';
@@ -27,7 +30,6 @@ import { useTodaysMission } from '../../app/journeyContext';
 import { MissionBrief } from '../journey/MissionBrief';
 import { PROGRAM, PROGRAM_DAYS, unitPlace } from '../../domain/journey/program';
 import { useLang, t as tr, tf, iso } from '../../app/i18n';
-import { WIDTH } from '../../ui/designSystem';
 import { TodayRetrieval, dueToday } from '../journey/TodayRetrieval';
 
 interface Props {
@@ -50,6 +52,23 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
   // Position and mission come from the one resolver the roadmap reads too.
   const { action, currentModule, nextModule, phase, day } = progression(p, t, traineeId);
   const mission = useTodaysMission();
+  const events = useTrainingEvents();
+  // The earned moments the mission paper carries: the latest unit approval
+  // not yet acted on, and — once the manager has decided — the certification.
+  const approval = React.useMemo<FreshApproval | null>(() => {
+    let last: { moduleId: string; at: number } | null = null;
+    for (const e of events) if (e.type === 'EVALUATION_RECORDED' && e.employeeId === traineeId && e.decision === 'ready') last = e;
+    if (!last || last.at <= approvalSeen.get(traineeId)) return null;
+    const unit = MODULES.find(x => x.id === last.moduleId);
+    return unit ? { title: unit.title, at: last.at } : null;
+  }, [events, traineeId]);
+  const certification = React.useMemo<Certification | null>(() => {
+    let last: { managerId: string; decision: string; at: number } | null = null;
+    for (const e of events) if (e.type === 'FINAL_READINESS_DECIDED' && e.employeeId === traineeId) last = e;
+    if (!last || last.decision !== 'ready') return null;
+    const manager = identityStore.userById(last.managerId);
+    return { by: manager ? displayNameOf(manager, lang) : undefined, at: last.at };
+  }, [events, traineeId, lang]);
   const startedCurrent = currentModule ? moduleLessonsDone(p, currentModule.id) > 0 : false;
   // The promise they made at the end of the last lesson, read back where the
   // work actually starts. Derived from the event log — nothing new stored here.
@@ -73,12 +92,12 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
           of its own (two stacked sticky bars cost a third of a phone screen). */}
 
       {!progressStore.healthy() && (
-        <div role="alert" className="text-center" style={{ background: 'var(--attn-bg)', borderBottom: '1px solid var(--attn-line)', padding: 'var(--sp-2) var(--sp-5)' }}>
+        <div role="alert" className="save-alert">
           <span className="t-sm c-attn">{tr('db.nosave', lang)}</span>
         </div>
       )}
 
-      <main style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
+      <main className="page-col page-col--staff">
         {/* Where the trainee is in the programme: the day, the phase, the
             trainer. The phase title is curriculum content, so it stays Arabic. */}
         <PageHeader crumbs={[tr('crumb.academy', lang), tr('home.crumb', lang)]}
@@ -98,6 +117,8 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
                 spring on this screen; everything else changes with plain easing. */}
             <m.div {...paperIn}>
               <MissionBrief mission={mission} trainerName={trainerName}
+                approval={approval} onApprovalSeen={() => { if (approval) approvalSeen.mark(traineeId, approval.at); }}
+                certification={certification}
                 onOpenLesson={onOpenLesson} onOpenExam={onOpenExam} onOpenReview={onOpenReview} onOpenReadiness={onOpenReadiness} />
             </m.div>
 
@@ -174,7 +195,7 @@ const CurrentModuleCard: React.FC<{
       <h2 className="t-h3 mt-2"><ArabicContent as="span">{m.title}</ArabicContent></h2>
       {showQuestion && <p className="t-sm mt-1 mb-3"><ArabicContent as="span">{m.bigQuestion}</ArabicContent></p>}
 
-      <div style={{ marginTop: showQuestion ? 0 : 'var(--sp-3)' }}>
+      <div className={showQuestion ? undefined : 'mt-3'}>
         <ProgressRail total={m.lessons.length} current={done} />
         <span className="t-label block c-tx3 mt-1">{done} {tr('jr.of', lang)} {m.lessons.length} {tr('db.lessonsof', lang)}</span>
       </div>

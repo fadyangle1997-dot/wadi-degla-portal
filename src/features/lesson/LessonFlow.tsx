@@ -8,8 +8,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { HelpCircle, Lightbulb, Sparkles, ArrowRight, ChevronLeft, ClipboardCheck } from 'lucide-react';
+import { Icon } from '../../ui/Icon';
 import type { Lesson } from '../../domain/types/content';
-import { Button, Eyebrow, Callout, OptionButton, ScreenHeader, ProgressRail, Capsule, SpineWell } from '../../ui/primitives';
+import { Button, Eyebrow, Callout, OptionButton, FlowRoom, FlowSplit, Achievement, Capsule, SpineWell, Content } from '../../ui/primitives';
+import { useLang, t } from '../../app/i18n';
 import { lessonSkillTouches, LEVEL_LABEL } from '../../app/skills';
 import { RuleExamples } from './ruleRenderers';
 import { RuleObject, SupportingPoint, DialogueBlock, DoneRow } from './lessonBlocks';
@@ -23,7 +25,6 @@ import { AgeEligibilityTimeline } from './AgeEligibilityTimeline';
 import { RenewalPenaltyTiers } from './RenewalPenaltyTiers';
 import { CheckBeforeActFlow } from './CheckBeforeActFlow';
 import { fade, achieve } from '../../ui/motion';
-import { WIDTH } from '../../ui/designSystem';
 
 type Stage = 'challenge' | 'ask' | 'predict' | 'learn' | 'reflect' | 'office' | 'coach' | 'mistakes' | 'dialogue' | 'comms' | 'produce' | 'practice' | 'quiz' | 'commit' | 'done';
 
@@ -68,6 +69,7 @@ interface Props {
 
 
 export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lessonIndex, lessonCount, nextStep, onCommit, onQuizAttempt, onComplete, onFinish, onExit, exitLabel = 'ارجع للمسار' }) => {
+  const lang = useLang();
   // Stage list derived from data — optional stages appear only when content exists.
   const stages = useMemo<Stage[]>(() => {
     const p = lesson.pro;
@@ -115,7 +117,10 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
   // sessions would need a store change, so it is deliberately not persisted.
   const [commitment, setCommitment] = useState<string | null>(null);
   const stage = stages[idx] ?? 'done';
-  const next = () => setIdx(i => Math.min(i + 1, stages.length - 1));
+  // A press moves from the stage it was drawn on, once. A leaving stage keeps
+  // its button on screen while it fades, so a double-click lands twice; counting
+  // from wherever the lesson is by then would skip the next stage, quiz included.
+  const next = () => setIdx(i => (i === idx ? Math.min(i + 1, stages.length - 1) : i));
   // «السابق» re-reads what came before. It never steps into the quiz or back
   // past it: the quiz records each question's FIRST answer for spaced
   // retrieval, and a second «first» answer would change that schedule. The
@@ -123,9 +128,9 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
   const quizAt = stages.indexOf('quiz');
   const floor = quizAt >= 0 && idx > quizAt ? quizAt + 1 : 0;
   const canGoBack = idx > floor && stage !== 'quiz' && stage !== 'done';
-  const prev = () => setIdx(i => Math.max(i - 1, floor));
+  const prev = () => setIdx(i => (i === idx ? Math.max(i - 1, floor) : i));
   const ruleRefs = useMemo(() => lesson.points.flatMap(p => (p.rule ? [p.rule] : [])), [lesson]);
-  const headingRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     // Focus management: move focus to the stage container so screen-reader and
@@ -159,58 +164,52 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
   }, [onExit]);
 
   return (
-    <div className="stack min-h-screen">
-      {/* Orientation: the lesson's name and its place in the unit sit in the
-          chrome; the bar shows progress within this lesson. */}
-      <ScreenHeader onBack={onExit} backLabel={exitLabel} maxWidth={WIDTH.focus}
-        rail={<ProgressRail total={stages.length - 1} current={idx} />}
-        trailing={
-          <span className="t-label lesson-stage">
-            {STAGE_LABEL[stage]}
-            <span className="sr-only"> · خطوة {Math.min(idx + 1, stages.length - 1)} من {stages.length - 1}</span>
-          </span>
-        }
-        leading={
-          <span className="stack" style={{ minWidth: 0 }}>
-            <span className="t-label">{unitLabel} · درس {lessonIndex + 1} من {lessonCount}</span>
-            <span className="t-sm c-tx1" style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '42vw' }}>
-              {lesson.title}
-            </span>
-          </span>
-        } />
-
-      <main ref={headingRef} tabIndex={-1} className="stack grow" style={{ outline: 'none' }}>
+    /* Orientation: the lesson's name and its place in the unit sit in the
+       bar, the rail shows progress within this lesson and names the step, and
+       Exit is the same labelled control as in the exam and the challenge.
+       Leaving mid-lesson is a pause (the place is kept), so it never asks. */
+    <FlowRoom mode={<Content>{unitLabel} · درس {lessonIndex + 1} من {lessonCount}</Content>} title={<Content>{lesson.title}</Content>}
+      progress={{ total: stages.length - 1, current: idx }}
+      progressLabel={
+        <span className="lesson-stage">
+          <Content>{STAGE_LABEL[stage]}</Content>
+          <span className="sr-only"> · خطوة {Math.min(idx + 1, stages.length - 1)} من {stages.length - 1}</span>
+        </span>
+      }
+      onExit={onExit} exitTo={exitLabel} mainRef={headingRef}>
         <AnimatePresence mode="wait">
           {/* ── CHALLENGE ─────────────────────────────────────────────────
               A real situation, alone, before a single word of explanation.
               The trainee must want the answer before being given one. */}
           {stage === 'challenge' && lesson.pro?.openingChallenge && (
-            <m.section key="challenge" {...fade} className="focus-col stack grow justify-center">
-              <Eyebrow icon={<HelpCircle size={13} />}>موقف في المكتب</Eyebrow>
-              <h1 className="t-h2 measure mt-4">{lesson.pro.openingChallenge}</h1>
-              {/* The trainee's own question, under the situation that provokes
-                  it — one beat, one screen. Splitting them would open the
-                  lesson twice with the same emotion. */}
-              <p className="t-lead measure mt-4 c-tx2">{lesson.employeeQuestion}</p>
-              <div className="mt-5">
+            <m.section key="challenge" {...fade} className="flow-stage">
+              <FlowSplit prompt={<>
+                <Eyebrow icon={<Icon as={HelpCircle} size="sm" />}>موقف في المكتب</Eyebrow>
+                <h1 className="t-h2 flow-question mt-4">{lesson.pro.openingChallenge}</h1>
+                {/* The trainee's own question, under the situation that provokes
+                    it — one beat, one screen. Splitting them would open the
+                    lesson twice with the same emotion. */}
+                <p className="t-lead measure mt-4 c-tx2">{lesson.employeeQuestion}</p>
+              </>}>
                 <Callout tone="objective">{lesson.objective}</Callout>
-              </div>
-              <div className="mt-7">
-                <Button onClick={next}>تفتكر تعمل إيه؟ <ArrowRight size={16} className="icon-dir" /></Button>
-              </div>
+                <div className="mt-6">
+                  <Button onClick={next}>تفتكر تعمل إيه؟ <Icon as={ArrowRight} dir /></Button>
+                </div>
+              </FlowSplit>
             </m.section>
           )}
 
           {stage === 'ask' && (
-            <m.section key="ask" {...fade} className="focus-col stack grow justify-center">
-              <Eyebrow icon={<HelpCircle size={13} />}>سؤال بيقابلك في الشغل</Eyebrow>
-              <h1 className="t-h2 measure mt-4">{lesson.employeeQuestion}</h1>
-              <div className="mt-6">
+            <m.section key="ask" {...fade} className="flow-stage">
+              <FlowSplit prompt={<>
+                <Eyebrow icon={<Icon as={HelpCircle} size="sm" />}>سؤال بيقابلك في الشغل</Eyebrow>
+                <h1 className="t-h2 flow-question mt-4">{lesson.employeeQuestion}</h1>
+              </>}>
                 <Callout tone="objective">{lesson.objective}</Callout>
-              </div>
-              <div className="mt-7">
-                <Button onClick={next}>يلا نجاوب عليه <ArrowRight size={16} className="icon-dir" /></Button>
-              </div>
+                <div className="mt-6">
+                  <Button onClick={next}>يلا نجاوب عليه <Icon as={ArrowRight} dir /></Button>
+                </div>
+              </FlowSplit>
             </m.section>
           )}
 
@@ -243,21 +242,19 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
               )}
 
               {/* ③ THE HERO */}
-              <ul role="list" className="stack m-0 gap-3" style={{ listStyle: 'none', padding: 0 }}>
+              {/* The rules arrive with the stage, together: one at a time made
+                  the reader wait for a list they could already read. */}
+              <ul role="list" className="list-plain stack gap-3">
                 {lesson.points.map((pt, i) => (
-                  <m.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06 + i * 0.06 }}>
+                  <li key={i}>
                     {pt.rule ? <RuleObject text={pt.text} /> : <SupportingPoint text={pt.text} />}
-                  </m.li>
+                  </li>
                 ))}
               </ul>
 
               {/* ④ Prose, not a card. It must not out-weigh the rule. */}
-              <m.div
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 + lesson.points.length * 0.06 }}
-                className="mt-6"
-              >
-                <Eyebrow icon={<Lightbulb size={13} />}>مثال من الشغل</Eyebrow>
+              <div className="mt-6">
+                <Eyebrow icon={<Icon as={Lightbulb} size="sm" />}>مثال من الشغل</Eyebrow>
                 <p className="t-body measure mt-3 c-tx2">
                   {lesson.example}
                 </p>
@@ -266,10 +263,10 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
 
                 <div className="mt-6">
                   <Button onClick={next}>
-                    {lesson.practice ? 'جرّب بنفسك' : 'فهمت — اختبرني'} <ArrowRight size={16} className="icon-dir" />
+                    {lesson.practice ? 'جرّب بنفسك' : 'فهمت — اختبرني'} <Icon as={ArrowRight} dir />
                   </Button>
                 </div>
-              </m.div>
+              </div>
             </m.section>
           )}
 
@@ -279,10 +276,10 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
               with yourself, not a navigation label. */}
           {stage === 'reflect' && lesson.pro?.reflectiveQuestion && (
             <m.section key="reflect" {...fade} className="focus-col stack grow justify-center">
-              <Eyebrow icon={<Lightbulb size={13} />}>خد ثانية وفكّر</Eyebrow>
+              <Eyebrow icon={<Icon as={Lightbulb} size="sm" />}>خد ثانية وفكّر</Eyebrow>
               <h2 className="t-h2 measure mt-4">{lesson.pro.reflectiveQuestion}</h2>
               <div className="mt-7">
-                <Button variant="ghost" onClick={next}>فكّرت <ArrowRight size={16} className="icon-dir" /></Button>
+                <Button variant="ghost" onClick={next}>فكّرت <Icon as={ArrowRight} dir /></Button>
               </div>
             </m.section>
           )}
@@ -292,7 +289,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
               felt while it happened. Splitting them would break the scene. */}
           {stage === 'office' && lesson.pro?.officeScenario && (
             <m.section key="office" {...fade} className="focus-col">
-              <Eyebrow icon={<ClipboardCheck size={13} />}>في المكتب</Eyebrow>
+              <Eyebrow icon={<Icon as={ClipboardCheck} size="sm" />}>في المكتب</Eyebrow>
               <p className="t-lead measure mt-3">{lesson.pro.officeScenario}</p>
               {/* The journey-overview lesson compresses all eleven stages into
                   one arrow-separated sentence — the hardest possible shape to
@@ -325,12 +322,12 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
                 <div className="mt-6">
                   <SpineWell>
                     <span className="t-label c-tx3">العضو حاسس بإيه</span>
-                    <p className="t-body measure" style={{ margin: 'var(--sp-2) 0 0' }}>{lesson.pro.customerPerspective}</p>
+                    <p className="t-body measure mb-0 mt-2">{lesson.pro.customerPerspective}</p>
                   </SpineWell>
                 </div>
               )}
               <div className="mt-7">
-                <Button onClick={next}>طيب أتصرّف إزاي؟ <ArrowRight size={16} className="icon-dir" /></Button>
+                <Button onClick={next}>طيب أتصرّف إزاي؟ <Icon as={ArrowRight} dir /></Button>
               </div>
             </m.section>
           )}
@@ -340,7 +337,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
               the golden rule — the one line meant to survive years. */}
           {stage === 'coach' && lesson.pro?.professionalThinking && (
             <m.section key="coach" {...fade} className="focus-col">
-              <Eyebrow icon={<Sparkles size={13} />}>إزاي المحترف بيفكّر</Eyebrow>
+              <Eyebrow icon={<Icon as={Sparkles} size="sm" />}>إزاي المحترف بيفكّر</Eyebrow>
               <p className="t-lead measure mt-3">{lesson.pro.professionalThinking}</p>
               {lesson.pro.ownershipMindset && (
                 <p className="t-body measure mt-5 c-tx1">{lesson.pro.ownershipMindset}</p>
@@ -351,7 +348,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
                 </div>
               )}
               <div className="mt-7">
-                <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
+                <Button onClick={next}>كمّل <Icon as={ArrowRight} dir /></Button>
               </div>
             </m.section>
           )}
@@ -361,7 +358,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
           {stage === 'mistakes' && lesson.pro?.commonMistakes?.length && (
             <m.section key="mistakes" {...fade} className="focus-col">
               <Eyebrow>أخطاء بتحصل كتير</Eyebrow>
-              <ul role="list" className="stack gap-3" style={{ listStyle: 'none', margin: 'var(--sp-4) 0 0', padding: 0 }}>
+              <ul role="list" className="list-plain stack gap-3 mt-4">
                 {lesson.pro.commonMistakes.map((m, i) => (
                   <li key={i} className="t-body measure row gap-3 items-start">
                     <span aria-hidden className="c-risk no-shrink">✕</span>
@@ -370,7 +367,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
                 ))}
               </ul>
               <div className="mt-7">
-                <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
+                <Button onClick={next}>كمّل <Icon as={ArrowRight} dir /></Button>
               </div>
             </m.section>
           )}
@@ -378,18 +375,18 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
           {stage === 'dialogue' && lesson.dialogue && (
         <m.section {...fade} className="focus-col">
           <Eyebrow>نفس الموقف · نفس القرار</Eyebrow>
-          <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>الفرق في التوصيل</h2>
+          <h2 className="t-h2 mt-3 mb-2">الفرق في التوصيل</h2>
           <p className="t-body c-tx2 mb-5">{lesson.dialogue.setup}</p>
 
           <DialogueBlock tone="wrong" label="❌ الحوار الغلط" lines={lesson.dialogue.wrong} why={lesson.dialogue.whyWrongFails} whyLabel="ليه بيفشل" />
-          <div style={{ height: 'var(--sp-5)' }} />
+          <div className="mt-5" />
           <DialogueBlock tone="right" label="✅ الحوار الصح" lines={lesson.dialogue.right} why={lesson.dialogue.whyRightWorks} whyLabel="ليه بينجح" />
 
           <p className="t-sm c-tx3 mt-5">
             الحوارات دي أمثلة مش جمل تتحفظ — اللي بينتقل معاك هو المبدأ.
           </p>
           <div className="mt-5">
-            <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
+            <Button onClick={next}>كمّل <Icon as={ArrowRight} dir /></Button>
           </div>
         </m.section>
       )}
@@ -397,7 +394,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
       {stage === 'comms' && lesson.comms && (
         <m.section {...fade} className="focus-col">
           <Eyebrow>{lesson.comms.audience === 'sales' ? 'التوصيل الداخلي · للمبيعات' : 'التوصيل · للعضو'}</Eyebrow>
-          <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-5)' }}>
+          <h2 className="t-h2 mt-3 mb-5">
             {lesson.comms.audience === 'sales'
               ? 'الفخ والأفضل — في الطلب الداخلي'
               : 'الفخ والأفضل — قدّام العضو'}
@@ -413,17 +410,17 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
               <p className="t-body measure m-0">{lesson.comms.risk}</p>
             </SpineWell>
 
-            <div style={{ padding: '0 var(--sp-2)' }}>
+            <div className="px-2">
               <div className="t-label c-tx3 mb-2">بيحصل إيه لما تقع فيه</div>
               <p className="t-body measure m-0 c-tx2">{lesson.comms.why}</p>
             </div>
 
             <SpineWell label="⭐ الأفضل">
-              <p className="t-body measure m-0 c-tx0" style={{ fontWeight: 500 }}>{lesson.comms.instead}</p>
+              <p className="t-body measure m-0 c-tx0 fw-500">{lesson.comms.instead}</p>
             </SpineWell>
           </div>
           <div className="mt-6">
-            <Button onClick={next}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
+            <Button onClick={next}>كمّل <Icon as={ArrowRight} dir /></Button>
           </div>
         </m.section>
       )}
@@ -446,9 +443,11 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
               commits to nothing. The choice is echoed on the closing screen so
               it is not swallowed the moment it is made. */}
           {stage === 'commit' && lesson.pro?.commitmentOptions?.length && (
-            <m.section key="commit" {...fade} className="focus-col stack grow justify-center">
-              <Eyebrow>هتركّز على إيه بكرة؟</Eyebrow>
-              <h2 className="t-h3 measure mt-3 mb-5">اختار حاجة واحدة بس.</h2>
+            <m.section key="commit" {...fade} className="flow-stage">
+              <FlowSplit prompt={<>
+                <Eyebrow>هتركّز على إيه بكرة؟</Eyebrow>
+                <h2 className="t-h2 flow-question mt-3">اختار حاجة واحدة بس.</h2>
+              </>}>
               <div className="stack gap-3">
                 {lesson.pro.commitmentOptions.map(o => (
                   <OptionButton key={o} text={o}
@@ -457,84 +456,86 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
                 ))}
               </div>
               <div className="mt-6">
-                <Button disabled={!commitment} onClick={() => { if (commitment) onCommit?.(commitment); next(); }}>ده اللي هركّز عليه <ArrowRight size={16} className="icon-dir" /></Button>
+                <Button disabled={!commitment} onClick={() => { if (commitment) onCommit?.(commitment); next(); }}>ده اللي هركّز عليه <Icon as={ArrowRight} dir /></Button>
               </div>
+              </FlowSplit>
             </m.section>
           )}
 
           {stage === 'done' && (
-            <m.section key="done" {...achieve} className="focus-col stack grow justify-center">
+            <m.section key="done" {...achieve} className="flow-stage">
               {/* THE HERO — capability, never completion. «You finished» rewards
-                  attendance; «tomorrow you can» rewards becoming. The whole
-                  screen is sized so the eye lands here first and only here. */}
-              <div className="text-center">
-                <Eyebrow icon={<Sparkles size={13} />}>بكرة في الفرع</Eyebrow>
-                <h2 className="t-h2 measure mt-3" style={{ marginInline: 'auto' }}>
-                  {lesson.pro?.tomorrowInBranch ?? lesson.canNow}
-                </h2>
-              </div>
-
-              {/* The golden rule, second and last time — spaced repetition
-                  inside one lesson is how a line survives a year. */}
-              {lesson.pro?.goldenRule && (
-                <p className="golden-rule">{lesson.pro.goldenRule}</p>
-              )}
-
-              {/* Everything practical drops to a quiet block: present, findable,
-                  and never competing with the hero above it. */}
-              {lesson.pro && (
-                <div className="stack mt-7 gap-4">
-                  {commitment && <DoneRow label="التزامك بكرة" body={commitment} />}
-                  {lesson.pro.dailyHabit && <DoneRow label="عادة النهاردة · أقل من دقيقة" body={lesson.pro.dailyHabit} />}
-                  {lesson.pro.officeTask && <DoneRow label="مهمتك مع مدربك" body={lesson.pro.officeTask} />}
-                  {lesson.pro.trainerQuestions?.length ? (
-                    <div>
-                      <span className="t-label c-tx3">اسأل مدربك — متخمّنش</span>
-                      <ul role="list" className="stack gap-2" style={{ listStyle: 'none', margin: 'var(--sp-2) 0 0', padding: 0 }}>
-                        {lesson.pro.trainerQuestions.map((q, i) => (
-                          <li key={i} className="t-sm c-tx1">• {q}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                  {lesson.pro.readinessCheck && (
-                    <SpineWell>
-                      <span className="t-label c-tx3">
-                        {lesson.pro.readinessCheck.level === 'YES' ? 'جاهز' : lesson.pro.readinessCheck.level === 'NO' ? 'لسه بدري' : 'قربت'}
-                      </span>
-                      <p className="t-body measure" style={{ margin: 'var(--sp-2) 0 0' }}>{lesson.pro.readinessCheck.why}</p>
-                    </SpineWell>
-                  )}
-                  {lesson.pro.closingReflection && (
-                    <p className="t-sm measure c-tx2">{lesson.pro.closingReflection}</p>
-                  )}
+                  attendance; «tomorrow you can» rewards becoming. On a wide room
+                  the hero holds one side and what to do with it the other; the
+                  mark is the smallest of the earned moments — a lesson is a
+                  step, not the unit. */}
+              <FlowSplit prompt={
+                <div className="done-hero">
+                  <Achievement tier="task" />
+                  <Eyebrow icon={<Icon as={Sparkles} size="sm" />}>بكرة في الفرع</Eyebrow>
+                  <h2 className="t-h2 flow-question">{lesson.pro?.tomorrowInBranch ?? lesson.canNow}</h2>
+                  {/* The golden rule, second and last time — spaced repetition
+                      inside one lesson is how a line survives a year. */}
+                  {lesson.pro?.goldenRule && <p className="golden-rule golden-rule--start">{lesson.pro.goldenRule}</p>}
                 </div>
-              )}
+              }>
+                <div className="done-notes">
+                  {/* Everything practical is a quiet block: present, findable,
+                      and never competing with the hero beside it. */}
+                  {lesson.pro && (
+                    <>
+                      {commitment && <DoneRow label="التزامك بكرة" body={commitment} />}
+                      {lesson.pro.dailyHabit && <DoneRow label="عادة النهاردة · أقل من دقيقة" body={lesson.pro.dailyHabit} />}
+                      {lesson.pro.officeTask && <DoneRow label="مهمتك مع مدربك" body={lesson.pro.officeTask} />}
+                      {lesson.pro.trainerQuestions?.length ? (
+                        <div>
+                          <span className="t-label c-tx3">اسأل مدربك — متخمّنش</span>
+                          <ul role="list" className="list-plain stack gap-2 mt-2">
+                            {lesson.pro.trainerQuestions.map((q, i) => (
+                              <li key={i} className="t-sm c-tx1">• {q}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                      {lesson.pro.readinessCheck && (
+                        <SpineWell>
+                          <span className="t-label c-tx3">
+                            {lesson.pro.readinessCheck.level === 'YES' ? 'جاهز' : lesson.pro.readinessCheck.level === 'NO' ? 'لسه بدري' : 'قربت'}
+                          </span>
+                          <p className="t-body measure mb-0 mt-2">{lesson.pro.readinessCheck.why}</p>
+                        </SpineWell>
+                      )}
+                      {lesson.pro.closingReflection && (
+                        <p className="t-sm measure c-tx2 m-0">{lesson.pro.closingReflection}</p>
+                      )}
+                    </>
+                  )}
 
-              {/* skills this lesson moved */}
-              <div className="row mt-6 gap-2 wrap justify-center">
-                {lessonSkillTouches(moduleId, lesson.id).map(t => (
-                  <Capsule key={t.name}>{t.name} · {LEVEL_LABEL[t.level]}</Capsule>
-                ))}
-              </div>
+                  {/* skills this lesson moved */}
+                  <div className="row gap-2 wrap">
+                    {lessonSkillTouches(moduleId, lesson.id).map(sk => (
+                      <Capsule key={sk.name}>{sk.name} · {LEVEL_LABEL[sk.level]}</Capsule>
+                    ))}
+                  </div>
 
-              <div className="row mt-6 gap-3 wrap justify-center">
-                {nextStep && (
-                  <Button onClick={nextStep.go}>
-                    {nextStep.label} <ArrowRight size={16} className="icon-dir" />
-                  </Button>
-                )}
-                <Button variant={nextStep ? 'ghost' : 'primary'} onClick={onFinish ?? onExit}>{exitLabel}</Button>
-              </div>
+                  <div className="done-actions">
+                    {nextStep && (
+                      <Button onClick={nextStep.go}>
+                        {nextStep.label} <Icon as={ArrowRight} dir />
+                      </Button>
+                    )}
+                    <Button variant={nextStep ? 'ghost' : 'primary'} onClick={onFinish ?? onExit}>{t('flow.done', lang)}</Button>
+                  </div>
+                </div>
+              </FlowSplit>
             </m.section>
           )}
         </AnimatePresence>
         {canGoBack && (
           <div className="focus-col lesson-steps">
-            <Button variant="ghost" onClick={prev}><ChevronLeft size={16} className="icon-dir" aria-hidden /> السابق</Button>
+            <Button variant="ghost" onClick={prev}><Icon as={ChevronLeft} dir /> السابق</Button>
           </div>
         )}
-      </main>
-    </div>
+    </FlowRoom>
   );
 };

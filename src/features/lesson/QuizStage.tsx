@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
+import { Icon } from '../../ui/Icon';
 import type { QuizQuestion } from '../../domain/types/content';
-import { Eyebrow, OptionButton, FeedbackBlock } from '../../ui/primitives';
+import { Eyebrow, OptionButton, FeedbackBlock, FlowSplit } from '../../ui/primitives';
 import { shuffleOptions } from '../../content/shuffle';
 import { fade } from '../../ui/motion';
 
@@ -24,7 +25,10 @@ export const QuizStage: React.FC<{
   const q = pool[qi]!; // stage only mounts when questions.length > 0
   const isLast = qi >= pool.length - 1;
   const answered = picked !== null;
-  const correct = answered && q.options[picked]?.correct;
+  // The options as shown; the verdict reads the one pressed from this same
+  // list (reading the original order called a right answer wrong).
+  const shown = useMemo(() => shuffleOptions(q.options, q.id + q.prompt + round), [q, round]);
+  const correct = answered && shown[picked]?.correct;
 
   const advance = () => {
     if (!isLast) { setQi(qi + 1); setPicked(null); return; }
@@ -33,11 +37,13 @@ export const QuizStage: React.FC<{
   };
 
   return (
-    <m.section {...fade} className="focus-col">
-      <Eyebrow>{round === 'first' ? 'اتأكد إنك فهمت' : 'الأسئلة اللي زغللت — جاوبها تاني'} · {qi + 1} من {pool.length}</Eyebrow>
-      <h2 className="t-h2 measure mt-4 mb-6">{q.prompt}</h2>
+    <m.section {...fade} className="flow-stage">
+      <FlowSplit prompt={<>
+        <Eyebrow>{round === 'first' ? 'اتأكد إنك فهمت' : 'الأسئلة اللي زغللت — جاوبها تاني'} · {qi + 1} من {pool.length}</Eyebrow>
+        <h2 className="t-h2 flow-question mt-4">{q.prompt}</h2>
+      </>}>
       <div className="stack gap-3">
-        {shuffleOptions(q.options, q.id + q.prompt + round).map((o, i) => (
+        {shown.map((o, i) => (
           <OptionButton key={i} text={o.text} state={!answered ? 'idle' : o.correct ? 'correct' : picked === i ? 'wrong' : 'dim'}
             onPick={() => {
               setPicked(i);
@@ -52,18 +58,19 @@ export const QuizStage: React.FC<{
       </div>
       <AnimatePresence>
         {answered && (
-          <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
+          <m.div {...fade} className="mt-5">
             <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'صح' : 'مش صح — اعرف ليه'}
               onAction={advance}
               actionLabel={<>
                 {!isLast ? 'السؤال الجاي' : round === 'first' && missed.length > 0 ? 'جاوب اللي زغلل تاني' : 'خلّصت الدرس'}
-                <ArrowRight size={16} className="icon-dir" />
+                <Icon as={ArrowRight} dir />
               </>}>
               {q.explanation}
             </FeedbackBlock>
           </m.div>
         )}
       </AnimatePresence>
+      </FlowSplit>
     </m.section>
   );
 };

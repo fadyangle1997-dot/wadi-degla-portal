@@ -34,7 +34,7 @@ import {
   ScreenHeader, EmptyState, ArabicContent, Status, Button, FormField, Toast, DataTable, type Column,
 } from '../../ui/primitives';
 import { WIDTH } from '../../ui/designSystem';
-import { useLang, t as tr, tf, iso } from '../../app/i18n';
+import { useLang, t as tr, tf, iso, dateLocale } from '../../app/i18n';
 import { TRAINING_POLICY } from '../../domain/policy';
 
 type LogEvent = ReturnType<typeof trainingStore.events>[number];
@@ -208,7 +208,7 @@ const Profile: React.FC<{ employeeId: string; name: string; onExit: () => void }
 };
 
 const dateOf = (at: number, lang: 'ar' | 'en') =>
-  new Date(at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'long' });
+  new Date(at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long' });
 
 /** One filed review: the five links, any comments, and a comment box. */
 const ReviewCard: React.FC<{ review: FiledReview; employeeId: string; focus: boolean; onCommented: () => void }> = ({ review, employeeId, focus, onCommented }) => {

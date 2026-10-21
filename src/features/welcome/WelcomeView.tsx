@@ -8,12 +8,12 @@
 import React from 'react';
 import { m } from 'motion/react';
 import { Compass, GraduationCap, Clock3, ShieldCheck, ArrowRight, LogOut } from 'lucide-react';
+import { Icon } from '../../ui/Icon';
 import { identityStore } from '../../app/identity/identityStore';
 import { MODULES, curriculumStats, BOSS_BATTLES } from '../../content/registry';
 import { Button, Eyebrow, ArabicContent } from '../../ui/primitives';
 import { useLang, t } from '../../app/i18n';
-import { fade, stagger } from '../../ui/motion';
-import { WIDTH } from '../../ui/designSystem';
+import { fade } from '../../ui/motion';
 import { PROGRAM } from '../../domain/journey/program';
 
 interface Props {
@@ -28,32 +28,35 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
 
   const facts = [
     {
-      icon: <Compass size={22} />,
+      icon: Compass,
       title: t('wc.where', lang),
       body: t('wc.wherebody', lang),
     },
     {
-      icon: <GraduationCap size={22} />,
+      icon: GraduationCap,
       title: t('wc.learn', lang),
       // States how the nine units sit inside the six phases, so the welcome
       // screen and the roadmap describe the same programme. Both derived from content.
       body: `${stats.lessons} ${t('wc.learnbody', lang)} ${stats.units} ${t('wc.learnunits', lang)} ${PROGRAM.length} ${t('wc.learnphases', lang)}`,
     },
     {
-      icon: <Clock3 size={22} />,
+      icon: Clock3,
       title: t('wc.time', lang),
       body: t('wc.timebody', lang),
     },
     {
-      icon: <ShieldCheck size={22} />,
+      icon: ShieldCheck,
       title: t('wc.ready', lang),
       body: `${t('wc.readybody1', lang)} ${lastBossLevel} ${t('wc.readybody2', lang)}`,
     },
   ];
 
   return (
+    /* The first screen after the door, on the same room as the door: one
+       action above the fold, the programme in four facts for whoever reads on.
+       It arrives once, as a whole — nothing here is staged in. */
     <div className="stack min-h-screen justify-center">
-      <m.main {...fade} aria-label="أهلاً بيك في أكاديمية عمليات العضويات" className="w-full" style={{ maxWidth: WIDTH.focus, margin: '0 auto', padding: 'var(--sp-7) var(--sp-5)' }}>
+      <m.main {...fade} aria-label="أهلاً بيك في أكاديمية عمليات العضويات" className="welcome-room">
         <Eyebrow>{t('wel.eyebrow', lang)}</Eyebrow>
         <h1 className="t-display mt-4">{t('wel.title', lang)}</h1>
         <p className="t-lead measure mt-4">
@@ -62,34 +65,33 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
 
         {/* The one action comes first, above the fold; the explanation cards
             follow for whoever scrolls. */}
-        <m.div {...stagger(1, 0.15)} className="mt-6">
+        <div className="mt-6">
           <Button onClick={onStartFirstLesson}>
-            {t('wc.startfirst', lang)} — <ArabicContent as="span">{first?.lessons[0]?.title ?? ''}</ArabicContent> <ArrowRight size={16} className="icon-dir" />
+            {t('wc.startfirst', lang)} — <ArabicContent as="span">{first?.lessons[0]?.title ?? ''}</ArabicContent> <Icon as={ArrowRight} dir />
           </Button>
-        </m.div>
-
-        <div className="stack mt-7 gap-3">
-          {facts.map((f, i) => (
-            <m.div key={f.title} {...stagger(i + 2, 0.15)}
-              className="row gap-4 items-start" style={{ padding: 'var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}>
-              <span className="c-g2 mt-1 no-shrink">{f.icon}</span>
-              <span>
-                <span className="t-title block c-tx0">{f.title}</span>
-                <span className="t-sm block mt-1">{f.body}</span>
-              </span>
-            </m.div>
-          ))}
         </div>
 
-        <m.p {...stagger(facts.length, 0.15)} className="t-sm mt-5 c-tx3">
+        <ul role="list" className="list-plain welcome-facts">
+          {facts.map(f => (
+            <li key={f.title} className="welcome-fact">
+              <span className="mt-1 no-shrink"><Icon as={f.icon} size="lg" /></span>
+              <span>
+                <span className="t-title block">{f.title}</span>
+                <span className="t-sm block mt-1">{f.body}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <p className="t-sm mt-5">
           {t('wc.storage', lang)}
-        </m.p>
+        </p>
         {/* The one tertiary way out of a screen that otherwise has a single
             action: someone who signed in on the wrong account must not be
             stuck in a stranger's first day. */}
         <div className="mt-6">
           <button type="button" className="icon-btn" onClick={() => identityStore.signOut()}>
-            <LogOut size={16} aria-hidden /> {t('menu.signout', lang)}
+            <Icon as={LogOut} /> {t('menu.signout', lang)}
           </button>
         </div>
         {/* One primary action. The journey is always one tap away in the shell. */}

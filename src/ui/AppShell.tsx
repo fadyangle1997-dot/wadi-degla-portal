@@ -23,7 +23,7 @@ import { orgStore } from '../app/organization/orgStore';
 import { MODULES } from '../content/registry';
 import type { View } from '../app/router';
 import { navFor } from '../domain/identity/access';
-import { useLang, langStore, t, tf, roleName as roleDisplayName, type Key } from '../app/i18n';
+import { useLang, langStore, t, tf, roleName as roleDisplayName, type Key, dateLocale } from '../app/i18n';
 import { WIDTH } from './designSystem';
 import { LoadingState, useModal, Content, tx } from './primitives';
 import { displayNameOf } from '../domain/identity';
@@ -354,7 +354,7 @@ const ActionCenter: React.FC<{ now: readonly BellItem[]; before: readonly BellIt
       {urgent && <span aria-hidden className="no-shrink" style={{ width: 6, height: 6, borderRadius: 'var(--r-full)', background: 'var(--attn)' }} />}
       <span className="grow">
         <span className="t-sm">{it.label}</span>
-        {it.at && <span className="t-label c-tx3 block">{new Date(it.at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'long' })}</span>}
+        {it.at && <span className="t-label c-tx3 block">{new Date(it.at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long' })}</span>}
       </span>
     </button>
   );

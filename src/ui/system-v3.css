@@ -54,6 +54,11 @@
   /* The edge brightens under the pointer, so affordance goes up, not down. */
   --edge-control-hover: var(--g1);
   --placeholder: var(--paper-2);
+  /* Paper's own rules and hover: ink at low strength, solid on cream. */
+  --paper-rule: #CFC3B3;
+  --paper-hover: #E6DDD0;
+  /* The focus room's widest column pair. */
+  --w-room: 72rem;
 
   /* An action or a choice carries its label ON the gold, so it takes the
      champagne step: dark ink on #CCAB6C is 7.7:1 (AAA); on #B38922 it was
@@ -116,6 +121,8 @@
   :root[data-system="v3"] .t-score { font-size: var(--fs-8); line-height: var(--lh-8); }
 }
 :root[data-system="v3"] .t-lead { font-size: var(--fs-4); line-height: var(--lh-4); }
+/* A list item's title: a step of the scale, never the heading element's default. */
+:root[data-system="v3"] .t-title { font-size: var(--fs-4); line-height: var(--lh-4); font-weight: 600; }
 :root[data-system="v3"] .t-body { font-size: var(--fs-3); line-height: var(--lh-3); }
 :root[data-system="v3"] .t-sm { font-size: var(--fs-2); line-height: var(--lh-2); }
 :root[data-system="v3"] :is(.t-label, .t-eyebrow, .form-label, .form-hint, .form-error) { font-size: var(--fs-1); line-height: var(--lh-1); }
@@ -167,6 +174,11 @@
   transition: background var(--dur-150) var(--ease-standard), border-color var(--dur-150) var(--ease-standard);
 }
 :root[data-system="v3"] .option-idle:hover { border-color: var(--edge-control-hover); background: var(--surface-panel-nested); }
+/* An answered option keeps its meaning: the right one in the positive role, the
+   wrong one pressed in risk. A 2px edge and a tint, beside the mark and the
+   spoken word, so the answer never rests on colour alone. */
+:root[data-system="v3"] .option-correct { background: var(--ready-bg); border-color: var(--ready); box-shadow: inset 0 0 0 1px var(--ready); }
+:root[data-system="v3"] .option-wrong { background: var(--risk-bg); border-color: var(--risk); box-shadow: inset 0 0 0 1px var(--risk); }
 
 /* ── Panel ────────────────────────────────────────────────────────────────── */
 :root[data-system="v3"] .card { border-radius: var(--r-panel); }
@@ -207,6 +219,9 @@
 @media (min-width: 640px) { :root[data-system="v3"] .brief { padding: var(--sp-6); } }
 :root[data-system="v3"] .brief::before { display: none; }
 :root[data-system="v3"] .brief .t-eyebrow { color: var(--text-on-paper); }
+/* A link on paper is ink, underlined: never the browser's blue. */
+:root[data-system="v3"] :is(.brief, .paper-sheet) a { color: var(--text-on-paper); font-weight: 600; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+:root[data-system="v3"] :is(.brief, .paper-sheet) a:hover { text-decoration-thickness: 2px; }
 /* A tone is said by the label's ink, not by an edge. */
 :root[data-system="v3"] .brief[data-tone="attn"] .t-eyebrow { color: var(--attn); }
 :root[data-system="v3"] .brief[data-tone="risk"] .t-eyebrow { color: var(--risk); }
@@ -308,6 +323,7 @@
 .golden-rule { margin: var(--sp-5) auto 0; max-width: var(--measure); text-align: center;
   font-family: var(--font-display); font-weight: 600; font-size: var(--fs-5); line-height: var(--lh-5);
   color: var(--text-strong); font-size-adjust: var(--display-adjust); }
+.golden-rule--start { margin: var(--sp-2) 0 0; text-align: start; }
 .example-card { padding: var(--sp-5); border: 1px solid var(--edge-panel); border-radius: var(--r-panel);
   background: var(--surface-panel-nested); box-shadow: var(--panel-light); }
 .example-total { margin: var(--sp-3) 0 var(--sp-2); font-family: var(--font-display); font-weight: 600;
@@ -335,3 +351,170 @@
 .choice-chip:hover:not(:disabled) { border-color: var(--edge-control-hover); }
 .choice-chip[aria-current="true"] { background: var(--accent-selected); border-color: var(--accent-selected); color: var(--text-on-action); }
 .choice-chip:disabled { cursor: default; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   The focus room — a lesson, the unit exam, the challenge, the daily review.
+   One bar, one body, the same labelled Exit at the same place. These routes
+   are always in the v3 scope (App.tsx FOCUS_JOURNEY).
+   ════════════════════════════════════════════════════════════════════════════ */
+.flow { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+.flow-bar { position: sticky; top: 0; z-index: 10; background: var(--surface-room); border-bottom: 1px solid var(--edge-hairline); }
+.flow-bar-row {
+  display: flex; align-items: center; gap: var(--sp-3) var(--sp-4); flex-wrap: wrap;
+  max-width: var(--w-room); margin: 0 auto; padding: var(--sp-3) var(--sp-4);
+}
+.flow-id { display: flex; flex-direction: column; min-width: 0; flex: 1 1 0; }
+.flow-mode { font-size: var(--fs-1); line-height: var(--lh-1); font-weight: 600; color: var(--text-strong); }
+.flow-title { font-size: var(--fs-2); line-height: var(--lh-2); font-weight: 600; color: var(--text-strong); text-wrap: balance; }
+/* The rail takes the second line on a phone, the middle of the bar on a desk. */
+.flow-rail { order: 3; flex: 1 1 100%; display: flex; align-items: center; gap: var(--sp-3); }
+.flow-rail .prail { flex: 1; }
+.flow-step { font-size: var(--fs-1); line-height: var(--lh-1); font-weight: 600; color: var(--text-strong); white-space: nowrap; }
+.flow-exit {
+  flex: 0 0 auto; min-height: 44px; padding: 0 var(--sp-4); border: 1px solid var(--edge-control); border-radius: var(--r-full);
+  background: transparent; color: var(--text-strong); font: inherit; font-size: var(--fs-2); font-weight: 600; cursor: pointer;
+  transition: background var(--dur-150) var(--ease-standard), border-color var(--dur-150) var(--ease-standard);
+}
+.flow-exit:hover { border-color: var(--edge-control-hover); background: var(--surface-panel-nested); }
+@media (min-width: 720px) {
+  .flow-bar-row { flex-wrap: nowrap; padding: var(--sp-3) var(--sp-5); }
+  .flow-id { flex: 0 1 18rem; }
+  .flow-rail { order: 0; flex: 1 1 auto; }
+}
+.flow-body { flex: 1; display: flex; flex-direction: column; container-type: inline-size; outline: none; }
+/* One step of a flow (a question, a stage): fills the room so its split can centre. */
+.flow-stage { flex: 1; display: flex; flex-direction: column; container-type: inline-size; }
+
+/* Prompt beside response once the room is wide enough for both to keep a
+   reading measure; the prompt stays in view while the answer is chosen. */
+.flow-split {
+  width: 100%; max-width: var(--w-room); margin: 0 auto; padding: var(--sp-5) var(--sp-4) var(--sp-7);
+  display: grid; gap: var(--sp-5); align-content: start;
+}
+.flow-prompt, .flow-response { min-width: 0; }
+@container (min-width: 60rem) {
+  .flow-split {
+    flex: 1; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--sp-8);
+    align-content: center; align-items: start; padding: var(--sp-7) var(--sp-5);
+  }
+  .flow-prompt { position: sticky; top: var(--sp-9); }
+}
+.flow-question { margin: 0; max-width: var(--measure); }
+.flow-note { margin: 0; max-width: var(--measure); font-size: var(--fs-2); line-height: var(--lh-2); color: var(--text-strong); }
+.flow-actor { display: flex; align-items: center; gap: var(--sp-2); margin: 0; font-size: var(--fs-2); line-height: var(--lh-2); color: var(--text-strong); }
+/* The room for a single message (a cooldown, a filed review). */
+.flow-center {
+  flex: 1; width: 100%; max-width: 40rem; margin: 0 auto; padding: var(--sp-7) var(--sp-4);
+  display: flex; flex-direction: column; justify-content: center; gap: var(--sp-4);
+}
+
+/* ── Paper in the room: a case file, a result ────────────────────────────── */
+.paper-sheet {
+  width: 100%; max-width: 44rem; margin: 0 auto; padding: var(--sp-5) var(--sp-4);
+  background: var(--tooth), var(--surface-paper); color: var(--text-on-paper);
+  border-radius: var(--r-paper); box-shadow: var(--e-paper);
+}
+@media (min-width: 640px) { .paper-sheet { padding: var(--sp-6); } }
+.paper-sheet :is(h1, h2, h3, p, dt, dd, li, .t-eyebrow, .t-sm, .t-body, .status) { color: var(--text-on-paper); }
+/* The v3 eyebrow is white on the room; on paper it takes the paper's ink. */
+:root[data-system="v3"] .paper-sheet .t-eyebrow { color: var(--text-on-paper); }
+/* One action on paper is ink, as on the mission paper: gold stays for the
+   room's actions and for what was earned. */
+:root[data-system="v3"] .paper-sheet .btn-primary { background: var(--text-on-paper); color: var(--on-ink); }
+:root[data-system="v3"] .paper-sheet .btn-primary:hover:not(:disabled) { background: #2E2722; }
+:root[data-system="v3"] .paper-sheet .btn-ghost { border-color: var(--text-on-paper); color: var(--text-on-paper); background: transparent; }
+:root[data-system="v3"] .paper-sheet .btn-ghost:hover:not(:disabled) { background: var(--paper-hover); }
+.paper-sheet :focus-visible { outline-color: var(--text-on-paper); }
+.paper-facts { margin: var(--sp-5) 0 0; display: grid; gap: 0; border-top: 1px solid var(--paper-rule); }
+.paper-facts > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-4); padding: var(--sp-3) 0; border-bottom: 1px solid var(--paper-rule); }
+.paper-facts dt { font-size: var(--fs-2); line-height: var(--lh-2); }
+.paper-facts dd { margin: 0; font-size: var(--fs-2); line-height: var(--lh-2); font-weight: 600; text-align: end; font-variant-numeric: tabular-nums lining-nums; }
+.paper-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-6); }
+.case-label { margin: var(--sp-5) 0 0; font-size: var(--fs-1); line-height: var(--lh-1); font-weight: 600; }
+.case-text { margin: var(--sp-2) 0 0; max-width: var(--measure); font-size: var(--fs-4); line-height: var(--lh-4); }
+
+/* ── Earned moments ───────────────────────────────────────────────────────────
+   The mark grows with what was earned; the gold is the progress role. */
+.achievement {
+  position: relative; display: inline-grid; place-items: center; flex-shrink: 0;
+  color: var(--accent-progress);
+}
+.achievement-ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+.achievement-ring circle { fill: none; stroke: var(--accent-progress); stroke-width: 2; }
+.achievement--task { width: 2.5rem; height: 2.5rem; }
+.achievement--pass { width: 3.5rem; height: 3.5rem; }
+.achievement--unit { width: 3.5rem; height: 3.5rem; }
+.achievement--programme { width: 5.5rem; height: 5.5rem; }
+.achievement--programme .achievement-ring circle { stroke-width: 1.5; }
+
+.score-progress { position: relative; display: grid; place-items: center; width: 8.5rem; height: 8.5rem; flex-shrink: 0; }
+.score-progress svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.score-track { fill: none; stroke: var(--paper-rule); stroke-width: 6; }
+.score-arc { fill: none; stroke: var(--text-on-paper); stroke-width: 6; stroke-linecap: round; }
+.score-progress[data-passed] .score-arc { stroke: var(--accent-progress); }
+.score-num {
+  font-family: var(--font-display); font-weight: 600; font-size: var(--fs-7); line-height: var(--lh-7);
+  font-size-adjust: var(--display-adjust); font-variant-numeric: tabular-nums lining-nums; color: var(--text-on-paper);
+}
+.result-head { display: flex; align-items: center; gap: var(--sp-5); flex-wrap: wrap; }
+.result-verdict { display: grid; gap: var(--sp-2); min-width: 0; flex: 1 1 14rem; }
+
+/* What follows a result on the room: a plan, as rows you can act on. */
+.flow-after { width: 100%; max-width: 44rem; margin: var(--sp-6) auto 0; }
+.plan-list { list-style: none; margin: var(--sp-3) 0 0; padding: 0; border-top: 1px solid var(--edge-hairline); }
+.plan-list li { border-bottom: 1px solid var(--edge-hairline); }
+.plan-link {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); width: 100%; min-height: 52px;
+  padding: var(--sp-3) var(--sp-2); border: 0; background: transparent; color: var(--text-strong);
+  font: inherit; font-size: var(--fs-3); line-height: var(--lh-3); text-align: start; cursor: pointer;
+  transition: background var(--dur-150) var(--ease-standard);
+}
+.plan-link:hover { background: var(--surface-panel); }
+.unlock-line { display: flex; align-items: center; gap: var(--sp-2); margin: var(--sp-4) 0 0; font-size: var(--fs-2); line-height: var(--lh-2); font-weight: 600; }
+
+/* ── The lesson's closing screen ──────────────────────────────────────────── */
+.done-hero { display: grid; gap: var(--sp-3); justify-items: start; }
+.done-notes { display: grid; gap: var(--sp-4); }
+.done-row { padding: var(--sp-4); border: 1px solid var(--edge-hairline); border-radius: var(--r-md); background: var(--surface-panel); box-shadow: var(--panel-light); }
+.done-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-2); }
+
+/* ── The daily review ─────────────────────────────────────────────────────── */
+.review-chain { display: grid; gap: var(--sp-2); margin: var(--sp-5) 0 0; }
+.review-chain-row {
+  display: flex; align-items: flex-start; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3);
+  background: var(--surface-panel); border: 1px solid var(--edge-hairline); border-radius: var(--r-sm);
+}
+.review-chain-key { flex: 0 0 6rem; font-size: var(--fs-1); line-height: var(--lh-1); font-weight: 600; color: var(--text-strong); }
+.review-chain-text { flex: 1; min-width: 0; font-size: var(--fs-2); line-height: var(--lh-2); color: var(--text-strong); }
+.review-answer { min-height: 9rem; resize: vertical; font-family: inherit; line-height: var(--lh-3); }
+
+/* ── Welcome: what the programme is, before the first lesson ──────────────── */
+.welcome-facts { display: grid; gap: var(--sp-3); margin-top: var(--sp-7); }
+@container (min-width: 44rem) { .welcome-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.welcome-fact {
+  display: flex; gap: var(--sp-4); align-items: flex-start; padding: var(--sp-4);
+  background: var(--surface-panel); border: 1px solid var(--edge-hairline); border-radius: var(--r-panel); box-shadow: var(--panel-light);
+  color: var(--text-strong);
+}
+.welcome-room { flex: 1; container-type: inline-size; width: 100%; max-width: var(--w-room); margin: 0 auto; padding: var(--sp-7) var(--sp-4); }
+@media (min-width: 640px) { .welcome-room { padding: var(--sp-8) var(--sp-5); } }
+
+/* ── Approval and completion on the mission paper ─────────────────────────── */
+.brief-achievement { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); padding-bottom: var(--sp-4); border-bottom: 1px solid var(--paper-rule); }
+.brief-achievement .achievement { color: var(--text-on-paper); }
+@media (max-width: 479px) { .brief-achievement .achievement { width: 2.5rem; height: 2.5rem; } }
+.brief-achievement-text { display: grid; gap: var(--sp-1); font-size: var(--fs-2); line-height: var(--lh-2); color: var(--text-on-paper); }
+.certified-mark { display: flex; align-items: center; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+/* The case, one tap away beside each decision: closed by default on a phone,
+   where the decision needs the room. */
+.case-recall { max-width: var(--measure); border: 1px solid var(--edge-hairline); border-radius: var(--r-md); background: var(--surface-panel); }
+.case-recall > summary { min-height: 44px; display: flex; align-items: center; padding: 0 var(--sp-3); cursor: pointer; font-size: var(--fs-2); font-weight: 600; color: var(--text-strong); }
+.case-recall > p { padding: 0 var(--sp-3) var(--sp-3); }
+
+.practice-item-text { min-width: min(100%, 12.5rem); }
+.dialogue-who { min-width: 2.75rem; padding-top: var(--sp-1); }
+/* A narrow room puts each answer's label on its own line, above the answer. */
+@container (max-width: 30rem) {
+  .review-chain-row { flex-wrap: wrap; }
+  .review-chain-key { flex: 1 1 100%; }
+}

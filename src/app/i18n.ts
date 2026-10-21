@@ -204,7 +204,12 @@ const DICT = {
                       en: 'You tried the exam several times in a row. Review the lessons, and you can try again after {when}. If you need to try sooner, talk to your trainer.' },
   'sh.cooldowncta': { ar: 'ارجع للمسار وراجع',     en: 'Back to the path to review' },
   'sh.unitexam':    { ar: 'امتحان الوحدة',         en: 'Unit exam' },
-  'as.bar':         { ar: 'وضع التقييم',           en: 'Assessment' },
+  'flow.bar':       { ar: 'شريط المهمة',           en: 'Task bar' },
+  'rv.mode':        { ar: 'مراجعة اليوم',           en: 'Daily review' },
+  'rv.step':        { ar: 'سؤال {n} من {total}',   en: 'Question {n} of {total}' },
+  'rv.answer':      { ar: 'إجابتك',                en: 'Your answer' },
+  'rv.filedtitle':  { ar: 'اتسجّلت',               en: 'Filed' },
+  'flow.done':      { ar: 'تمام',                  en: 'Done' },
   'ts.label':       { ar: 'حجم الخط',              en: 'Text size' },
   'ts.md':          { ar: 'عادي',                  en: 'Normal' },
   'ts.lg':          { ar: 'كبير',                  en: 'Large' },
@@ -856,6 +861,10 @@ const DICT = {
   'tn.readreview':  { ar: 'اقرا المراجعة وعلّق',     en: 'read the review and comment' },
   'tn.col.situation': { ar: 'الموقف',               en: 'Situation' },
   'tn.col.filed':   { ar: 'اتسجّلت',                en: 'Filed' },
+  'mi.approved':    { ar: 'اتعتمدت {m}',           en: '{m} approved' },
+  'mi.approvedbody':{ ar: 'مدربك اعتمد الوحدة، واللي بعدها اتفتحت.', en: 'Your trainer approved the unit, and the next one is open.' },
+  'mi.certifiedby': { ar: 'اعتمدك {name} يوم {date}.', en: 'Certified by {name} on {date}.' },
+  'mi.certifiedon': { ar: 'اتعتمدت يوم {date}.',     en: 'Certified on {date}.' },
   'mi.certifiedeyebrow': { ar: 'خلّصت البرنامج',     en: 'Programme complete' },
   'mi.certified':   { ar: 'مديرك اعتمدك جاهز للعمل في المكتب', en: 'Your manager certified you ready for the office' },
   'mi.certifiedbody': { ar: 'قرار الجاهزية اتسجّل في ملفك ومفيش خطوة تدريب مطلوبة. المرجع فاضل معاك — رجعله وإنت شغّال.', en: 'The readiness decision is on your file and no training step is due. The reference stays with you — come back to it while you work.' },
@@ -1041,6 +1050,9 @@ export const roleName = (role: { readonly id: string; readonly name: string } | 
  * the string equivalent of <bdi>, so «83%» keeps its order inside Arabic.
  */
 export const iso = (v: string | number): string => `\u2068${v}\u2069`;
+
+/** The locale for dates: Egyptian Arabic month names with the product's Western digits. */
+export const dateLocale = (l: Lang = lang): string => (l === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB');
 
 /** Translate and fill {placeholders}: tf('pf.dayof', { d: 12 }, lang). */
 export const tf = (key: Key, vars: Readonly<Record<string, string | number>>, l: Lang = lang): string =>

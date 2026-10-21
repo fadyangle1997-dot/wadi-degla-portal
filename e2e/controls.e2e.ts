@@ -14,13 +14,16 @@ const loadDemo = async (page: import('@playwright/test').Page) => {
   await signOut(page);
 };
 
-test('dashboard → lesson → Back returns to the dashboard', async ({ page }) => {
+test('dashboard → lesson → Exit returns to the dashboard, and names where it goes', async ({ page }) => {
   await signIn(page, 'ahmed.m');
   await toAcademy(page);
   await openTodaysLesson(page);
-  const back = page.getByRole('button', { name: 'ارجع للمسار' }).first();
-  await expect(back).toBeVisible();
-  await back.click();
+  // One labelled Exit, in the same place in every flow: its visible word is
+  // «خروج», and its name goes on to say where it leads.
+  const exit = page.getByRole('navigation', { name: 'شريط المهمة' }).getByRole('button', { name: 'خروج — ارجع للمسار' });
+  await expect(exit).toBeVisible();
+  await expect(exit).toHaveText(/^خروج/);
+  await exit.click();
   await expect(page).not.toHaveURL(/#\/lesson\//);
   await expect(page.getByText('مهمة النهارده')).toBeVisible();
 });

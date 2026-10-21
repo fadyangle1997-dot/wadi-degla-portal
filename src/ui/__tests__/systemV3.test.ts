@@ -1,6 +1,7 @@
 /**
  * The v3 benchmark's contract, held by tests:
- *  · it is scoped — nothing outside sign-in, the dashboard and a lesson changes;
+ *  · it is scoped — the sign-in and the trainee's focus journey (welcome,
+ *    dashboard, lesson, exam, challenge, daily review) and nothing else;
  *  · type comes from the nine steps only, never a literal size;
  *  · Arabic never takes letter-spacing;
  *  · motion uses the duration tokens, and every spring is critically damped;
@@ -27,7 +28,7 @@ const selectors = (list: string) => {
 };
 
 /** Classes only the benchmark screens render; they may stand unscoped. */
-const BENCHMARK_ONLY = /^\.(door|text-action|rule-text|golden-rule|example-|dialogue-|archetype|check-|practice-item|choice-chip)/;
+const BENCHMARK_ONLY = /^\.(door|text-action|rule-text|golden-rule|example-|dialogue-|archetype|check-|practice-item|choice-chip|flow|paper-|case-|achievement|score-|result-|plan-|unlock-line|done-|review-chain|review-answer|welcome-|brief-achievement|certified-mark)/;
 
 describe('system v3 — the benchmark contract', () => {
   it('every rule is scoped to html[data-system="v3"], or belongs only to the benchmark screens', () => {
@@ -86,10 +87,28 @@ describe('system v3 — the benchmark contract', () => {
     expect(v3).toMatch(/--display-adjust:\s*0\.531/);
   });
 
-  it('the scope is set by the benchmark screens and nobody else', () => {
+  it('the scope is set by the focus journey and the sign-in, and nobody else', () => {
     const app = readFileSync(join(SRC, 'app/App.tsx'), 'utf-8');
     const login = readFileSync(join(SRC, 'features/login/LoginView.tsx'), 'utf-8');
-    expect(app).toMatch(/useSystemV3\(signedIn && \(view\.kind === 'path' \|\| view\.kind === 'lesson'\)\)/);
+    expect(app).toMatch(/useSystemV3\(signedIn && FOCUS_JOURNEY\.has\(view\.kind\)\)/);
+    const journey = app.match(/FOCUS_JOURNEY[^=]*= new Set\(\[([^\]]*)\]\)/)?.[1] ?? '';
+    expect(journey.split(',').map(s => s.trim().replace(/'/g, '')).sort())
+      .toEqual(['boss', 'exam', 'lesson', 'path', 'review', 'reviews', 'welcome']);
     expect(login).toMatch(/useSystemV3\(true\)/);
+  });
+
+  it('every flow in the journey opens into the same room, with the same Exit', () => {
+    for (const f of ['features/lesson/LessonFlow.tsx', 'features/exam/ExamView.tsx', 'features/boss/BossView.tsx', 'features/review/DecisionReview.tsx']) {
+      const src = readFileSync(join(SRC, f), 'utf-8');
+      expect(src, f).toMatch(/<FlowRoom\b/);
+      expect(src, f).not.toMatch(/<ScreenHeader\b|<AssessmentMode\b|<BackButton\b/);
+    }
+  });
+
+  it('an answered option keeps its status role: the v3 option panel does not cover it', () => {
+    // `:root[data-system="v3"] .option` outranks the plain state classes, so
+    // the states have to be restated in the same scope or they turn neutral.
+    expect(v3).toMatch(/:root\[data-system="v3"\] \.option-correct \{[^}]*border-color: var\(--ready\)/);
+    expect(v3).toMatch(/:root\[data-system="v3"\] \.option-wrong \{[^}]*border-color: var\(--risk\)/);
   });
 });

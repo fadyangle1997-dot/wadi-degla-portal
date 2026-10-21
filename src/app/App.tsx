@@ -31,7 +31,7 @@ const LessonFlow = lazy(() => import('../features/lesson/LessonFlow').then(m => 
 const ExamView = lazy(() => import('../features/exam/ExamView').then(m => ({ default: m.ExamView })));
 const BossView = lazy(() => import('../features/boss/BossView').then(m => ({ default: m.BossView })));
 import { readinessStanding } from '../domain/readiness/track';
-import { EmptyState, Button, Eyebrow, ScreenHeader, ArabicContent, LoadingState } from '../ui/primitives';
+import { EmptyState, Button, ArabicContent, LoadingState, FlowRoom, Content } from '../ui/primitives';
 import { RouteBoundary } from './RouteBoundary';
 import { moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
 import { unitPlace } from '../domain/journey/program';
@@ -42,7 +42,7 @@ import { consumed, pushUrl, replaceUrl, restore, settled } from './overlayHistor
 import { useSystemV3 } from '../ui/systemScope';
 import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents, useTraining } from './training/trainingStore';
 import { TRAINING_POLICY } from '../domain/policy';
-import { useLang, t, tf } from './i18n';
+import { useLang, t, tf, dateLocale } from './i18n';
 
 const initialView = (): View => {
   const v = parseHash(location.hash);
@@ -98,20 +98,22 @@ const NoAccess: React.FC = () => {
   );
 };
 
-const ExamCooldown: React.FC<{ retryAt: number; onExit: () => void }> = ({ retryAt, onExit }) => {
+/** The trainee's focus journey: every route the v3 system covers. */
+const FOCUS_JOURNEY: ReadonlySet<View['kind']> = new Set(['path', 'welcome', 'lesson', 'exam', 'boss', 'review', 'reviews']);
+
+const ExamCooldown: React.FC<{ title: string; retryAt: number; onExit: () => void }> = ({ title, retryAt, onExit }) => {
   const lang = useLang();
-  const when = new Date(retryAt).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+  const when = new Date(retryAt).toLocaleString(dateLocale(lang), { dateStyle: 'medium', timeStyle: 'short' });
   return (
-    <div className="min-h-screen">
-      <ScreenHeader onBack={onExit} maxWidth={680} leading={<Eyebrow>{t('sh.unitexam', lang)}</Eyebrow>} />
-      <main style={{ maxWidth: 680, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5)' }}>
+    <FlowRoom mode={t('sh.unitexam', lang)} title={<Content>{title}</Content>} onExit={onExit}>
+      <div className="flow-center">
         <EmptyState
           title={t('sh.cooldowntitle', lang)}
           body={tf('sh.cooldownbody', { when }, lang)}
           action={<Button onClick={onExit}>{t('sh.cooldowncta', lang)}</Button>}
         />
-      </main>
-    </div>
+      </div>
+    </FlowRoom>
   );
 };
 
@@ -120,7 +122,10 @@ export const App: React.FC = () => {
   // The exam attempt gate is an ENTRY condition: decided once when the trainee
   // enters an exam and cached until they leave. Re-asking it mid-exam would count
   // the attempt just recorded and swap the result screen for the cooldown.
-  const gateCache = useRef(new Map<string, ReturnType<typeof examGate>>());
+  // «Already passed» is decided at the same moment: asked on every render, it
+  // saw the pass the trainee had just earned and replaced its result screen
+  // with the path.
+  const gateCache = useRef(new Map<string, ReturnType<typeof examGate> & { passedOnEntry: boolean }>());
   // Leaving an exam clears its cached decision, so the NEXT entry re-asks the
   // question against the attempts as they now stand. Without this the cache
   // would outlive the visit and let a blocked trainee back in.
@@ -133,7 +138,8 @@ export const App: React.FC = () => {
   const gateFor = (moduleId: string) => {
     const hit = gateCache.current.get(moduleId);
     if (hit) return hit;
-    const fresh = examGate(moduleId);
+    const attempts = examAttemptsOf(moduleId);
+    const fresh = { ...examGate(moduleId), passedOnEntry: !!attempts[attempts.length - 1]?.passed };
     gateCache.current.set(moduleId, fresh);
     return fresh;
   };
@@ -143,9 +149,11 @@ export const App: React.FC = () => {
   useIdentity();
   const signedIn = identityStore.currentUser() !== null;
   const p = useProgress();
-  // The v3 benchmark covers the trainee's dashboard and a lesson (and the
-  // sign-in screen, which holds the scope itself); everything else stays v2.
-  useSystemV3(signedIn && (view.kind === 'path' || view.kind === 'lesson'));
+  // The v3 system covers the trainee's focus journey end to end — welcome,
+  // dashboard, lesson, exam, challenge, daily review and its replies (the
+  // sign-in screen holds the scope itself); everything else stays v2 until
+  // its own migration.
+  useSystemV3(signedIn && FOCUS_JOURNEY.has(view.kind));
 
   // A redirect REPLACES the entry it refused: pushing it left a Back button
   // that returned to the refused URL, which redirected again — a trap.
@@ -346,17 +354,14 @@ export const App: React.FC = () => {
     const lessonsDone = m ? m.lessons.every(l => isLessonDone(p, l.id)) : false;
     if (!m || !isModuleUnlocked(p, m.id) || !lessonsDone) return <Redirect to="path" onGo={goTo} />;
 
-    // A passed exam is never re-entered. A refresh on the result screen re-parses
-    // #/exam/:id; send it to the path, where nextAction() already derives the
-    // post-exam state from the attempt that was just recorded.
-    const attempts = examAttemptsOf(m.id);
-    const latestAttempt = attempts[attempts.length - 1];
-    if (latestAttempt?.passed) return <Redirect to="path" onGo={goTo} />;
-
-    // Attempt policy: unlimited retries cannot brute-force a pass. The decision is
-    // the entry-time one cached above (gateFor).
+    // Both decisions are the entry-time ones cached above (gateFor).
+    // A passed exam is never re-entered: a refresh on the result screen re-parses
+    // #/exam/:id and goes to the path, where nextAction() derives the post-exam
+    // state. The pass recorded during THIS visit keeps its result screen.
     const gate = gateFor(m.id);
-    if (!gate.allowed) return <ExamCooldown retryAt={gate.retryAt} onExit={toPath} />;
+    if (gate.passedOnEntry) return <Redirect to="path" onGo={goTo} />;
+    // Attempt policy: unlimited retries cannot brute-force a pass.
+    if (!gate.allowed) return <ExamCooldown title={m.title} retryAt={gate.retryAt} onExit={toPath} />;
     return <Lazy><ArabicContent><ExamView key={`${m.id}:${examRun}`} module={m} onExit={toOrigin} exitLabel={originLabel()}
       onReviewLesson={lessonId => openLesson(m.id, lessonId)}
       onRetry={() => { gateCache.current.delete(m.id); setExamRun(r => r + 1); }}

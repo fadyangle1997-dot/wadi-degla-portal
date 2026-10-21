@@ -20,16 +20,16 @@
  */
 import React, { useState } from 'react';
 import { m } from 'motion/react';
-import { ArrowRight, Check, ChevronLeft } from 'lucide-react';
+import { ArrowRight, ChevronLeft, PenLine } from 'lucide-react';
 import {
   REVIEW_FIELDS, REVIEW_LABELS, REVIEW_PROMPTS, isComplete, type ReviewField,
 } from '../../domain/review';
 import { trainingStore, currentTraineeId } from '../../app/training/trainingStore';
-import { Button, Eyebrow, ScreenHeader, InlineError, useExitFlow } from '../../ui/primitives';
-import { t, langStore } from '../../app/i18n';
-import { fade } from '../../ui/motion';
+import { Button, Eyebrow, InlineError, FlowRoom, FlowSplit, Achievement } from '../../ui/primitives';
+import { Icon } from '../../ui/Icon';
+import { t, tf, langStore, useLang } from '../../app/i18n';
+import { fade, achieve } from '../../ui/motion';
 import { toHash } from '../../app/router';
-import { WIDTH } from '../../ui/designSystem';
 
 /** Why each link is being asked — shown once, at the moment it matters. */
 const RATIONALE: Record<ReviewField, string> = {
@@ -42,6 +42,7 @@ const RATIONALE: Record<ReviewField, string> = {
 
 
 export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }> = ({ onExit, exitLabel = t('nav.toroadmap', langStore.get()) }) => {
+  const lang = useLang();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [idx, setIdx] = useState(0);
   const [filed, setFiled] = useState(false);
@@ -52,12 +53,9 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
   const canAdvance = value.trim().length > 0;
   const isLast = idx === REVIEW_FIELDS.length - 1;
   // Five free-text answers are work: leaving before filing asks first, from
-  // the back button and from the browser's Back.
+  // Exit and from the browser's Back.
   const dirty = !filed && Object.values(answers).some(v => v.trim().length > 0);
-  const { leave, dialog } = useExitFlow(dirty, {
-    title: 'تسيب المراجعة من غير ما تسجّلها؟',
-    body: 'اللي كتبته في المراجعة دي مش هيتحفظ. لو كمّلت، تقدر تسجّلها في دقيقتين.',
-  });
+  const mode = t('rv.mode', lang);
 
   const [empty, setEmpty] = useState(false);
   const advance = () => {
@@ -85,75 +83,77 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
 
   if (filed) {
     return (
-      <div className="min-h-screen">
-        <ScreenHeader onBack={onExit} backLabel={exitLabel} maxWidth={WIDTH.focus} leading={<Eyebrow>مراجعة اليوم</Eyebrow>} />
-        <m.section {...fade} className="focus-col text-center" style={{ paddingTop: 'var(--sp-8)' }}>
-          <Check size={32} className="c-ready" />
-          <h1 className="t-h2" style={{ margin: 'var(--sp-4) 0 var(--sp-2)' }}>اتسجّلت</h1>
-          {/* No congratulation. Filing a debrief is the job, not an achievement. */}
-          {/* The promise is kept now: the review lands in the trainer's queue,
-              their comment comes back to «مراجعاتي» and to the bell. */}
-          <p className="t-body c-tx2">
-            وصلت لقايمة المدرب. تعليقه هيوصلك في «مراجعاتي» وهتلاقيه في الجرس.
-          </p>
-          <div className="mt-6 row gap-3 justify-center wrap">
+      <FlowRoom mode={mode} title={t('rv.filedtitle', lang)} onExit={onExit} exitTo={exitLabel}>
+        {/* A task done, said plainly: the smallest earned mark, no
+            congratulation. Filing a debrief is the job, not an achievement.
+            The promise is kept now: the review lands in the trainer's queue,
+            their comment comes back to «مراجعاتي» and to the bell. */}
+        <m.section {...achieve} className="flow-center" aria-labelledby="rv-filed">
+          <Achievement tier="task" />
+          <h1 id="rv-filed" className="t-h2 m-0">اتسجّلت</h1>
+          <p className="t-body m-0">وصلت لقايمة المدرب. تعليقه هيوصلك في «مراجعاتي» وهتلاقيه في الجرس.</p>
+          <div className="done-actions mt-3">
             <Button onClick={() => { location.hash = toHash({ kind: 'reviews' }); }}>مراجعاتي</Button>
-            <Button variant="ghost" onClick={onExit}>{exitLabel}</Button>
+            <Button variant="ghost" onClick={onExit}>{t('flow.done', lang)}</Button>
           </div>
         </m.section>
-      </div>
+      </FlowRoom>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <ScreenHeader onBack={() => leave(onExit)} backLabel={exitLabel} maxWidth={WIDTH.focus}
-        leading={<Eyebrow>مراجعة اليوم · {idx + 1} من {REVIEW_FIELDS.length}</Eyebrow>} />
-
-      <main className="focus-col">
-        {/* The chain so far — you reason forward from what you already said. */}
-        {idx > 0 && (
-          <div className="stack mb-6 gap-2">
-            {REVIEW_FIELDS.slice(0, idx).map(f => (
-              <div key={f} className="row gap-3 items-start" style={{ padding: 'var(--sp-2) var(--sp-3)', background: 'var(--s-2)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
-                <span className="t-label no-shrink c-tx3" style={{ minWidth: 96 }}>{REVIEW_LABELS[f]}</span>
-                <span className="t-sm grow c-tx1">{answers[f]}</span>
-                <button className="icon-btn" onClick={() => setIdx(REVIEW_FIELDS.indexOf(f))} aria-label={`تعديل ${REVIEW_LABELS[f]}`}>تعديل</button>
+    <FlowRoom mode={mode} title={tf('rv.step', { n: idx + 1, total: REVIEW_FIELDS.length }, lang)}
+      progress={{ total: REVIEW_FIELDS.length, current: idx }}
+      onExit={onExit} exitTo={exitLabel}
+      leaveWarning={dirty ? {
+        title: 'تسيب المراجعة من غير ما تسجّلها؟',
+        body: 'اللي كتبته في المراجعة دي مش هيتحفظ. لو كمّلت، تقدر تسجّلها في دقيقتين.',
+      } : undefined}>
+      {/* Each question replaces the last at once: an exit animation would keep
+          the previous answer box on screen, and typing into it would land in
+          the previous answer. The new question only fades in. */}
+        <m.section key={field} {...fade} className="flow-stage">
+          <FlowSplit prompt={<>
+            <Eyebrow icon={<Icon as={PenLine} size="sm" />}>{REVIEW_LABELS[field]}</Eyebrow>
+            <h1 className="t-h2 flow-question mt-3">{REVIEW_PROMPTS[field]}</h1>
+            <p className="flow-note mt-3">{RATIONALE[field]}</p>
+            {/* The chain so far — you reason forward from what you already said.
+                On a wide room it stays beside the question being answered. */}
+            {idx > 0 && (
+              <div className="review-chain">
+                {REVIEW_FIELDS.slice(0, idx).map(f => (
+                  <div key={f} className="review-chain-row">
+                    <span className="review-chain-key">{REVIEW_LABELS[f]}</span>
+                    <span className="review-chain-text">{answers[f]}</span>
+                    <button className="icon-btn" onClick={() => setIdx(REVIEW_FIELDS.indexOf(f))} aria-label={`تعديل ${REVIEW_LABELS[f]}`}>تعديل</button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-
-        <m.section key={field} {...fade}>
-          <h1 className="t-h2 m-0">{REVIEW_PROMPTS[field]}</h1>
-          <p className="t-sm c-tx3" style={{ margin: 'var(--sp-2) 0 var(--sp-5)' }}>{RATIONALE[field]}</p>
-
-          <textarea
-            id="rv-answer"
-            value={value}
-            onChange={e => { setAnswers(a => ({ ...a, [field]: e.target.value })); setEmpty(false); }}
-            className="field w-full"
-            aria-label={REVIEW_LABELS[field]}
-            aria-invalid={empty || undefined}
-            aria-describedby={empty ? 'rv-empty' : undefined}
-            rows={4}
-            autoFocus
-            style={{ resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.7 }}
-          />
-
-          {empty && <p id="rv-empty" className="form-error mt-2">اكتب إجابتك الأول — جملة واحدة كفاية.</p>}
-          <div className="mt-3"><InlineError message={failed} /></div>
-          <div className="row gap-2 mt-5 items-center">
-            {/* «السابق» steps inside the debrief; «رجوع» was also the word for leaving it. */}
-            {idx > 0 && <Button variant="ghost" onClick={() => setIdx(i => i - 1)}><ChevronLeft size={16} className="icon-dir" aria-hidden /> السابق</Button>}
-            <div className="grow" />
-            <Button onClick={advance}>
-              {isLast ? 'سجّل المراجعة' : <>كمّل <ArrowRight size={16} className="icon-dir" /></>}
-            </Button>
-          </div>
+            )}
+          </>}>
+            <label htmlFor="rv-answer" className="form-label">{t('rv.answer', lang)}</label>
+            <textarea
+              id="rv-answer"
+              value={value}
+              onChange={e => { setAnswers(a => ({ ...a, [field]: e.target.value })); setEmpty(false); }}
+              className="field w-full review-answer mt-2"
+              aria-invalid={empty || undefined}
+              aria-describedby={empty ? 'rv-empty' : undefined}
+              rows={5}
+              autoFocus
+            />
+            {empty && <p id="rv-empty" className="form-error mt-2">اكتب إجابتك الأول — جملة واحدة كفاية.</p>}
+            <div className="mt-3"><InlineError message={failed} /></div>
+            <div className="row gap-2 mt-5 items-center">
+              {/* «السابق» steps inside the debrief; leaving it is Exit, in the bar. */}
+              {idx > 0 && <Button variant="ghost" onClick={() => setIdx(i => i - 1)}><Icon as={ChevronLeft} dir /> السابق</Button>}
+              <div className="grow" />
+              <Button onClick={advance}>
+                {isLast ? 'سجّل المراجعة' : <>كمّل <Icon as={ArrowRight} dir /></>}
+              </Button>
+            </div>
+          </FlowSplit>
         </m.section>
-      </main>
-      {dialog}
-    </div>
+    </FlowRoom>
   );
 };

@@ -730,41 +730,8 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .lesson-steps { padding-top:var(--sp-4); padding-bottom:var(--sp-6); }
 @media (max-width: 559px) { .lesson-stage { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } }
 
-/* ASSESSMENT MODE — the room an exam or a boss battle opens into. The void,
-   no shell, one column; the bar names the mode and the unit and holds the one
-   way out. No glow and no gradient: quiet is what makes it read as a test. */
-.assess { display:flex; flex-direction:column; min-height:100vh; background:var(--void); }
-.assess-bar { position:sticky; top:0; z-index:10; background:var(--overlay-arena);
-  backdrop-filter:blur(12px); border-bottom:1px solid var(--line-2); }
-.assess-bar-row { display:flex; align-items:center; gap:var(--sp-4);
-  max-width:var(--w-focus); margin:0 auto; padding:var(--sp-3) var(--sp-5); }
-.assess-mode { display:flex; flex-direction:column; min-width:0; flex:0 1 auto; }
-.assess-title { font-size:1rem; font-weight:600; color:var(--tx1);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.assess-mode .t-eyebrow { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.assess-rail { flex:1 1 96px; min-width:64px; }
-/* On a phone the unit's name needs the row: progress drops to a line of its own. */
-@media (max-width: 559px) {
-  .assess-bar-row { flex-wrap:wrap; row-gap:var(--sp-2); justify-content:space-between; }
-  .assess-mode { flex:1 1 0; }
-  .assess-rail { order:3; flex-basis:100%; }
-}
-.assess-body { flex:1; }
-/* The facts of a result or a brief: ruled rows, figures at the end. */
-.assess-facts { margin:var(--sp-6) 0 0; border-top:1px solid var(--line); }
-.assess-facts > div { display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-4);
-  padding:var(--sp-3) 0; border-bottom:1px solid var(--line); }
-.assess-facts dt { font-size:1rem; color:var(--tx2); }
-.assess-facts dd { margin:0; color:var(--tx0); font-weight:500; text-align:end; }
-/* Lessons to review after a missed exam: a numbered list, not a stack of boxes. */
-.review-list { list-style:none; margin:0; padding:0; counter-reset:review; border-top:1px solid var(--line); }
-.review-list li { counter-increment:review; display:flex; align-items:baseline; gap:var(--sp-3);
-  padding:var(--sp-3) 0; border-bottom:1px solid var(--line); color:var(--tx1); }
-.review-link { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); flex:1;
-  min-height:44px; padding:0; background:none; border:0; color:var(--tx1); font:inherit; text-align:start; cursor:pointer; }
-.review-link:hover { color:var(--tx0); }
-.review-list li::before { content:counter(review); min-inline-size:1.5em; color:var(--attn);
-  font-weight:600; font-variant-numeric:tabular-nums; }
+/* The exam, the challenge, the lesson and the daily review open into the
+   focus room (system-v3.css, «The focus room»): one bar, one labelled Exit. */
 
 /* A ruled list: short statements, one per line, no bullets and no boxes. */
 .ruled-list { list-style:none; margin:0; padding:0; border-top:1px solid var(--line); }
@@ -866,6 +833,20 @@ details > summary { min-block-size:44px; cursor:pointer; }
 .option-idle:hover { border-color:var(--line-3); background:var(--s0); }
 .option-correct { background:var(--ready-bg); border-color:var(--ready); }
 .option-wrong { background:var(--risk-bg); border-color:var(--risk); }
+.option-spacer { inline-size:17px; flex-shrink:0; }
+/* A list whose items carry their own marks: role="list" stays on the element. */
+.list-plain { list-style:none; margin:0; padding:0; }
+.px-2 { padding-inline:var(--sp-2); }
+.fw-500 { font-weight:500; }
+.list-indent { margin:0; padding-inline-start:1.1em; }
+.ms-2 { margin-inline-start:var(--sp-2); }
+.py-1 { padding-block:var(--sp-1); }
+/* A page column inside the shell: the trainee's reading width or the staff width. */
+.page-col { margin:0 auto; padding:var(--sp-6) var(--sp-5) var(--sp-9); }
+.page-col--read { max-width:720px; }
+.page-col--staff { max-width:960px; }
+/* Local saving failed: said across the top of the dashboard, once. */
+.save-alert { text-align:center; padding:var(--sp-2) var(--sp-5); background:var(--attn-bg); border-bottom:1px solid var(--attn-line); }
 
 /* -- Form field -- */
 .field { background:var(--s-2); border:1px solid var(--line-ctl); border-radius:var(--r-sm);

@@ -7,3 +7,5 @@ tsconfig.tsbuildinfo
 coverage/
 test-results/
 playwright-report/
+visual-out/
+dist-*/

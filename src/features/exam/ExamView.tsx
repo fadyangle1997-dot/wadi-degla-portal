@@ -2,6 +2,10 @@
  * ExamView — the end-of-unit exam. Mixes lessons (simulates a real customer).
  * Scores at the end with per-question review pointers ("راجع درس …") so a
  * failed exam becomes a personalised review plan, not a dead end (Proposal 9).
+ *
+ * It runs in the focus room: the question beside its answers on a wide room,
+ * stacked on a phone. The result is the screen's one paper — the score, the
+ * verdict, what it opened — and a missed exam's review plan follows it.
  */
 import React, { useState, useMemo } from 'react';
 import { m, AnimatePresence } from 'motion/react';
@@ -9,10 +13,13 @@ import { ArrowRight, RotateCcw, Unlock } from 'lucide-react';
 import type { Module } from '../../domain/types/content';
 import { MODULES } from '../../content/registry';
 import { shuffleOptions } from '../../content/shuffle';
-import { AssessmentMode, Button, OptionButton, FeedbackBlock, Num, SectionHeader, Status } from '../../ui/primitives';
-import { fade } from '../../ui/motion';
+import { FlowRoom, FlowSplit, PaperSheet, ScoreRing, Achievement, Button, OptionButton, FeedbackBlock, Num, SectionHeader, Status, Content } from '../../ui/primitives';
+import { Icon } from '../../ui/Icon';
+import { fade, achieve } from '../../ui/motion';
 import { TRAINING_POLICY } from '../../domain/policy';
+import { tone, EXAM } from '../../ui/statusSemantics';
 import { useLang, t, tf } from '../../app/i18n';
+
 interface Props {
   module: Module;
   onExit: () => void;
@@ -23,7 +30,6 @@ interface Props {
   onReviewLesson?: (lessonId: string) => void;
   exitLabel?: string;
 }
-
 
 export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, onReviewLesson, exitLabel }) => {
   const lang = useLang();
@@ -44,6 +50,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, o
 
   const finished = finalScore !== null;
   const mode = t('sh.unitexam', lang);
+  const title = <Content>{module.title}</Content>;
 
   if (finished) {
     const score = finalScore;
@@ -56,51 +63,58 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, o
     // The attempt is recorded the moment the last answer is confirmed, so the
     // result screen leaves without asking.
     return (
-      <AssessmentMode mode={mode} title={module.title} onExit={onExit}>
-        <m.section {...fade} className="focus-col">
-          <p className="t-eyebrow m-0">{t('as.result', lang)}</p>
-          <div className="row items-center gap-4 wrap mt-4">
-            <span className="t-score">{Math.round(score * 100)}%</span>
-            <Status tone={passed ? 'ready' : 'attn'}>{passed ? t('as.passed', lang) : t('as.notyet', lang)}</Status>
-          </div>
-          {/* «Close» only when it is true: at 13% it would be a kindness that misleads. */}
-          <h1 className="t-h2 mt-5 mb-0">
-            {passed ? 'الوحدة دي بقت في جيبك.' : score >= TRAINING_POLICY.passThreshold - 0.2 ? 'قرّبت — راجع وارجع' : 'لسه — راجع الدروس دي الأول'}
-          </h1>
-          <p className="t-sm measure mt-2 mb-0">
-            {passed ? 'ده مش حفظ — ده فهم بيشتغل على حالات مخلوطة زي الواقع.' : 'المراجعة تحت معمولة على اللي غلطت فيه بالظبط.'}
-          </p>
-          <dl className="assess-facts">
-            <div><dt>{t('as.correct', lang)}</dt><dd className="t-num">{tf('as.of', { n: right, total: qs.length }, lang)}</dd></div>
-            <div><dt>{t('as.passmark', lang)}</dt><dd><Num>{Math.round(TRAINING_POLICY.passThreshold * 100)}%</Num></dd></div>
-          </dl>
-          {opened.length > 0 && (
-            <p className="t-sm row mt-5 mb-0 c-g1 items-center gap-2">
-              <Unlock size={13} aria-hidden /> {t('ex.unlocked', lang)} {opened.join(' · ')}
-            </p>
-          )}
+      <FlowRoom mode={mode} title={title} onExit={onExit} exitTo={exitLabel}>
+        <div className="flow-center">
+          <m.div {...achieve}>
+            <PaperSheet labelledBy="ex-verdict">
+              <p className="t-eyebrow m-0">{t('as.result', lang)}</p>
+              <div className="result-head mt-4">
+                <ScoreRing score={score} passed={passed} />
+                <div className="result-verdict">
+                  <Status tone={tone(passed ? EXAM.passed : EXAM.failed)}>{passed ? t('as.passed', lang) : t('as.notyet', lang)}</Status>
+                  {/* «Close» only when it is true: at 13% it would be a kindness that misleads. */}
+                  <h1 id="ex-verdict" className="t-h2 m-0">
+                    {passed ? 'الوحدة دي بقت في جيبك.' : score >= TRAINING_POLICY.passThreshold - 0.2 ? 'قرّبت — راجع وارجع' : 'لسه — راجع الدروس دي الأول'}
+                  </h1>
+                </div>
+              </div>
+              <p className="t-body measure mt-4 mb-0">
+                {passed ? 'ده مش حفظ — ده فهم بيشتغل على حالات مخلوطة زي الواقع.' : 'المراجعة تحت معمولة على اللي غلطت فيه بالظبط.'}
+              </p>
+              <dl className="paper-facts">
+                <div><dt>{t('as.correct', lang)}</dt><dd>{tf('as.of', { n: right, total: qs.length }, lang)}</dd></div>
+                <div><dt>{t('as.passmark', lang)}</dt><dd><Num>{Math.round(TRAINING_POLICY.passThreshold * 100)}%</Num></dd></div>
+              </dl>
+              {opened.length > 0 && (
+                <p className="unlock-line">
+                  <Achievement tier="pass" />
+                  <span><Icon as={Unlock} size="sm" /> {t('ex.unlocked', lang)} <Content>{opened.join(' · ')}</Content></span>
+                </p>
+              )}
+              <div className="paper-actions">
+                <Button onClick={onExit}>{t('flow.done', lang)} <Icon as={ArrowRight} dir /></Button>
+                {!passed && <Button variant="ghost" onClick={onRetry}><Icon as={RotateCcw} /> {t('ex.retry', lang)}</Button>}
+              </div>
+            </PaperSheet>
+          </m.div>
           {!passed && reviewLessons.length > 0 && (
-            <section className="mt-7" aria-labelledby="ex-review">
+            <section className="flow-after" aria-labelledby="ex-review">
               <SectionHeader id="ex-review" title={t('as.reviewlist', lang)} count={reviewLessons.length} />
-              <ol className="review-list mt-3">
+              <ol className="plan-list">
                 {/* Each lesson to review opens from here: a plan you can act on,
                     not a list you have to go and find. */}
                 {reviewLessons.map(l => (
                   <li key={l.id}>
                     {onReviewLesson
-                      ? <button type="button" className="review-link" onClick={() => onReviewLesson(l.id)}>{l.title} <ArrowRight size={16} className="icon-dir" aria-hidden /></button>
-                      : l.title}
+                      ? <button type="button" className="plan-link" onClick={() => onReviewLesson(l.id)}><Content>{l.title}</Content> <Icon as={ArrowRight} dir /></button>
+                      : <span className="plan-link"><Content>{l.title}</Content></span>}
                   </li>
                 ))}
               </ol>
             </section>
           )}
-          <div className="row mt-7 gap-3 wrap">
-            <Button onClick={onExit}>{exitLabel ?? t('ex.backtopath', lang)} <ArrowRight size={16} className="icon-dir" /></Button>
-            {!passed && <Button variant="ghost" onClick={onRetry}><RotateCcw size={16} /> {t('ex.retry', lang)}</Button>}
-          </div>
-        </m.section>
-      </AssessmentMode>
+        </div>
+      </FlowRoom>
     );
   }
 
@@ -111,43 +125,46 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, o
   const started = qi > 0 || answered;
 
   return (
-    <AssessmentMode mode={mode} title={module.title} onExit={onExit}
+    <FlowRoom mode={mode} title={title} onExit={onExit} exitTo={exitLabel}
       progress={{ total: qs.length, current: qi }}
       leaveWarning={started ? { title: t('as.examleave', lang), body: t('as.examleavebody', lang) } : undefined}>
       <AnimatePresence mode="wait">
-        <m.section key={qi} {...fade} className="focus-col">
-          <p className="t-eyebrow m-0">{tf('as.q', { n: qi + 1, total: qs.length }, lang)}</p>
-          {qi === 0 && <p className="t-sm mt-2 mb-0">الأسئلة هنا بتخلط الدروس — زي عميل حقيقي بالظبط.</p>}
-          <h1 className="t-h2 measure mt-4 mb-6">{q.prompt}</h1>
-          <div className="stack gap-3">
-            {shuffledOptions.map((o, i) => (
-              <OptionButton key={i} text={o.text}
-                state={!answered ? 'idle' : o.correct ? 'correct' : picked === i ? 'wrong' : 'dim'}
-                onPick={() => setPicked(i)} />
-            ))}
-          </div>
-          <AnimatePresence>
-            {answered && (
-              <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
-                <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'صح' : 'مش صح'}
-                  onAction={() => {
-                    const nextAnswers = [...answers, !!correct];
-                    setAnswers(nextAnswers);
-                    if (!correct && q.reviewLessonId) setWrongIds(w => [...w, q.reviewLessonId!]);
-                    if (qi >= qs.length - 1) {
-                      const score = nextAnswers.filter(Boolean).length / qs.length;
-                      setFinalScore(score);
-                      onFinish(score); // event-driven persistence — never in render
-                    } else { setQi(qi + 1); setPicked(null); }
-                  }}
-                  actionLabel={<>{qi >= qs.length - 1 ? t('ex.seeresult', lang) : t('ex.next', lang)} <ArrowRight size={16} className="icon-dir" /></>}>
-                  {q.explanation}
-                </FeedbackBlock>
-              </m.div>
-            )}
-          </AnimatePresence>
-        </m.section>
+        <m.div key={qi} {...fade} className="flow-stage">
+          <FlowSplit prompt={<>
+            <p className="t-eyebrow m-0">{tf('as.q', { n: qi + 1, total: qs.length }, lang)}</p>
+            {qi === 0 && <p className="flow-note mt-2">الأسئلة هنا بتخلط الدروس — زي عميل حقيقي بالظبط.</p>}
+            <h1 className="t-h2 flow-question mt-4">{q.prompt}</h1>
+          </>}>
+            <div className="stack gap-3">
+              {shuffledOptions.map((o, i) => (
+                <OptionButton key={i} text={o.text}
+                  state={!answered ? 'idle' : o.correct ? 'correct' : picked === i ? 'wrong' : 'dim'}
+                  onPick={() => setPicked(i)} />
+              ))}
+            </div>
+            <AnimatePresence>
+              {answered && (
+                <m.div {...fade} className="mt-5">
+                  <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'صح' : 'مش صح'}
+                    onAction={() => {
+                      const nextAnswers = [...answers, !!correct];
+                      setAnswers(nextAnswers);
+                      if (!correct && q.reviewLessonId) setWrongIds(w => [...w, q.reviewLessonId!]);
+                      if (qi >= qs.length - 1) {
+                        const score = nextAnswers.filter(Boolean).length / qs.length;
+                        setFinalScore(score);
+                        onFinish(score); // event-driven persistence — never in render
+                      } else { setQi(qi + 1); setPicked(null); }
+                    }}
+                    actionLabel={<>{qi >= qs.length - 1 ? t('ex.seeresult', lang) : t('ex.next', lang)} <Icon as={ArrowRight} dir /></>}>
+                    {q.explanation}
+                  </FeedbackBlock>
+                </m.div>
+              )}
+            </AnimatePresence>
+          </FlowSplit>
+        </m.div>
       </AnimatePresence>
-    </AssessmentMode>
+    </FlowRoom>
   );
 };

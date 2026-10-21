@@ -25,7 +25,7 @@ export const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }>
           return (
             <div key={i} className="practice-item" data-result={showResult ? (isRight ? 'right' : 'wrong') : undefined}>
               <div className="row items-center gap-3 wrap">
-                <span className="t-body grow" style={{ minWidth: 'min(100%, 200px)' }}>{it.text}</span>
+                <span className="t-body grow practice-item-text">{it.text}</span>
                 <div className="row gap-2">
                   {[{ v: true, label: 'مطلوب' }, { v: false, label: 'مش مطلوب' }].map(b => (
                     <button key={String(b.v)} type="button" disabled={checked} aria-current={mark === b.v ? 'true' : undefined}

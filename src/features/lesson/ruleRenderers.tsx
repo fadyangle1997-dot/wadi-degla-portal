@@ -21,12 +21,12 @@ const ExampleCard: React.FC<{ title: string; result: CalculationResult }> = ({ t
   <div className="example-card">
     <Eyebrow icon={<Sparkles size={13} />}>{title} — محسوب مباشرة من المحرك</Eyebrow>
     <p className="example-total">
-      {result.total}<span className="t-sm c-tx2" style={{ marginInlineStart: 'var(--sp-2)' }}>ج.م</span>
+      {result.total}<span className="t-sm c-tx2 ms-2">ج.م</span>
     </p>
     {result.lines.length > 0 && (
-      <ul role="list" style={{ listStyle: 'none', margin: '0 0 var(--sp-2)', padding: 0 }}>
+      <ul role="list" className="list-plain mb-2">
         {result.lines.map((l, i) => (
-          <li key={i} className="t-sm row justify-between gap-3" style={{ padding: 'var(--sp-1) 0' }}>
+          <li key={i} className="t-sm row justify-between gap-3 py-1">
             <span>{l.label}{l.note ? ` (${l.note})` : ''}</span>
             <span className="t-num c-tx1">{l.amount}</span>
           </li>
@@ -56,7 +56,7 @@ const ChildJoiningExample: React.FC = () => (
 const CancellationCard: React.FC = () => (
   <Card tone="raised" pad={5}>
     <Eyebrow>سياسة الإلغاء المعتمدة</Eyebrow>
-    <p className="t-body" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>
+    <p className="t-body mt-3 mb-2">
       بدون أسباب: أول <b className="t-num">{CANCELLATION_POLICY.noReasonWindowDays}</b> يوم من التعاقد.
     </p>
     <p className="t-sm">

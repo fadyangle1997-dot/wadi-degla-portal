@@ -33,7 +33,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
     return (
       <m.section {...fade} className="focus-col">
         <Eyebrow>إنتاج · {MODE_LABEL[p.mode]}</Eyebrow>
-        <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-4)' }}>دورك دلوقتي</h2>
+        <h2 className="t-h2 mt-3 mb-4">دورك دلوقتي</h2>
         <p className="t-body mb-5">{p.task}</p>
 
         {/* You face a PERSON, not a line. The gap between what they DO and what
@@ -56,10 +56,10 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
         {p.arc && (
           <div className="mb-5">
             <SpineWell label={`النجاح = ${STATE_LABEL[p.arc.opensAs as MemberState]} ← ${STATE_LABEL[p.arc.targetState as MemberState]}`}>
-              <p className="t-body measure m-0 c-tx0" style={{ fontWeight: 500 }}>
+              <p className="t-body measure m-0 c-tx0 fw-500">
                 مش إنك تقول الجملة الصح — إنه يتحرك.
               </p>
-              <ul className="t-sm c-tx2" style={{ margin: 'var(--sp-3) 0 0', paddingInlineStart: '1.1em' }}>
+              <ul className="t-sm c-tx2 list-indent mt-3">
                 {p.arc.signsOfShift.map(sg => <li key={sg} className="mb-1">{sg}</li>)}
               </ul>
             </SpineWell>
@@ -73,7 +73,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
             {p.distractors.map(d => (
               <div key={d.event} className="mb-3">
                 <p className="t-sm m-0 c-tx1">{d.event}</p>
-                <p className="t-sm c-tx3" style={{ margin: 'var(--sp-1) 0 0' }}>{d.tests}</p>
+                <p className="t-sm c-tx3 mb-0 mt-1">{d.tests}</p>
               </div>
             ))}
           </Card>
@@ -81,7 +81,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
         {/* Prose, not a card. This is a kind aside, and a card would have given
             it the same footing as the exercise — four surfaces in a row and the
             trainee reads none of them. */}
-        <p className="t-sm measure c-tx3" style={{ margin: '0 var(--sp-2) var(--sp-6)', lineHeight: 1.75 }}>
+        <p className="t-sm measure c-tx3 mt-0 mb-6 px-2">
           محدش بيقيّمك هنا. ده تمرين — تقولها، تشوف نقصت إيه، وتقولها تاني.
           <strong className="c-tx2"> أول مرة تنطقها المفروض تكون هنا، مش قدّام عضو.</strong>
         </p>
@@ -93,7 +93,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
   return (
     <m.section {...fade} className="focus-col">
       <Eyebrow>إنتاج · محاولة {attempt}</Eyebrow>
-      <h2 className="t-h2" style={{ margin: 'var(--sp-3) 0 var(--sp-2)' }}>راجع اللي قلته</h2>
+      <h2 className="t-h2 mt-3 mb-2">راجع اللي قلته</h2>
       <p className="t-sm c-tx3 mb-5">
         علّم على اللي عملته فعلاً — مش على اللي كنت ناوي تعمله.
       </p>
@@ -117,13 +117,13 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
       {reviewed && !passed && (
         <m.div {...fade} className="mt-5">
           <SpineWell spine="risk" label={`ناقص ${missed.length}`}>
-            <ul className="t-sm m-0 c-tx1" style={{ paddingInlineStart: '1.1em' }}>
+            <ul className="t-sm c-tx1 list-indent">
               {missed.map(i => <li key={i} className="mb-1">{p.criteria[i]}</li>)}
             </ul>
           </SpineWell>
           <Card tone="quiet" pad={4} layout={{ marginTop: 'var(--sp-3)' }}>
             <div className="t-label c-tx3 mb-2">اللي بيحصل عادة في المحاولة الأولى</div>
-            <ul className="t-sm m-0 c-tx2" style={{ paddingInlineStart: '1.1em' }}>
+            <ul className="t-sm c-tx2 list-indent">
               {p.commonMisses.map(m => <li key={m} className="mb-1">{m}</li>)}
             </ul>
           </Card>
@@ -138,7 +138,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
 
       {reviewed && passed && (
         <m.div {...fade} className="mt-5">
-          <p className="t-body" style={{ margin: '0 0 var(--sp-4)' }}>
+          <p className="t-body mt-0 mb-4">
             الأربعة اتعملوا{attempt > 1 ? ` — بعد ${attempt} محاولات، وده الطبيعي` : ''}.
             {' '}دي الجملة اللي هتقولها بكرة على الكاونتر.
           </p>
@@ -148,7 +148,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
             <Card tone="raised" pad={4} layout={{ marginBottom: 'var(--sp-5)' }}>
               <div className="t-label mb-2">سؤال واحد قبل ما تكمّل</div>
               <p className="t-body m-0">{p.reflection}</p>
-              <p className="t-sm c-tx3" style={{ margin: 'var(--sp-2) 0 0' }}>
+              <p className="t-sm c-tx3 mb-0 mt-2">
                 مش محتاج تكتبه — بس متعديش من غير ما تجاوبه لنفسك.
               </p>
             </Card>

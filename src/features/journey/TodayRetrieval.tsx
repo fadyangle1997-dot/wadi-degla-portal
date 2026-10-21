@@ -96,7 +96,7 @@ export const TodayRetrieval: React.FC<{
       {/* The unit is named, but the SET is mixed on purpose — working out which
           rule applies is the skill; at the counter nobody announces it. */}
       <div className="t-label mb-3 c-tx3">{module.title}</div>
-      <p className="t-body" style={{ margin: '0 0 var(--sp-4)' }}>{question.prompt}</p>
+      <p className="t-body mt-0 mb-4">{question.prompt}</p>
 
       {/* The product's one answer control (OptionButton). Retrieval's rule holds
           through its states: the correct option is marked, the rest dim, and a
