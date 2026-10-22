@@ -56,8 +56,43 @@ access · **P2** clear quality gain · **P3** polish. Status: ✅ done · ⏳ op
 | 24 | Responsive | A stacked table stayed stacked once it had been measured too wide (fonts not loaded yet): the roster was stacked at 1280px in Arabic; in English it never fitted the 960px staff column | P1 | ✅ re-measured on every resize and once fonts arrive; headers wrap; cell padding 12px; staff column 1040px |
 | 25 | Cross-role | The full readiness report showed «مش جاهز لسه» (red) on five stations of six, while the file and the trainee's page say no verdict yet — the engine is fail-closed | P1 | ✅ «مفيش حكم لسه» until the evidence is complete; E2E asserts it |
 | 26 | Leftover | «محتواها التفاعلي لسه تحت الإنشاء» on the roadmap for phases without units — every phase has units, so the line was dead | P3 | ✅ removed with its key |
+| 27 | Visual | «على المسار» split over two lines in table rows once statuses could wrap | P3 | ✅ tables fit as table (one line), tight (states wrap), or stacked, in that order |
 | 19 | Trust | Mission and profile derived the certification separately | P2 | ✅ one source: `latestManagerDecision` carries who decided |
 
 ## 3. Scorecard
 
-Filled at the end of the pass, each score with the evidence behind it.
+Scored on the final build, against evidence rather than intent. 10 means
+nothing left that this scope can improve; where a point is missing, the
+reason is named.
+
+| Area | Score | Evidence | What keeps it from 10 |
+|---|---|---|---|
+| Product correctness | 9.5 | 903 unit tests (75 files); readiness, progression and permissions unchanged (business-rules tests); one readiness verdict on every screen (#25) | — within scope; the readiness rules themselves are the owner's |
+| Core workflows | 9.5 | 84 E2E tests, every role: learn → exam → submit → trainer decision → trainee sees it → manager file (#18); readiness stations → manager decision → trainee; daily review → comment → bell | no server: data lives in one browser (documented prototype boundary) |
+| UX | 9 | navigation named by scope; one primary action per screen; honest empty states; certification said as it is (#14) | login A/B and «افتكرني» await the owner |
+| Visual system | 9.5 | one system (v3) on 41 scenarios × 8 sizes; 0 palette references in components; gold 125 → 103 uses, governance test covers every component | — |
+| Arabic language | 9.5 | 0 administrative MSA in the dictionary, test reads the whole product; one word per concept and control (`docs/voice-and-language.md`) | gendered address is an owner decision |
+| English language | 9 | every key in both languages; staff screens, audit log and operational issues in English; sentence case, one apostrophe | lessons, exams and the trainee readiness page stay Arabic by design (learning language) |
+| Accessibility | 9.5 | 328 captures: 0 serious/critical axe, 0 text below AA (≥98.8% AAA per shot), 0 missing or weak focus rings, 0 focus traps, 0 unnamed controls, 0 targets under 44px | the inline «مهاراتك» link in a sentence (WCAG 2.5.8 inline exception) |
+| Responsive | 9.5 | 0 sideways overflow at 1280/834/390/320 × normal and largest text; tables fit as table, tight, or stacked (#20, #24) | — |
+| Interaction | 9.5 | one control vocabulary; Back closes overlays; typed links open them (#8); unsaved work asks on every exit | — |
+| Cross-role consistency | 9.5 | the same decision in the same words for trainer, trainee, manager (#18, #25); one certification source (#19) | — |
+| State completeness | 9 | first-time, in-progress, waiting, approved, repeat, certified, empty and no-access states captured and tested | content authoring, cohorts and certificates are deferred features (`docs/redesign.md`) |
+| Performance | 9.5 | 94.2 KB initial download of a 100 KB budget; display face 25.7 KB of 36 KB, one preload | — |
+| Code quality | 9 | typecheck strict, ESLint 0 warnings; design-debt ratchets all at or below baseline (raw palette in components 40 → 0) | 84 `!important` in legacy utility classes remain under their ratchet |
+| QA coverage | 9.5 | unit 903, E2E 84 (twice green), axe in E2E, visual capture with keyboard pass, language and gold governance tests | — |
+| Governance | 9.5 | structured audit log, bilingual, roles by name, CSV export; organisation changes staged and recorded | export to a server is server-phase work |
+
+## 4. Open decisions (the owner's, documented, not guessed)
+
+- **Names in the data.** Demo names are Latin («Adel Ramadan») inside Arabic sentences. The identity model already holds a second spelling per language (`displayName`); which spelling real records carry is an HR-data decision.
+- **Sign-in A or B**, **«افتكرني»**, and the **champagne primary** — listed in `docs/redesign.md`.
+- **Gendered address** and the **«يعيد الوحدة» / «مطلوب تحسين» pair** — listed in `docs/voice-and-language.md` §10.
+- **Early daily reviews** (#17): the domain makes the review due from day 33; whether it should be closed before then is a rule, not a screen.
+
+## 5. Outside the prototype's scope
+
+Each needs a backend or a product decision before it can be built
+(`docs/redesign.md`, «متأجّل عن قصد»): content management, bulk user import,
+an editable programme engine, policy settings, cohort analytics, issued
+certificates, cross-device sync and real sign-in (OIDC).

@@ -83,37 +83,47 @@ export function DataTable<R>({
   const toggleSort = (id: string) => setSort(s =>
     s?.id === id ? { id, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { id, dir: 'asc' });
 
-  // Stacks when the table, laid out as a table, is wider than its box. A
-  // stacked table is laid out as a table for the measurement and put back in
+  // How the table fits its box, in order of preference: as a table with each
+  // state on one line; as a table whose states may wrap (data-fit="tight");
+  // stacked into labelled rows (data-stacked) when even that is too wide.
+  // Each layout is tried for the measurement and the current one put back in
   // the same task, so nothing is painted in between; measured again whenever
-  // its box or its contents change size, and once the fonts have arrived.
+  // the box or the contents change size, and once the fonts have arrived.
   const box = useRef<HTMLDivElement>(null);
-  const [stacked, setStacked] = useState(false);
+  const [fit, setFit] = useState<'table' | 'tight' | 'stacked'>('table');
+  const stacked = fit === 'stacked';
   useLayoutEffect(() => {
     const el = box.current;
     const table = el?.querySelector('table');
     if (!el || !table || typeof ResizeObserver === 'undefined') return;
     let live = true;
-    const fit = () => {
-      if (!live) return;
-      const was = el.hasAttribute('data-stacked');
-      if (was) el.removeAttribute('data-stacked');
-      const natural = table.scrollWidth;
-      if (was) el.setAttribute('data-stacked', '');
-      setStacked(natural > el.clientWidth + 1);
+    const widthAs = (tight: boolean) => {
+      el.removeAttribute('data-stacked');
+      if (tight) el.setAttribute('data-fit', 'tight'); else el.removeAttribute('data-fit');
+      return table.scrollWidth;
     };
-    fit();
-    const ro = new ResizeObserver(fit);
+    const measure = () => {
+      if (!live) return;
+      const stackedNow = el.hasAttribute('data-stacked');
+      const fitNow = el.getAttribute('data-fit');
+      const room = el.clientWidth + 1;
+      const next = widthAs(false) <= room ? 'table' : widthAs(true) <= room ? 'tight' : 'stacked';
+      if (stackedNow) el.setAttribute('data-stacked', ''); else el.removeAttribute('data-stacked');
+      if (fitNow) el.setAttribute('data-fit', fitNow); else el.removeAttribute('data-fit');
+      setFit(next);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
     ro.observe(table);
-    void document.fonts?.ready.then(fit);
+    void document.fonts?.ready.then(measure);
     return () => { live = false; ro.disconnect(); };
   }, [columns.length, shown.length]);
 
   if (rows.length === 0 && empty) return <>{empty}</>;
 
   return (
-    <div className="dt" ref={box} data-stacked={stacked || undefined}>
+    <div className="dt" ref={box} data-stacked={stacked || undefined} data-fit={fit === 'tight' ? 'tight' : undefined}>
       {(search || filters) && (
         <div className="dt-toolbar">
           {search && (
