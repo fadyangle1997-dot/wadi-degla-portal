@@ -24,8 +24,10 @@ import { readinessReport } from '../../domain/readiness/report';
 import { formalLabel, performanceText } from '../readiness/labels';
 import { PROGRAM } from '../../domain/journey/program';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent, CloseButton } from '../../ui/primitives';
-import { useLang, t as tr, tf } from '../../app/i18n';
+import { Icon } from '../../ui/Icon';
+import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent, CloseButton, tx } from '../../ui/primitives';
+import { useLang, t as tr, tf, dateLocale } from '../../app/i18n';
+import { displayNameOf } from '../../domain/identity';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 import { branchNameOf } from '../../domain/organization';
@@ -57,7 +59,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
   // The module title is Arabic content, so it is declared as such inside the
   // translated sentence.
   const withTitle = (key: 'pf.resume' | 'pf.exam' | 'pf.submit' | 'pf.improve') =>
-    next.module ? <>{tr(key, lang)} <ArabicContent as="span">«{next.module.title}»</ArabicContent></> : null;
+    next.module ? tx(key, { m: <ArabicContent as="span">{next.module.title}</ArabicContent> }, lang) : null;
   const nextLine = ((): React.ReactNode => {
     switch (next.kind) {
       case 'resume_lesson': return withTitle('pf.resume');
@@ -73,6 +75,12 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
   })();
 
   const trainer = me?.trainerId ? users.find(u => u.id === me.trainerId) : undefined;
+  const certifier = formal.managerDecision?.managerId ? users.find(u => u.id === formal.managerDecision!.managerId) : undefined;
+  const certifiedOn = formal.managerDecision
+    ? new Date(formal.managerDecision.at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const certifiedLine = certifier
+    ? tf('mi.certifiedby', { name: displayNameOf(certifier, lang), date: certifiedOn }, lang)
+    : tf('mi.certifiedon', { date: certifiedOn }, lang);
 
   const initials = (me?.name ?? '؟').split(' ').slice(0, 2).map(s => s[0]).join('');
 
@@ -203,12 +211,27 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </div>
         </section>
 
-        {/* ── 7 · Certificates — honest empty state, never a faked cert ── */}
+        {/* ── 7 · Certification — the manager's decision as the record holds it.
+            The platform issues no certificate document (docs/redesign.md,
+            deferred), so it never promises one: certified says who and when;
+            before that, what certification takes. ── */}
         <section aria-label={tr('pf.certs', lang)}>
           <Eyebrow icon={<Award size={13} />}>{tr('pf.certs', lang)}</Eyebrow>
           <div className="mt-3">
-            <EmptyState icon={<Award size={22} />} title={tr('pf.nocert', lang)}
-              body={tr('pf.nocertbody', lang)} />
+            {formal.certified && formal.managerDecision ? (
+              <Card pad={5}>
+                <div className="row items-center gap-3">
+                  <Icon as={Award} size="lg" className="c-ready no-shrink" />
+                  <div>
+                    <p className="t-title m-0">{tr('pf.certified', lang)}</p>
+                    <p className="t-sm c-tx2 m-0">{certifiedLine}</p>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <EmptyState icon={<Award size={22} />} title={tr('pf.nocert', lang)}
+                body={tr('pf.nocertbody', lang)} />
+            )}
           </div>
         </section>
       </m.main>

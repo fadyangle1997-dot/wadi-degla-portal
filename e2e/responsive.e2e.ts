@@ -70,3 +70,26 @@ test.describe('the v3 benchmark at 320px with 125% text', () => {
     await noSidewaysScroll(page);
   });
 });
+
+test.describe('at tablet width — the widest tables and the largest text', () => {
+  test.use({ viewport: { width: 834, height: 1112 } });
+  // Seven roster columns needed 1002px at 834: the page scrolled sideways.
+  // A table that does not fit now stacks into labelled rows instead.
+  test('every management view fits, with demo data and the largest text', async ({ page }) => {
+    await signIn(page, 'admin');
+    await page.getByRole('button', { name: 'حمّل بيانات العرض' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'حمّل بيانات العرض' }).click();
+    await noSidewaysScroll(page);
+    await signOut(page);
+    for (const who of ['manager.nabil', 'area.hoda', 'gm.tarek', 'trainer.samir']) {
+      await signIn(page, who);
+      await noSidewaysScroll(page);
+      await page.evaluate(() => { localStorage.setItem('wda.text.v1', 'xl'); });
+      await page.reload();
+      await expect(page.locator('html')).toHaveAttribute('data-text', 'xl');
+      await noSidewaysScroll(page);
+      await page.evaluate(() => { localStorage.setItem('wda.text.v1', 'md'); });
+      await signOut(page);
+    }
+  });
+});

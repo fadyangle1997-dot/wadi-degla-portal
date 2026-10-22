@@ -551,6 +551,9 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .crumbs ol { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin:0; padding:0; list-style:none; }
 .crumbs li { font-size:.875rem; font-weight:600; color:var(--tx2); }
 .crumb-link { display:inline-flex; align-items:center; min-height:24px; color:var(--tx2); text-decoration:none; border-radius:var(--r-sm); }
+/* A crumb is a 44px target in a 24px line: the hit area grows into the
+   space around it (negative margins), so the trail keeps its rhythm. */
+.crumb-link { min-height:44px; margin-block:-10px; padding-inline:var(--sp-2); margin-inline:calc(-1 * var(--sp-2)); }
 .crumb-link:hover { color:var(--tx0); text-decoration:underline; text-underline-offset:4px; }
 /* A secondary act under a mission: available today, never a second button.
    Underlined so it reads as an action without competing with the primary. */
@@ -600,7 +603,7 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   .metric-strip { grid-template-columns:1fr 1fr; }
   .metric:last-child:nth-child(odd) { grid-column:1 / -1; }
 }
-.metric { display:flex; flex-direction:column; gap:var(--sp-2); padding:var(--sp-4) var(--sp-5);
+.metric { display:flex; flex-direction:column; gap:var(--sp-2); padding:var(--sp-4) var(--sp-5); min-width:0; overflow-wrap:anywhere;
   box-shadow:-1px 0 0 var(--line), 1px 0 0 var(--line), 0 -1px 0 var(--line); }
 .metric-context { color:var(--tx2); }
 .metric--ready .t-metric { color:var(--ready); }
@@ -612,6 +615,10 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 /* Row state: a dot and a word, in the text colour; the dot carries the hue. */
 .status { display:inline-flex; align-items:center; gap:var(--sp-2); white-space:nowrap;
   font-size:1rem; font-weight:500; color:var(--tx1); }
+/* A long state («وحدة واحدة في انتظار مراجعة المدرب») wraps rather than push
+   a narrow page sideways; the dot stays on its first line. */
+.status { white-space:normal; max-width:100%; }
+.status-dot { align-self:flex-start; margin-top:.5em; }
 .status-dot { width:8px; height:8px; border-radius:var(--r-full); flex-shrink:0; background:var(--tx3); }
 .status--ready .status-dot { background:var(--ready); }
 .status--attn .status-dot { background:var(--attn); }
@@ -642,7 +649,7 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   padding-inline:var(--sp-4); background:var(--s-1); border:1px solid var(--line-ctl); border-radius:var(--r-full);
   transition:border-color var(--t-fast) var(--ease); }
 .dt-search:focus-within { border-color:var(--g2); outline:2px solid var(--focus-ring); outline-offset:2px; }
-.dt-search-input { flex:1; width:100%; min-width:0; min-height:42px; background:none; border:0; outline:none;
+.dt-search-input { flex:1; width:100%; min-width:0; min-height:44px; background:none; border:0; outline:none;
   color:var(--tx0); font-family:var(--font-body); font-size:1rem; }
 .dt-search-input::placeholder { color:var(--text-muted); }
 .dt-filters { display:flex; flex-wrap:wrap; gap:var(--sp-1); }
@@ -673,7 +680,7 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .dt tbody tr:has(.dt-open:focus-visible) { outline:2px solid var(--g2); outline-offset:-2px; }
 /* Controls in other cells sit above the stretched button. */
 .dt td :is(button, a, input, select) { position:relative; z-index:1; }
-.dt-sort { display:inline-flex; align-items:center; gap:var(--sp-1); padding:0; min-height:44px; background:none; border:0;
+.dt-sort { display:inline-flex; align-items:center; gap:var(--sp-1); padding:0; min-height:44px; min-width:44px; background:none; border:0;
   color:inherit; font:inherit; cursor:pointer; }
 .dt-sort:hover { color:var(--tx0); }
 .dt-sort-idle { opacity:.5; }
@@ -689,8 +696,18 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
   .dt tbody tr { padding-block:var(--sp-3); border-bottom:1px solid var(--line); }
   .dt th, .dt td { border-bottom:0; padding:var(--sp-1) var(--sp-3); }
   .dt .dt-end { text-align:start; }
+  .dt td[data-empty] { display:none; }
   .dt-label { display:inline; margin-inline-end:var(--sp-2); font-size:.875rem; font-weight:600; color:var(--tx3); }
 }
+/* The same stacked rows, wider than a phone: the table measured its columns
+   and they do not fit its box (DataTable sets data-stacked). */
+.dt[data-stacked] thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.dt[data-stacked] :is(table, tbody, tr, th, td) { display:block; }
+.dt[data-stacked] tbody tr { padding-block:var(--sp-3); border-bottom:1px solid var(--edge-hairline); }
+.dt[data-stacked] :is(th, td) { border-bottom:0; padding:var(--sp-1) var(--sp-3); }
+.dt[data-stacked] .dt-end { text-align:start; }
+.dt[data-stacked] td[data-empty] { display:none; }
+.dt[data-stacked] .dt-label { display:inline; margin-inline-end:var(--sp-2); font-size:var(--fs-1); font-weight:600; color:var(--text-faint); }
 
 /* ============================================================
    THE BRIEF — the one raised surface on a screen: the decision or the next
@@ -723,7 +740,10 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .brief .btn-ghost { background:transparent; color:var(--ink); border-color:var(--line-2); }
 .brief :focus-visible { outline-color:var(--ink); }
 .brief-text { display:flex; flex-direction:column; gap:var(--sp-2); flex:1 1 280px; min-width:0; }
-.brief-action { display:flex; align-items:center; gap:var(--sp-3); flex-shrink:0; }
+.brief-action { display:flex; align-items:center; gap:var(--sp-3); flex-shrink:0; flex-wrap:wrap; max-width:100%; }
+/* A long action («افتح ملف Menna Kamal») wraps inside its button at the
+   narrowest width and largest text, instead of running past the sheet. */
+.brief-action .btn { max-width:100%; white-space:normal; }
 
 /* Two regions: the work, and its context beside it on wide screens. */
 .workspace { display:grid; grid-template-columns:minmax(0, 1fr); gap:var(--sp-7); }

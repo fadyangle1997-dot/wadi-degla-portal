@@ -21,6 +21,7 @@ import { useProgress, moduleLessonsDone, progressStore, currentCommitment } from
 import { useTraining, useTrainingEvents, traineeIdOrNull } from '../../app/training/trainingStore';
 import { approvalSeen } from '../../app/approvalSeen';
 import { latestApproval } from '../journey/approval';
+import { latestManagerDecision } from '../../domain/readiness/status';
 import { displayNameOf } from '../../domain/identity';
 import type { FreshApproval, Certification } from '../journey/MissionBrief';
 import { identityStore } from '../../app/identity/identityStore';
@@ -63,11 +64,12 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
     const unit = MODULES.find(x => x.id === last.moduleId);
     return unit ? { title: unit.title, at: last.at } : null;
   }, [events, traineeId]);
+  // Who certified and when: the same decision the readiness status reads
+  // (domain/readiness/status), so the mission and the profile agree.
   const certification = React.useMemo<Certification | null>(() => {
-    let last: { managerId: string; decision: string; at: number } | null = null;
-    for (const e of events) if (e.type === 'FINAL_READINESS_DECIDED' && e.employeeId === traineeId) last = e;
+    const last = latestManagerDecision(events, traineeId);
     if (!last || last.decision !== 'ready') return null;
-    const manager = identityStore.userById(last.managerId);
+    const manager = last.managerId ? identityStore.userById(last.managerId) : null;
     return { by: manager ? displayNameOf(manager, lang) : undefined, at: last.at };
   }, [events, traineeId, lang]);
   const startedCurrent = currentModule ? moduleLessonsDone(p, currentModule.id) > 0 : false;

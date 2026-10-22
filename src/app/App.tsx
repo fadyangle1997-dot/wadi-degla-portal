@@ -65,12 +65,12 @@ const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 /** The trainee's readiness, computed from the stations their trainer and manager recorded. */
-const TraineeReadiness: React.FC<{ onExit: () => void; exitLabel: string }> = ({ onExit, exitLabel }) => {
+const TraineeReadiness: React.FC<{ onExit: () => void; exitLabel: string; via: 'path' | 'roadmap' }> = ({ onExit, exitLabel, via }) => {
   const events = useTrainingEvents();
   const training = useTraining();
   const id = traineeIdOrNull() ?? '';
   const standing = readinessStanding(training, events, id, progressStore.hasOnboarded());
-  return <ReadinessResult standing={standing} onExit={onExit} exitLabel={exitLabel} />;
+  return <ReadinessResult standing={standing} onExit={onExit} exitLabel={exitLabel} via={via} />;
 };
 
 /** Redirects an unauthorised view to the identity's own landing page. */
@@ -282,7 +282,7 @@ export const App: React.FC = () => {
   // that IS the answer to "where am I?", not a placeholder.
   if (view.kind === 'readiness') return inShell(
     <Lazy><ArabicContent>
-      <TraineeReadiness onExit={toOrigin} exitLabel={originLabel()} />
+      <TraineeReadiness onExit={toOrigin} exitLabel={originLabel()} via={origin.current} />
     </ArabicContent></Lazy>,
   );
   /* Staff platforms are fully translated. Inside them, Arabic content (module

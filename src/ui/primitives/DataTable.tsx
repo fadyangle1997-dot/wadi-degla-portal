@@ -5,11 +5,13 @@
  *
  * A real <table> with explicit roles, so the semantics survive the stacked
  * layout on narrow containers (a container query, not the viewport: the same
- * table can sit in a side panel). Sorting is per column; a row opens through
+ * table can sit in a side panel). A table also stacks whenever its columns do
+ * not fit, whatever the width: seven columns on a tablet, or the largest text
+ * size, would otherwise push the page sideways. Sorting is per column; a row opens through
  * one button in its header cell, stretched over the whole row, so a pointer
  * can hit anywhere and a keyboard has exactly one stop per row.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronsUpDown, Search, X } from 'lucide-react';
 import { useLang, t } from '../../app/i18n';
 
@@ -81,10 +83,31 @@ export function DataTable<R>({
   const toggleSort = (id: string) => setSort(s =>
     s?.id === id ? { id, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { id, dir: 'asc' });
 
+  // Stacks when the table, laid out as a table, is wider than its box. Its
+  // natural width is measured while it is unstacked and kept, so a stacked
+  // table can tell when it would fit again. Measured before paint.
+  const box = useRef<HTMLDivElement>(null);
+  const natural = useRef(0);
+  const [stacked, setStacked] = useState(false);
+  useLayoutEffect(() => {
+    const el = box.current;
+    const table = el?.querySelector('table');
+    if (!el || !table || typeof ResizeObserver === 'undefined') return;
+    const fit = () => {
+      if (!el.hasAttribute('data-stacked')) natural.current = table.scrollWidth;
+      setStacked(natural.current > el.clientWidth + 1);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    ro.observe(table);
+    return () => ro.disconnect();
+  }, [columns.length, shown.length]);
+
   if (rows.length === 0 && empty) return <>{empty}</>;
 
   return (
-    <div className="dt">
+    <div className="dt" ref={box} data-stacked={stacked || undefined}>
       {(search || filters) && (
         <div className="dt-toolbar">
           {search && (
@@ -162,8 +185,12 @@ export function DataTable<R>({
                         </th>
                       );
                     }
+                    // A cell with nothing in it (no action on this row) is marked
+                    // empty, so the stacked layout does not print a label over nothing.
+                    const content = c.cell(r);
+                    const empty = content === null || content === undefined || content === false || content === '';
                     return (
-                      <td key={c.id} role="cell" className={c.align === 'end' ? 'dt-end' : undefined}>{label}{c.cell(r)}</td>
+                      <td key={c.id} role="cell" className={c.align === 'end' ? 'dt-end' : undefined} data-empty={empty || undefined}>{label}{content}</td>
                     );
                   })}
                 </tr>

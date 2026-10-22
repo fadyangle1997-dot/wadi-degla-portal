@@ -35,7 +35,7 @@ access · **P2** clear quality gain · **P3** polish. Status: ✅ done · ⏳ op
 | 2 | A11y | Search field's focus is a 1px colour change, no ring; its placeholder is gold | P1 | ✅ 2px ring, muted placeholder |
 | 3 | Visual | A blue figure on the admin dashboard (operations tile, info severity): no blue for status | P2 | ✅ neutral |
 | 4 | Language | Staff screens still carry administrative MSA: «تم …», «قيد …», «بانتظار …», «بلا …», «يحتاج إلى» (25 dictionary entries + audit sentences «من … إلى …») | P1 | ✅ 0 MSA in the dictionary; test reads the whole product |
-| 5 | Language | Trainee readiness result (`ReadinessResult.tsx`) writes 69 Arabic strings in the component: English mode shows Arabic | P1 | ⏳ |
+| 5 | Language | Trainee readiness result (`ReadinessResult.tsx`) writes 69 Arabic strings in the component: English mode shows Arabic | P2 | 📝 Arabic content by design (Phase 4; wrapped in `ArabicContent`, like the lesson); fixed inside it: «مرفوض» → «مش جاهز» (the manager's label), no «محرك» jargon |
 | 6 | Language | `tn.daysago`, `mg.dayssince` glued from parts, English half empty | P2 | ✅ `daysAgo` with plural forms |
 | 7 | Navigation | One nav label «المدير» for the branch manager, the area manager and the general manager; the page is «فرعك / منطقتك / المؤسسة» | P2 | ✅ فريقي · منطقتي · المؤسسة; متدربيني; التشغيل |
 | 8 | Overlay | Editing the hash in an open tab to add `?file=` does not open the file (a pasted link in a new tab does) | P3 | ⏳ |
@@ -44,9 +44,14 @@ access · **P2** clear quality gain · **P3** polish. Status: ✅ done · ⏳ op
 | 11 | Language | Audit log sentences Arabic-only (English mode showed Arabic), raw role id printed («إلى trainer»), MSA («أسند مدربًا») | P1 | ✅ bilingual, role by name, search in both |
 | 12 | Language | Glued counts across staff screens («2 محتاج تدخّل», «3 مدرب», «{n} تغيير») | P2 | ✅ plural helpers |
 | 13 | Mobile | Bottom tab bar drawn with a single tab for staff roles | P2 | ✅ only when there are two or more |
-| 14 | Trust | Profile «الشهادات» promises a certificate the product never issues (certificates are deferred) | P1 | ⏳ |
-| 15 | Navigation | Trainee readiness page: crumbs say «رحلتي» but Back says «ارجع للأكاديمية» when opened from the dashboard | P3 | ⏳ |
-| 16 | Mobile | Stacked table rows print an empty «الإجراء» label when a row has no action | P3 | ⏳ |
+| 14 | Trust | Profile «الشهادات» promises a certificate the product never issues (certificates are deferred), and says «no certificate yet» even after certification | P1 | ✅ «الاعتماد»: who certified and when, or what certification takes |
+| 15 | Navigation | Trainee readiness page: crumbs say «رحلتي» but Back says «ارجع للأكاديمية» when opened from the dashboard | P3 | ✅ the trail follows where it was opened from |
+| 16 | Mobile | Stacked table rows print an empty «الإجراء» label when a row has no action | P3 | ✅ empty cells hidden when stacked |
+| 17 | Semantics | «مراجعاتي» said the daily review «starts» in the independence phase, yet offers it from day 1; the domain makes it an obligation from day 33 (`REVIEW_STARTS_ON_DAY`), i.e. voluntary before | P1 | 📝 behaviour kept (no rule invented); copy now says due from the independence phase, optional before |
+| 18 | QA | No end-to-end test of a unit decision read across roles | P2 | ✅ `e2e/unit-approval.e2e.ts`: trainer approves → trainee sees it → manager's file records it |
+| 20 | Responsive | Branch manager dashboard scrolled sideways at tablet width (roster 1002px in 834; 335px over at the largest text); area/GM at 834 and 320 with large text; a brief's action ran past the sheet at 320 | P1 | ✅ a table that does not fit stacks (measured, not guessed); statuses wrap; metrics shrink; `responsive.e2e.ts` covers every management view at 834 with the largest text |
+| 21 | A11y | Targets under 44px: crumbs (26px), a sort header (43px wide), search input (42px) | P2 | ✅ 44px hit areas without moving the layout |
+| 19 | Trust | Mission and profile derived the certification separately | P2 | ✅ one source: `latestManagerDecision` carries who decided |
 
 ## 3. Scorecard
 

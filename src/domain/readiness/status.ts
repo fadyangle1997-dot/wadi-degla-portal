@@ -41,7 +41,8 @@ export interface FormalReadiness {
   readonly conductRecorded: boolean;
   /** The engine's verdict over the evidence so far (fail-closed). */
   readonly engine: ReadinessOutcome;
-  readonly managerDecision: { readonly decision: ManagerReadinessDecision; readonly rationale: string; readonly at: number } | null;
+  /** The manager's latest decision, with who recorded it. */
+  readonly managerDecision: { readonly decision: ManagerReadinessDecision; readonly rationale: string; readonly at: number; readonly managerId?: string } | null;
   readonly certified: boolean;
   /** The assessment has opened: every unit is approved. */
   readonly open: boolean;
@@ -50,7 +51,7 @@ export interface FormalReadiness {
 }
 
 type AnyEvent = { readonly type: string; readonly employeeId?: string; readonly at?: number };
-type DecisionEvent = AnyEvent & { readonly type: 'FINAL_READINESS_DECIDED'; readonly decision: ManagerReadinessDecision; readonly rationale: string; readonly at: number };
+type DecisionEvent = AnyEvent & { readonly type: 'FINAL_READINESS_DECIDED'; readonly decision: ManagerReadinessDecision; readonly rationale: string; readonly at: number; readonly managerId?: string };
 
 const isDecision = (e: AnyEvent): e is DecisionEvent => e.type === 'FINAL_READINESS_DECIDED';
 
@@ -58,7 +59,7 @@ const isDecision = (e: AnyEvent): e is DecisionEvent => e.type === 'FINAL_READIN
 export function latestManagerDecision(events: readonly AnyEvent[], employeeId: string): FormalReadiness['managerDecision'] {
   let latest: DecisionEvent | null = null;
   for (const e of events) if (isDecision(e) && e.employeeId === employeeId && (!latest || e.at >= latest.at)) latest = e;
-  return latest ? { decision: latest.decision, rationale: latest.rationale, at: latest.at } : null;
+  return latest ? { decision: latest.decision, rationale: latest.rationale, at: latest.at, managerId: latest.managerId } : null;
 }
 
 /**
