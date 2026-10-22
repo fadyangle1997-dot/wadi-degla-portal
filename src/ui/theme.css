@@ -612,12 +612,17 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .metric--info .t-metric { color:var(--info); }
 .metric--gold .t-metric { color:var(--g1); }
 
-/* Row state: a dot and a word, in the text colour; the dot carries the hue. */
-.status { display:inline-flex; align-items:center; gap:var(--sp-2); white-space:nowrap;
+/* Row state: a dot and a word, in the text colour; the dot carries the hue.
+   Outside a table it reads on one line whenever there is room, and wraps
+   only when a long state («In progress — 5 of 6 stations» at the largest
+   text) would otherwise push a narrow page sideways. */
+.status { display:inline-flex; align-items:center; gap:var(--sp-2); white-space:normal; max-width:100%;
   font-size:1rem; font-weight:500; color:var(--tx1); }
-/* A long state («وحدة واحدة في انتظار مراجعة المدرب») wraps rather than push
-   a narrow page sideways — in stacked rows, where a line is a whole row wide.
-   In a table row it stays on one line; the dot stays on its first line. */
+/* In a table row it stays on one line — a table shrinks columns toward their
+   narrowest, which would break «على المسار» in two — except where the table
+   only fits tight, or stacked, where a line is a whole row wide. The dot
+   stays on its first line. */
+.dt .status { white-space:nowrap; max-width:none; }
 .dt:is([data-stacked], [data-fit="tight"]) .status { white-space:normal; max-width:100%; }
 .status-dot { align-self:flex-start; margin-top:.5em; }
 .status-dot { width:8px; height:8px; border-radius:var(--r-full); flex-shrink:0; background:var(--tx3); }
@@ -1540,7 +1545,15 @@ details > summary { min-block-size:44px; cursor:pointer; }
 @media (max-width: 380px) { .jr-hero .dayring { --ring: 100px; } .jr-hero .dayring-day { font-size: 2rem; } }
 
 /* ── Readiness report (Phase 0.5) ── */
-.report-facts { display:grid; grid-template-columns:auto 1fr; gap:var(--sp-2) var(--sp-5); align-items:center; margin:0; }
+/* Label beside value; on a narrow screen with the largest text the label
+   wraps within at most half the width, and the value is never narrower than
+   its longest word («performance»). */
+.report-facts { display:grid; grid-template-columns:fit-content(50%) minmax(min-content, 1fr); gap:var(--sp-2) var(--sp-5); align-items:center; margin:0; }
+/* The narrowest phones: the label above its value. */
+@media (max-width: 359px) {
+  .report-facts { grid-template-columns:minmax(0, 1fr); gap:var(--sp-1); }
+  .report-facts > dd + dt { margin-top:var(--sp-2); }
+}
 .report-meter { width:140px; height:5px; border-radius:var(--r-full); background:var(--line-2); overflow:hidden; flex:none; }
 .report-meter > span { display:block; height:100%; border-radius:var(--r-full); background:var(--g2); }
 .report-meter > span[data-below] { background:var(--risk); }

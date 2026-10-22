@@ -23,11 +23,14 @@ had been there since the baseline or since overlays moved into the URL:
 | 32 | One four-part name stacked the manager's roster at 1280px | P2 | Fixed |
 | 33 | The full E2E run was 83/84 under load (a test race, not a product defect) | — | Fixed |
 | 34 | The capture harness could serve a stale build to the next run | — | Fixed |
+| 35 | In English, at 320px with the largest text, the trainer's screens scrolled sideways | P1 | Fixed; E2E |
+| 36 | The responsive E2E could not fail on a phone: it measured a width that grows with the overflow | — | Fixed; proven to fail without #35 |
 
 The lesson for whoever continues: the earlier evidence was real for the paths
 it covered, and blind to the paths nobody walked — a decision that leads
-nowhere and a link nobody was expected to edit. The three cross-role loops
-(approve, rework, escalate) now each have an end-to-end test.
+nowhere, a link nobody was expected to edit, a language nobody captured at
+the narrowest width, and a test that measured the wrong width. The three
+cross-role loops (approve, rework, escalate) now each have an end-to-end test.
 
 ## 2. Verified evidence
 

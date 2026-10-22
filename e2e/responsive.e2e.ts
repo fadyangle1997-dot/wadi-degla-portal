@@ -1,7 +1,10 @@
 import { test, signIn, signOut, toAcademy, expect, expectAccessible } from './fixtures';
 
+// Against the layout width, not window.innerWidth: a phone (and its
+// emulation) zooms out to fit content wider than the screen, and innerWidth
+// grows with it — so it can never see the overflow it is meant to catch.
 const noSidewaysScroll = async (page: import('@playwright/test').Page) =>
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 
 test('sign-in and academy fit a phone screen', async ({ page }) => {
   await page.goto('/');
@@ -91,5 +94,25 @@ test.describe('at tablet width — the widest tables and the largest text', () =
       await page.evaluate(() => { localStorage.setItem('wda.text.v1', 'md'); });
       await signOut(page);
     }
+  });
+});
+
+test.describe('in English at 320px with the largest text — the longest staff states', () => {
+  test.use({ viewport: { width: 320, height: 720 } });
+  // English states run longer than Arabic: «In progress — 5 of 6 stations»
+  // and «Strong performance» beside «Readiness assessment» pushed the
+  // trainer's screens sideways.
+  test('the trainer\'s home and a trainee\'s file fit', async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem('wda.lang.v1', 'en'); localStorage.setItem('wda.text.v1', 'xl'); } catch { /* ignore */ } });
+    await signIn(page, 'admin');
+    await page.getByRole('button', { name: 'Load demo data' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Load demo data' }).click();
+    await page.evaluate(() => { localStorage.removeItem('wda.identity.session.v2'); });
+    await signIn(page, 'trainer.samir');
+    await expect(page).toHaveURL(/#\/trainer$/);
+    await noSidewaysScroll(page);
+    await page.goto('/#/trainee/karim.s');
+    await expect(page.getByRole('heading', { level: 1, name: 'Karim Saad' })).toBeVisible();
+    await noSidewaysScroll(page);
   });
 });

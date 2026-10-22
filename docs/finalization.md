@@ -64,6 +64,8 @@ access · **P2** clear quality gain · **P3** polish. Status: ✅ done · ⏳ op
 | 31 | Notifications | A branch manager's bell said «مفيش حاجة محتاجة انتباهك» while a readiness decision waited on the dashboard | P1 | ✅ the bell carries the dashboard's two decisions (programme finished, unit escalated); the admin's carries urgent operational issues; E2E |
 | 32 | Responsive | One four-part name (ordinary in Egypt) turned the manager's roster into stacked rows at 1280px | P2 | ✅ in a table that fits only tight, a name may take a second line, never narrower than 12em |
 | 33 | QA | Full E2E run 83/84: a lesson walk clicked a stage's button as the stage changed, under load | — | ✅ short clicks that look again, counting the stages actually moved |
+| 35 | Responsive | In English at 320px with the largest text the trainer's home and a trainee's file scrolled sideways (2–75px): a state never wrapped («In progress — 5 of 6 stations», «Strong performance»), and the facts list kept its label column wide | P1 | ✅ outside a table a state wraps only when it cannot fit (tables unchanged); the facts list caps its label at half the width and stacks below 360px; E2E in English |
+| 36 | QA | The responsive E2E measured against `window.innerWidth`, which a phone's zoom-to-fit grows with the overflow — it could not fail | — | ✅ measured against the layout width; the new test fails without #35's fix |
 | 34 | Harness | The capture harness started its server through `npx`, so the server outlived the run and could answer the next one with a stale build; a modal's single control read as a keyboard trap | — | ✅ the server is the vite binary itself; containment inside `aria-modal` is not a trap |
 
 ## 3. Scorecard
