@@ -12,6 +12,7 @@ import { FormalStatus, FollowUpStatus, formalLabel, performanceText } from '../r
 import { rowTone, FOLLOW_UP } from '../../ui/statusSemantics';
 import { ArabicContent, DataTable, Meter, Initials, type Column } from '../../ui/primitives';
 import { useLang, t as tr, type Lang } from '../../app/i18n';
+import { daysAgo } from '../../app/plural';
 
 /* ---------------- employee card grid ----------------
    Each card carries only what the manager needs to triage one employee:
@@ -146,5 +147,5 @@ const currentStageLabel = (t: ReturnType<typeof useTraining>, id: string, lang: 
 /** Relative-day label for last activity — durable phrasing, no exact timestamps. */
 const relativeDay = (at: number, lang: Lang): string => {
   const days = Math.floor((Date.now() - at) / 86_400_000);
-  return days <= 0 ? tr('mg.today', lang) : days === 1 ? tr('mg.yesterday', lang) : `${tr('mg.dayssince', lang)} ${days} ${tr('mg.dayunit', lang)}`;
+  return daysAgo(days, lang);
 };

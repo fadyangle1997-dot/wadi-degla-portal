@@ -91,7 +91,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
         {/* ── 1 · Hero Identity — who am I ── */}
         <Card tone="accent" pad={6}>
           <div className="row items-center gap-5 wrap">
-            <span aria-hidden className="row no-shrink items-center justify-center c-g1" style={{ width: 76, height: 76, borderRadius: 'var(--r-full)', background: 'var(--s0)', border: '2px solid var(--g3)' }}>
+            <span aria-hidden className="avatar avatar--hero row no-shrink items-center justify-center">
               <span className="t-h3 m-0">{initials}</span>
             </span>
             <div className="grow" style={{ minWidth: '16ch' }}>
@@ -170,7 +170,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
             {trainer ? (
               <Card tone="quiet" pad={5}>
                 <div className="row items-center gap-3">
-                  <span aria-hidden className="row no-shrink items-center justify-center c-tx2" style={{ width: 44, height: 44, borderRadius: 'var(--r-full)', background: 'var(--s0)', border: '1px solid var(--line-2)' }}>
+                  <span aria-hidden className="avatar row no-shrink items-center justify-center c-tx2">
                     <User2 size={22} />
                   </span>
                   <div>

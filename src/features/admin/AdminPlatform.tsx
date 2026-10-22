@@ -24,7 +24,7 @@ import { WIDTH } from '../../ui/designSystem';
 import { useOrganization, orgStore } from '../../app/organization/orgStore';
 import { branchNameOf } from '../../domain/organization';
 import { tone, SEVERITY, type SemanticTone } from '../../ui/statusSemantics';
-import { useLang, t, tf, type Key, dateLocale } from '../../app/i18n';
+import { useLang, t, tf, roleName as roleDisplayName, type Key, dateLocale } from '../../app/i18n';
 import { overlayParams } from '../../app/overlayHistory';
 import { leaveGuard } from '../../app/leaveGuard';
 import { eventCount, issuesNeedAction } from '../../app/plural';
@@ -99,10 +99,10 @@ const OperationalDashboard: React.FC<{ onOpenInbox: () => void }> = ({ onOpenInb
         <Metric label={t('ad.active', lang)} value={stats.active} />
         <Metric label={t('ad.disabled', lang)} value={stats.disabled} tone={stats.disabled ? 'attn' : undefined} />
         <Metric label={t('ad.archivedst', lang)} value={stats.archived} />
-        {/* Green means nothing to do, so only a zero count is green; informational
-            issues are `info`. */}
+        {/* Green means nothing to do, so only a zero count is green; issues that
+            are only information stay neutral: there is no blue for a status. */}
         <Metric label={t('ad.opissues', lang)} value={sev.total}
-          tone={sev.critical ? 'risk' : sev.warning ? 'attn' : sev.total > 0 ? 'info' : 'ready'}
+          tone={sev.critical ? 'risk' : sev.warning ? 'attn' : sev.total > 0 ? undefined : 'ready'}
           context={sev.total > 0 ? `${sev.critical} ${t('ad.sevcritical', lang)} · ${sev.warning} ${t('ad.sevwarning', lang)} · ${sev.info} ${t('ad.sevinfo', lang)}` : undefined} />
       </MetricStrip>
 
@@ -271,9 +271,14 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
     const map = new Map(users.map(u => [u.id, u.name]));
     return (id: string) => map.get(id) ?? id;
   }, [users]);
+  const roles = identityStore.get().roles;
+  const roleNameOf = useMemo(() => (id: string) => {
+    const role = roles.find(r => r.id === id);
+    return role ? roleDisplayName(role, lang) : id;
+  }, [roles, lang]);
   const CAP = 200;
   const actions = useMemo(() => auditActions(log), [log]);
-  const matching = useMemo(() => filterAudit(log, filter, nameOf), [log, filter, nameOf]);
+  const matching = useMemo(() => filterAudit(log, filter, nameOf, roleNameOf), [log, filter, nameOf, roleNameOf]);
   const shown = useMemo(() => latestAudit(matching, CAP), [matching]);
   const [toast, setToast] = useState<string | null>(null);
   const when = (at: number) => new Date(at).toLocaleString(dateLocale(lang), { dateStyle: 'medium', timeStyle: 'short' });
@@ -281,7 +286,7 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
   // The export is real: every matching event, not just the visible page,
   // as a CSV that opens in Excel with its Arabic intact (UTF-8 BOM).
   const exportCsv = () => {
-    const rows = auditExportRows(matching, nameOf);
+    const rows = auditExportRows(matching, nameOf, lang, roleNameOf);
     const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
     const csv = ['\uFEFF' + ['at', 'actor', 'action', 'target', 'before', 'after', 'detail'].join(','),
       ...rows.map(r => [new Date(r.at).toISOString(), r.actor, r.action, r.target, r.before, r.after, r.detail].map(cell).join(','))].join('\r\n');
@@ -301,7 +306,7 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
 
   type Ev = (typeof shown)[number];
   const columns: Column<Ev>[] = [
-    { id: 'what', header: t('ad.col.what', lang), cell: e => <span className="c-tx1">{describeAudit(e, nameOf)}</span> },
+    { id: 'what', header: t('ad.col.what', lang), cell: e => <span className="c-tx1">{describeAudit(e, nameOf, lang, roleNameOf)}</span> },
     { id: 'when', header: t('ad.col.when', lang), sortValue: e => e.at, cell: e => <span className="t-sm"><Num>{when(e.at)}</Num></span> },
     { id: 'type', header: t('ad.col.type', lang), cell: e => <span className="t-label" lang="en" dir="ltr">{actionOf(e)}</span> },
   ];

@@ -10,9 +10,10 @@ import { moduleById } from '../../content/registry';
 import { UNIT_DECISION_LABEL } from '../../domain/evaluation';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, Eyebrow, StatusBadge, ArabicContent, CloseButton, ConfirmDialog, Toast, InlineError, FormField, useModal, useExitFlow } from '../../ui/primitives';
+import { Button, Eyebrow, StatusBadge, ArabicContent, tx, CloseButton, ConfirmDialog, Toast, InlineError, FormField, useModal, useExitFlow } from '../../ui/primitives';
 import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
-import { useLang, t as tr, tf, type Key } from '../../app/i18n';
+import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
+import { unitCount } from '../../app/plural';
 import { leaveGuard } from '../../app/leaveGuard';
 
 const moduleName = (id: string) => moduleById(id)?.title ?? id;
@@ -58,7 +59,7 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
   // Module names, decision labels and free-text reasons are Arabic content
   // inside a translated sentence, so each is declared as Arabic.
   const label = (e: OrgEvent): React.ReactNode =>
-    e.type === 'UNIT_SUBMITTED_FOR_REVIEW' ? <>{tr('mg.submitted', lang)} <ArabicContent as="span">«{moduleName(e.moduleId!)}»</ArabicContent> {tr('mg.forreview', lang)}</>
+    e.type === 'UNIT_SUBMITTED_FOR_REVIEW' ? tx('mg.sentforreview', { m: <ArabicContent as="span">{moduleName(e.moduleId!)}</ArabicContent> }, lang)
       : e.type === 'EVALUATION_RECORDED' ? <>{tr('mg.evaluation', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)} — {UNIT_DECISION_LABEL[e.decision!] ?? e.decision}</ArabicContent></>
       : e.type === 'TRAINING_EXTENDED' ? <>{tr('mg.extended', lang)} <ArabicContent as="span">{e.reason ?? ''}</ArabicContent></>
       : e.type === 'LESSON_REOPENED' ? tr('mg.reopened', lang)
@@ -127,7 +128,7 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
             <ol role="list" className="stack gap-3" style={{ listStyle: 'none', margin: 'var(--sp-3) 0 0', padding: 0 }}>
               {events.map((e, i) => (
                 <li key={i} className="row gap-3 items-start">
-                  <span className="mt-2 no-shrink" style={{ width: 8, height: 8, borderRadius: 'var(--r-full)', background: 'var(--g2)' }} aria-hidden />
+                  <span className="timeline-dot mt-2 no-shrink" aria-hidden />
                   <span className="t-sm">{label(e)}</span>
                 </li>
               ))}
@@ -194,7 +195,7 @@ const FinalDecisionPanel: React.FC<{
   const flash = (msg: string) => { setSaved(msg); window.setTimeout(() => setSaved(null), 2600); };
 
   return (
-    <div className="mt-5" style={{ paddingTop: 'var(--sp-5)', borderTop: '1px solid var(--line)' }}>
+    <div className="mt-5 section-rule">
       <Eyebrow icon={<ShieldCheck size={13} />}>{tr('mg.decision', lang)}</Eyebrow>
 
       {existing && (
@@ -221,7 +222,7 @@ const FinalDecisionPanel: React.FC<{
 
       {!complete ? (
         <p className="t-sm mt-3 c-tx3">
-          {tr('mg.locked', lang)} {approved} {tr('jr.of', lang)} {total}.
+          {tf('mg.lockedof', { done: iso(approved), total: unitCount(total, lang) }, lang)}
         </p>
       ) : !canDecide ? (
         <p className="t-sm mt-3 c-tx3">

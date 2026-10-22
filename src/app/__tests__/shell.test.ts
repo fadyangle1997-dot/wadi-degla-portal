@@ -6,13 +6,24 @@ import { readFileSync } from 'node:fs';
  */
 import { describe, it, expect } from 'vitest';
 import { can, DEFAULT_ROLES, type User, type Permission } from '../../domain/identity';
-import { navFor, canAccess, landingFor, PLATFORM_ACCESS } from '../../domain/identity/access';
+import { navFor, canAccess, landingFor, managementLabel, PLATFORM_ACCESS } from '../../domain/identity/access';
 
 const user = (roleId: string): User =>
   ({ id: `u-${roleId}`, name: roleId, roleId, status: 'active', createdAt: 0, updatedAt: 0 });
 
 const canOf = (roleId: string) => (p: Permission) => can(user(roleId), DEFAULT_ROLES, p);
 const viewsOf = (roleId: string) => navFor(canOf(roleId)).map(n => n.view);
+
+describe('the management platform is named by its scope', () => {
+  // One screen, three scopes: «فريقي», «منطقتي», «المؤسسة» — never «المدير».
+  it('a branch manager sees their team, an area manager their area, the general manager the organisation', () => {
+    const label = (roleId: string) => navFor(canOf(roleId)).find(n => n.view === 'manager')?.label;
+    expect(label('manager')).toBe('nav.manager');
+    expect(label('area_manager')).toBe('nav.area');
+    expect(label('general_manager')).toBe('nav.org');
+    expect(managementLabel(canOf('area_manager')).back).toBe('nav.toarea');
+  });
+});
 
 describe('RBAC matrix — each role sees only its own platform', () => {
   it('ADMIN sees only the admin platform', () => {

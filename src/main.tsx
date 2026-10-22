@@ -16,7 +16,8 @@ import { createRoot } from 'react-dom/client';
 import { lazy, Suspense, useEffect } from 'react';
 import { LazyMotion, MotionConfig } from 'motion/react';
 import './ui/theme.css';
-// The v3 benchmark's rules apply only under html[data-system="v3"] (ui/systemScope.ts).
+// The product's one visual system. index.html carries html[data-system="v3"],
+// which every rule in it is keyed to; nothing switches it off.
 import './ui/system-v3.css';
 import { ErrorBoundary } from './app/ErrorBoundary';
 import { LoginView } from './features/login/LoginView';

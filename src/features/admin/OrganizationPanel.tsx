@@ -24,6 +24,7 @@ import { useIdentity } from '../../app/identity/identityStore';
 import { branchesOfArea, usersOfBranch } from '../../domain/organization';
 import { Card, Eyebrow, StatusBadge, Button, EmptyState, ConfirmDialog, FormField, Toast, useExitFlow } from '../../ui/primitives';
 import { useLang, t, tf } from '../../app/i18n';
+import { branchCount, changeCount, staffCount, trainerCount } from '../../app/plural';
 
 /** A staged assignment: `mgr:<areaId>` → manager id, `area:<branchId>` → area id ('' = none). */
 type Drafts = Readonly<Record<string, string>>;
@@ -83,7 +84,7 @@ export const OrganizationPanel: React.FC = () => {
   };
   const { dialog: leaveDialog } = useExitFlow(staged.length > 0, {
     title: t('og.leaveask', lang),
-    body: tf('og.leavebody', { n: staged.length, list: staged.map(k => describe(k, drafts[k] ?? '').pending).join(' ') }, lang),
+    body: tf('og.leavebody', { changes: changeCount(staged.length, lang), list: staged.map(k => describe(k, drafts[k] ?? '').pending).join(' ') }, lang),
     leaveLabel: t('og.leavego', lang),
     stayLabel: t('og.leavestay', lang),
   });
@@ -140,7 +141,7 @@ export const OrganizationPanel: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <span className="t-title" style={{ color: archived ? 'var(--tx3)' : 'var(--tx0)' }}>{area.name}</span>
+                    <span className={`t-title ${archived ? 'c-tx3' : 'c-tx0'}`}>{area.name}</span>
                     <button className="pill" aria-label={`${t('og.renameaera', lang)} ${area.name}`} title={`${t('og.renameaera', lang)} ${area.name}`}
                       onClick={() => setRenaming(area.id)}><Pencil size={13} aria-hidden /></button>
                   </>
@@ -167,17 +168,17 @@ export const OrganizationPanel: React.FC = () => {
               {/* Branches inside this area */}
               <div className="stack mt-4 gap-2">
                 <span className="t-label c-tx3">
-                  {kids.length} {t('og.branches', lang)} · {people} {t('og.staff', lang)}
+                  {branchCount(kids.length, lang)} · {staffCount(people, lang)}
                 </span>
                 {kids.map(b => {
                   const trainers = usersOfBranch(b.id, 'trainer', users);
                   const staff = usersOfBranch(b.id, 'employee', users);
                   return (
-                    <div key={b.id} className="row items-center gap-3 wrap" style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--line)', borderRadius: 'var(--r-sm)' }}>
+                    <div key={b.id} className="org-branch row items-center gap-3 wrap">
                       <Building2 size={13} className="c-tx3 no-shrink" />
                       <span className="t-body c-tx0">{b.name}</span>
                       <span className="t-label c-tx3">
-                        {nameOf(b.branchManagerId) ?? t('og.nomanager', lang)} · {trainers.length} {t('og.trainers', lang)} · {staff.length} {t('og.staff', lang)}
+                        {nameOf(b.branchManagerId) ?? t('og.nomanager', lang)} · {trainerCount(trainers.length, lang)} · {staffCount(staff.length, lang)}
                       </span>
                       <div className="grow" />
                       <StagedSelect id={`og-area-${b.id}`} label={`${t('og.areaofbranch', lang)} ${b.name}`} {...stagedProps(`area:${b.id}`)}>
@@ -206,7 +207,7 @@ export const OrganizationPanel: React.FC = () => {
             </p>
             <div className="stack gap-2">
               {unassigned.map(b => (
-                <div key={b.id} className="row items-center gap-3" style={{ padding: 'var(--sp-3) var(--sp-4)', background: 'var(--s-1)', border: '1px solid var(--attn-line)', borderRadius: 'var(--r-sm)' }}>
+                <div key={b.id} className="org-branch org-branch--attn row items-center gap-3">
                   <Building2 size={13} className="c-attn no-shrink" />
                   <span className="t-body">{b.name}</span>
                   <div className="grow" />

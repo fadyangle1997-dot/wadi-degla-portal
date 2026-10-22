@@ -162,7 +162,7 @@ const answersKey = [];
     for (const kpi of await file.locator('fieldset.rubric').all()) await kpi.locator('label.rubric-option').nth(3).click();
     await file.getByLabel('الملاحظة — شفت إيه بالظبط؟').fill('شرح الخطر التشغيلي ورا رفض الحالة بوضوح.');
     await file.getByRole('button', { name: 'سجّل المحطة' }).click(); await p.waitForTimeout(400);
-    await file.getByLabel('مبرر قرار الجاهزية').fill('الست محطات فوق الحد، والمقابلة أكّدت القرار.');
+    await file.getByLabel('سبب قرار الجاهزية').fill('الست محطات فوق الحد، والمقابلة أكّدت القرار.');
     await file.getByRole('button', { name: 'جاهز للعمل' }).click();
     await p.getByRole('dialog', { name: /القرار النهائي/ }).getByRole('button', { name: 'جاهز للعمل' }).click();
     await p.waitForTimeout(400);
@@ -284,6 +284,35 @@ for (const text of TEXTS) for (const width of WIDTHS) {
       await signIn(p, 'menna.k'); await go(p, '#/'); await S(p, '21-home-certified');
       await ctx.close();
     });
+  }
+
+  // Every other screen, by role, on the demo data: the trainee's secondary
+  // screens, then each staff platform with the overlay it opens most.
+  if (states.demo) {
+    const tour = [
+      ['karim.s', [['#/skills', '30-skills'], ['#/roadmap', '31-roadmap'], ['#/roadmap?phase=2', '32-roadmap-phase'], ['#/journey', '33-reference'], ['#/readiness', '34-readiness-trainee'], ['#/reviews', '35-my-reviews-history']]],
+      ['trainer.samir', [['#/trainer', '40-trainer-home'], ['#/trainee/youssef.a', '41-trainer-trainee'], ['#/trainee/karim.s', '42-trainer-trainee-late']]],
+      ['trainer.adel', [['#/trainer', '43-trainer-home-early']]],
+      ['manager.nabil', [['#/manager', '50-manager-home'], ['#/manager?file=menna.k', '51-manager-file'], ['#/manager?file=karim.s', '52-manager-file-pending'], ['#/readiness-report/menna.k', '53-readiness-report']]],
+      ['area.hoda', [['#/manager', '60-area-home'], ['#/manager?file=karim.s', '61-area-file']]],
+      ['gm.tarek', [['#/manager', '70-gm-home']]],
+      ['admin', [['#/admin', '80-admin-home'], ['#/admin?user=karim.s', '81-admin-user'], ['#/admin?create=1', '82-admin-create']]],
+    ];
+    for (const [who, stops] of tour) {
+      if (ONLY && !stops.some(([, name]) => ONLY.some(o => name.startsWith(o)))) continue;
+      await step(`${who}-${width}-${text}`, async () => {
+        const { ctx, page: p } = await open(width, text, states.demo);
+        await signIn(p, who);
+        // An overlay (?file=, ?user=) opens the way a pasted link does: the
+        // page loads with it, so the screen underneath comes up with it.
+        for (const [hash, name] of stops) {
+          await go(p, hash);
+          if (hash.includes('?')) { await p.reload(); await settle(p); }
+          await S(p, name);
+        }
+        await ctx.close();
+      });
+    }
   }
   console.log(`done ${width} ${text}: ${results.length} shots, ${log.length} problems`);
 }

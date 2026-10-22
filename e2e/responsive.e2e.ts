@@ -48,9 +48,9 @@ test.describe('at 320px — the narrowest phone WCAG reflow asks for', () => {
   test.use({ viewport: { width: 320, height: 720 } });
   test('admin users, an account, and the manager file fit without sideways scroll', async ({ page }) => {
     await signIn(page, 'admin');
-    await page.getByRole('button', { name: 'المستخدمون' }).click();
+    await page.getByRole('button', { name: 'المستخدمين' }).click();
     await noSidewaysScroll(page);
-    await page.getByRole('table', { name: 'المستخدمون' }).getByRole('button', { name: /Nabil Sherif/ }).click();
+    await page.getByRole('table', { name: 'المستخدمين' }).getByRole('button', { name: /Nabil Sherif/ }).click();
     await noSidewaysScroll(page);
     await expectAccessible(page, 'account panel at 320');
   });

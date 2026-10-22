@@ -27,7 +27,7 @@ test('trainer stations + manager interview produce a readiness verdict the train
   await signIn(page, 'manager.nabil');
   await page.locator('main').getByRole('button', { name: /Menna Kamal/ }).first().click();
   const file = page.getByRole('dialog');
-  await expect(file).toContainText('جاري — 5 من 6 محطات');
+  await expect(file).toContainText('شغّال — 5 من 6 محطات');
   await file.getByRole('button', { name: 'قيّم' }).click();
   // No level is pre-picked: each KPI is judged by the behaviour seen.
   for (const kpi of await file.locator('fieldset.rubric').all()) await kpi.locator('label.rubric-option').nth(3).click();

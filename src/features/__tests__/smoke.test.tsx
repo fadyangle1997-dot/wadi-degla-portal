@@ -122,7 +122,6 @@ describe('sign-in — the door', () => {
   it('the door follows the product language — it never forces its own direction', () => {
     render(<App />);
     expect(document.querySelector('.door')?.getAttribute('dir')).toBeNull();
-    expect(document.documentElement.dataset.system).toBe('v3');
   });
 
   it('🚫 nothing decorative is drawn — no light orbs behind the form', () => {

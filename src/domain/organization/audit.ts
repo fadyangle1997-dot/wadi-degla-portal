@@ -134,23 +134,44 @@ export function orgEventFor(prev: OrgSnapshot, next: OrgSnapshot, c: EventContex
   return null;
 }
 
-/** One governance event as a sentence an auditor can read. */
-export function describeOrgEvent(e: OrgAuditEvent, nameOf: (id: string) => string): string {
+/** The language an audit sentence is written in: the reader's interface language. */
+export type AuditLang = 'ar' | 'en';
+
+const BRANCH_STATUS: Record<AuditLang, Record<string, string>> = {
+  ar: { active: 'شغّال', inactive: 'متوقّف' },
+  en: { active: 'active', inactive: 'inactive' },
+};
+
+/**
+ * One governance event as a sentence an auditor can read, in their language.
+ * A change from or to nobody is said as what happened («عيّن», «شال»), not
+ * as «from nobody to X»; a status is said in words, never as its stored value.
+ */
+export function describeOrgEvent(e: OrgAuditEvent, nameOf: (id: string) => string, lang: AuditLang = 'ar'): string {
   const actor = nameOf(e.actorId);
-  const none = (s: string | null, fallback: string) => s ?? fallback;
+  const n = e.target.name;
+  const b = e.beforeLabel, a = e.afterLabel;
+  const ar = lang === 'ar';
   switch (e.action) {
-    case 'org.area_created': return `${actor} أنشأ منطقة ${e.target.name}`;
-    case 'org.area_deleted': return `${actor} حذف منطقة ${e.target.name}`;
-    case 'org.area_renamed': return `${actor} غيّر اسم منطقة «${e.before}» إلى «${e.after}»`;
-    case 'org.area_archived': return `${actor} أرشف منطقة ${e.target.name}`;
-    case 'org.area_restored': return `${actor} استرجع منطقة ${e.target.name}`;
+    case 'org.area_created': return ar ? `${actor} عمل منطقة ${n}` : `${actor} created area ${n}`;
+    case 'org.area_deleted': return ar ? `${actor} مسح منطقة ${n}` : `${actor} deleted area ${n}`;
+    case 'org.area_renamed': return ar ? `${actor} غيّر اسم منطقة «${e.before}» لـ«${e.after}»` : `${actor} renamed area “${e.before}” to “${e.after}”`;
+    case 'org.area_archived': return ar ? `${actor} أرشف منطقة ${n}` : `${actor} archived area ${n}`;
+    case 'org.area_restored': return ar ? `${actor} رجّع منطقة ${n}` : `${actor} restored area ${n}`;
     case 'org.area_manager_changed':
-      return `${actor} غيّر مدير منطقة ${e.target.name} من ${none(e.beforeLabel, 'بلا مدير')} إلى ${none(e.afterLabel, 'بلا مدير')}`;
+    case 'org.branch_manager_changed': {
+      const place = e.action === 'org.area_manager_changed' ? (ar ? `منطقة ${n}` : `area ${n}`) : (ar ? `فرع ${n}` : `branch ${n}`);
+      if (!b && a) return ar ? `${actor} عيّن ${a} مدير ${place}` : `${actor} made ${a} manager of ${place}`;
+      if (b && !a) return ar ? `${actor} شال ${b} من إدارة ${place}` : `${actor} removed ${b} as manager of ${place}`;
+      return ar ? `${actor} غيّر مدير ${place} من ${b} لـ${a}` : `${actor} changed the manager of ${place} from ${b} to ${a}`;
+    }
     case 'org.branch_moved':
-      return `${actor} نقل فرع ${e.target.name} من ${none(e.beforeLabel, 'بلا منطقة')} إلى ${none(e.afterLabel, 'بلا منطقة')}`;
-    case 'org.branch_manager_changed':
-      return `${actor} غيّر مدير فرع ${e.target.name} من ${none(e.beforeLabel, 'بلا مدير')} إلى ${none(e.afterLabel, 'بلا مدير')}`;
-    case 'org.branch_status_changed':
-      return `${actor} غيّر حالة فرع ${e.target.name} من ${e.before} إلى ${e.after}`;
+      if (!b && a) return ar ? `${actor} ضم فرع ${n} لـ${a}` : `${actor} added branch ${n} to ${a}`;
+      if (b && !a) return ar ? `${actor} خرّج فرع ${n} من ${b} — ومبقاش تابع لأي منطقة` : `${actor} took branch ${n} out of ${b} — it belongs to no area`;
+      return ar ? `${actor} نقل فرع ${n} من ${b} لـ${a}` : `${actor} moved branch ${n} from ${b} to ${a}`;
+    case 'org.branch_status_changed': {
+      const s = (v: string | null) => (v && BRANCH_STATUS[lang][v]) ?? v ?? '';
+      return ar ? `${actor} غيّر حالة فرع ${n} من ${s(e.before)} لـ${s(e.after)}` : `${actor} changed branch ${n} from ${s(e.before)} to ${s(e.after)}`;
+    }
   }
 }

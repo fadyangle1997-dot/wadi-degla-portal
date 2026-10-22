@@ -23,8 +23,11 @@ import { WIDTH } from '../../ui/designSystem';
 
 /* Who owns a stage is a category, not a status: neutral chips, the trainee's
    own stages carry the brand accent (ui/statusSemantics — no blue). */
-const OWNER: Record<'membership' | 'external' | 'archive', { label: Key; tone: 'gold' | 'neutral'; icon: React.ReactNode }> = {
-  membership: { label: 'ref.own.membership', tone: 'gold', icon: <MapPin size={13} /> },
+// Who owns each stage is a label, not a status: one neutral badge for all.
+// The membership office's own stages are marked by the stage itself (its
+// numbered disc), so the badge does not add a second gold.
+const OWNER: Record<'membership' | 'external' | 'archive', { label: Key; tone: 'neutral'; icon: React.ReactNode }> = {
+  membership: { label: 'ref.own.membership', tone: 'neutral', icon: <MapPin size={13} /> },
   external: { label: 'ref.own.external', tone: 'neutral', icon: <Building2 size={13} /> },
   archive: { label: 'ref.own.archive', tone: 'neutral', icon: <Archive size={13} /> },
 };

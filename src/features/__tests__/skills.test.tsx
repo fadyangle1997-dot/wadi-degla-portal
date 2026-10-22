@@ -47,7 +47,7 @@ describe('skills — overview → phase → skill', () => {
     for (const r of rows) {
       // The steps are decoration; the words carry the meaning.
       expect(r.querySelector('.sk-steps')!.getAttribute('aria-hidden')).toBe('true');
-      expect(r.querySelector('.sk-level')!.textContent).toMatch(/لسه|بدأتها|بتتمرن عليها|اتقنتها/);
+      expect(r.querySelector('.sk-level')!.textContent).toMatch(/لسه|بدأتها|بتتمرّن عليها|اتقنتها/);
       expect(r.textContent).toMatch(/وصلت للمتوقّع|المتوقّع: /);
     }
   });

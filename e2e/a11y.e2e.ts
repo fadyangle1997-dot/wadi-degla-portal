@@ -51,18 +51,18 @@ test('readiness assessment and trainee file, with demo data', async ({ page }) =
 
 test('admin: the users ledger, an account panel, and a form showing its errors', async ({ page }) => {
   await signIn(page, 'admin');
-  await page.getByRole('button', { name: 'المستخدمون' }).click();
+  await page.getByRole('button', { name: 'المستخدمين' }).click();
   await expectAccessible(page, 'users ledger');
-  await page.getByRole('table', { name: 'المستخدمون' }).getByRole('button', { name: /Nabil Sherif/ }).click();
+  await page.getByRole('table', { name: 'المستخدمين' }).getByRole('button', { name: /Nabil Sherif/ }).click();
   await expectAccessible(page, 'account panel');
   // A destructive confirm, open. axe leaves contrast inside the animated dialog
   // as "needs review"; the label-on-risk pair is held by designSystem.test.ts.
-  await page.getByRole('button', { name: 'أرشفة', exact: true }).click();
+  await page.getByRole('button', { name: 'أرشف', exact: true }).click();
   await expectAccessible(page, 'destructive confirm');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'إضافة مستخدم' }).click();
-  await page.getByRole('dialog', { name: 'مستخدم جديد' }).getByRole('button', { name: 'إنشاء' }).click();
+  await page.getByRole('button', { name: 'ضيف مستخدم' }).click();
+  await page.getByRole('dialog', { name: 'مستخدم جديد' }).getByRole('button', { name: 'ضيف المستخدم' }).click();
   await expectAccessible(page, 'new user with errors');
 });
 

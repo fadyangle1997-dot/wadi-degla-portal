@@ -7,7 +7,7 @@
  * palette (--g0…--g3) feeds those roles and nothing else.
  *
  * This suite holds four lines:
- *  1. components on the v3 benchmark screens never reach for the palette —
+ *  1. no component, on any screen, reaches for the palette —
  *     no --g*, no surface or text palette token, no .c-g1/.c-g2;
  *  2. no raw gold value is written anywhere outside a token definition;
  *  3. a role is only used where its meaning applies (action on primary
@@ -30,13 +30,8 @@ const files = walk(SRC).filter(f => /\.(tsx?|css)$/.test(f));
 const read = (f: string) => readFileSync(f, 'utf-8');
 const stripComments = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 
-/** The screens the v3 system covers (the focus journey), and the shell around the dashboard. */
-const BENCHMARK = files.filter(f => {
-  const r = relative(SRC, f);
-  return /^features\/(login|path|lesson|exam|boss|welcome)\//.test(r)
-    || ['features/journey/MissionBrief.tsx', 'features/journey/TodayRetrieval.tsx', 'features/review/DecisionReview.tsx',
-      'features/review/MyReviews.tsx', 'ui/AppShell.tsx', 'ui/Icon.tsx'].includes(r);
-}).filter(f => f.endsWith('.tsx'));
+/** Every component: the v3 system covers the whole product, every role. */
+const BENCHMARK = files.filter(f => /^(features|ui)\//.test(relative(SRC, f))).filter(f => f.endsWith('.tsx'));
 
 const PALETTE = /var\(--(?:void|s-2|s-1|s0|s1|line|line-2|line-3|line-ctl|g0|g1|g2|g3|g2-rgb|tx[0-3]|paper|paper-2|ink|ink-2|on-gold|gold-ink)\)|\bc-g[12]\b/g;
 const RAW_GOLD = /#(?:FEDEA0|CCAB6C|B38922|7C5F17|8D6C1A)\b|rgba?\(\s*(?:179,\s*137,\s*34|204,\s*171,\s*108|254,\s*222,\s*160|124,\s*95,\s*23|141,\s*108,\s*26)/gi;
@@ -125,8 +120,9 @@ describe('gold governance', () => {
   it('🔒 overall gold usage only goes down', () => {
     // 148 at the Phase 0 commit; 134 once the benchmark screens moved onto
     // roles; 125 once the whole focus journey did (127 at the product-integrity
-    // baseline). Lower this number as each phase moves more screens — never raise it.
-    const MAX_GOLD_USES = 125;
+    // baseline); 104 once every screen moved onto v3 and its roles. Lower this
+    // number as more rules move onto roles — never raise it.
+    const MAX_GOLD_USES = 104;
     let n = 0;
     for (const f of files) {
       const src = stripComments(read(f));

@@ -31,14 +31,15 @@ import { WIDTH } from '../../ui/designSystem';
 // DayRing now lives in shared primitives (see import below).
 
 // Module-level, so it holds translation KEYS; the label is resolved inside
-// the component, where `lang` exists.
-const STATUS_META: Record<PhaseStatus, { labelKey: Key; color: string; icon: React.ReactNode }> = {
-  completed:       { labelKey: 'ps.completed',            color: 'var(--ready)', icon: <Check size={13} /> },
-  waiting_trainer: { labelKey: 'ps.waiting',   color: 'var(--attn)',  icon: <Clock size={13} /> },  // label overridden per-trainee via waitingForTrainer()
-  in_progress:     { labelKey: 'ps.inprogress', color: 'var(--g2)',    icon: <CircleDot size={13} /> },
-  available:       { labelKey: 'ps.available',        color: 'var(--g2)',    icon: <PlayCircle size={13} /> },
-  locked:          { labelKey: 'ps.locked',            color: 'var(--line-3)', icon: <Lock size={13} /> },
-  planned:         { labelKey: 'ps.planned',       color: 'var(--line-3)', icon: <Flag size={13} /> },
+// the component, where `lang` exists. The colour is the status's semantic
+// (PHASE in ui/statusSemantics), never chosen here.
+const STATUS_META: Record<PhaseStatus, { labelKey: Key; icon: React.ReactNode }> = {
+  completed:       { labelKey: 'ps.completed', icon: <Check size={13} /> },
+  waiting_trainer: { labelKey: 'ps.waiting', icon: <Clock size={13} /> },  // label overridden per-trainee via waitingForTrainer()
+  in_progress:     { labelKey: 'ps.inprogress', icon: <CircleDot size={13} /> },
+  available:       { labelKey: 'ps.available', icon: <PlayCircle size={13} /> },
+  locked:          { labelKey: 'ps.locked', icon: <Lock size={13} /> },
+  planned:         { labelKey: 'ps.planned', icon: <Flag size={13} /> },
 };
 
 export const TrainingJourney: React.FC<{
@@ -171,27 +172,24 @@ export const TrainingJourney: React.FC<{
           <Card pad={5}>
             <Eyebrow>{tr('jr.distance', lang)}</Eyebrow>
             <div className="row items-baseline gap-2" style={{ margin: 'var(--sp-3) 0 var(--sp-1)' }}>
-              <span className="t-num t-h1 c-g1">{donePhases}</span>
+              <span className="t-num t-h1 ledger-progress-figure">{donePhases}</span>
               <span className="t-sm c-tx3">{tr('jr.of', lang)} {PROGRAM.length} {tr('jr.phasesof', lang)}</span>
             </div>
             {currentLessons && (
               <p className="t-sm c-tx2" style={{ margin: 'var(--sp-1) 0 0' }}>
-                {tr('jr.inphase', lang)} <strong className="c-g1">{tf('db.lessonsdone', { done: iso(currentLessons.done), total: lessonCount(currentLessons.total, lang) }, lang)}</strong>
+                {tr('jr.inphase', lang)} <strong className="c-tx0">{tf('db.lessonsdone', { done: iso(currentLessons.done), total: lessonCount(currentLessons.total, lang) }, lang)}</strong>
               </p>
             )}
             {/* Six segments, one per phase — the same rail, read at a glance. */}
-            <div className="row gap-1 mt-3" aria-hidden>
-              {PROGRAM.map(ph => {
-                const st = phaseStatus(ph, ctx);
-                return (
-                  <span key={ph.id} className="grow" style={{ height: 4, borderRadius: 'var(--r-full)', background: st === 'completed' ? 'var(--g2)'
-                      : current?.id === ph.id ? 'var(--g1)' : 'var(--line-2)' }} />
-                );
-              })}
+            <div className="prail mt-3" aria-hidden>
+              {PROGRAM.map(ph => (
+                <div key={ph.id} className="prail-seg"
+                  data-state={phaseStatus(ph, ctx) === 'completed' ? 'done' : current?.id === ph.id ? 'now' : 'todo'} />
+              ))}
             </div>
 
             {current && (
-              <div className="mt-5" style={{ paddingTop: 'var(--sp-4)', borderTop: '1px solid var(--line)' }}>
+              <div className="mt-5 ledger-gate">
                 <Eyebrow>{tr('jr.nextgate', lang)}</Eyebrow>
                 <p className="t-sm c-tx1" style={{ margin: 'var(--sp-2) 0 0' }}>
                   <ArabicContent as="span">{current.title}</ArabicContent>
@@ -311,8 +309,8 @@ const PhaseSheet: React.FC<{
               return (
                 <Card key={b.id} tone="quiet" pad={4} className="row-hover">
                 <div className="row items-center gap-3">
-                  {passed ? <Trophy size={16} className="c-g1 no-shrink" /> : <Swords size={16} className="c-g2 no-shrink" />}
-                  <span className="t-sm grow" style={{ minWidth: 0, color: ready || passed ? 'var(--g1)' : 'var(--tx2)' }}>{b.title}</span>
+                  {passed ? <Trophy size={16} className="c-tx1 no-shrink" aria-hidden /> : <Swords size={16} className="c-tx2 no-shrink" aria-hidden />}
+                  <span className={`t-sm grow ${ready || passed ? 'c-tx0' : 'c-tx2'}`} style={{ minWidth: 0 }}>{b.title}</span>
                   {passed
                     ? <StatusBadge tone="ready">{tr('jr.passed', lang)}</StatusBadge>
                     : ready

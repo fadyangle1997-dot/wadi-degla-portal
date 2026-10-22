@@ -15,6 +15,7 @@ import React from 'react';
 import { ShieldCheck, TrendingUp, AlertTriangle, CheckCircle2, Lock, Info } from 'lucide-react';
 import { useTraining, trainingStore } from '../../app/training/trainingStore';
 import { useIdentity, identityStore, useCan } from '../../app/identity/identityStore';
+import { managementLabel } from '../../domain/identity/access';
 import { scopeOf, isInScope } from '../../domain/identity/scope';
 import { orgStore } from '../../app/organization/orgStore';
 import { readinessReport } from '../../domain/readiness/report';
@@ -46,7 +47,7 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
   if (!authorized) {
     return (
       <div className="min-h-screen">
-        <ScreenHeader onBack={onExit} backLabel={tr('nav.tomanager', lang)} leading={<span className="t-title c-g1">{tr('rr.title', lang)}</span>} />
+        <ScreenHeader onBack={onExit} backLabel={tr(managementLabel(canDo).back as Key, lang)} leading={<span className="t-title c-tx0">{tr('rr.title', lang)}</span>} />
         <main style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-9) var(--sp-5)' }}>
           <EmptyState icon={<Lock size={22} />} title={tr('rr.noaccess', lang)} body={tr("rr.noaccessbody", lang)} />
         </main>
@@ -65,8 +66,8 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
     <div className="min-h-screen">
       <ScreenHeader
         onBack={onExit}
-        backLabel={tr('nav.tomanager', lang)}
-        leading={<span className="t-title c-g1">{tr('rr.title', lang)}</span>}
+        backLabel={tr(managementLabel(canDo).back as Key, lang)}
+        leading={<span className="t-title c-tx0">{tr('rr.title', lang)}</span>}
       />
 
       <main className="stack gap-6" style={{ maxWidth: WIDTH.read, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>

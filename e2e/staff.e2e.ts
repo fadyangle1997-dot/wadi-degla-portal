@@ -13,8 +13,8 @@ test.describe('trainer', () => {
     await signIn(page, 'trainer.adel');
     await page.locator('main').getByRole('button', { name: 'ملاحظة' }).first().click();
     await page.getByLabel(/ملاحظة عن/).fill('محتاج يراجع مستندات الانضمام');
-    await page.locator('main').getByRole('button', { name: 'حفظ' }).click();
-    await expect(page.getByText('تم حفظ الملاحظة في السجل')).toBeVisible();
+    await page.locator('main').getByRole('button', { name: 'احفظ' }).click();
+    await expect(page.getByText('الملاحظة اتحفظت في السجل')).toBeVisible();
   });
 });
 
@@ -30,14 +30,14 @@ test.describe('branch manager', () => {
   test('opens a trainee file', async ({ page }) => {
     await signIn(page, 'manager.nabil');
     // From the staff ledger (the follow-up list may name him too).
-    await page.getByRole('table', { name: 'الموظفون' }).getByRole('button', { name: /Ahmed Magdy/ }).click();
+    await page.getByRole('table', { name: 'الموظفين' }).getByRole('button', { name: /Ahmed Magdy/ }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByRole('dialog')).toContainText('Ahmed Magdy');
   });
 
   test('closes a file back to the row it came from, and opens the full report', async ({ page }) => {
     await signIn(page, 'manager.nabil');
-    const row = page.getByRole('table', { name: 'الموظفون' }).getByRole('button', { name: /Ahmed Magdy/ });
+    const row = page.getByRole('table', { name: 'الموظفين' }).getByRole('button', { name: /Ahmed Magdy/ });
     await row.click();
     const file = page.getByRole('dialog');
     await page.keyboard.press('Escape');
@@ -51,7 +51,7 @@ test.describe('branch manager', () => {
     await expect(page.locator('main')).toContainText('Ahmed Magdy');
     await page.goBack();
     await expect(page).toHaveURL(/#\/manager/);
-    await expect(page.getByRole('table', { name: 'الموظفون' })).toBeVisible();
+    await expect(page.getByRole('table', { name: 'الموظفين' })).toBeVisible();
   });
 });
 
@@ -68,8 +68,8 @@ test.describe('admin', () => {
   test('sees user-book health and every section', async ({ page }) => {
     await signIn(page, 'admin');
     await expect(page).toHaveURL(/#\/admin/);
-    await expect(page.getByText('صحة دفتر المستخدمين')).toBeVisible();
-    for (const tab of ['الوارد', 'المنظمة', 'المستخدمون', 'سجل التدقيق']) {
+    await expect(page.getByText('سلامة الحسابات')).toBeVisible();
+    for (const tab of ['الوارد', 'المنظمة', 'المستخدمين', 'سجل التدقيق']) {
       await page.getByRole('button', { name: tab }).click();
       await expect(page.getByRole('button', { name: tab })).toHaveAttribute('aria-current', 'page');
     }

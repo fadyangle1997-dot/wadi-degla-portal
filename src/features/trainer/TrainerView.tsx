@@ -29,7 +29,7 @@ import { WIDTH } from '../../ui/designSystem';
 import { branchNameOf } from '../../domain/organization';
 import { useOrganization } from '../../app/organization/orgStore';
 import { useLang, t as tr, tf, type Lang } from '../../app/i18n';
-import { unitsAwaitingYou, improvingCount, staffCount } from '../../app/plural';
+import { unitsAwaitingYou, improvingCount, staffCount, daysAgo } from '../../app/plural';
 import { isProgramComplete } from '../../domain/journey/programCompletion';
 import { TraineeReadinessBlock } from '../readiness/ReadinessStations';
 
@@ -262,7 +262,7 @@ const waitDays = (submittedAtMs: number): number =>
   submittedAtMs ? Math.floor((Date.now() - submittedAtMs) / 86_400_000) : 0;
 const waitLabel = (submittedAtMs: number, lang: Lang): string => {
   const d = waitDays(submittedAtMs);
-  return d <= 0 ? tr('tn.today', lang) : d === 1 ? tr('tn.yesterday', lang) : `${tr('tn.daysago', lang)} ${d} ${tr('tn.days', lang)}`;
+  return daysAgo(d, lang);
 };
 
 /* ---------------- coaching note (opens under a roster row) ---------------- */

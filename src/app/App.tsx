@@ -39,7 +39,6 @@ import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLesso
 import { parseHash, toHash, type View } from './router';
 import { leaveGuard } from './leaveGuard';
 import { consumed, pushUrl, replaceUrl, restore, settled } from './overlayHistory';
-import { useSystemV3 } from '../ui/systemScope';
 import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents, useTraining } from './training/trainingStore';
 import { TRAINING_POLICY } from '../domain/policy';
 import { useLang, t, tf, dateLocale } from './i18n';
@@ -98,9 +97,6 @@ const NoAccess: React.FC = () => {
   );
 };
 
-/** The trainee's focus journey: every route the v3 system covers. */
-const FOCUS_JOURNEY: ReadonlySet<View['kind']> = new Set(['path', 'welcome', 'lesson', 'exam', 'boss', 'review', 'reviews']);
-
 const ExamCooldown: React.FC<{ title: string; retryAt: number; onExit: () => void }> = ({ title, retryAt, onExit }) => {
   const lang = useLang();
   const when = new Date(retryAt).toLocaleString(dateLocale(lang), { dateStyle: 'medium', timeStyle: 'short' });
@@ -149,11 +145,6 @@ export const App: React.FC = () => {
   useIdentity();
   const signedIn = identityStore.currentUser() !== null;
   const p = useProgress();
-  // The v3 system covers the trainee's focus journey end to end — welcome,
-  // dashboard, lesson, exam, challenge, daily review and its replies (the
-  // sign-in screen holds the scope itself); everything else stays v2 until
-  // its own migration.
-  useSystemV3(signedIn && FOCUS_JOURNEY.has(view.kind));
 
   // A redirect REPLACES the entry it refused: pushing it left a Back button
   // that returned to the refused URL, which redirected again — a trap.

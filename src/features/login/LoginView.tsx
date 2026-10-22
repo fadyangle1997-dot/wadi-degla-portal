@@ -25,7 +25,6 @@
 import React, { useRef, useState } from 'react';
 import { Loader2, Eye, EyeOff, X } from 'lucide-react';
 import { BrandLogo } from '../../ui/BrandLogo';
-import { useSystemV3 } from '../../ui/systemScope';
 import { useLang, langStore, t } from '../../app/i18n';
 
 /** Returns an error message, or null when the credentials are accepted. */
@@ -34,7 +33,6 @@ interface Props { onSignIn: (username: string, password: string) => string | nul
 type FieldErrors = { user?: string; pass?: string };
 
 export const LoginView: React.FC<Props> = ({ onSignIn }) => {
-  useSystemV3(true);
   const lang = useLang();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

@@ -28,13 +28,15 @@ describe('orgEventFor — one structured event per change', () => {
     expect(e.refs.branchIds).toEqual(['maadi']);
     // Hoda manages Cairo Area 1 and loses the branch; Nabil manages the branch.
     expect(e.refs.userIds).toEqual(expect.arrayContaining(['area.hoda', 'manager.nabil']));
-    expect(describeOrgEvent(e, ctx.nameOf)).toBe('admin نقل فرع Maadi من Cairo Area 1 إلى Cairo Area 2');
+    expect(describeOrgEvent(e, ctx.nameOf)).toBe('admin نقل فرع Maadi من Cairo Area 1 لـCairo Area 2');
+    // The reader's language: the same fact in English.
+    expect(describeOrgEvent(e, ctx.nameOf, 'en')).toBe('admin moved branch Maadi from Cairo Area 1 to Cairo Area 2');
   });
 
   it('a branch left with no area says so', () => {
     const e = orgEventFor(seed, moveMaadi(null), ctx)!;
     expect(e.after).toBeNull();
-    expect(describeOrgEvent(e, ctx.nameOf)).toContain('إلى بلا منطقة');
+    expect(describeOrgEvent(e, ctx.nameOf)).toBe('admin خرّج فرع Maadi من Cairo Area 1 — ومبقاش تابع لأي منطقة');
   });
 
   it('an area manager changed: the people before and after, by name as they were', () => {
@@ -113,6 +115,6 @@ describe('orgStore — attributed, persisted, readable in the audit log', () => 
     for (const id of ['maadi', 'cairo-1', 'cairo-2', 'area.hoda']) expect(filterAudit(log, { targetId: id }, nameOf), id).toHaveLength(1);
     const row = auditExportRows(log, nameOf).find(r => r.action === 'org.branch_moved')!;
     expect(row).toMatchObject({ target: 'branch:maadi (Maadi)', before: 'Cairo Area 1', after: 'Cairo Area 2' });
-    expect(describeAudit(log.find(e => 'action' in e)!, nameOf)).toContain('نقل فرع Maadi من Cairo Area 1 إلى Cairo Area 2');
+    expect(describeAudit(log.find(e => 'action' in e)!, nameOf)).toContain('نقل فرع Maadi من Cairo Area 1 لـCairo Area 2');
   });
 });

@@ -25,7 +25,7 @@ describe('OrganizationPanel — staged assignments', () => {
     fireEvent.change(select, { target: { value: 'cairo-2' } });
     expect(areaOf('maadi')).toBe('cairo-1');
     expect(orgStore.auditLog()).toEqual([]);
-    const pending = screen.getByText('فرع Maadi هيتنقل من Cairo Area 1 إلى Cairo Area 2.');
+    const pending = screen.getByText('فرع Maadi هيتنقل من Cairo Area 1 لـCairo Area 2.');
     // The sentence is tied to the field, so it is heard with it.
     expect(select.getAttribute('aria-describedby')).toBe(pending.id);
     expect(leaveGuard.active()).toBe(true);
@@ -36,7 +36,7 @@ describe('OrganizationPanel — staged assignments', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'منطقة فرع Maadi' }), { target: { value: 'cairo-2' } });
     fireEvent.click(screen.getByRole('button', { name: 'احفظ' }));
     expect(areaOf('maadi')).toBe('cairo-2');
-    expect(screen.getByRole('status').textContent).toContain('تم نقل فرع Maadi إلى Cairo Area 2');
+    expect(screen.getByRole('status').textContent).toContain('فرع Maadi اتنقل لـCairo Area 2');
     expect(screen.queryByText(/^اتحفظ$/)).toBeNull();
     expect(orgStore.auditLog().map(e => e.action)).toEqual(['org.branch_moved']);
     expect(leaveGuard.active()).toBe(false);
@@ -62,14 +62,14 @@ describe('OrganizationPanel — staged assignments', () => {
     const who = identityStore.userById('area.hoda')!.name;
     expect(screen.getByText(`${who} هيتولّى إدارة Cairo Area 2.`)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'احفظ' }));
-    expect(screen.getByRole('status').textContent).toContain(`تم تعيين ${who} لإدارة Cairo Area 2`);
+    expect(screen.getByRole('status').textContent).toContain(`${who} بقى مدير Cairo Area 2`);
   });
 
   it('restoring an archived area asks first, like archiving', () => {
     orgStore.setAreaStatus('delta', 'inactive');
     render(<OrganizationPanel />);
-    fireEvent.click(screen.getByRole('button', { name: /استرجاع/ }));
+    fireEvent.click(screen.getByRole('button', { name: /رجّعها/ }));
     expect(orgStore.get().areas.find(a => a.id === 'delta')!.status).toBe('inactive');
-    expect(screen.getByRole('dialog', { name: 'تسترجع Delta Area؟' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'ترجّع Delta Area؟' })).toBeTruthy();
   });
 });

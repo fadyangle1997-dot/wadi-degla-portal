@@ -6,7 +6,8 @@ import { trainingStore } from '../../app/training/trainingStore';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { ArabicContent, DataTable, SectionHeader, Status, Meter, type Column } from '../../ui/primitives';
-import { useLang, t as tr } from '../../app/i18n';
+import { useLang, t as tr, tf, iso } from '../../app/i18n';
+import { needInterventionCount, unitCount } from '../../app/plural';
 import { tone, rowTone, FOLLOW_UP, UNIT_REVIEW, SEVERITY } from '../../ui/statusSemantics';
 
 /* ---------------- 1 · Needs Your Attention ----------------
@@ -38,8 +39,8 @@ export const UnitsTable: React.FC<{ units: readonly UnitRow[]; onOpen: (id: stri
   const semantic = (u: UnitRow) => attentionOf(u.s) > 0
     ? (u.s.needsImmediate > 0 ? FOLLOW_UP.needs_immediate_attention : FOLLOW_UP.needs_attention)
     : u.s.waitingForTrainer > 0 ? UNIT_REVIEW.waiting : 'neutral' as const;
-  const state = (u: UnitRow) => attentionOf(u.s) > 0 ? `${attentionOf(u.s)} ${tr('mg.needint', lang)}`
-    : u.s.waitingForTrainer > 0 ? `${u.s.waitingForTrainer} ${tr('mg.awaitreview', lang)}` : tr('mg.stable', lang);
+  const state = (u: UnitRow) => attentionOf(u.s) > 0 ? needInterventionCount(attentionOf(u.s), lang)
+    : u.s.waitingForTrainer > 0 ? tf('mg.waitingunits', { units: unitCount(u.s.waitingForTrainer, lang) }, lang) : tr('mg.stable', lang);
   const columns: Column<UnitRow>[] = [
     { id: 'name', header: tr('mg.col.branch', lang), sortValue: u => u.name, cell: u => <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{u.name}</span> },
     { id: 'state', header: tr('dt.status', lang), sortValue: u => attentionOf(u.s) * 100 + u.s.waitingForTrainer, cell: u => <Status tone={tone(semantic(u))}>{state(u)}</Status> },
@@ -98,7 +99,7 @@ export const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: 
       <SectionHeader id="mg-follow" title={urgent > 0 ? tr('mg.needyours', lang) : tr('mg.tofollow', lang)}
         count={issues.length}
         description={issues.length > 0
-          ? `${urgent > 0 ? `${urgent} ${tr('mg.needint', lang)} · ${issues.length - urgent} ${tr('mg.forinfo', lang)}` : `${issues.length} ${tr('mg.forinfo', lang)}`} — ${tr('mg.followsub', lang)}`
+          ? `${urgent > 0 ? `${needInterventionCount(urgent, lang)} · ${tf('mg.forinfon', { n: iso(issues.length - urgent) }, lang)}` : tf('mg.forinfon', { n: iso(issues.length) }, lang)} — ${tr('mg.followsub', lang)}`
           : undefined} />
       {issues.length === 0 ? (
         <p className="t-sm c-tx3">{tr('mg.allgood', lang)}</p>

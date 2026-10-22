@@ -74,7 +74,7 @@ export const AppShell: React.FC<{
   const actions = useActionCenter();
 
   return (
-    <div className="shell-root min-h-screen" data-collapsed={railCollapsed || undefined}>
+    <div className="shell-root min-h-screen" data-collapsed={railCollapsed || undefined} data-tabs={items.length > 1 || undefined}>
       {/* Skip link (WCAG 2.4.1): invisible until focused, it lets keyboard users
           jump past the rail, nav and header controls on every screen. */}
       {/* The URL hash is the router: following #wda-main navigated to «home».
@@ -147,8 +147,9 @@ export const AppShell: React.FC<{
       </header>
 
       {/* On phones, navigation is a bottom bar: where the thumb is, and it
-          frees the header. Built from the same permission-filtered items. */}
-      <nav className="tabbar" aria-label={t('a11y.tabnav', lang)}>
+          frees the header. Built from the same permission-filtered items, and
+          only when there is somewhere else to go: one tab is not a choice. */}
+      {items.length > 1 && <nav className="tabbar" aria-label={t('a11y.tabnav', lang)}>
         {items.map(n => (
           <button key={n.view} onClick={() => onNavigate(n.view)}
             className={`tabbar-item${active === n.view ? ' tabbar-item--on' : ''}`}
@@ -157,7 +158,7 @@ export const AppShell: React.FC<{
             <span>{t(n.label as Key, lang)}</span>
           </button>
         ))}
-      </nav>
+      </nav>}
 
       <div className="shell-content" id="wda-main" tabIndex={-1} data-collapsed={railCollapsed || undefined}>
         {children}

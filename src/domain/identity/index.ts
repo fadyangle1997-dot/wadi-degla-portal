@@ -82,7 +82,7 @@ export const DEFAULT_ROLES: readonly Role[] = [
   {
     id: 'area_manager',
     name: 'مدير منطقة',
-    description: 'متابعة عدة فروع وتحليلها ومقارنتها — رؤية بلا قرار.',
+    description: 'متابعة كذا فرع وتحليلها ومقارنتها — رؤية من غير قرار.',
     // AUTHORITY MODEL (frozen): visibility flows UP, decisions flow DOWN.
     // The area manager sees every operational dossier across their branches,
     // compares branches/trainers/employees, and leaves feedback — but holds NO
@@ -92,7 +92,7 @@ export const DEFAULT_ROLES: readonly Role[] = [
   {
     id: 'general_manager',
     name: 'مدير عام',
-    description: 'رؤية المؤسسة كلها للمتابعة والتحليل التنفيذي — رؤية بلا قرار.',
+    description: 'رؤية المؤسسة كلها للمتابعة والتحليل التنفيذي — رؤية من غير قرار.',
     // AUTHORITY MODEL (frozen): whole-organization visibility, zero operational
     // decisions. Executive observation and feedback only — no readiness.decide.
     permissions: ['employees.view', 'reports.view', 'reports.export', 'feedback.observe', 'scope.organization'],

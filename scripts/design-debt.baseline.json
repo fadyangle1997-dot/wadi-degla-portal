@@ -1,12 +1,12 @@
 {
   "note": "Ratchet: counts may only go down. Lower with `node scripts/design-debt.mjs --write`.",
   "counts": {
-    "inlineStyles": 125,
+    "inlineStyles": 114,
     "important": 84,
-    "rawPaletteTsx": 40,
-    "rawPaletteCss": 367,
+    "rawPaletteTsx": 0,
+    "rawPaletteCss": 366,
     "rawGold": 5,
-    "goldUses": 125,
+    "goldUses": 103,
     "arbitraryFontSizes": 105,
     "literalDurations": 22,
     "directLucide": 141

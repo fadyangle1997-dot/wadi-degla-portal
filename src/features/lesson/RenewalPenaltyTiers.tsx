@@ -38,7 +38,7 @@ export const RenewalPenaltyTiers: React.FC = () => (
     {/* الحالة صفر — نافذة السماح */}
     <div className="rpt-stage rpt-stage--free">
       <span className="rpt-cond">جوّه أول 3 شهور من السنة</span>
-      <span className="rpt-val">بلا غرامة</span>
+      <span className="rpt-val">من غير غرامة</span>
       <span className="rpt-act">جدّد عادي — نافذة السماح.</span>
     </div>
 

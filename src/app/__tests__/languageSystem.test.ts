@@ -1,30 +1,36 @@
 /**
  * The product language system (docs/voice-and-language.md), held by test.
  *
- * The trainee's journey speaks professional Egyptian Arabic and natural
+ * Every screen, for every role, speaks professional Egyptian Arabic and natural
  * English: no bureaucratic MSA, no slang, one word per concept and per
  * control, nothing described by its colour or its place, and every key in
- * both languages. The journey is read from its own files, so a new screen or
+ * both languages. The product is read from its own files, so a new screen or
  * a new string is checked the day it is written.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { t, type Key } from '../i18n';
 
 const SRC = join(__dirname, '../..');
 const read = (f: string) => readFileSync(join(SRC, f), 'utf-8');
 
-/** The Phase 1 focus journey: sign-in to completion, and the shell around it. */
+/**
+ * Every screen the product draws, for every role: the features, the shell and
+ * the primitives, and the domain modules that write sentences a person reads.
+ * Curriculum content (src/content, and the rules, rubric and simulation
+ * material the lessons teach) is the learning language and is not scanned.
+ */
+const walk = (dir: string): string[] => readdirSync(join(SRC, dir)).flatMap(f => {
+  const rel = `${dir}/${f}`;
+  if (f === '__tests__') return [];
+  return statSync(join(SRC, rel)).isDirectory() ? walk(rel) : [rel];
+});
 const JOURNEY = [
-  'features/login/LoginView.tsx', 'features/welcome/WelcomeView.tsx', 'features/path/PathView.tsx',
-  'features/journey/MissionBrief.tsx', 'features/journey/TodayRetrieval.tsx',
-  'features/lesson/LessonFlow.tsx', 'features/lesson/PredictStage.tsx', 'features/lesson/QuizStage.tsx',
-  'features/lesson/PracticeStage.tsx', 'features/lesson/ProductionStage.tsx', 'features/lesson/lessonBlocks.tsx',
-  'features/lesson/ruleRenderers.tsx', 'features/exam/ExamView.tsx', 'features/boss/BossView.tsx',
-  'features/review/DecisionReview.tsx', 'features/review/MyReviews.tsx', 'ui/primitives/index.tsx',
-  'ui/AppShell.tsx', 'app/App.tsx', 'domain/training/statusWording.ts', 'domain/review/index.ts',
-];
+  ...walk('features'), ...walk('ui'), ...walk('app').filter(f => f !== 'app/i18n.ts'),
+  'domain/training/statusWording.ts', 'domain/review/index.ts', 'domain/identity/index.ts',
+  'domain/organization/audit.ts', 'domain/operations/audit.ts', 'domain/evaluation/index.ts',
+].filter(f => /\.tsx?$/.test(f));
 
 const DICT_SRC = read('app/i18n.ts');
 const BODY = DICT_SRC.slice(DICT_SRC.indexOf('const DICT = {'), DICT_SRC.indexOf('} as const'));
@@ -78,11 +84,11 @@ describe('voice: professional Egyptian, not MSA and not slang', () => {
     });
   }
 
-  it('the rest of the dictionary only gets better (MSA left outside the journey may not grow)', () => {
-    // Admin, organisation and trainer messages still say «تم …», «قيد …»,
-    // «بلا …»: they are fixed with each screen's migration. 25 at Phase 1.1.
-    const msa = /(^|\s)تم\s|قيد\s|يرجى|الرجاء|لم يتم|لا يوجد|لا توجد|جاري\s|يتعين|سوف\s|(^|\s)بلا\s|أثناء|(^|\s)أنت(\s|$)/;
-    expect([...DICT.values()].filter(v => msa.test(v.ar)).length).toBeLessThanOrEqual(25);
+  it('no entry anywhere in the dictionary is administrative MSA, used or not', () => {
+    // 25 at Phase 1.1 (admin, organisation and trainer messages); none since
+    // every screen moved onto the language system.
+    const msa = /(^|\s)تم\s|قيد\s|يرجى|الرجاء|لم يتم|لا يوجد|لا توجد|جاري\s|يتعين|سوف\s|(^|\s)بلا\s|أثناء|(^|\s)أنت(\s|$)|بانتظار/;
+    expect([...DICT.entries()].filter(([, v]) => msa.test(v.ar)).map(([k]) => k)).toEqual([]);
   });
 });
 
@@ -143,13 +149,9 @@ describe('both languages, every key', () => {
   const CROSS = new Set(['lang.switch', 'lang.aria', 'ref.placeholder']);
   // No words to translate: a dash, a template.
   const SYMBOLS = new Set(['us.assignnone', 'ref.found']);
-  // Known debt outside the journey: trainer and manager «من {n} أيام» glued
-  // from parts, English half empty. Fixed with those screens; listed, not hidden.
-  const GLUED = new Set(['tn.daysago', 'mg.dayssince']);
   it('every entry has Arabic and English, and each is in its own script', () => {
     const bad: string[] = [];
     for (const [k, v] of DICT) {
-      if (GLUED.has(k)) continue;
       if (!v.ar.trim() || !v.en.trim()) bad.push(`${k}: empty`);
       if (CROSS.has(k) || SYMBOLS.has(k)) continue;
       if (!AR.test(v.ar)) bad.push(`${k}: Arabic side has no Arabic`);

@@ -121,24 +121,24 @@ describe('AdminView — users', () => {
 
   it('opens an account from its row, refuses an empty name next to the field, and saves a real one', () => {
     render(<AdminView onExit={() => {}} />);
-    const table = screen.getByRole('table', { name: 'المستخدمون' });
+    const table = screen.getByRole('table', { name: 'المستخدمين' });
     fireEvent.click(within(table).getByRole('button', { name: /Nabil Sherif/ }));
     const panel = screen.getByRole('dialog', { name: 'Nabil Sherif' });
     const name = within(panel).getByLabelText(/^الاسم/);
     fireEvent.change(name, { target: { value: '' } });
-    fireEvent.click(within(panel).getByRole('button', { name: 'حفظ' }));
+    fireEvent.click(within(panel).getByRole('button', { name: 'احفظ' }));
     expect(within(panel).getByText('اكتب الاسم.')).toBeTruthy();
     expect(document.activeElement).toBe(name);
 
     fireEvent.change(name, { target: { value: 'Nabil S.' } });
-    fireEvent.click(within(panel).getByRole('button', { name: 'حفظ' }));
+    fireEvent.click(within(panel).getByRole('button', { name: 'احفظ' }));
     expect(identityStore.userById('manager.nabil')?.name).toBe('Nabil S.');
     identityStore.updateUser('manager.nabil', { name: 'Nabil Sherif' }); // the store is shared: put it back
   });
 
   it('asks before throwing away unsaved edits', () => {
     render(<AdminView onExit={() => {}} />);
-    fireEvent.click(within(screen.getByRole('table', { name: 'المستخدمون' })).getByRole('button', { name: /Nabil Sherif/ }));
+    fireEvent.click(within(screen.getByRole('table', { name: 'المستخدمين' })).getByRole('button', { name: /Nabil Sherif/ }));
     const panel = screen.getByRole('dialog', { name: 'Nabil Sherif' });
     fireEvent.change(within(panel).getByLabelText(/^الاسم/), { target: { value: 'Someone else' } });
     fireEvent.click(within(panel).getByRole('button', { name: 'إغلاق' }));
@@ -150,34 +150,34 @@ describe('AdminView — users', () => {
 
   it('disables an account only after saying so, and never the admin\'s own', () => {
     render(<AdminView onExit={() => {}} />);
-    const table = screen.getByRole('table', { name: 'المستخدمون' });
+    const table = screen.getByRole('table', { name: 'المستخدمين' });
     fireEvent.click(within(table).getByRole('button', { name: /Nabil Sherif/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'تعطيل' }));
+    fireEvent.click(screen.getByRole('button', { name: 'عطّل' }));
     const ask = screen.getByRole('dialog', { name: /تعطّل Nabil Sherif/ });
     expect(identityStore.userById('manager.nabil')?.status).toBe('active');
-    fireEvent.click(within(ask).getByRole('button', { name: 'تعطيل' }));
+    fireEvent.click(within(ask).getByRole('button', { name: 'عطّل' }));
     expect(identityStore.userById('manager.nabil')?.status).toBe('disabled');
     identityStore.setActive('manager.nabil', true);
     fireEvent.click(screen.getByRole('button', { name: 'إغلاق' }));
 
     fireEvent.click(within(table).getByRole('button', { name: /System Administrator/ }));
     const own = screen.getByRole('dialog', { name: 'System Administrator' });
-    expect(within(own).queryByRole('button', { name: 'تعطيل' })).toBeNull();
+    expect(within(own).queryByRole('button', { name: 'عطّل' })).toBeNull();
     expect(within(own).getByRole<HTMLSelectElement>('combobox', { name: 'الدور' }).disabled).toBe(true);
   });
 
   it('creates a user only once the name and email are right', () => {
     render(<AdminView onExit={() => {}} />);
-    fireEvent.click(screen.getByRole('button', { name: 'إضافة مستخدم' }));
+    fireEvent.click(screen.getByRole('button', { name: 'ضيف مستخدم' }));
     const form = screen.getByRole('dialog', { name: 'مستخدم جديد' });
-    fireEvent.click(within(form).getByRole('button', { name: 'إنشاء' }));
+    fireEvent.click(within(form).getByRole('button', { name: 'ضيف المستخدم' }));
     expect(within(form).getByText('اكتب الاسم.')).toBeTruthy();
     fireEvent.change(within(form).getByLabelText(/^الاسم/), { target: { value: 'Salma Fawzy' } });
     fireEvent.change(within(form).getByLabelText(/^الإيميل/), { target: { value: 'salma@' } });
-    fireEvent.click(within(form).getByRole('button', { name: 'إنشاء' }));
+    fireEvent.click(within(form).getByRole('button', { name: 'ضيف المستخدم' }));
     expect(within(form).getByText(/الإيميل مش مكتوب صح/)).toBeTruthy();
     fireEvent.change(within(form).getByLabelText(/^الإيميل/), { target: { value: 'salma@example.com' } });
-    fireEvent.click(within(form).getByRole('button', { name: 'إنشاء' }));
+    fireEvent.click(within(form).getByRole('button', { name: 'ضيف المستخدم' }));
     expect(screen.queryByRole('dialog', { name: 'مستخدم جديد' })).toBeNull();
     expect(identityStore.get().users.some(u => u.name === 'Salma Fawzy' && u.email === 'salma@example.com')).toBe(true);
   });
@@ -189,7 +189,7 @@ describe('AdminPlatform — sections', () => {
   it('moves between its sections, and the audit log lists what was done', () => {
     identityStore.requestPasswordReset('manager.nabil');
     render(<AdminPlatform onExit={() => {}} />);
-    for (const tab of ['الوارد', 'المنظمة', 'المستخدمون', 'سجل التدقيق']) {
+    for (const tab of ['الوارد', 'المنظمة', 'المستخدمين', 'سجل التدقيق']) {
       fireEvent.click(screen.getByRole('button', { name: tab }));
       expect(screen.getByRole('button', { name: tab }).getAttribute('aria-current')).toBe('page');
     }

@@ -51,7 +51,7 @@ test('Back from an employee file with a rationale typed asks, names what is lost
   const file = page.getByRole('dialog', { name: /Menna Kamal/ });
   await expect(file).toBeVisible();
   await expect(page).toHaveURL(/\?file=menna\.k/);
-  const why = file.getByLabel('مبرر قرار الجاهزية');
+  const why = file.getByLabel('سبب قرار الجاهزية');
   await why.fill('الأدلة في المحطات الست كاملة.');
 
   // Back: the file stays, and the question says what would be lost.
@@ -70,7 +70,7 @@ test('Back from an employee file with a rationale typed asks, names what is lost
 
   // Back, then leave: the file closes and the dashboard is still there.
   await page.goBack();
-  await ask.getByRole('button', { name: 'اقفل وامسح المبرر' }).click();
+  await ask.getByRole('button', { name: 'اقفل وامسح السبب' }).click();
   await expect(file).toBeHidden();
   await expect(page).toHaveURL(/#\/manager$/);
 });
@@ -81,7 +81,7 @@ test('the rationale is asked about on ×, Escape and the scrim too', async ({ pa
   const file = page.getByRole('dialog', { name: /Menna Kamal/ });
   const ask = page.getByRole('dialog', { name: /من غير ما تسجّل القرار/ });
   await page.locator('main').getByRole('button', { name: /Menna Kamal/ }).first().click();
-  await file.getByLabel('مبرر قرار الجاهزية').fill('سبب');
+  await file.getByLabel('سبب قرار الجاهزية').fill('سبب');
 
   await file.getByRole('button', { name: 'إغلاق' }).click();
   await expect(ask).toBeVisible();
@@ -94,10 +94,10 @@ test('the rationale is asked about on ×, Escape and the scrim too', async ({ pa
   await page.mouse.click(4, 4);   // the scrim, outside the sheet
   await expect(ask).toBeVisible();
   await ask.getByRole('button', { name: 'ارجع للقرار' }).click();
-  await expect(file.getByLabel('مبرر قرار الجاهزية')).toHaveValue('سبب');
+  await expect(file.getByLabel('سبب قرار الجاهزية')).toHaveValue('سبب');
 
   // With nothing typed, closing asks nothing.
-  await file.getByLabel('مبرر قرار الجاهزية').fill('');
+  await file.getByLabel('سبب قرار الجاهزية').fill('');
   await file.getByRole('button', { name: 'إغلاق' }).click();
   await expect(ask).toBeHidden();
   await expect(file).toBeHidden();
@@ -108,7 +108,7 @@ test('Back dismisses a confirmation open inside the file, and the file stays', a
   await signIn(page, 'manager.nabil');
   await page.locator('main').getByRole('button', { name: /Menna Kamal/ }).first().click();
   const file = page.getByRole('dialog', { name: /Menna Kamal/ });
-  await file.getByLabel('مبرر قرار الجاهزية').fill('سبب واضح');
+  await file.getByLabel('سبب قرار الجاهزية').fill('سبب واضح');
   await file.getByRole('button', { name: 'تمديد' }).click();
   const confirm = page.getByRole('dialog', { name: /القرار النهائي/ });
   await expect(confirm).toBeVisible();
@@ -132,8 +132,8 @@ test('Back closes the profile and leaves the page it opened over', async ({ page
 
 test('Back from an account with edits asks before discarding them', async ({ page }) => {
   await signIn(page, 'admin');
-  await page.getByRole('button', { name: 'المستخدمون' }).click();
-  await page.getByRole('table', { name: 'المستخدمون' }).getByRole('button', { name: /Nabil Sherif/ }).click();
+  await page.getByRole('button', { name: 'المستخدمين' }).click();
+  await page.getByRole('table', { name: 'المستخدمين' }).getByRole('button', { name: /Nabil Sherif/ }).click();
   const panel = page.getByRole('dialog', { name: /Nabil Sherif/ });
   await expect(page).toHaveURL(/\?user=manager\.nabil/);
   await panel.getByLabel('الاسم', { exact: true }).fill('Nabil S.');

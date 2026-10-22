@@ -1,14 +1,14 @@
 /**
- * The v3 benchmark's contract, held by tests:
- *  · it is scoped — the sign-in and the trainee's focus journey (welcome,
- *    dashboard, lesson, exam, challenge, daily review) and nothing else;
+ * The v3 system's contract, held by tests:
+ *  · it is the product's one system — every screen, every role — keyed to
+ *    html[data-system="v3"], which index.html sets and nothing removes;
  *  · type comes from the nine steps only, never a literal size;
  *  · Arabic never takes letter-spacing;
  *  · motion uses the duration tokens, and every spring is critically damped;
  *  · the display face is one weight in two subsets, under its 36 KB budget.
  */
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import * as motion from '../motion';
 
@@ -30,7 +30,7 @@ const selectors = (list: string) => {
 /** Classes only the benchmark screens render; they may stand unscoped. */
 const BENCHMARK_ONLY = /^\.(door|text-action|rule-text|golden-rule|example-|dialogue-|archetype|check-|practice-item|choice-chip|flow|paper-|case-|achievement|score-|result-|plan-|unlock-line|done-|review-chain|review-answer|welcome-|brief-achievement|certified-mark)/;
 
-describe('system v3 — the benchmark contract', () => {
+describe('system v3 — the contract', () => {
   it('every rule is scoped to html[data-system="v3"], or belongs only to the benchmark screens', () => {
     const loose = rules
       .filter(r => !r.selector.startsWith('@font-face'))
@@ -87,14 +87,18 @@ describe('system v3 — the benchmark contract', () => {
     expect(v3).toMatch(/--display-adjust:\s*0\.531/);
   });
 
-  it('the scope is set by the focus journey and the sign-in, and nobody else', () => {
-    const app = readFileSync(join(SRC, 'app/App.tsx'), 'utf-8');
-    const login = readFileSync(join(SRC, 'features/login/LoginView.tsx'), 'utf-8');
-    expect(app).toMatch(/useSystemV3\(signedIn && FOCUS_JOURNEY\.has\(view\.kind\)\)/);
-    const journey = app.match(/FOCUS_JOURNEY[^=]*= new Set\(\[([^\]]*)\]\)/)?.[1] ?? '';
-    expect(journey.split(',').map(s => s.trim().replace(/'/g, '')).sort())
-      .toEqual(['boss', 'exam', 'lesson', 'path', 'review', 'reviews', 'welcome']);
-    expect(login).toMatch(/useSystemV3\(true\)/);
+  it('one system for the whole product: index.html sets it before the first paint, and nothing switches it', () => {
+    const html = readFileSync(join(SRC, '../index.html'), 'utf-8');
+    expect(html).toMatch(/<html[^>]*\sdata-system="v3"/);
+    // No screen, role or state may take the product back to another look.
+    const walk = (dir: string): string[] => readdirSync(dir).flatMap(f => {
+      const p = join(dir, f);
+      if (f === '__tests__') return [];
+      return statSync(p).isDirectory() ? walk(p) : [p];
+    });
+    const switches = walk(SRC).filter(f => /\.tsx?$/.test(f))
+      .filter(f => /dataset\.system|data-system|useSystemV3/.test(readFileSync(f, 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')));
+    expect(switches).toEqual([]);
   });
 
   it('every flow in the journey opens into the same room, with the same Exit', () => {

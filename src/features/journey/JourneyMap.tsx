@@ -83,8 +83,8 @@ export const JourneyMap: React.FC<{
       <svg className="jmap-road" viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" aria-hidden focusable="false">
         <defs>
           <linearGradient id="jmap-gold" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={height}>
-            <stop offset="0" stopColor="var(--g1)" />
-            <stop offset="1" stopColor="var(--g2)" />
+            <stop offset="0" className="jmap-stop-from" />
+            <stop offset="1" className="jmap-stop-to" />
           </linearGradient>
         </defs>
         <path d={legs.join(' ')} className="jmap-road-ahead" vectorEffect="non-scaling-stroke" />

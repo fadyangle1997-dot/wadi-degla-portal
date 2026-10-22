@@ -31,11 +31,18 @@ export async function keyboardPass(page) {
       const lum = c => { const v = c.map(x => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
       const rgb = s => { const m = s && s.match(/rgba?\(([^)]+)\)/); if (!m) return null; const a = m[1].split(',').map(Number); return { c: a.slice(0, 3), a: a.length > 3 ? a[3] : 1 }; };
       const bgOf = e0 => { const st = []; for (let e = e0; e; e = e.parentElement) { const b = rgb(getComputedStyle(e).backgroundColor); if (b && b.a > 0) { st.push(b); if (b.a >= 1) break; } } let c = [13, 11, 9]; for (const b of st.reverse()) c = c.map((x, i) => b.c[i] * b.a + x * (1 - b.a)); return c; };
-      const cs = getComputedStyle(el);
-      const r = el.getBoundingClientRect();
+      // Some controls draw their focus on what they stand for: a table row's
+      // open button rings the whole row (and its target is the row), a
+      // roadmap stop rings its disc, a search box rings its frame. Measure
+      // the element that actually shows it.
+      const ringEl = (el.matches('.dt-open') && el.closest('tr'))
+        || (el.matches('.jmap-btn') && el.querySelector('.jmap-disc'))
+        || el.closest('.dt-search') || el;
+      const cs = getComputedStyle(ringEl);
+      const r = (el.matches('.dt-open') && el.closest('tr') || el).getBoundingClientRect();
       const ring = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2;
       const oc = rgb(cs.outlineColor);
-      const behind = bgOf(el.parentElement || el);
+      const behind = bgOf(ringEl.parentElement || ringEl);
       const [hi, lo] = oc ? [lum(oc.c), lum(behind)].sort((a, b) => b - a) : [0, 0];
       const name = (el.getAttribute('aria-label') || el.innerText || el.getAttribute('placeholder') || el.tagName).trim().replace(/\s+/g, ' ').slice(0, 36);
       const inlineLink = el.matches('a') && el.parentElement?.matches('p, li, span') && (el.parentElement.textContent || '').trim().length > (el.textContent || '').trim().length + 4;

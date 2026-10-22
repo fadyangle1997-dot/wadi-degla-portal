@@ -20,7 +20,8 @@ import { Button, EmptyState, Eyebrow, PageHeader, MetricStrip, Metric, Brief, Nu
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
-import { useLang, t as tr, tf, iso } from '../../app/i18n';
+import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
+import { managementLabel } from '../../domain/identity/access';
 import { tone, FORMAL_READINESS, FOLLOW_UP, UNIT_REVIEW } from '../../ui/statusSemantics';
 import { staffCount } from '../../app/plural';
 import { NeedsAttention, UnitsTable } from './NeedsAttention';
@@ -104,7 +105,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   return (
     <div className="min-h-screen">
       <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
-        <PageHeader crumbs={[tr('crumb.academy', lang), tr('nav.manager', lang)]}
+        <PageHeader crumbs={[tr('crumb.academy', lang), tr(managementLabel(canDo).nav as Key, lang)]}
           title={scopeTitle}
           lead={noData ? tr('mg.sub', lang) : tf('mg.lead', { n: staffCount(s.activeTrainees, lang), r: iso(`${s.avgPerformance}%`), c: iso(s.certified), a: iso(attention) }, lang)} />
 

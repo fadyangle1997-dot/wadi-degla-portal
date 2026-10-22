@@ -68,9 +68,21 @@ const NAV_ORDER: readonly { readonly view: PlatformView; readonly label: string 
   { view: 'admin', label: 'nav.admin' },
 ];
 
+/**
+ * The management platform is one screen over three scopes, and its name says
+ * which: a branch manager's team, an area manager's area, the general
+ * manager's organisation — never «Manager» for all three.
+ */
+export function managementLabel(can: Can): { readonly nav: string; readonly back: string } {
+  if (can('scope.organization')) return { nav: 'nav.org', back: 'nav.toorg' };
+  if (can('scope.area')) return { nav: 'nav.area', back: 'nav.toarea' };
+  return { nav: 'nav.manager', back: 'nav.tomanager' };
+}
+
 /** Navigation is BUILT from permissions — never hardcoded per role. */
 export function navFor(can: Can): readonly { readonly view: PlatformView; readonly label: string }[] {
-  return NAV_ORDER.filter(item => can(PLATFORM_ACCESS[item.view]));
+  return NAV_ORDER.filter(item => can(PLATFORM_ACCESS[item.view]))
+    .map(item => (item.view === 'manager' ? { ...item, label: managementLabel(can).nav } : item));
 }
 
 /**

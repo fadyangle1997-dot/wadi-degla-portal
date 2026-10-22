@@ -7,7 +7,7 @@
  */
 import type { AuditEvent as IdentityAuditEvent } from '../../app/identity/identityBackend';
 import type { User } from '../identity';
-import { describeOrgEvent, type OrgAuditEvent } from '../organization/audit';
+import { describeOrgEvent, type AuditLang, type OrgAuditEvent } from '../organization/audit';
 
 export type AuditEvent = IdentityAuditEvent | OrgAuditEvent;
 
@@ -27,20 +27,34 @@ export interface AuditFilter {
   readonly text?: string;
 }
 
-/** Human, RTL-friendly description of an audit event. */
-export function describeAudit(e: AuditEvent, nameOf: (id: string) => string): string {
-  if (isOrg(e)) return describeOrgEvent(e, nameOf);
+/**
+ * One audit event as a sentence, in the reader's language. A role is said by
+ * its name (`roleName`), never by its stored id; an assignment names the
+ * person assigned.
+ */
+export function describeAudit(
+  e: AuditEvent,
+  nameOf: (id: string) => string,
+  lang: AuditLang = 'ar',
+  roleName: (roleId: string) => string = id => id,
+): string {
+  if (isOrg(e)) return describeOrgEvent(e, nameOf, lang);
   const actor = nameOf(e.actorId);
+  const ar = lang === 'ar';
   switch (e.type) {
-    case 'USER_CREATED': return `${actor} أنشأ المستخدم ${e.user.name}`;
-    case 'USER_UPDATED': return `${actor} عدّل بيانات ${nameOf(e.userId)}`;
-    case 'ROLE_CHANGED': return `${actor} غيّر دور ${nameOf(e.userId)} إلى ${e.roleId}`;
-    case 'USER_DISABLED': return `${actor} عطّل ${nameOf(e.userId)}`;
-    case 'USER_ENABLED': return `${actor} فعّل ${nameOf(e.userId)}`;
-    case 'USER_ARCHIVED': return `${actor} أرشف ${nameOf(e.userId)}`;
-    case 'PASSWORD_RESET_REQUESTED': return `${actor} طلب إعادة تعيين كلمة مرور ${nameOf(e.userId)}`;
-    case 'TRAINER_ASSIGNED': return `${actor} ${e.trainerId ? 'أسند مدربًا لـ' : 'أزال مدرب'} ${nameOf(e.userId)}`;
-    case 'MANAGER_ASSIGNED': return `${actor} ${e.managerId ? 'أسند مديرًا لـ' : 'أزال مدير'} ${nameOf(e.userId)}`;
+    case 'USER_CREATED': return ar ? `${actor} ضاف المستخدم ${e.user.name}` : `${actor} added the user ${e.user.name}`;
+    case 'USER_UPDATED': return ar ? `${actor} عدّل بيانات ${nameOf(e.userId)}` : `${actor} edited ${nameOf(e.userId)}’s details`;
+    case 'ROLE_CHANGED': return ar ? `${actor} غيّر دور ${nameOf(e.userId)} لـ«${roleName(e.roleId)}»` : `${actor} changed ${nameOf(e.userId)}’s role to “${roleName(e.roleId)}”`;
+    case 'USER_DISABLED': return ar ? `${actor} عطّل حساب ${nameOf(e.userId)}` : `${actor} disabled ${nameOf(e.userId)}’s account`;
+    case 'USER_ENABLED': return ar ? `${actor} فعّل حساب ${nameOf(e.userId)}` : `${actor} enabled ${nameOf(e.userId)}’s account`;
+    case 'USER_ARCHIVED': return ar ? `${actor} أرشف حساب ${nameOf(e.userId)}` : `${actor} archived ${nameOf(e.userId)}’s account`;
+    case 'PASSWORD_RESET_REQUESTED': return ar ? `${actor} طلب كلمة سر جديدة لـ${nameOf(e.userId)}` : `${actor} requested a new password for ${nameOf(e.userId)}`;
+    case 'TRAINER_ASSIGNED': return e.trainerId
+      ? (ar ? `${actor} عيّن ${nameOf(e.trainerId)} مدرب لـ${nameOf(e.userId)}` : `${actor} made ${nameOf(e.trainerId)} ${nameOf(e.userId)}’s trainer`)
+      : (ar ? `${actor} شال مدرب ${nameOf(e.userId)}` : `${actor} removed ${nameOf(e.userId)}’s trainer`);
+    case 'MANAGER_ASSIGNED': return e.managerId
+      ? (ar ? `${actor} عيّن ${nameOf(e.managerId)} مدير لـ${nameOf(e.userId)}` : `${actor} made ${nameOf(e.managerId)} ${nameOf(e.userId)}’s manager`)
+      : (ar ? `${actor} شال مدير ${nameOf(e.userId)}` : `${actor} removed ${nameOf(e.userId)}’s manager`);
   }
 }
 
@@ -53,6 +67,7 @@ export function filterAudit(
   log: readonly AuditEvent[],
   filter: AuditFilter,
   nameOf: (id: string) => string,
+  roleName?: (roleId: string) => string,
 ): readonly AuditEvent[] {
   return log.filter(e => {
     if (filter.actorId && e.actorId !== filter.actorId) return false;
@@ -61,7 +76,8 @@ export function filterAudit(
     if (filter.from && e.at < filter.from) return false;
     if (filter.to && e.at > filter.to) return false;
     if (filter.text) {
-      const hay = `${describeAudit(e, nameOf)} ${actionOf(e)}`.toLowerCase();
+      // Found in either language: the log reads in both.
+      const hay = `${describeAudit(e, nameOf, 'ar', roleName)} ${describeAudit(e, nameOf, 'en', roleName)} ${actionOf(e)}`.toLowerCase();
       if (!hay.includes(filter.text.toLowerCase())) return false;
     }
     return true;
@@ -79,13 +95,18 @@ export interface AuditRow {
   readonly target: string; readonly before: string; readonly after: string;
   readonly detail: string;
 }
-export function auditExportRows(log: readonly AuditEvent[], nameOf: (id: string) => string): readonly AuditRow[] {
+export function auditExportRows(
+  log: readonly AuditEvent[],
+  nameOf: (id: string) => string,
+  lang: AuditLang = 'ar',
+  roleName?: (roleId: string) => string,
+): readonly AuditRow[] {
   return [...log].sort((a, b) => b.at - a.at).map(e => ({
     at: e.at, actor: nameOf(e.actorId), action: actionOf(e),
     target: isOrg(e) ? `${e.target.kind}:${e.target.id} (${e.target.name})` : targetsOf(e).map(nameOf).join(' '),
     before: isOrg(e) ? e.beforeLabel ?? e.before ?? '' : '',
     after: isOrg(e) ? e.afterLabel ?? e.after ?? '' : '',
-    detail: describeAudit(e, nameOf),
+    detail: describeAudit(e, nameOf, lang, roleName),
   }));
 }
 

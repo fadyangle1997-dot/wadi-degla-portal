@@ -1,8 +1,8 @@
 import { test, expect, signIn, settle, usernameField, passwordField, signInButton, expectAccessible } from './fixtures';
 
 /**
- * The Phase 1 benchmark: sign-in, the trainee's dashboard and a lesson are on
- * the v3 system, and nothing else is. The door is Arabic first.
+ * The v3 system covers the whole product: the door, the trainee's journey and
+ * every staff platform. The door is Arabic first.
  */
 const system = (page: import('@playwright/test').Page) => page.evaluate(() => document.documentElement.dataset.system ?? null);
 
@@ -41,20 +41,24 @@ test('the door speaks English when asked, and the direction follows', async ({ p
   await expect(page.getByRole('heading', { level: 1, name: 'أكاديمية وادي دجلة' })).toBeVisible();
 });
 
-test('v3 covers the dashboard and the lesson, and only them', async ({ page }) => {
+test('v3 covers every screen, the journey and the staff platforms alike', async ({ page }) => {
   await signIn(page, 'ahmed.m');
-  await page.goto('/#/');
-  await settle(page);
-  expect(await system(page)).toBe('v3');
-  await page.goto('/#/roadmap');
-  await settle(page);
-  expect(await system(page)).toBeNull();
+  for (const hash of ['/#/', '/#/roadmap', '/#/skills', '/#/journey', '/#/readiness', '/#/reviews']) {
+    await page.goto(hash);
+    await settle(page);
+    expect(await system(page), hash).toBe('v3');
+  }
   await page.goto('/#/lesson/m1/l1-where');
   await settle(page);
   expect(await system(page)).toBe('v3');
   // The display face is in use where the system says so.
   const face = await page.locator('main h1').first().evaluate(el => getComputedStyle(el).fontFamily);
   expect(face).toMatch(/Alexandria/);
+  // A staff platform keeps it too.
+  await page.evaluate(() => localStorage.removeItem('wda.identity.session.v2'));
+  await signIn(page, 'trainer.adel');
+  await settle(page);
+  expect(await system(page)).toBe('v3');
 });
 
 test('the door passes axe in both languages', async ({ page }) => {

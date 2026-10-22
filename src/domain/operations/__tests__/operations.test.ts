@@ -103,8 +103,12 @@ describe('audit selectors — projection over existing log', () => {
     expect(latest).toHaveLength(2);
     expect(latest[0]?.at).toBe(300);
   });
-  it('describes events in human Arabic', () => {
-    expect(describeAudit(log[0]!, nameOf)).toContain('أنشأ');
+  it('describes events in the reader\'s language, a role by its name', () => {
+    expect(describeAudit(log[0]!, nameOf)).toContain('ضاف المستخدم');
+    expect(describeAudit(log[0]!, nameOf, 'en')).toContain('added the user');
+    const roleChange = { type: 'ROLE_CHANGED', actorId: 'admin', userId: 'u1', roleId: 'trainer', at: 1 } as const;
+    expect(describeAudit(roleChange, nameOf, 'ar', id => (id === 'trainer' ? 'مدرب' : id))).toContain('لـ«مدرب»');
+    expect(describeAudit(roleChange, nameOf, 'ar', id => (id === 'trainer' ? 'مدرب' : id))).not.toContain('trainer');
   });
 });
 

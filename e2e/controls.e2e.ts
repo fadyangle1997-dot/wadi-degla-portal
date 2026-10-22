@@ -59,7 +59,7 @@ test('Escape closes the account menu and gives focus back to it', async ({ page 
 
 test('the employee file closes with its ×, back on the row that opened it', async ({ page }) => {
   await signIn(page, 'manager.nabil');
-  const row = page.getByRole('table', { name: 'الموظفون' }).getByRole('button', { name: /Ahmed Magdy/ });
+  const row = page.getByRole('table', { name: 'الموظفين' }).getByRole('button', { name: /Ahmed Magdy/ });
   await row.click();
   const file = page.getByRole('dialog');
   await file.getByRole('button', { name: 'إغلاق' }).click();
@@ -202,7 +202,7 @@ test('a decision without its reason asks for the reason, next to the box', async
   // A decision it can take still needs its reason first, next to the box.
   await file.getByRole('button', { name: 'تمديد', exact: true }).click();
   await expect(file.getByText(/اكتب سبب القرار الأول/)).toBeVisible();
-  await expect(file.getByLabel('مبرر قرار الجاهزية')).toBeFocused();
+  await expect(file.getByLabel('سبب قرار الجاهزية')).toBeFocused();
 });
 
 test('a lesson steps back to what came before, but never back into its quiz', async ({ page }) => {

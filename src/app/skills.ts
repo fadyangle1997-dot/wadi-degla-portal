@@ -28,10 +28,10 @@ export const lessonSkillTouches = (moduleId: string, lessonId: string) => {
  * mastered). A skill's level is the furthest a COMPLETED lesson has moved it.
  * That is the one scale now, drawn as one step per expected level, with words.
  */
-/** 0 = not started; 1–3 = بدأتها · بتتمرن عليها · اتقنتها. */
+/** 0 = not started; 1–3 = بدأتها · بتتمرّن عليها · اتقنتها. */
 export type SkillStep = 0 | 1 | 2 | 3;
 const STEP: Record<SkillLevel, SkillStep> = { introduced: 1, practiced: 2, mastered: 3 };
-export const STEP_LABEL: Record<SkillStep, string> = { 0: 'لسه', 1: 'بدأتها', 2: 'بتتمرن عليها', 3: 'اتقنتها' };
+export const STEP_LABEL: Record<SkillStep, string> = { 0: 'لسه', 1: 'بدأتها', 2: 'بتتمرّن عليها', 3: 'اتقنتها' };
 export const LEVEL_LABEL: Record<SkillLevel, string> = {
   introduced: STEP_LABEL[1], practiced: STEP_LABEL[2], mastered: STEP_LABEL[3],
 };

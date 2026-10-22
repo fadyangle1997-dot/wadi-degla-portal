@@ -108,9 +108,11 @@ export const FeedbackBlock: React.FC<{
 };
 
 /* ---------------- prices disclaimer ---------------- */
+// A footnote, not an action or a brand mark: it sits on a quiet panel, with
+// no gold.
 export const PricesNote: React.FC<{ text: string }> = ({ text }) => (
-  <div className="row gap-2 items-start" style={{ padding: 'var(--sp-3) var(--sp-4)', borderRadius: 'var(--r-sm)', background: 'rgba(var(--g2-rgb),.05)', border: '1px solid rgba(var(--g2-rgb),.16)' }}>
-    <Info size={16} className="c-g2 no-shrink mt-1" />
+  <div className="note row gap-2 items-start">
+    <Info size={16} className="c-tx2 no-shrink mt-1" aria-hidden />
     <span className="t-sm">{text}</span>
   </div>
 );
@@ -214,7 +216,7 @@ export const ScreenHeader: React.FC<{
        headers with work in them keep the work and drop only the back button
        and the label the tab bar already shows. */
     className={tabRoute ? `screen-header screen-header--tab${trailing || rail ? '' : ' screen-header--bare'}` : 'screen-header'}
-    style={{ background: 'var(--overlay)', borderBottom: '1px solid var(--line)' }}>
+    style={{ background: 'var(--overlay)', borderBottom: '1px solid var(--edge-hairline)' }}>
     <div className="row items-center gap-3 wrap" style={{ maxWidth, margin: '0 auto', padding: 'var(--sp-3) var(--sp-5)' }}>
       {onBack && <BackButton onClick={onBack} label={backLabel ?? t('ex.backtopath', langStore.get())} />}
       <span className="screen-header-label">{leading}</span>
@@ -236,26 +238,15 @@ export const ProgressRail: React.FC<{ total: number; current: number }> = ({ tot
 
 /* ---------------- status badge ----------------
    Text and ring come from the same status token (the ring is its -line
-   alpha), so each badge reads as one colour. */
-const BADGE = {
-  ready: { c: 'var(--ready)', b: 'var(--ready-line)' },
-  attn: { c: 'var(--attn)', b: 'var(--attn-line)' },
-  risk: { c: 'var(--risk)', b: 'var(--risk-line)' },
-  info: { c: 'var(--info)', b: 'var(--info-line)' },
-  gold: { c: 'var(--g1)', b: 'rgba(var(--g2-rgb),.35)' },
-  neutral: { c: 'var(--tx2)', b: 'var(--line-2)' },
-  // Waiting on someone else: neutral ink, dashed edge — reads apart from
-  // `neutral` without relying on colour (ui/statusSemantics).
-  pending: { c: 'var(--tx1)', b: 'var(--line-3)' },
-};
-export const StatusBadge: React.FC<{ tone: keyof typeof BADGE; children: React.ReactNode; icon?: React.ReactNode }> = ({ tone, children, icon }) => {
-  const t = BADGE[tone];
-  return (
-    <span className="items-center gap-1" style={{ display: 'inline-flex', padding: 'var(--sp-1) var(--sp-3)', borderRadius: 'var(--r-full)', border: `1px ${tone === 'pending' ? 'dashed' : 'solid'} ${t.b}`, color: t.c, fontSize: '.875rem', fontWeight: 600 }}>
-      {icon}{children}
-    </span>
-  );
-};
+   alpha), so each badge reads as one colour. The colours live in the
+   stylesheet (.badge--*): a component names the status, never the paint.
+   `pending` (waiting on someone else) is neutral ink on a dashed edge, apart
+   from `neutral` without relying on colour (ui/statusSemantics). There is no
+   gold and no blue: neither is a status. */
+type BadgeTone = 'ready' | 'attn' | 'risk' | 'neutral' | 'pending';
+export const StatusBadge: React.FC<{ tone: BadgeTone; children: React.ReactNode; icon?: React.ReactNode }> = ({ tone, children, icon }) => (
+  <span className={`badge badge--${tone}`}>{icon}{children}</span>
+);
 
 /* ---------------- confirm dialog ----------------
    A modal: focus moves in, Tab stays in, Escape cancels, and focus goes back

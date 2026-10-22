@@ -7,7 +7,7 @@
  * singular again). The product speaks Egyptian Arabic, so the forms below are
  * the spoken ones. Numbers are bidi-isolated (iso) like every other figure.
  */
-import { iso, type Lang } from './i18n';
+import { iso, t, tf, type Lang } from './i18n';
 
 /**
  * The four Arabic forms; `{n}` is replaced with the isolated number. `zero`
@@ -33,6 +33,26 @@ export const count = (n: number, lang: Lang, ar: ArabicForms, en: EnglishForms):
 export const staffCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'موظف واحد', two: 'موظفين اتنين', few: '{n} موظفين', many: '{n} موظف' },
   { one: 'one person', other: '{n} staff' });
+
+export const trainerCount = (n: number, lang: Lang) => count(n, lang,
+  { zero: 'من غير مدربين', one: 'مدرب واحد', two: 'مدربين اتنين', few: '{n} مدربين', many: '{n} مدرب' },
+  { zero: 'no trainers', one: 'one trainer', other: '{n} trainers' });
+
+export const branchCount = (n: number, lang: Lang) => count(n, lang,
+  { zero: 'من غير فروع', one: 'فرع واحد', two: 'فرعين', few: '{n} فروع', many: '{n} فرع' },
+  { zero: 'no branches', one: 'one branch', other: '{n} branches' });
+
+export const needInterventionCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'موظف واحد محتاج تدخّل', two: 'موظفين اتنين محتاجين تدخّل', few: '{n} موظفين محتاجين تدخّل', many: '{n} موظف محتاجين تدخّل' },
+  { one: 'one needs intervention', other: '{n} need intervention' });
+
+export const changeCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'تغيير واحد', two: 'تغييرين', few: '{n} تغييرات', many: '{n} تغيير' },
+  { one: 'one change', other: '{n} changes' });
+
+/** «من يومين», «من 3 أيام»; today and yesterday by name. */
+export const daysAgo = (days: number, lang: Lang): string =>
+  days <= 0 ? t('mg.today', lang) : days === 1 ? t('mg.yesterday', lang) : tf('time.daysago', { days: dayCount(days, lang) }, lang);
 
 export const dayCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'يوم واحد', two: 'يومين', few: '{n} أيام', many: '{n} يوم' },
