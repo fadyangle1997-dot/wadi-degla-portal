@@ -13,6 +13,12 @@ npm run build          # بناء للنشر في dist/
 npx vite preview       # تشغيل نسخة البناء
 ```
 
+## النشر على Vercel
+الإعدادات جاهزة في [`vercel.json`](vercel.json): البناء `npm run build`، والمخرجات `dist/`، وترويسات الأمان (CSP وHSTS وغيرهم). التنقّل بالـhash (`#/…`)، فمفيش rewrites محتاجة.
+- **من GitHub:** في Vercel اختار *Add New → Project*، واختار الريبو، واضغط *Deploy*. Vercel بيتعرّف على Vite لوحده.
+- **من الجهاز:** `npx vercel` لنسخة تجريبية، و`npx vercel --prod` للنشر الفعلي.
+- **الحسابات التجريبية** وكلمات السر في [docs/DEMO.md](docs/DEMO.md#الحسابات).
+
 ## بوابة الجودة (نفس اللي بيشغّله الـCI)
 ```bash
 npm run lint           # ESLint بصفر تحذيرات

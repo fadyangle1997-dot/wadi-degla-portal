@@ -323,11 +323,6 @@ const PhaseSheet: React.FC<{
           </div>
         )}
 
-        {phase.moduleIds.length === 0 && (
-          <p className="t-sm mt-4 c-tx3">
-            {tr('jr.buildsoon', lang)}
-          </p>
-        )}
       </div>
     </div>
   );

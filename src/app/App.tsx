@@ -177,7 +177,10 @@ export const App: React.FC = () => {
       // popstate and hashchange both fire for one Back; the second sees the
       // screen already restored and must not ask twice. An overlay moving in
       // the query is the same screen too (overlayHistory handles it).
-      if (toHash(next) === toHash(viewRef.current)) return;
+      // A typed or pasted link to an overlay on this screen settles too, which
+      // brings the overlays in line with the URL — unless one holds unsaved
+      // work, which overlayHistory asks about instead of dropping it.
+      if (toHash(next) === toHash(viewRef.current)) { if (!leaveGuard.active()) settled(); return; }
       if (!leaveGuard.active()) { setViewState(next); settled(); return; }
       // Put the screen back, with whatever overlay was open on it, and ask.
       restore();

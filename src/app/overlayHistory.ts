@@ -102,6 +102,9 @@ function onPop(e: PopStateEvent) {
   }
   settle();
 }
+// Popstate only. A Back that this module answers fires hashchange too; heard
+// here, it would dismiss the very question Back just asked. A hash typed into
+// the open tab is settled by App, which brings the overlays in line.
 if (typeof window !== 'undefined') window.addEventListener('popstate', onPop);
 
 /**

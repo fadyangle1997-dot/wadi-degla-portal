@@ -34,6 +34,19 @@ test('Back closes a roadmap phase, then leaves the roadmap', async ({ page }) =>
   await expect(page).toHaveURL(/#\/$/);
 });
 
+test('a link typed into the open tab opens the file over the page, and Escape closes it', async ({ page }) => {
+  await signIn(page, 'manager.nabil');
+  await expect(page).toHaveURL(/#\/manager$/);
+  // Not a new tab: the address bar of the page already open.
+  await page.evaluate(() => { location.hash = '#/manager?file=ahmed.m'; });
+  const file = page.getByRole('dialog');
+  await expect(file).toBeVisible();
+  await expect(file).toContainText('Ahmed Magdy');
+  await page.keyboard.press('Escape');
+  await expect(file).toBeHidden();
+  await expect(page).toHaveURL(/#\/manager$/);
+});
+
 test('a link to a phase opens it over the roadmap, and Back closes it there', async ({ page }) => {
   await signIn(page, 'mariam.a');
   await page.goto('/#/roadmap?phase=p2');

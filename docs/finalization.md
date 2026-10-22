@@ -38,7 +38,7 @@ access · **P2** clear quality gain · **P3** polish. Status: ✅ done · ⏳ op
 | 5 | Language | Trainee readiness result (`ReadinessResult.tsx`) writes 69 Arabic strings in the component: English mode shows Arabic | P2 | 📝 Arabic content by design (Phase 4; wrapped in `ArabicContent`, like the lesson); fixed inside it: «مرفوض» → «مش جاهز» (the manager's label), no «محرك» jargon |
 | 6 | Language | `tn.daysago`, `mg.dayssince` glued from parts, English half empty | P2 | ✅ `daysAgo` with plural forms |
 | 7 | Navigation | One nav label «المدير» for the branch manager, the area manager and the general manager; the page is «فرعك / منطقتك / المؤسسة» | P2 | ✅ فريقي · منطقتي · المؤسسة; متدربيني; التشغيل |
-| 8 | Overlay | Editing the hash in an open tab to add `?file=` does not open the file (a pasted link in a new tab does) | P3 | ⏳ |
+| 8 | Overlay | Editing the hash in an open tab to add `?file=` does not open the file (a pasted link in a new tab does) | P3 | ✅ App settles a same-screen hash change, bringing overlays in line (unless one holds unsaved work); E2E covers it |
 | 9 | Harness | Keyboard pass read a row's ring on the button, not the row; capture opened overlays by hash edit | — | ✅ |
 | 10 | Gold governance | Palette tokens used directly in 7 non-journey components (TrainingJourney, primitives, OrganizationPanel, ReadinessReportView, IdentityCenter, EmployeeTimeline, JourneyMap) | P2 | ✅ 0 in components; governance covers every component |
 | 11 | Language | Audit log sentences Arabic-only (English mode showed Arabic), raw role id printed («إلى trainer»), MSA («أسند مدربًا») | P1 | ✅ bilingual, role by name, search in both |
@@ -54,6 +54,8 @@ access · **P2** clear quality gain · **P3** polish. Status: ✅ done · ⏳ op
 | 22 | Language | Operational issues (admin inbox, manager follow-up) built as Arabic sentences in the domain: English mode showed Arabic; fixes were verbal nouns («إسناد مدرب») | P1 | ✅ `issueText`: dictionary sentence + imperative fix per kind, in both languages, names by their owner's spelling; domain keeps kind and target only |
 | 23 | Language | «1 · Staff who finished the programme…»: a count glued to a sentence | P2 | ✅ `awaitingDecisionCount`, verb agrees with the count |
 | 24 | Responsive | A stacked table stayed stacked once it had been measured too wide (fonts not loaded yet): the roster was stacked at 1280px in Arabic; in English it never fitted the 960px staff column | P1 | ✅ re-measured on every resize and once fonts arrive; headers wrap; cell padding 12px; staff column 1040px |
+| 25 | Cross-role | The full readiness report showed «مش جاهز لسه» (red) on five stations of six, while the file and the trainee's page say no verdict yet — the engine is fail-closed | P1 | ✅ «مفيش حكم لسه» until the evidence is complete; E2E asserts it |
+| 26 | Leftover | «محتواها التفاعلي لسه تحت الإنشاء» on the roadmap for phases without units — every phase has units, so the line was dead | P3 | ✅ removed with its key |
 | 19 | Trust | Mission and profile derived the certification separately | P2 | ✅ one source: `latestManagerDecision` carries who decided |
 
 ## 3. Scorecard

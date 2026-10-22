@@ -88,7 +88,13 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
               <>
                 <dt className="t-sm c-tx2">{tr('fr.engine', lang)}</dt>
                 <dd className="row items-center gap-2 wrap m-0">
-                  <StatusBadge tone={tone(ENGINE_DECISION[f.engine.decision])}>{tr(`rd.dec.${f.engine.decision}` as Key, lang)}</StatusBadge>
+                  {/* The engine is fail-closed: with a station missing it says
+                      «not ready», which is right for certification and false as
+                      a verdict — nothing was judged yet. The trainee's page and
+                      the employee file say so; the report says the same. */}
+                  {f.status === 'in_progress'
+                    ? <StatusBadge tone="pending">{tr('rd.noverdict', lang)}</StatusBadge>
+                    : <StatusBadge tone={tone(ENGINE_DECISION[f.engine.decision])}>{tr(`rd.dec.${f.engine.decision}` as Key, lang)}</StatusBadge>}
                   <span className="t-sm t-num c-tx2">{tf('rd.progress', { n: f.stationsDone, total: f.stationsTotal }, lang)}</span>
                 </dd>
               </>

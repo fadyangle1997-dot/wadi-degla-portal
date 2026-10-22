@@ -23,8 +23,15 @@ test('trainer stations + manager interview produce a readiness verdict the train
   await expect(page.getByText('اتسجّلت المحطة')).toBeVisible();
   await signOut(page);
 
-  // Manager: record the interview (station 6), see the verdict, decide.
+  // Manager, before the interview: the full report names no verdict on five
+  // stations of six — the same as the file and the trainee's page.
   await signIn(page, 'manager.nabil');
+  await page.goto('/#/readiness-report/menna.k');
+  await expect(page.getByText('مفيش حكم لسه')).toBeVisible();
+  await expect(page.locator('main')).not.toContainText('مش جاهز لسه');
+  await page.goto('/#/manager');
+
+  // Manager: record the interview (station 6), see the verdict, decide.
   await page.locator('main').getByRole('button', { name: /Menna Kamal/ }).first().click();
   const file = page.getByRole('dialog');
   await expect(file).toContainText('شغّال — 5 من 6 محطات');
