@@ -70,6 +70,11 @@ access · **P2** clear quality gain · **P3** polish. Status: ✅ done · ⏳ op
 
 ## 3. Scorecard
 
+> **Superseded by `docs/acceptance.md`.** The acceptance gate found two P0
+> defects (#28, #29) and two P1 (#30, #31) behind the correctness and
+> workflow scores below; they were too high. The table is kept as the
+> record of what was claimed before the gate.
+
 Scored on the final build, against evidence rather than intent. 10 means
 nothing left that this scope can improve; where a point is missing, the
 reason is named.

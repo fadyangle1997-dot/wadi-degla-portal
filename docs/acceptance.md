@@ -6,7 +6,7 @@ the real defects it found, and then evaluated the product idea itself —
 separately from the quality of the build, on purpose: a polished prototype is
 not evidence of a valuable product.
 
-**Status: PASS WITH DOCUMENTED LIMITATIONS. The prototype is FROZEN** (see §6).
+**Status: PASS WITH DOCUMENTED LIMITATIONS. The prototype is FROZEN** (see §7).
 
 ## 1. What the gate found that earlier reports had missed
 
@@ -34,7 +34,30 @@ cross-role loops (approve, rework, escalate) now each have an end-to-end test.
 
 ## 2. Verified evidence
 
-EVIDENCE_TABLE
+All on the final build, from the commands in the repository; nothing is
+carried over from earlier reports.
+
+| Check | Result |
+|---|---|
+| Typecheck (app, server, tooling) | pass |
+| Lint (ESLint, zero warnings allowed) | pass |
+| Unit tests | 915 passed in 77 files |
+| Server tests | 16 passed in 2 files |
+| Browser tests (Playwright on the production build) | 90 passed, twice in a row; any console error fails a test |
+| Visual and accessibility capture, Arabic | 376 shots — 47 scenarios at 1280, 834, 390 and 320px, normal and largest text: 0 sideways scroll, 0 text below AA (at least 98.1% of each shot's text at AAA), 0 clipped, 0 axe serious or critical; keyboard pass: 0 missing or weak focus rings, 0 traps, 0 unnamed controls, 0 targets under 44px; one h1 per screen; all on v3 |
+| Same, English | 208 shots — 26 staff and new-state scenarios, same widths and sizes: the same zeros (at least 97% AAA) |
+| The one flag | the inline «مهاراتك» / «Skills» link inside a sentence (WCAG 2.5.8 inline exception) |
+| Deep links | another branch's file, a trainer's or unknown id, another trainer's trainee, an assessment, a report, staff screens typed by a trainee: all closed |
+| Bundle | 94.9 KB initial download (gzip) of a 100 KB budget; display face 25.7 KB of 36 KB |
+| Dependencies | `npm audit --omit=dev`: 0 vulnerabilities |
+| Leftovers | no TODO, FIXME, `console.log` or `debugger` in `src` |
+| Design debt | every ratchet at or below its baseline |
+| Clean install | `git archive 805075b` → `npm ci` (313 packages) → typecheck, lint, 915 tests, build: pass; the build is byte-identical to the one tested |
+| Production smoke | admin, trainer, branch manager and trainee each land on their own platform, on v3, with 0 console errors |
+
+What these numbers do not cover is listed in §6: one browser holds the data,
+sign-in is checked in the browser, and permissions are enforced by the
+interface, not a server.
 
 ## 3. Product evaluation
 
@@ -308,4 +331,15 @@ visual change.
 
 ## 7. Freeze
 
-FREEZE_RECORD
+- **Code frozen at `805075b`** on `claude/prototype-quality` (the release
+  candidate was `c01f26f`; this gate added `967c0c9` and `805075b`). The
+  commit that records this changes documents only.
+- **Deployment:** `vercel.json` builds with `npm run build`, serves `dist`
+  with the security headers, and needs no rewrites (hash routing); Node 22.
+  Two packages: the source (a `git archive` of the final commit, built by
+  Vercel) and the built site (the clean install's `dist`, served as it is).
+  Nothing has been deployed: that waits for the owner.
+- **What frozen means:** no feature, visual or copy change. Only a defect
+  that breaks a workflow, data or security reopens it — and then only through
+  this gate: unit tests, the browser suite twice, both captures, a clean
+  install.
