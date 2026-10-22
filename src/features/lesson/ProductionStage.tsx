@@ -33,7 +33,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
     return (
       <m.section {...fade} className="focus-col">
         <Eyebrow>إنتاج · {MODE_LABEL[p.mode]}</Eyebrow>
-        <h2 className="t-h2 mt-3 mb-4">دورك دلوقتي</h2>
+        <h1 className="t-h2 mt-3 mb-4">دورك دلوقتي</h1>
         <p className="t-body mb-5">{p.task}</p>
 
         {/* You face a PERSON, not a line. The gap between what they DO and what
@@ -93,7 +93,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
   return (
     <m.section {...fade} className="focus-col">
       <Eyebrow>إنتاج · محاولة {attempt}</Eyebrow>
-      <h2 className="t-h2 mt-3 mb-2">راجع اللي قلته</h2>
+      <h1 className="t-h2 mt-3 mb-2">راجع اللي قلته</h1>
       <p className="t-sm c-tx3 mb-5">
         علّم على اللي عملته فعلاً — مش على اللي كنت ناوي تعمله.
       </p>

@@ -33,7 +33,7 @@ const BossView = lazy(() => import('../features/boss/BossView').then(m => ({ def
 import { readinessStanding } from '../domain/readiness/track';
 import { EmptyState, Button, ArabicContent, LoadingState, FlowRoom, Content } from '../ui/primitives';
 import { RouteBoundary } from './RouteBoundary';
-import { moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
+import { MODULES, moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
 import { unitPlace } from '../domain/journey/program';
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
@@ -324,7 +324,10 @@ export const App: React.FC = () => {
         : null;
     return (
       <Lazy><ArabicContent>
+      {/* One lesson, one screen: «الدرس الجاي» must start the next one fresh,
+          not inherit this one's stage and its completed mark. */}
       <LessonFlow
+        key={lesson.id}
         lesson={lesson}
         unitLabel={(() => { const u = unitPlace(m.id); return u ? `الوحدة ${u.n} من ${u.total}` : ''; })()}
         moduleId={m.id}
@@ -362,7 +365,11 @@ export const App: React.FC = () => {
     if (gate.passedOnEntry) return <Redirect to="path" onGo={goTo} />;
     // Attempt policy: unlimited retries cannot brute-force a pass.
     if (!gate.allowed) return <ExamCooldown title={m.title} retryAt={gate.retryAt} onExit={toPath} />;
+    // What a pass really opens, read from the unlock rule after it is recorded:
+    // under per-unit gating nothing opens until the trainer approves the unit.
+    const opens = MODULES.filter(x => x.unlock.requiresUnits.includes(m.id) && isModuleUnlocked(p, x.id)).map(x => x.title);
     return <Lazy><ArabicContent><ExamView key={`${m.id}:${examRun}`} module={m} onExit={toOrigin} exitLabel={originLabel()}
+      opens={opens} awaitsApproval={TRAINING_POLICY.evaluationGating === 'per-unit'}
       onReviewLesson={lessonId => openLesson(m.id, lessonId)}
       onRetry={() => { gateCache.current.delete(m.id); setExamRun(r => r + 1); }}
       onFinish={score => {

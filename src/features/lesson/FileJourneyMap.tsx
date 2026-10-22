@@ -92,7 +92,7 @@ export const FileJourneyMap: React.FC = () => (
               <span className="fj-num t-num" aria-hidden>{String(s.n).padStart(2, '0')}</span>
               <div className="fj-body">
                 <span className="fj-owner">{DEPT_LABEL[s.dept]}</span>
-                <h3 className="fj-title">{s.title}</h3>
+                <h2 className="fj-title">{s.title}</h2>
                 <p className="fj-detail">{s.detail}</p>
               </div>
             </div>

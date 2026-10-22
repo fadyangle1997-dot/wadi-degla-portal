@@ -19,6 +19,7 @@ npm run visual:compare -- visual-out/before visual-out/after visual-out/compare
 - **`visual:compare`** بيطلّع صورة قبل/بعد لكل لقطة وجدول `metrics.md` بالفرق.
 - النتايج في `visual-out/` (متجاهَل في git). الدليل ما بيتعملش commit.
 - `DIST=dist-base` بيعرض build تاني (مثلاً build الـbaseline) من غير ما يلمس `dist/`.
+- **`KEYS=1`** بيضيف لكل لقطة جولة كيبورد وقارئ شاشة (`scripts/visual/keyboard.mjs`): Tab من أول الصفحة لحد ما التركيز يلف، ولكل وقفة: الحلقة مرسومة؟ تباينها 3:1؟ ظاهرة على الشاشة؟ أقل من 44×44؟ ومعاها العناوين بالمستوى، والـlandmarks، والأزرار اللي من غير اسم أو اسمها متكرر.
 
 ## 2) الدين التصميمي: `scripts/design-debt.mjs`
 

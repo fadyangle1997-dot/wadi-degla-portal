@@ -8,14 +8,15 @@ import { Eyebrow, OptionButton, FeedbackBlock, FlowSplit } from '../../ui/primit
 import { shuffleOptions } from '../../content/shuffle';
 import { fade } from '../../ui/motion';
 
-export const PredictStage: React.FC<{ lesson: Lesson; onNext: () => void }> = ({ lesson, onNext }) => {
+/** `back` is the lesson's «السابق», kept in the answer column as in every flow. */
+export const PredictStage: React.FC<{ lesson: Lesson; onNext: () => void; back?: React.ReactNode }> = ({ lesson, onNext, back }) => {
   const [picked, setPicked] = useState<number | null>(null);
   const p = lesson.prediction;
   return (
     <m.section {...fade} className="flow-stage">
       <FlowSplit prompt={<>
         <Eyebrow icon={<Icon as={HelpCircle} size="sm" />}>قبل ما نقولك القاعدة — إنت إيه رأيك؟</Eyebrow>
-        <h2 className="t-h2 flow-question mt-4">{p.prompt}</h2>
+        <h1 className="t-h2 flow-question mt-4">{p.prompt}</h1>
       </>}>
       <div className="stack gap-3">
         {shuffleOptions(p.options, p.prompt).map((o, i) => (
@@ -32,6 +33,7 @@ export const PredictStage: React.FC<{ lesson: Lesson; onNext: () => void }> = ({
           </m.div>
         )}
       </AnimatePresence>
+      {back && <div className="row mt-5">{back}</div>}
       </FlowSplit>
     </m.section>
   );

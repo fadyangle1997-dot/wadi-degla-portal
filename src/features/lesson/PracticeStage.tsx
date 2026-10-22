@@ -15,7 +15,7 @@ export const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }>
   return (
     <m.section {...fade} className="focus-col">
       <Eyebrow icon={<ClipboardCheck size={13} />}>تمرين — قرارك إنت</Eyebrow>
-      <h2 className="t-h2 measure mt-4 mb-3">{practice.prompt}</h2>
+      <h1 className="t-h2 measure mt-4 mb-3">{practice.prompt}</h1>
       <p className="t-sm mb-5">حدّد لكل بند: مطلوب فعلاً في الملف ده، ولا لأ؟</p>
       <div className="stack gap-3">
         {practice.items.map((it, i) => {

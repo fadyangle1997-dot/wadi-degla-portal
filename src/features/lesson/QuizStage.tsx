@@ -40,7 +40,7 @@ export const QuizStage: React.FC<{
     <m.section {...fade} className="flow-stage">
       <FlowSplit prompt={<>
         <Eyebrow>{round === 'first' ? 'اتأكد إنك فهمت' : 'الأسئلة اللي زغللت — جاوبها تاني'} · {qi + 1} من {pool.length}</Eyebrow>
-        <h2 className="t-h2 flow-question mt-4">{q.prompt}</h2>
+        <h1 className="t-h2 flow-question mt-4">{q.prompt}</h1>
       </>}>
       <div className="stack gap-3">
         {shown.map((o, i) => (

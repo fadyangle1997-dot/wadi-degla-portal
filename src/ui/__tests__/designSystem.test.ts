@@ -302,6 +302,8 @@ describe('🔴 the material is warm all the way down — including where it is t
     expect(WIDTH.read).toBe(720);
     // CSS cannot import WIDTH, so the two columns it names are read back.
     expect(css).toContain(`--w-focus: ${WIDTH.focus}px;`);
+    expect(css).toContain(`--w-read: ${WIDTH.read}px;`);
+    expect(css).toContain(`--w-staff: ${WIDTH.staff}px;`);
     expect(css).toContain(`--w-shell: ${WIDTH.journey}px;`);
   });
 });

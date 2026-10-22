@@ -62,8 +62,10 @@ export const Card: React.FC<
   </div>
 );
 
-export const Eyebrow: React.FC<{ children: React.ReactNode; icon?: React.ReactNode }> = ({ children, icon }) => (
-  <span className="t-eyebrow items-center gap-2" style={{ display: 'inline-flex' }}>{icon}{children}</span>
+/** A small label above a heading — or, `as="h1"`, the heading itself on a
+ *  screen whose label is its only title (a lesson stage with no question). */
+export const Eyebrow: React.FC<{ children: React.ReactNode; icon?: React.ReactNode; as?: 'span' | 'h1' }> = ({ children, icon, as: Tag = 'span' }) => (
+  <Tag className={Tag === 'h1' ? 't-eyebrow items-center gap-2 m-0' : 't-eyebrow items-center gap-2'} style={{ display: 'inline-flex' }}>{icon}{children}</Tag>
 );
 
 /* ---------------- button ---------------- */

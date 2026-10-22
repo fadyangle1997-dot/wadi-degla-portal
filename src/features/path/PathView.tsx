@@ -20,6 +20,7 @@ import { moduleById, MODULES } from '../../content/registry';
 import { useProgress, moduleLessonsDone, progressStore, currentCommitment } from '../../app/progress';
 import { useTraining, useTrainingEvents, traineeIdOrNull } from '../../app/training/trainingStore';
 import { approvalSeen } from '../../app/approvalSeen';
+import { latestApproval } from '../journey/approval';
 import { displayNameOf } from '../../domain/identity';
 import type { FreshApproval, Certification } from '../journey/MissionBrief';
 import { identityStore } from '../../app/identity/identityStore';
@@ -56,9 +57,8 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
   // The earned moments the mission paper carries: the latest unit approval
   // not yet acted on, and — once the manager has decided — the certification.
   const approval = React.useMemo<FreshApproval | null>(() => {
-    let last: { moduleId: string; at: number } | null = null;
-    for (const e of events) if (e.type === 'EVALUATION_RECORDED' && e.employeeId === traineeId && e.decision === 'ready') last = e;
-    if (!last || last.at <= approvalSeen.get(traineeId)) return null;
+    const last = latestApproval(events, traineeId, approvalSeen.get(traineeId));
+    if (!last) return null;
     const unit = MODULES.find(x => x.id === last.moduleId);
     return unit ? { title: unit.title, at: last.at } : null;
   }, [events, traineeId]);

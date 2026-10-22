@@ -269,6 +269,17 @@ describe('DecisionReview and ReadinessResult', () => {
     expect(screen.getByRole<HTMLTextAreaElement>('textbox').value).toBe('عضو جه بصورة البطاقة');
   });
 
+  it('each answer box is named for its question, and described by it', () => {
+    render(<DecisionReview onExit={() => {}} />);
+    const first = screen.getByRole('textbox', { name: /^إجابتك — / });
+    const name1 = first.getAttribute('aria-describedby');
+    expect(name1).toContain('rv-question');
+    fireEvent.change(first, { target: { value: 'عضو جه بصورة البطاقة' } });
+    const before = screen.getByText(/^إجابتك/).textContent;
+    fireEvent.click(screen.getByRole('button', { name: /كمّل/ }));
+    expect(screen.getByText(/^إجابتك/).textContent).not.toBe(before);
+  });
+
   it('readiness before the phase opens says the assessment has not started — not «not ready»', () => {
     const standing = readinessStanding(EMPTY_TRAINING, [], 'ahmed.m', true);
     render(<ReadinessResult standing={standing} onExit={() => {}} />);

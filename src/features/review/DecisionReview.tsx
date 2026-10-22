@@ -115,7 +115,7 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
         <m.section key={field} {...fade} className="flow-stage">
           <FlowSplit prompt={<>
             <Eyebrow icon={<Icon as={PenLine} size="sm" />}>{REVIEW_LABELS[field]}</Eyebrow>
-            <h1 className="t-h2 flow-question mt-3">{REVIEW_PROMPTS[field]}</h1>
+            <h1 id="rv-question" className="t-h2 flow-question mt-3">{REVIEW_PROMPTS[field]}</h1>
             <p className="flow-note mt-3">{RATIONALE[field]}</p>
             {/* The chain so far — you reason forward from what you already said.
                 On a wide room it stays beside the question being answered. */}
@@ -131,14 +131,16 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
               </div>
             )}
           </>}>
-            <label htmlFor="rv-answer" className="form-label">{t('rv.answer', lang)}</label>
+            {/* Named per question («إجابتك — الموقف»), the question itself as its
+                description: five answers in a row are five different fields. */}
+            <label htmlFor="rv-answer" className="form-label">{t('rv.answer', lang)} <span className="sr-only">— {REVIEW_LABELS[field]}</span></label>
             <textarea
               id="rv-answer"
               value={value}
               onChange={e => { setAnswers(a => ({ ...a, [field]: e.target.value })); setEmpty(false); }}
               className="field w-full review-answer mt-2"
               aria-invalid={empty || undefined}
-              aria-describedby={empty ? 'rv-empty' : undefined}
+              aria-describedby={empty ? 'rv-question rv-empty' : 'rv-question'}
               rows={5}
               autoFocus
             />

@@ -13,10 +13,14 @@
  */
 export const EASE = [0.22, 1, 0.36, 1] as const;
 
+/** A step in, a step out. A step that is leaving takes no more presses (a
+ *  double-click would otherwise act twice, and skip the step after); one that
+ *  comes back before it has gone takes them again. The value is not animatable,
+ *  so it switches the moment the exit starts. */
 export const fade = {
   initial: { opacity: 0, y: 14 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -10 },
+  animate: { opacity: 1, y: 0, pointerEvents: 'auto' as const },
+  exit: { opacity: 0, y: -10, pointerEvents: 'none' as const },
   transition: { duration: 0.32, ease: EASE },
 };
 

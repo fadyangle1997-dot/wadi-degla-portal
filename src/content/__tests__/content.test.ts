@@ -23,6 +23,9 @@ describe('content integrity', () => {
   it('every boss battle step has exactly one correct option', () => {
     for (const b of BOSS_BATTLES) for (const s of b.steps) expect(s.options.filter(o => o.correct).length).toBe(1);
   });
+  it('every boss battle has at least one decision (the challenge screen needs one to open on)', () => {
+    for (const b of BOSS_BATTLES) expect(b.steps.length, b.id).toBeGreaterThan(0);
+  });
 
   it('every lesson has objective, ≥1 skill, an example, and a prediction beat', () => {
     for (const m of MODULES) for (const l of m.lessons) {

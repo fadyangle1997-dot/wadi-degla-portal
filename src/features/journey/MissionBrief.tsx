@@ -6,11 +6,12 @@
  */
 import React from 'react';
 import { Play, GraduationCap, Clock, Check, ArrowRight, ShieldCheck, NotebookPen, Award } from 'lucide-react';
-import type { Mission, TodaysMission } from '../../domain/journey/mission';
+import type { Mission, MissionKind, TodaysMission } from '../../domain/journey/mission';
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { trainingStore, traineeIdOrNull } from '../../app/training/trainingStore';
 import { Button, Eyebrow, ArabicContent, Brief, Content, Achievement, tx } from '../../ui/primitives';
 import { useLang, t as tr, tf, dateLocale } from '../../app/i18n';
+import { Icon } from '../../ui/Icon';
 
 export interface MissionHandlers {
   onOpenLesson: (moduleId: string, lessonId: string) => void;
@@ -50,7 +51,7 @@ export const MissionBrief: React.FC<{
           {mission.also.map(a => (
             <button key={a.kind} type="button" className="quiet-act t-sm"
               onClick={a.kind === 'readiness' ? go.onOpenReadiness : go.onOpenReview}>
-              {tr(a.kind === 'readiness' ? 'jr.readytitle' : 'jr.reviewtitle', lang)} <ArrowRight size={13} className="icon-dir" />
+              {tr(a.kind === 'readiness' ? 'jr.readytitle' : 'jr.reviewtitle', lang)} <Icon as={ArrowRight} size="sm" dir />
             </button>
           ))}
         </div>
@@ -59,13 +60,18 @@ export const MissionBrief: React.FC<{
   );
 };
 
+/** Missions the approval band may open: each is a step, and taking it is the acknowledgement. */
+const WITH_APPROVAL: ReadonlySet<MissionKind> = new Set<MissionKind>(['resume_lesson', 'take_exam', 'readiness', 'decision_review']);
+
 const PrimaryMission: React.FC<{ action: Mission; trainerName?: string; approval?: FreshApproval | null; certification?: Certification | null } & MissionHandlers> =
   ({ action, trainerName, approval, certification, onOpenLesson, onOpenExam, onOpenReview, onOpenReadiness }) => {
   const lang = useLang();
   const m = action.module;
   // A unit approval is the third of the earned moments: it opens the mission
-  // paper, above the step it unlocked, and leaves when that step is taken.
-  const band = approval && action.kind !== 'certified' ? (
+  // paper above a step the trainee can take, and leaves when that step is
+  // taken. Never above a rework request or a wait, where it would contradict
+  // the paper and could never be acknowledged.
+  const band = approval && WITH_APPROVAL.has(action.kind) ? (
     <div className="brief-achievement">
       <Achievement tier="unit" />
       <span className="brief-achievement-text">

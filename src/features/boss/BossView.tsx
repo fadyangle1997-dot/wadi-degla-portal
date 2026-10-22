@@ -6,7 +6,7 @@
  * stays beside each decision, so nobody has to remember the case to answer it.
  * Feedback still teaches after every decision.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { ArrowRight, User } from 'lucide-react';
 import type { BossBattle } from '../../domain/types/content';
@@ -27,16 +27,26 @@ export const BossView: React.FC<Props> = ({ battle, onExit, onFinish, exitLabel 
   const [si, setSi] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [mistakes, setMistakes] = useState(0);
-  const mode = `${t('as.boss', lang)} · المستوى ${battle.level}`;
+  // The bar is interface: every word of it in the interface language.
+  const mode = `${t('as.boss', lang)} · ${tf('as.bosslevel', { n: battle.level }, lang)}`;
   const total = battle.steps.length;
-  const step = battle.steps[Math.min(si, total - 1)]!;
+  // One room for the whole challenge: brief, decisions and result share its bar.
+  // Focus follows the step: a new phase, or a decision replaced, puts focus on
+  // the room, so a keyboard user starts on what is now on screen.
+  const mainRef = useRef<HTMLElement>(null);
+  const focusRoom = () => mainRef.current?.focus({ preventScroll: true });
+  const room = { mode, title: <Content>{battle.title}</Content>, onExit, exitTo: exitLabel, mainRef };
+  // A battle always has a decision (content.test); the brief still renders if
+  // one arrives without, instead of throwing before the trainee sees anything.
+  const step = battle.steps[Math.min(si, total - 1)];
   // The options as shown, and the verdict read from the SAME list the trainee
   // pressed — reading the original order called a right answer wrong.
-  const shown = useMemo(() => shuffleOptions(step.options, step.actor + step.prompt), [step]);
+  const shown = useMemo(() => (step ? shuffleOptions(step.options, step.actor + step.prompt) : []), [step]);
+  useEffect(() => { if (phase !== 'brief') focusRoom(); }, [phase]);
 
   if (phase === 'brief') {
     return (
-      <FlowRoom mode={mode} title={<Content>{battle.title}</Content>} onExit={onExit} exitTo={exitLabel}>
+      <FlowRoom {...room}>
         <div className="flow-center">
           <m.div {...paperIn}>
             <PaperSheet labelledBy="boss-title">
@@ -48,9 +58,11 @@ export const BossView: React.FC<Props> = ({ battle, onExit, onFinish, exitLabel 
                 <div><dt>{t('as.decisions', lang)}</dt><dd><Num>{total}</Num></dd></div>
                 <div><dt>إزاي بيتحسب</dt><dd>كل قرار بيتحسب · الغلط بيعلّم</dd></div>
               </dl>
-              <div className="paper-actions">
-                <Button onClick={() => setPhase('steps')}>ابدأ التحدّي <Icon as={ArrowRight} dir /></Button>
-              </div>
+              {total > 0 && (
+                <div className="paper-actions">
+                  <Button onClick={() => setPhase('steps')}>ابدأ التحدّي <Icon as={ArrowRight} dir /></Button>
+                </div>
+              )}
             </PaperSheet>
           </m.div>
         </div>
@@ -61,7 +73,7 @@ export const BossView: React.FC<Props> = ({ battle, onExit, onFinish, exitLabel 
   if (phase === 'done') {
     const perfect = mistakes === 0;
     return (
-      <FlowRoom mode={mode} title={<Content>{battle.title}</Content>} onExit={onExit} exitTo={exitLabel}>
+      <FlowRoom {...room}>
         <div className="flow-center">
           <m.div {...achieve}>
             <PaperSheet labelledBy="boss-done">
@@ -89,21 +101,26 @@ export const BossView: React.FC<Props> = ({ battle, onExit, onFinish, exitLabel 
     );
   }
 
+  if (!step) return null; // unreachable: the brief offers no start without a decision
+  // Where the room is wide enough to keep it beside the decision, the situation
+  // starts open; on a phone it stays one tap away. Read per decision, like the
+  // roster reads the screen; the trainee's own open/close then holds.
+  const wideRoom = typeof window !== 'undefined' && !!window.matchMedia?.('(min-width: 64rem)').matches;
   const answered = picked !== null;
   const correct = answered && shown[picked]?.correct;
 
   return (
-    <FlowRoom mode={mode} title={<Content>{battle.title}</Content>} onExit={onExit} exitTo={exitLabel}
+    <FlowRoom {...room}
       progress={{ total, current: si }}
       leaveWarning={{ title: t('as.bossleave', lang), body: t('as.bossleavebody', lang) }}>
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" onExitComplete={focusRoom}>
         <m.div key={si} {...fade} className="flow-stage">
           <FlowSplit prompt={<>
             <p className="t-eyebrow m-0">{tf('as.decision', { n: si + 1, total }, lang)}</p>
             <p className="flow-actor mt-3"><Icon as={User} size="sm" />{step.actor}</p>
             <h1 className="t-h2 flow-question mt-3">{step.prompt}</h1>
             {/* The case, kept in view: the decision is about this person. */}
-            <details className="case-recall mt-5">
+            <details className="case-recall mt-5" open={wideRoom}>
               <summary>الموقف</summary>
               <p className="flow-note mt-2">{battle.brief}</p>
             </details>

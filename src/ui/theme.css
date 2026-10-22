@@ -134,6 +134,8 @@
   --w-shell: 1080px;
   /* WIDTH.focus: the one-thing-on-screen column (lesson, exam, boss, debrief). */
   --w-focus: 680px;
+  --w-read: 720px;
+  --w-staff: 960px;
 
   /* ── Elevation ───────────────────────────────────────────────────────────
      Almost invisible, by design. A shadow you can see is a shadow doing the
@@ -843,8 +845,8 @@ details > summary { min-block-size:44px; cursor:pointer; }
 .py-1 { padding-block:var(--sp-1); }
 /* A page column inside the shell: the trainee's reading width or the staff width. */
 .page-col { margin:0 auto; padding:var(--sp-6) var(--sp-5) var(--sp-9); }
-.page-col--read { max-width:720px; }
-.page-col--staff { max-width:960px; }
+.page-col--read { max-width:var(--w-read); }
+.page-col--staff { max-width:var(--w-staff); }
 /* Local saving failed: said across the top of the dashboard, once. */
 .save-alert { text-align:center; padding:var(--sp-2) var(--sp-5); background:var(--attn-bg); border-bottom:1px solid var(--attn-line); }
 

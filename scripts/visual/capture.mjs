@@ -6,6 +6,7 @@
  *
  * Env: WIDTHS=1280,834,390,320   TEXT=md,xl   ONLY=exam,boss (scenario prefixes)
  *      PORT=4190   DIST=dist     BASE=http://… (skip the built-in preview server)
+ *      KEYS=1 (add the keyboard and screen-reader pass: scripts/visual/keyboard.mjs)
  *
  * Writes <outDir>/<scenario>-<width>-<text>.png, results.json and log.txt.
  * Default outDir: visual-out/<git short hash> (git-ignored; evidence is never
@@ -21,7 +22,9 @@ import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
+import { chromiumPath } from './browser.mjs';
 import { measureInPage } from './measure.mjs';
+import { keyboardPass } from './keyboard.mjs';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const require = createRequire(join(ROOT, 'package.json'));
@@ -40,12 +43,16 @@ mkdirSync(OUT, { recursive: true });
 let server = null;
 if (!process.env.BASE) {
   server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort', '--outDir', process.env.DIST ?? 'dist'], { cwd: ROOT, stdio: 'ignore' });
+  // However this run ends, the server goes with it: one left on the port would
+  // answer the next run with a stale build, and no error would say so.
+  process.on('exit', () => server?.kill());
+  for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => process.exit(130));
   for (let i = 0; i < 100; i++) {
     try { await fetch(BASE); break; } catch { await new Promise(r => setTimeout(r, 200)); }
   }
 }
 
-const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM_PATH ?? '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: chromiumPath() });
 const results = [];
 const log = [];
 
@@ -123,7 +130,9 @@ async function shot(p, name, width, text, note = '') {
     await p.evaluate(AXE);
     const axe = await p.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] } }))
       .violations.filter(v => v.impact === 'serious' || v.impact === 'critical').map(v => `${v.id}×${v.nodes.length}`));
-    results.push({ name, width, text, note, url: p.url().replace(BASE, ''), ...m, axe });
+    // KEYS=1 adds the keyboard and screen-reader pass (scripts/visual/keyboard.mjs).
+    const keys = process.env.KEYS ? await keyboardPass(p) : undefined;
+    results.push({ name, width, text, note, url: p.url().replace(BASE, ''), ...m, axe, ...(keys && { keys }) });
   } catch (e) { log.push(`${name}-${width}-${text}: ${String(e).slice(0, 180)}`); }
 }
 const step = async (label, fn) => { try { await fn(); } catch (e) { log.push(`${label}: ${String(e).slice(0, 180)}`); } };

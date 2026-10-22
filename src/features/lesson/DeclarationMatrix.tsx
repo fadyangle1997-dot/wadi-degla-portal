@@ -92,7 +92,7 @@ export const DeclarationMatrix: React.FC = () => (
         <li key={d.n} className="dm-row">
           <span className="dm-n t-num" aria-hidden>{String(d.n).padStart(2, '0')}</span>
           <div className="dm-body">
-            <h3 className="dm-name">{d.name}</h3>
+            <h2 className="dm-name">{d.name}</h2>
             <p className="dm-use"><span className="dm-tag dm-tag--yes">تستخدمه لما</span>{d.use}</p>
             <p className="dm-dont"><span className="dm-tag dm-tag--no">ما تستخدموش لما</span>{d.dont}</p>
             <p className="dm-meta">

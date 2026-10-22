@@ -13,9 +13,11 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { chromium } from 'playwright';
+import { chromiumPath } from './browser.mjs';
 
-const [A, B, OUT = join(resolve(B), '..', 'compare')] = process.argv.slice(2);
+const [A, B, outArg] = process.argv.slice(2);
 if (!A || !B) { console.error('usage: compare.mjs <beforeDir> <afterDir> [outDir]'); process.exit(1); }
+const OUT = outArg ?? join(resolve(B), '..', 'compare');
 const ONLY = process.env.ONLY?.split(',') ?? null;
 const WIDTHS = process.env.WIDTHS?.split(',').map(Number) ?? null;
 const TEXTS = process.env.TEXT?.split(',') ?? null;
@@ -28,7 +30,7 @@ const before = new Map(load(A).map(r => [key(r), r]));
 const after = load(B).filter(r => (!ONLY || ONLY.some(o => r.name.startsWith(o)))
   && (!WIDTHS || WIDTHS.includes(r.width)) && (!TEXTS || TEXTS.includes(r.text)));
 
-const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM_PATH ?? '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: chromiumPath() });
 const page = await browser.newPage({ deviceScaleFactor: 1 });
 const sheet = join(resolve(OUT), '.sheet.html');
 const rows = [];
