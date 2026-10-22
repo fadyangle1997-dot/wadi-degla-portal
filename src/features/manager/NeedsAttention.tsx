@@ -4,8 +4,10 @@ import { performanceFromOwnEvents, groupByEmployee } from '../../app/analytics/d
 import { orgSummary } from '../../domain/analytics/organization';
 import { trainingStore } from '../../app/training/trainingStore';
 import { detectOperationalIssues } from '../../domain/operations/health';
+import { issueText } from '../admin/issueText';
+import { useOrganization } from '../../app/organization/orgStore';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { ArabicContent, DataTable, SectionHeader, Status, Meter, type Column } from '../../ui/primitives';
+import { DataTable, SectionHeader, Status, Meter, type Column } from '../../ui/primitives';
 import { useLang, t as tr, tf, iso } from '../../app/i18n';
 import { needInterventionCount, unitCount } from '../../app/plural';
 import { tone, rowTone, FOLLOW_UP, UNIT_REVIEW, SEVERITY } from '../../ui/statusSemantics';
@@ -62,6 +64,7 @@ export const UnitsTable: React.FC<{ units: readonly UnitRow[]; onOpen: (id: stri
 export const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: string) => void }> = ({ ids, onInspect }) => {
   const lang = useLang();
   const { users } = useIdentity();
+  const { branches } = useOrganization();
   const inScope = useMemo(() => new Set(ids), [ids]);
   const issues = useMemo(() => {
     const all = detectOperationalIssues(users, trainingStore.events());
@@ -84,12 +87,12 @@ export const NeedsAttention: React.FC<{ ids: readonly string[]; onInspect: (id: 
 
   type Issue = (typeof issues)[number];
   const columns: Column<Issue>[] = [
-    // health.ts messages already start with the person's name.
-    { id: 'detail', header: tr('mg.detail', lang), cell: i => <ArabicContent as="span" className="t-sm c-tx1">{i.message}</ArabicContent> },
+    // The sentence names the person first, in the reader's language.
+    { id: 'detail', header: tr('mg.detail', lang), cell: i => <span className="t-sm c-tx1">{issueText(i, users, branches, lang).message}</span> },
     { id: 'severity', header: tr('mg.col.severity', lang), cell: i => <Status tone={tone(SEVERITY[i.severity])}>{tr(sevKey[i.severity], lang)}</Status> },
     // The recommendation is advice, so it reads as text — it used to wear a
     // status chip and look like a button. The row itself opens the file.
-    { id: 'step', header: tr('mg.col.step', lang), cell: i => <ArabicContent as="span" className="t-sm c-tx2">{i.action}</ArabicContent> },
+    { id: 'step', header: tr('mg.col.step', lang), cell: i => <span className="t-sm c-tx2">{issueText(i, users, branches, lang).action}</span> },
   ];
 
   return (

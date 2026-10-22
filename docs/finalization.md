@@ -51,6 +51,9 @@ access · **P2** clear quality gain · **P3** polish. Status: ✅ done · ⏳ op
 | 18 | QA | No end-to-end test of a unit decision read across roles | P2 | ✅ `e2e/unit-approval.e2e.ts`: trainer approves → trainee sees it → manager's file records it |
 | 20 | Responsive | Branch manager dashboard scrolled sideways at tablet width (roster 1002px in 834; 335px over at the largest text); area/GM at 834 and 320 with large text; a brief's action ran past the sheet at 320 | P1 | ✅ a table that does not fit stacks (measured, not guessed); statuses wrap; metrics shrink; `responsive.e2e.ts` covers every management view at 834 with the largest text |
 | 21 | A11y | Targets under 44px: crumbs (26px), a sort header (43px wide), search input (42px) | P2 | ✅ 44px hit areas without moving the layout |
+| 22 | Language | Operational issues (admin inbox, manager follow-up) built as Arabic sentences in the domain: English mode showed Arabic; fixes were verbal nouns («إسناد مدرب») | P1 | ✅ `issueText`: dictionary sentence + imperative fix per kind, in both languages, names by their owner's spelling; domain keeps kind and target only |
+| 23 | Language | «1 · Staff who finished the programme…»: a count glued to a sentence | P2 | ✅ `awaitingDecisionCount`, verb agrees with the count |
+| 24 | Responsive | A stacked table stayed stacked once it had been measured too wide (fonts not loaded yet): the roster was stacked at 1280px in Arabic; in English it never fitted the 960px staff column | P1 | ✅ re-measured on every resize and once fonts arrive; headers wrap; cell padding 12px; staff column 1040px |
 | 19 | Trust | Mission and profile derived the certification separately | P2 | ✅ one source: `latestManagerDecision` carries who decided |
 
 ## 3. Scorecard

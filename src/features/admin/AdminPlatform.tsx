@@ -15,13 +15,14 @@ import { useTraining, trainingStore } from '../../app/training/trainingStore';
 import { detectOperationalIssues, summarizeIssues, type OperationalIssue, type Severity } from '../../domain/operations/health';
 import { adminStats } from '../../domain/operations/adminStats';
 import { filterAudit, latestAudit, describeAudit, auditActions, auditExportRows, actionOf, auditKey, type AuditFilter } from '../../domain/operations/audit';
-import { Button, Eyebrow, EmptyState, Card, Toast, ArabicContent, ConfirmDialog, PageHeader, SectionNav, SectionHeader, MetricStrip, Metric, Brief, Meter, DataTable, Status, Num, FormField, type Column } from '../../ui/primitives';
+import { Button, Eyebrow, EmptyState, Card, Toast, ConfirmDialog, PageHeader, SectionNav, SectionHeader, MetricStrip, Metric, Brief, Meter, DataTable, Status, Num, FormField, type Column } from '../../ui/primitives';
 import { loadDemoScenario, clearDemoTraining } from '../../app/demo/demoScenario';
 import { fade } from '../../ui/motion';
 import { AdminView } from './AdminView';
 import { OrganizationPanel } from './OrganizationPanel';
 import { WIDTH } from '../../ui/designSystem';
 import { useOrganization, orgStore } from '../../app/organization/orgStore';
+import { issueText } from './issueText';
 import { branchNameOf } from '../../domain/organization';
 import { tone, SEVERITY, type SemanticTone } from '../../ui/statusSemantics';
 import { useLang, t, tf, roleName as roleDisplayName, type Key, dateLocale } from '../../app/i18n';
@@ -210,6 +211,7 @@ const SEV_META: Record<Severity, { icon: React.ReactNode; tone: SemanticTone; la
 const OperationalInbox: React.FC<{ onGoToUser: (userId: string | undefined) => void }> = ({ onGoToUser }) => {
   const lang = useLang();
   const { users } = useIdentity();
+  const { branches } = useOrganization();
   useTraining();
   const issues = useMemo(() => detectOperationalIssues(users, trainingStore.events()), [users]);
   const sev = summarizeIssues(issues);
@@ -217,7 +219,7 @@ const OperationalInbox: React.FC<{ onGoToUser: (userId: string | undefined) => v
   const columns: Column<OperationalIssue>[] = [
     {
       id: 'issue', header: t('ad.col.issue', lang),
-      cell: i => <ArabicContent as="span" className="c-tx1">{i.message}</ArabicContent>,
+      cell: i => <span className="c-tx1">{issueText(i, users, branches, lang).message}</span>,
     },
     {
       id: 'sev', header: t('ad.col.sev', lang), sortValue: i => rank[i.severity],
@@ -227,7 +229,7 @@ const OperationalInbox: React.FC<{ onGoToUser: (userId: string | undefined) => v
       id: 'act', header: t('dt.action', lang), align: 'end',
       cell: i => (
         <button type="button" className="icon-btn" onClick={() => onGoToUser(i.targetUserId)}>
-          <ArabicContent as="span">{i.action}</ArabicContent>
+          {issueText(i, users, branches, lang).action}
         </button>
       ),
     },

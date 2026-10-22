@@ -16,14 +16,14 @@ import { orgSummary } from '../../domain/analytics/organization';
 import { trainingStore, useTraining, finalDecisionOf } from '../../app/training/trainingStore';
 import { isProgramComplete } from '../../domain/journey/programCompletion';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, EmptyState, Eyebrow, PageHeader, MetricStrip, Metric, Brief, Num, SectionHeader } from '../../ui/primitives';
+import { Button, EmptyState, Eyebrow, PageHeader, MetricStrip, Metric, Brief, SectionHeader } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
 import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
 import { managementLabel } from '../../domain/identity/access';
 import { tone, FORMAL_READINESS, FOLLOW_UP, UNIT_REVIEW } from '../../ui/statusSemantics';
-import { staffCount } from '../../app/plural';
+import { staffCount, awaitingDecisionCount } from '../../app/plural';
 import { NeedsAttention, UnitsTable } from './NeedsAttention';
 import { CollapsibleRoster, EmployeeGrid } from './EmployeeRoster';
 import { EmployeeTimeline } from './EmployeeTimeline';
@@ -138,7 +138,7 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             {canDo('readiness.decide') && firstDecision && (
               <div className="mt-6">
                 <Brief tone="attn" eyebrow={<Eyebrow icon={<Gavel size={13} />}>{tr('mg.decisions', lang)}</Eyebrow>}
-                  title={<><Num>{pendingDecisions.length}</Num> · {tr('mg.decisionsub', lang)}</>}
+                  title={awaitingDecisionCount(pendingDecisions.length, lang)}
                   action={<Button onClick={() => setDrill(firstDecision)}>{tf('mg.openfile', { name: decisionName }, lang)}</Button>} />
               </div>
             )}

@@ -20,7 +20,6 @@ describe('Operational Health Engine', () => {
     const issue = issues.find(i => i.kind === 'employee_no_trainer');
     expect(issue?.severity).toBe('critical');
     expect(issue?.targetUserId).toBe('e1');
-    expect(issue?.action).toBeTruthy();
   });
 
   it('flags an archived user that still holds assignments (critical integrity risk)', () => {

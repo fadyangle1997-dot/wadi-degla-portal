@@ -135,7 +135,7 @@
   /* WIDTH.focus: the one-thing-on-screen column (lesson, exam, boss, debrief). */
   --w-focus: 680px;
   --w-read: 720px;
-  --w-staff: 960px;
+  --w-staff: 1040px;
 
   /* ── Elevation ───────────────────────────────────────────────────────────
      Almost invisible, by design. A shadow you can see is a shadow doing the
@@ -659,10 +659,13 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
 .dt-filter:hover { color:var(--tx0); background:var(--s-1); }
 .dt-filter[aria-current="true"] { color:var(--tx0); background:var(--s0); border-color:transparent; }
 .dt table { width:100%; border-collapse:separate; border-spacing:0; }
-.dt th, .dt td { text-align:start; vertical-align:middle; padding:var(--sp-3) var(--sp-4);
+.dt th, .dt td { text-align:start; vertical-align:middle; padding:var(--sp-3) var(--sp-3);
   border-bottom:1px solid var(--line); font-weight:400; }
 .dt thead th { padding-block:var(--sp-2); font-size:.875rem; font-weight:600; color:var(--tx2);
-  white-space:nowrap; border-bottom-color:var(--line-2); }
+  border-bottom-color:var(--line-2); }
+/* A long header («Readiness assessment») wraps over two lines rather than
+   widen its column past the page. */
+.dt-sort { text-align:start; }
 .dt .dt-end { text-align:end; }
 .dt tbody tr { position:relative; transition:background var(--t-fast) var(--ease); }
 .dt tbody tr > :first-child { border-inline-start:2px solid transparent; }

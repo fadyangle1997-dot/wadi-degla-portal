@@ -83,25 +83,31 @@ export function DataTable<R>({
   const toggleSort = (id: string) => setSort(s =>
     s?.id === id ? { id, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { id, dir: 'asc' });
 
-  // Stacks when the table, laid out as a table, is wider than its box. Its
-  // natural width is measured while it is unstacked and kept, so a stacked
-  // table can tell when it would fit again. Measured before paint.
+  // Stacks when the table, laid out as a table, is wider than its box. A
+  // stacked table is laid out as a table for the measurement and put back in
+  // the same task, so nothing is painted in between; measured again whenever
+  // its box or its contents change size, and once the fonts have arrived.
   const box = useRef<HTMLDivElement>(null);
-  const natural = useRef(0);
   const [stacked, setStacked] = useState(false);
   useLayoutEffect(() => {
     const el = box.current;
     const table = el?.querySelector('table');
     if (!el || !table || typeof ResizeObserver === 'undefined') return;
+    let live = true;
     const fit = () => {
-      if (!el.hasAttribute('data-stacked')) natural.current = table.scrollWidth;
-      setStacked(natural.current > el.clientWidth + 1);
+      if (!live) return;
+      const was = el.hasAttribute('data-stacked');
+      if (was) el.removeAttribute('data-stacked');
+      const natural = table.scrollWidth;
+      if (was) el.setAttribute('data-stacked', '');
+      setStacked(natural > el.clientWidth + 1);
     };
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(el);
     ro.observe(table);
-    return () => ro.disconnect();
+    void document.fonts?.ready.then(fit);
+    return () => { live = false; ro.disconnect(); };
   }, [columns.length, shown.length]);
 
   if (rows.length === 0 && empty) return <>{empty}</>;

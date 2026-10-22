@@ -155,13 +155,15 @@ export const MEASURE = '68ch';
  * system names (see THE FOUR PLATFORMS above):
  *   focus   — one thing on screen: lesson, exam, boss, daily debrief, welcome
  *   read    — the trainee's own screens: path, journey, skills, readiness, profile
- *   staff   — scanning tables and rosters: trainer, manager, admin
+ *   staff   — scanning tables and rosters: trainer, manager, admin. Nearly
+ *             the shell: a seven-column roster in English needs ~950px, and
+ *             960 (with its padding) turned it into stacked rows on a desktop
  *   journey — the only two-column layout in the product: the roadmap
  */
 export const WIDTH = {
   focus: 680,
   read: 720,
-  staff: 960,
+  staff: 1040,
   journey: 1080,
 } as const;
 

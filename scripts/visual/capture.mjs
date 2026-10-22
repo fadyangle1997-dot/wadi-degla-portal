@@ -7,6 +7,7 @@
  * Env: WIDTHS=1280,834,390,320   TEXT=md,xl   ONLY=exam,boss (scenario prefixes)
  *      PORT=4190   DIST=dist     BASE=http://… (skip the built-in preview server)
  *      KEYS=1 (add the keyboard and screen-reader pass: scripts/visual/keyboard.mjs)
+ *      UILANG=en (the product in English; Arabic by default)
  *
  * Writes <outDir>/<scenario>-<width>-<text>.png, results.json and log.txt.
  * Default outDir: visual-out/<git short hash> (git-ignored; evidence is never
@@ -37,6 +38,7 @@ const ONLY = process.env.ONLY?.split(',') ?? null;
 const PORT = Number(process.env.PORT ?? 4190);
 const BASE = process.env.BASE ?? `http://localhost:${PORT}/`;
 const PASSWORD = u => (u === 'admin' ? 'Admin@2026' : 'Welcome@123');
+const UI_LANG = process.env.UILANG === 'en' ? 'en' : null;
 mkdirSync(OUT, { recursive: true });
 
 /* ---------- the preview server, unless one is given ---------- */
@@ -67,6 +69,7 @@ async function open(width, text, storageState) {
     globalThis.Date = class extends D { constructor(...a) { super(...(a.length ? a : [D.now() + off])); } static now() { return D.now() + off; } };
     try { localStorage.setItem('wda.text.v1', t); } catch { /* storage may be blocked */ }
   }, text);
+  if (UI_LANG) await ctx.addInitScript(l => { try { localStorage.setItem('wda.lang.v1', l); } catch { /* */ } }, UI_LANG);
   // A saved state carries whoever was signed in when it was saved; every
   // variant signs in as its own person, so the first page load starts signed out.
   if (storageState) await ctx.addInitScript(() => {
@@ -145,8 +148,8 @@ const answersKey = [];
   // Demo data, loaded by the admin as a person would.
   await step('setup-demo', async () => {
     await signIn(p, 'admin');
-    await p.getByRole('button', { name: 'حمّل بيانات العرض' }).click();
-    await p.getByRole('dialog').getByRole('button', { name: 'حمّل بيانات العرض' }).click();
+    await p.getByRole('button', { name: /^(حمّل بيانات العرض|Load demo data)$/ }).click();
+    await p.getByRole('dialog').getByRole('button', { name: /^(حمّل بيانات العرض|Load demo data)$/ }).click();
     await p.waitForTimeout(500);
     states.demo = await ctx.storageState();
   });
@@ -296,7 +299,7 @@ for (const text of TEXTS) for (const width of WIDTHS) {
       ['manager.nabil', [['#/manager', '50-manager-home'], ['#/manager?file=menna.k', '51-manager-file'], ['#/manager?file=karim.s', '52-manager-file-pending'], ['#/readiness-report/menna.k', '53-readiness-report']]],
       ['area.hoda', [['#/manager', '60-area-home'], ['#/manager?file=karim.s', '61-area-file']]],
       ['gm.tarek', [['#/manager', '70-gm-home']]],
-      ['admin', [['#/admin', '80-admin-home'], ['#/admin?user=karim.s', '81-admin-user'], ['#/admin?create=1', '82-admin-create']]],
+      ['admin', [['#/admin', '80-admin-home'], ['#/admin?user=karim.s', '81-admin-user'], ['#/admin?create=user', '82-admin-create']]],
     ];
     for (const [who, stops] of tour) {
       if (ONLY && !stops.some(([, name]) => ONLY.some(o => name.startsWith(o)))) continue;

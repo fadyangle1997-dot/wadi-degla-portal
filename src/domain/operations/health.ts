@@ -14,8 +14,8 @@ export interface OperationalIssue {
   readonly id: string;
   readonly severity: Severity;
   readonly kind: OperationalIssueKind;
-  readonly message: string;
-  readonly action: string;        // label of the fix
+  // The sentence and the fix are product language: features/admin/issueText
+  // writes them from the kind and the target, in the reader's language.
   readonly targetUserId?: string;
   readonly targetBranch?: string;
 }
@@ -60,55 +60,46 @@ export function detectOperationalIssues(
   for (const u of users) {
     // archived but still holding assignments → data-integrity risk (critical)
     if (u.status === 'archived' && (u.trainerId || u.managerId)) {
-      issues.push({ id: `arch:${u.id}`, severity: 'critical', kind: 'archived_still_assigned',
-        message: `${u.name} مؤرشف لكن لسه مسند`, action: 'إزالة الإسناد', targetUserId: u.id });
+      issues.push({ id: `arch:${u.id}`, severity: 'critical', kind: 'archived_still_assigned', targetUserId: u.id });
     }
     if (u.status === 'archived') continue;
 
     // employee without trainer (critical — can't be developed)
     if (u.roleId === 'employee' && !u.trainerId) {
-      issues.push({ id: `notrainer:${u.id}`, severity: 'critical', kind: 'employee_no_trainer',
-        message: `${u.name} من غير مدرب`, action: 'إسناد مدرب', targetUserId: u.id });
+      issues.push({ id: `notrainer:${u.id}`, severity: 'critical', kind: 'employee_no_trainer', targetUserId: u.id });
     }
     // trainer without manager (warning — broken reporting chain)
     if (u.roleId === 'trainer' && !u.managerId) {
-      issues.push({ id: `nomanager:${u.id}`, severity: 'warning', kind: 'trainer_no_manager',
-        message: `${u.name} (مدرب) من غير مدير`, action: 'إسناد مدير', targetUserId: u.id });
+      issues.push({ id: `nomanager:${u.id}`, severity: 'warning', kind: 'trainer_no_manager', targetUserId: u.id });
     }
     // disabled user with pending reviews (warning — work stuck)
     if (u.status === 'disabled' && pendingByEmployee.has(u.id)) {
-      issues.push({ id: `disabled:${u.id}`, severity: 'warning', kind: 'disabled_pending_review',
-        message: `${u.name} معطّل وعنده مراجعة معلّقة`, action: 'تفعيل أو إعادة إسناد', targetUserId: u.id });
+      issues.push({ id: `disabled:${u.id}`, severity: 'warning', kind: 'disabled_pending_review', targetUserId: u.id });
     }
     // employee never evaluated (info — visibility)
     if (u.roleId === 'employee' && u.trainerId && !evaluatedEmployees.has(u.id)) {
-      issues.push({ id: `noeval:${u.id}`, severity: 'info', kind: 'employee_no_evaluation',
-        message: `${u.name} لسه من غير أي تقييم`, action: 'متابعة مع المدرب', targetUserId: u.id });
+      issues.push({ id: `noeval:${u.id}`, severity: 'info', kind: 'employee_no_evaluation', targetUserId: u.id });
     }
     // invalid assignment: trainerId points to a non-trainer / missing user (critical)
     if (u.trainerId) {
       const tr = byId.get(u.trainerId);
       if (!tr || tr.roleId !== 'trainer' || tr.status === 'archived') {
-        issues.push({ id: `badtrainer:${u.id}`, severity: 'critical', kind: 'invalid_role_assignment',
-          message: `${u.name} مسند لمدرب غير صالح`, action: 'تصحيح الإسناد', targetUserId: u.id });
+        issues.push({ id: `badtrainer:${u.id}`, severity: 'critical', kind: 'invalid_role_assignment', targetUserId: u.id });
       }
     }
     // orphan: employee whose branch has no trainer at all
     if (u.roleId === 'employee' && u.branchId && !branchesWithTrainer.has(u.branchId)) {
-      issues.push({ id: `orphan:${u.id}`, severity: 'warning', kind: 'orphan_user',
-        message: `${u.name} في فرع (${u.branchId}) من غير أي مدرب`, action: 'إضافة مدرب للفرع', targetUserId: u.id });
+      issues.push({ id: `orphan:${u.id}`, severity: 'warning', kind: 'orphan_user', targetUserId: u.id });
     }
   }
 
   // branch-level gaps
   for (const b of allBranches) {
     if (!branchesWithTrainer.has(b)) {
-      issues.push({ id: `br-notrainer:${b}`, severity: 'warning', kind: 'branch_no_trainer',
-        message: `فرع ${b} من غير مدرب`, action: 'إسناد مدرب للفرع', targetBranch: b });
+      issues.push({ id: `br-notrainer:${b}`, severity: 'warning', kind: 'branch_no_trainer', targetBranch: b });
     }
     if (!branchesWithManager.has(b)) {
-      issues.push({ id: `br-nomanager:${b}`, severity: 'info', kind: 'branch_no_manager',
-        message: `فرع ${b} من غير مدير`, action: 'إسناد مدير للفرع', targetBranch: b });
+      issues.push({ id: `br-nomanager:${b}`, severity: 'info', kind: 'branch_no_manager', targetBranch: b });
     }
   }
 

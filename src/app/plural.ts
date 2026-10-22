@@ -46,6 +46,12 @@ export const needInterventionCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'موظف واحد محتاج تدخّل', two: 'موظفين اتنين محتاجين تدخّل', few: '{n} موظفين محتاجين تدخّل', many: '{n} موظف محتاجين تدخّل' },
   { one: 'one needs intervention', other: '{n} need intervention' });
 
+/** «موظف واحد خلّص البرنامج ومستني قرارك» — the verb agrees with the count. */
+export const awaitingDecisionCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'موظف واحد خلّص البرنامج ومستني قرارك', two: 'موظفين اتنين خلّصوا البرنامج ومستنيين قرارك',
+    few: '{n} موظفين خلّصوا البرنامج ومستنيين قرارك', many: '{n} موظف خلّصوا البرنامج ومستنيين قرارك' },
+  { one: 'One person finished the programme and is waiting for your decision', other: '{n} people finished the programme and are waiting for your decision' });
+
 export const changeCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'تغيير واحد', two: 'تغييرين', few: '{n} تغييرات', many: '{n} تغيير' },
   { one: 'one change', other: '{n} changes' });
