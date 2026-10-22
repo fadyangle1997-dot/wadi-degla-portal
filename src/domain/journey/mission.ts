@@ -37,6 +37,8 @@ export interface Mission {
   readonly kind: MissionKind;
   readonly module?: Module;
   readonly lessonId?: string;
+  /** A wait on the branch manager rather than the trainer (an escalated unit). */
+  readonly withManager?: boolean;
 }
 
 export interface TodaysMission {

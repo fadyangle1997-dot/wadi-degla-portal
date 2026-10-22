@@ -8,7 +8,10 @@ import React from 'react';
 import { Play, GraduationCap, Clock, Check, ArrowRight, ShieldCheck, NotebookPen, Award } from 'lucide-react';
 import type { Mission, MissionKind, TodaysMission } from '../../domain/journey/mission';
 import { waitingForTrainer } from '../../domain/training/statusWording';
-import { trainingStore, traineeIdOrNull } from '../../app/training/trainingStore';
+import { trainingStore, traineeIdOrNull, useTrainingEvents } from '../../app/training/trainingStore';
+import { flaggedLessonsOf } from '../../domain/training/selectors';
+import { useProgress, isModuleUnlocked } from '../../app/progress';
+import { MODULES } from '../../content/registry';
 import { Button, Eyebrow, ArabicContent, Brief, Content, Achievement, tx } from '../../ui/primitives';
 import { useLang, t as tr, tf, dateLocale } from '../../app/i18n';
 import { Icon } from '../../ui/Icon';
@@ -66,6 +69,8 @@ const WITH_APPROVAL: ReadonlySet<MissionKind> = new Set<MissionKind>(['resume_le
 const PrimaryMission: React.FC<{ action: Mission; trainerName?: string; approval?: FreshApproval | null; certification?: Certification | null } & MissionHandlers> =
   ({ action, trainerName, approval, certification, onOpenLesson, onOpenExam, onOpenReview, onOpenReadiness }) => {
   const lang = useLang();
+  const events = useTrainingEvents();
+  const progress = useProgress();
   const m = action.module;
   // A unit approval is the third of the earned moments: it opens the mission
   // paper above a step the trainee can take, and leaves when that step is
@@ -125,13 +130,50 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string; approval
   }
 
   if (action.kind === 'rejected_review') {
+    // The lessons the trainer flagged are the rework itself: named here and
+    // opened from here. Without any (an extension), the unit is the rework.
+    // A suggestion from a unit not open yet is left out: it could not open.
+    const id = traineeIdOrNull();
+    const flagged = (id && m ? flaggedLessonsOf(events, id, m.id) : []).flatMap(lessonId => {
+      const unit = MODULES.find(mod => mod.lessons.some(l => l.id === lessonId));
+      const lesson = unit?.lessons.find(l => l.id === lessonId);
+      return unit && lesson && isModuleUnlocked(progress, unit.id) ? [{ moduleId: unit.id, lessonId, title: lesson.title }] : [];
+    });
+    const first = flagged[0];
     return (
       <Brief prominent tone="risk" eyebrow={eyebrow(<Clock size={13} />)}
-        title={tr('path.needswork', lang)} body={tx('pv.rejectedbody', { m: <Content>{m?.title}</Content> }, lang)}
+        title={tr(first ? 'path.needswork' : 'path.needsworkunit', lang)}
+        body={<>
+          <p className="m-0">{tx(first ? 'pv.rejectedbody' : 'pv.rejectedbodyunit', { m: <Content>{m?.title}</Content> }, lang)}</p>
+          {first && (
+            <div className="row wrap items-center gap-4">
+              <span className="t-sm c-tx2">{tr('pv.flagged', lang)}</span>
+              {flagged.map(f => (
+                <button key={f.lessonId} type="button" className="quiet-act t-sm" onClick={() => onOpenLesson(f.moduleId, f.lessonId)}>
+                  <Content>{f.title}</Content>
+                </button>
+              ))}
+            </div>
+          )}
+        </>}
         action={
-          <Button onClick={() => { if (m?.lessons[0]) onOpenLesson(m.id, m.lessons[0].id); }}>
-            {tr('db.reviewunit', lang)} <ArrowRight size={16} className="icon-dir" />
+          <Button onClick={() => { if (first) onOpenLesson(first.moduleId, first.lessonId); else if (m?.lessons[0]) onOpenLesson(m.id, m.lessons[0].id); }}>
+            {tr(first ? 'pv.startflagged' : 'db.reviewunit', lang)} <Icon as={ArrowRight} size="md" dir />
           </Button>
+        } />
+    );
+  }
+
+  if (action.kind === 'waiting_review' && action.withManager) {
+    return (
+      <Brief prominent eyebrow={eyebrow(<Icon as={Clock} size="sm" />)}
+        title={tr('pv.withmanager', lang)}
+        body={
+          <>
+            <p className="m-0">{tx('pv.withmanagerbody', { m: <Content>{m?.title}</Content> }, lang)}</p>
+            <p className="m-0 c-tx3">{tr('db.withmanager', lang)}</p>
+            <p className="m-0 c-tx3">{tx('db.meanwhile', { skills: <a href="#/skills">{tr('nav.skills', lang)}</a> }, lang)}</p>
+          </>
         } />
     );
   }

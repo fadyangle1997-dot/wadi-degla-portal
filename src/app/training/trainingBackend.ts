@@ -42,6 +42,10 @@ export type TrainingEvent =
   // loop after every unit is trainer-approved. One decision per trainee; a later
   // one supersedes (the reducer keeps the latest).
   | { readonly type: 'FINAL_READINESS_DECIDED'; readonly employeeId: string; readonly managerId: string; readonly decision: 'ready' | 'extend' | 'reject'; readonly rationale: string; readonly at: number }
+  // A unit the trainer escalated is beyond the trainer's authority, so the
+  // branch manager settles it: approve it, or send it back to the trainer's
+  // queue to be decided there. Without this the unit stayed parked for good.
+  | { readonly type: 'UNIT_ESCALATION_ANSWERED'; readonly employeeId: string; readonly moduleId: string; readonly managerId: string; readonly decision: 'ready' | 'return'; readonly at: number }
   // Readiness assessment (day 54–60): one observed encounter, scored only on
   // the KPIs that station measures, with the observation that justifies it.
   // A later assessment of the same station supersedes the earlier one.
@@ -139,6 +143,13 @@ export function reduceTraining(t: TrainingState, e: TrainingEvent): TrainingStat
     case 'STATION_ASSESSED':
     case 'CONDUCT_OBSERVED':
       return t; // derived from the log where needed — the event itself is the value
+
+    case 'UNIT_ESCALATION_ANSWERED': {
+      // Only an escalated unit has a question to answer; anything else stays.
+      const current = t.reviews[e.employeeId]?.[e.moduleId];
+      if (current?.status !== 'escalated') return t;
+      return setReview(t, e.employeeId, e.moduleId, { ...current, status: e.decision === 'ready' ? 'ready' : 'waiting' });
+    }
 
     case 'FINAL_READINESS_DECIDED':
       // Latest manager decision wins — one readiness verdict per trainee.

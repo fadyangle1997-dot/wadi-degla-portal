@@ -150,6 +150,7 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
                 moduleId={currentModule.id}
                 started={startedCurrent}
                 waiting={action.kind === 'waiting_review' && action.module?.id === currentModule.id}
+                withManager={!!action.withManager}
                 trainerName={trainerName}
                 done={moduleLessonsDone(p, currentModule.id)}
                 /* The unit's big question appears here only when the brief is showing
@@ -177,10 +178,12 @@ const CurrentModuleCard: React.FC<{
   moduleId: string;
   started: boolean;
   waiting: boolean;
+  /** The trainer escalated the unit: the wait is on the branch manager. */
+  withManager: boolean;
   trainerName?: string;
   done: number;
   showQuestion: boolean;
-}> = ({ moduleId, waiting, trainerName, done, showQuestion }) => {
+}> = ({ moduleId, waiting, withManager, trainerName, done, showQuestion }) => {
   const lang = useLang();
   const m = moduleById(moduleId);
   const place = unitPlace(moduleId);
@@ -193,7 +196,7 @@ const CurrentModuleCard: React.FC<{
             or its authored timeline text, which could drift from it. */}
         {place && <Eyebrow>{tf('db.unitwhen', { n: iso(place.n), total: iso(place.total), a: iso(place.dayStart), b: iso(place.dayEnd) }, lang)}</Eyebrow>}
         <div className="grow" />
-        {waiting && <StatusBadge tone="attn">{waitingForTrainer(trainerName)}</StatusBadge>}
+        {waiting && <StatusBadge tone="attn">{withManager ? tr('pv.withmanagershort', lang) : waitingForTrainer(trainerName)}</StatusBadge>}
       </div>
       <h2 className="t-h3 mt-2"><ArabicContent as="span">{m.title}</ArabicContent></h2>
       {showQuestion && <p className="t-sm mt-1 mb-3"><ArabicContent as="span">{m.bigQuestion}</ArabicContent></p>}

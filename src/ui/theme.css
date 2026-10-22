@@ -1602,5 +1602,9 @@ details > summary { min-block-size:44px; cursor:pointer; }
 .sk-detail { display: grid; gap: var(--sp-2); padding: 0 0 var(--sp-3); }
 
 /* A person's name is one unit: a narrow column wraps the line under it,
-   never «Mariam» over «Atef». */
+   never «Mariam» over «Atef». In a table that only fits tight, a long name
+   (four parts are ordinary) may take a second line rather than turn the whole
+   table into stacked rows on a desktop; it never wraps narrower than 12em, so
+   a short name still reads on one line. */
 .person-name { white-space: nowrap; }
+.dt[data-fit="tight"] .person-name { white-space: normal; min-width: min(12em, 100%); }

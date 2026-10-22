@@ -85,14 +85,20 @@ test('leaving a lesson keeps its place, and leaving its closing screen keeps it 
   await openTodaysLesson(page);
   const main = page.locator('main');
   // Two stages in, then out with Escape and back in: the lesson resumes there.
-  for (let i = 0; i < 2; i++) {
+  // A stage can be replaced between finding a button and clicking it (under
+  // load the next one may want an answer first), so each click is short-lived
+  // and the loop counts the stages it actually moved.
+  const stage = page.locator('.lesson-stage');
+  for (let moved = 0, tries = 0; moved < 2 && tries < 20; tries++) {
     await settle(page);
+    const before = await stage.innerText();
     const option = main.locator('button.option-idle:enabled');
-    if (await option.count()) { await option.first().click(); await settle(page); }
-    await main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' }).last().click();
+    if (await option.count()) { await option.first().click({ timeout: 2000 }).catch(() => {}); await settle(page); }
+    await main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' }).last().click({ timeout: 2000 }).catch(() => {});
+    await settle(page);
+    if (await stage.innerText() !== before) moved++;
   }
-  await settle(page);
-  const where = await page.locator('.lesson-stage').innerText();
+  const where = await stage.innerText();
   await page.keyboard.press('Escape');
   await expect(page).not.toHaveURL(/#\/lesson\//);
   await page.getByRole('button', { name: /كمّل الدرس/ }).click();

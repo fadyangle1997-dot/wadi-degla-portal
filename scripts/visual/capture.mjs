@@ -44,7 +44,7 @@ mkdirSync(OUT, { recursive: true });
 /* ---------- the preview server, unless one is given ---------- */
 let server = null;
 if (!process.env.BASE) {
-  server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort', '--outDir', process.env.DIST ?? 'dist'], { cwd: ROOT, stdio: 'ignore' });
+  server = spawn(join(ROOT, 'node_modules/.bin', process.platform === 'win32' ? 'vite.cmd' : 'vite'), ['preview', '--port', String(PORT), '--strictPort', '--outDir', process.env.DIST ?? 'dist'], { cwd: ROOT, stdio: 'ignore' });
   // However this run ends, the server goes with it: one left on the port would
   // answer the next run with a stale build, and no error would say so.
   process.on('exit', () => server?.kill());
@@ -170,6 +170,32 @@ const answersKey = [];
     await p.getByRole('dialog', { name: /القرار النهائي/ }).getByRole('button', { name: 'جاهز للعمل' }).click();
     await p.waitForTimeout(400);
     states.certified = await ctx.storageState();
+  });
+  // Youssef's unit escalated by his trainer: it waits on the branch manager.
+  // Long names (the admin's own form) stress every table, file and sentence.
+  await step('setup-escalated', async () => {
+    await p.context().clearCookies();
+    await p.evaluate(s => { for (const o of s.origins) for (const { name, value } of o.localStorage) localStorage.setItem(name, value); }, states.demo);
+    await p.goto(BASE + '#/'); await settle(p);
+    await p.getByRole('button', { name: /قائمة حسابك|Account menu/i }).first().click();
+    await p.getByRole('menuitem', { name: /تسجيل الخروج|Sign out/ }).click(); await user(p).waitFor();
+    await signIn(p, 'trainer.samir');
+    await p.getByRole('button', { name: /^(قيّم دلوقتي|Assess now)$/ }).first().click(); await settle(p);
+    for (const g of await p.locator('fieldset.rubric').all()) await g.locator('label.rubric-option').nth(2).click();
+    for (const box of await p.locator('fieldset.conduct input[type="checkbox"]').all()) await box.check();
+    await p.getByRole('button', { name: /^(تصعيد للمدير|Escalate to the manager)$/ }).click();
+    await p.getByRole('dialog', { name: /تأكيد القرار|Confirm the decision/ }).getByRole('button', { name: /^(تصعيد للمدير|Escalate to the manager)$/ }).click(); await settle(p);
+    await p.getByRole('button', { name: /قائمة حسابك|Account menu/i }).first().click();
+    await p.getByRole('menuitem', { name: /تسجيل الخروج|Sign out/ }).click(); await user(p).waitFor();
+    await signIn(p, 'admin');
+    for (const [id, name] of [['youssef.a', 'Youssef Abdelrahman Mohamed Abdelaziz El-Sayed Hassanein'], ['trainer.samir', 'Samir Abdelmoneim Lotfy El-Gamal Abouelenein']]) {
+      await go(p, `#/admin?user=${id}`); await p.reload(); await settle(p);
+      const dlg = p.getByRole('dialog');
+      await dlg.getByLabel(/^(الاسم|Name)/).first().fill(name);
+      await dlg.getByRole('button', { name: /^(احفظ|Save)$/ }).click(); await settle(p);
+      await p.keyboard.press('Escape'); await settle(p);
+    }
+    states.escalated = await ctx.storageState();
   });
   await ctx.close();
 
@@ -308,6 +334,28 @@ for (const text of TEXTS) for (const width of WIDTHS) {
         await signIn(p, who);
         // An overlay (?file=, ?user=) opens the way a pasted link does: the
         // page loads with it, so the screen underneath comes up with it.
+        for (const [hash, name] of stops) {
+          await go(p, hash);
+          if (hash.includes('?')) { await p.reload(); await settle(p); }
+          await S(p, name);
+        }
+        await ctx.close();
+      });
+    }
+  }
+  // The escalation handoff and the closed file, with long names throughout.
+  if (states.escalated) {
+    const tour = [
+      ['youssef.a', [['#/', '36-home-with-manager']]],
+      ['trainer.samir', [['#/trainee/youssef.a', '44-trainer-trainee-escalated']]],
+      ['manager.nabil', [['#/manager', '54-manager-escalated'], ['#/manager?file=youssef.a', '55-manager-file-escalated'], ['#/manager?file=lina.h', '56-manager-file-closed']]],
+      ['area.hoda', [['#/manager?file=youssef.a', '62-area-file-escalated']]],
+    ];
+    for (const [who, stops] of tour) {
+      if (ONLY && !stops.some(([, name]) => ONLY.some(o => name.startsWith(o)))) continue;
+      await step(`esc-${who}-${width}-${text}`, async () => {
+        const { ctx, page: p } = await open(width, text, states.escalated);
+        await signIn(p, who);
         for (const [hash, name] of stops) {
           await go(p, hash);
           if (hash.includes('?')) { await p.reload(); await settle(p); }

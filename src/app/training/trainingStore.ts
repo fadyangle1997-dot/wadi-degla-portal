@@ -121,6 +121,13 @@ export const trainingStore = {
   /** Clears every training record on this device. Used only by the demo reset. */
   reset: () => apply(() => { backend.reset(); return backend.load(); }),
 
+  /** The branch manager settles a unit the trainer escalated: approve it, or
+   *  send it back to the trainer's queue. Attributed to the current user. */
+  answerEscalation: (input: { employeeId: string; moduleId: string; decision: 'ready' | 'return' }) => {
+    if (reviewOf(state, input.employeeId, input.moduleId).status !== 'escalated') return;
+    apply(() => backend.record({ type: 'UNIT_ESCALATION_ANSWERED', managerId: trainerId(), at: now(), ...input }));
+  },
+
   /** The manager's final, evidence-based readiness decision for a trainee.
    *  Attributed to the current user (the manager); latest decision wins. */
   decideReadiness: (input: { employeeId: string; decision: 'ready' | 'extend' | 'reject'; rationale: string }) =>

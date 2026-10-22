@@ -51,11 +51,14 @@ export async function keyboardPass(page) {
         ring, ringK: oc ? +((hi + 0.05) / (lo + 0.05)).toFixed(2) : 0,
         inView: r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth,
         w: Math.round(r.width), h: Math.round(r.height), inlineLink,
+        inModal: !!el.closest('[aria-modal="true"]'),
       };
     });
     if (!s) break;                                  // focus left the document: the end of the order
     if (stops.length && stops[0].key === s.key) break; // came round to the first stop
-    if (stops.length && stops[stops.length - 1].key === s.key) { stops.push({ ...s, trapped: true }); break; }
+    // The same stop twice is a trap — unless it is the one control of a modal
+    // dialog, where keeping focus inside is the rule and Escape leaves.
+    if (stops.length && stops[stops.length - 1].key === s.key) { if (!s.inModal) stops.push({ ...s, trapped: true }); break; }
     stops.push(s);
   }
   await page.evaluate(() => { document.getElementById('kb-start')?.remove(); if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo(0, 0); });

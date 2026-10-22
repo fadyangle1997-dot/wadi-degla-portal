@@ -98,6 +98,8 @@ function countWaiting(events: readonly OrgEvent[]): number {
     const key = `${e.employeeId}:${e.moduleId}`;
     if (e.type === 'UNIT_SUBMITTED_FOR_REVIEW') status.set(key, 'waiting');
     else if (e.type === 'EVALUATION_RECORDED') status.set(key, 'done');
+    // An escalated unit the branch manager sends back is the trainer's to assess again.
+    else if (e.type === 'UNIT_ESCALATION_ANSWERED') status.set(key, e.decision === 'ready' ? 'done' : 'waiting');
   }
   return [...status.values()].filter(v => v === 'waiting').length;
 }
@@ -202,7 +204,7 @@ export function avgDimension(events: readonly OrgEvent[], dim: keyof Scores): nu
 /** Unit approvals per week — the pace of trainer sign-offs (not certification). */
 export function unitApprovalTrend(events: readonly OrgEvent[]): readonly { week: number; approvals: number }[] {
   const WEEK = 7 * 86_400_000;
-  const approvals = events.filter(e => e.type === 'EVALUATION_RECORDED' && e.decision === 'ready');
+  const approvals = events.filter(e => (e.type === 'EVALUATION_RECORDED' || e.type === 'UNIT_ESCALATION_ANSWERED') && e.decision === 'ready');
   if (approvals.length === 0) return [];
   const t0 = Math.min(...approvals.map(e => e.at));
   const buckets = new Map<number, number>();

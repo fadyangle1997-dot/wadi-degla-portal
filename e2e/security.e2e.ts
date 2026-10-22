@@ -26,3 +26,21 @@ test('a trainer cannot open the manager platform', async ({ page }) => {
   await page.goto('/#/manager');
   await expect(page).not.toHaveURL(/#\/manager/);
 });
+
+test('a branch manager who types another branch\'s file into the link gets a closed file', async ({ page }) => {
+  await signIn(page, 'manager.nabil');
+  // Lina is in the Nakheel branch; Nabil manages Maadi.
+  await page.goto('/#/manager?file=lina.h');
+  const file = page.getByRole('dialog', { name: 'الملف ده مش متاح' });
+  await expect(file).toBeVisible();
+  await expect(file).toContainText('الموظف ده مش ضمن نطاقك.');
+  await expect(page.getByText('Lina Hafez')).toHaveCount(0);
+  // Its one control holds focus, and Escape leaves it.
+  await expect(file.getByRole('button', { name: 'إغلاق' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(file).toBeHidden();
+  await expect(page).toHaveURL(/#\/manager$/);
+  // An id that names nobody is closed the same way, not an empty file.
+  await page.goto('/#/manager?file=nobody');
+  await expect(page.getByRole('dialog', { name: 'الملف ده مش متاح' })).toBeVisible();
+});

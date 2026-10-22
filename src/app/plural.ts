@@ -52,6 +52,11 @@ export const awaitingDecisionCount = (n: number, lang: Lang) => count(n, lang,
     few: '{n} موظفين خلّصوا البرنامج ومستنيين قرارك', many: '{n} موظف خلّصوا البرنامج ومستنيين قرارك' },
   { one: 'One person finished the programme and is waiting for your decision', other: '{n} people finished the programme and are waiting for your decision' });
 
+export const escalatedUnitCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'وحدة واحدة متصعّدة ليك ومستنية قرارك', two: 'وحدتين متصعّدين ليك ومستنيين قرارك',
+    few: '{n} وحدات متصعّدة ليك ومستنية قرارك', many: '{n} وحدة متصعّدة ليك ومستنية قرارك' },
+  { one: 'One unit was escalated to you and is waiting for your decision', other: '{n} units were escalated to you and are waiting for your decision' });
+
 export const changeCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'تغيير واحد', two: 'تغييرين', few: '{n} تغييرات', many: '{n} تغيير' },
   { one: 'one change', other: '{n} changes' });

@@ -64,7 +64,7 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
     switch (next.kind) {
       case 'resume_lesson': return withTitle('pf.resume');
       case 'take_exam': return withTitle('pf.exam');
-      case 'waiting_review': return tr('pf.underreview', lang);
+      case 'waiting_review': return tr(next.withManager ? 'pv.withmanager' : 'pf.underreview', lang);
       case 'needs_submission': return withTitle('pf.submit');
       case 'rejected_review': return withTitle('pf.improve');
       case 'all_done': return tr('pf.alldone', lang);

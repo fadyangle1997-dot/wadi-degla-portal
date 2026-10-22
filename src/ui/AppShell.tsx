@@ -14,6 +14,8 @@ import { initialsOf } from '../domain/identity/display';
 const IdentityCenter = React.lazy(() => import('../features/profile/IdentityCenter').then(m => ({ default: m.IdentityCenter })));
 import { useCan, useIdentity, identityStore } from '../app/identity/identityStore';
 import { useTraining, useTrainingEvents, reviewOf, traineeIdOrNull } from '../app/training/trainingStore';
+import { awaitsReadinessDecision, escalatedUnitsOf } from '../domain/journey/programCompletion';
+import { detectOperationalIssues, summarizeIssues } from '../domain/operations/health';
 import { filedReviews, unseenComments, reviewsAwaitingComment } from '../domain/review';
 import { reviewSeen } from '../app/reviewSeen';
 import { useProgress } from '../app/progress';
@@ -28,7 +30,7 @@ import { WIDTH } from './designSystem';
 import { LoadingState, useModal, Content, tx } from './primitives';
 import { displayNameOf } from '../domain/identity';
 import { useOverlayParam } from '../app/overlayHistory';
-import { unitsAwaitingYou, reviewsAwaitingYou, itemsNeedYou } from '../app/plural';
+import { unitsAwaitingYou, reviewsAwaitingYou, itemsNeedYou, awaitingDecisionCount, escalatedUnitCount, issuesNeedAction } from '../app/plural';
 
 /** Icons are presentation only — the nav itself is built from permissions. */
 const ICONS: Record<string, React.ReactNode> = {
@@ -258,9 +260,12 @@ const useActionCenter = (): { now: readonly BellItem[]; before: readonly BellIte
         for (const e of events) {
           if (!('employeeId' in e) || e.employeeId !== id) continue;
           if (e.type === 'EVALUATION_RECORDED') {
-            const ok = e.decision === 'ready';
+            const key = e.decision === 'ready' ? 'ac.h.approved' : e.decision === 'escalate' ? 'ac.h.escalated' : 'ac.h.returned';
             before.push({ key: `ev:${e.at}`, at: e.at, go: go('#/roadmap'),
-              label: tx(ok ? 'ac.h.approved' : 'ac.h.returned', { m: title(e.moduleId) }, lang) });
+              label: tx(key, { m: title(e.moduleId) }, lang) });
+          } else if (e.type === 'UNIT_ESCALATION_ANSWERED') {
+            before.push({ key: `ea:${e.at}`, at: e.at, go: go('#/roadmap'),
+              label: tx(e.decision === 'ready' ? 'ac.h.approved' : 'ac.h.backtotrainer', { m: title(e.moduleId) }, lang) });
           } else if (e.type === 'REVIEW_COACHED') {
             before.push({ key: `rc:${e.at}`, at: e.at, go: go('#/reviews'), label: tf('ac.h.comment', {}, lang) });
           } else if (e.type === 'FINAL_READINESS_DECIDED') {
@@ -292,6 +297,23 @@ const useActionCenter = (): { now: readonly BellItem[]; before: readonly BellIte
             label: tx('ac.h.filed', { name: <bdi>{name(e.employeeId)}</bdi> }, lang) });
         }
       }
+    }
+
+    // Branch manager — the decisions only they take, in their own scope: the
+    // same two the dashboard lists under «قرارات مستنياك».
+    if (canDo('readiness.decide')) {
+      const learners = visibleLearners(users, roles, scopeOf(me, canDo, orgStore.get()));
+      const deciding = learners.filter(u => awaitsReadinessDecision(t, u.id)).length;
+      if (deciding > 0) now.push({ key: 'decide', label: awaitingDecisionCount(deciding, lang), go: go('#/manager') });
+      const escalated = learners.reduce((n, u) => n + escalatedUnitsOf(t, u.id).length, 0);
+      if (escalated > 0) now.push({ key: 'escalated', label: escalatedUnitCount(escalated, lang), go: go('#/manager') });
+    }
+
+    // Administrator — operational issues that need action, the inbox's own count.
+    if (canDo('operations.view')) {
+      const sev = summarizeIssues(detectOperationalIssues(users, events));
+      const urgent = sev.critical + sev.warning;
+      if (urgent > 0) now.push({ key: 'ops', label: issuesNeedAction(urgent, lang), go: go('#/admin') });
     }
 
     before.sort((a, b) => (b.at ?? 0) - (a.at ?? 0));

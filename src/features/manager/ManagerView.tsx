@@ -13,8 +13,9 @@ import { useCan, useIdentity, identityStore } from '../../app/identity/identityS
 import { scopeOf } from '../../domain/identity/scope';
 import { useDashboard } from '../../app/analytics/dashboardStore';
 import { orgSummary } from '../../domain/analytics/organization';
-import { trainingStore, useTraining, finalDecisionOf } from '../../app/training/trainingStore';
-import { isProgramComplete } from '../../domain/journey/programCompletion';
+import { trainingStore, useTraining } from '../../app/training/trainingStore';
+import { Icon } from '../../ui/Icon';
+import { awaitsReadinessDecision, escalatedUnitsOf } from '../../domain/journey/programCompletion';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { Button, EmptyState, Eyebrow, PageHeader, MetricStrip, Metric, Brief, SectionHeader } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
@@ -23,7 +24,7 @@ import { WIDTH } from '../../ui/designSystem';
 import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
 import { managementLabel } from '../../domain/identity/access';
 import { tone, FORMAL_READINESS, FOLLOW_UP, UNIT_REVIEW } from '../../ui/statusSemantics';
-import { staffCount, awaitingDecisionCount } from '../../app/plural';
+import { staffCount, awaitingDecisionCount, escalatedUnitCount } from '../../app/plural';
 import { NeedsAttention, UnitsTable } from './NeedsAttention';
 import { CollapsibleRoster, EmployeeGrid } from './EmployeeRoster';
 import { EmployeeTimeline } from './EmployeeTimeline';
@@ -83,7 +84,14 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   // Pending decisions = employees who finished the program and are still waiting
   // for the manager's final call. Reuses existing engine functions — no new logic.
   const pendingDecisions = useMemo(
-    () => d.employeeIds.filter(id => isProgramComplete(t, id) && !finalDecisionOf(t, id)),
+    () => d.employeeIds.filter(id => awaitsReadinessDecision(t, id)),
+    [d.employeeIds, t],
+  );
+
+  // Units a trainer escalated: beyond the trainer's authority, so they wait
+  // here for the branch manager rather than in anyone's queue.
+  const escalated = useMemo(
+    () => d.employeeIds.map(id => ({ id, units: escalatedUnitsOf(t, id).length })).filter(e => e.units > 0),
     [d.employeeIds, t],
   );
 
@@ -101,6 +109,9 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const attention = s.needsAttention + s.needsImmediate;
   const firstDecision = pendingDecisions[0];
   const decisionName = firstDecision ? (users.find(u => u.id === firstDecision)?.name ?? '') : '';
+  const firstEscalated = escalated[0]?.id;
+  const escalatedName = firstEscalated ? (users.find(u => u.id === firstEscalated)?.name ?? '') : '';
+  const escalatedUnits = escalated.reduce((n, e) => n + e.units, 0);
 
   return (
     <div className="min-h-screen">
@@ -140,6 +151,13 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 <Brief tone="attn" eyebrow={<Eyebrow icon={<Gavel size={13} />}>{tr('mg.decisions', lang)}</Eyebrow>}
                   title={awaitingDecisionCount(pendingDecisions.length, lang)}
                   action={<Button onClick={() => setDrill(firstDecision)}>{tf('mg.openfile', { name: decisionName }, lang)}</Button>} />
+              </div>
+            )}
+            {canDo('readiness.decide') && firstEscalated && (
+              <div className="mt-6">
+                <Brief tone="attn" eyebrow={<Eyebrow icon={<Icon as={Gavel} size="sm" />}>{tr('mg.decisions', lang)}</Eyebrow>}
+                  title={escalatedUnitCount(escalatedUnits, lang)}
+                  action={<Button onClick={() => setDrill(firstEscalated)}>{tf('mg.openfile', { name: escalatedName }, lang)}</Button>} />
               </div>
             )}
 

@@ -8,7 +8,11 @@ export interface EvaluationLike { readonly type: string; readonly employeeId?: s
 
 export function latestApproval(events: readonly EvaluationLike[], traineeId: string, seenAt: number): { moduleId: string; at: number } | null {
   const latest = new Map<string, EvaluationLike>();
-  for (const e of events) if (e.type === 'EVALUATION_RECORDED' && e.employeeId === traineeId && e.moduleId) latest.set(e.moduleId, e);
+  for (const e of events) {
+    if (e.employeeId !== traineeId || !e.moduleId) continue;
+    // The branch manager settles an escalated unit; their approval is the unit's latest word.
+    if (e.type === 'EVALUATION_RECORDED' || e.type === 'UNIT_ESCALATION_ANSWERED') latest.set(e.moduleId, e);
+  }
   let last: { moduleId: string; at: number } | null = null;
   for (const [moduleId, e] of latest) if (e.decision === 'ready' && (!last || e.at > last.at)) last = { moduleId, at: e.at };
   return last && last.at > seenAt ? last : null;

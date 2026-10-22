@@ -24,13 +24,15 @@ export type NextActionKind =
                         // failure). The trainee can retry it themselves; this
                         // is NOT the same as 'ready' and must never be read as
                         // "fully approved, keep walking".
-  | 'waiting_review'   // submitted; trainer evaluation pending
+  | 'waiting_review'   // submitted; trainer evaluation pending (or, escalated, the manager's)
   | 'all_done';        // nothing left to act on
 
 export interface NextAction {
   readonly kind: NextActionKind;
   readonly module?: Module;
   readonly lessonId?: string;   // for resume_lesson
+  /** waiting_review only: the trainer escalated the unit, so the branch manager decides it. */
+  readonly withManager?: boolean;
 }
 
 export interface HomeContext {
@@ -62,6 +64,8 @@ export function nextAction(p: Progress, t: TrainingState, traineeId: string): Ne
     if (nextLesson) return { kind: 'resume_lesson', module: m, lessonId: nextLesson.id };
     if (!examPassed(p, m.id)) return { kind: 'take_exam', module: m };
     if (status(m) === 'waiting') return { kind: 'waiting_review', module: m };
+    // Escalated is a wait on the branch manager, never an approval to walk past.
+    if (status(m) === 'escalated') return { kind: 'waiting_review', module: m, withManager: true };
     // An unsubmitted unit ('none') gets its own action, resubmitting, rather than
     // falling through to 'all_done' while nothing reached the trainer.
     if (status(m) === 'none') return { kind: 'needs_submission', module: m };

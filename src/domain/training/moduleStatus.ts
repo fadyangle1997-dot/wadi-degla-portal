@@ -31,7 +31,7 @@ export interface ModuleStatusInput {
 
 export function moduleStatusOf(i: ModuleStatusInput): ModuleStatus {
   if (!i.unlocked) return 'locked';
-  if (i.gated && i.complete && i.reviewStatus === 'waiting') return 'waiting_review';
+  if (i.gated && i.complete && (i.reviewStatus === 'waiting' || i.reviewStatus === 'escalated')) return 'waiting_review';
   if (i.gated && (i.reviewStatus === 'not_ready' || i.reviewStatus === 'extend')) return 'rejected';
   if (i.complete && (!i.gated || i.reviewStatus === 'ready')) return 'approved';
   if (i.started || i.complete) return 'in_progress';

@@ -109,10 +109,16 @@ export function performanceFromOwnEvents(
   const score = latest ? weightedScore(latest.scores!) : null;
   const dimensions = latest ? dimensionsOf(latest.scores!) : [];
   const gaps = dimensions.filter(l => l.belowFloor);
-  const approvedModules = new Set(evals.filter(e => e.decision === 'ready').map(e => e.moduleId)).size;
+  // An escalated unit the branch manager approved is approved: the trainer's
+  // scores stand as its evidence, the manager's answer is its decision.
+  const managerApproved = own.filter(e => e.type === 'UNIT_ESCALATION_ANSWERED' && e.decision === 'ready');
+  const decisionOf = (e: TrainingEventLike): EvaluationDecision | undefined =>
+    e.decision === 'escalate' && managerApproved.some(a => a.moduleId === e.moduleId && a.at >= e.at) ? 'ready' : e.decision;
+  const approvedModules = new Set(evals.filter(e => decisionOf(e) === 'ready').map(e => e.moduleId)).size;
   const extensions = own.filter(e => e.type === 'TRAINING_EXTENDED').length;
+  const latestDecision = latest ? decisionOf(latest) : undefined;
   // Any decision other than approval leaves work open — extension included.
-  const hasOpenImprovement = latest?.decision !== undefined && latest.decision !== 'ready';
+  const hasOpenImprovement = latestDecision !== undefined && latestDecision !== 'ready';
   const confidence = performanceConfidence({
     evaluations: evals.length, approvedModules, extensions, consistency: consistencyOf(series),
   });
@@ -128,7 +134,7 @@ export function performanceFromOwnEvents(
     confidence, followUp,
     evaluations: evals.length, approvedModules, extensions,
     lastEvaluatedAt: latest?.at ?? null,
-    lastDecision: latest?.decision ?? null,
+    lastDecision: latestDecision ?? null,
   };
 }
 

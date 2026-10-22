@@ -1,8 +1,10 @@
 import React from 'react';
-import { ShieldCheck } from 'lucide-react';
-import { useCan, useIdentity } from '../../app/identity/identityStore';
+import { Gavel, Lock, ShieldCheck } from 'lucide-react';
+import { useCan, useIdentity, identityStore } from '../../app/identity/identityStore';
+import { scopeOf, visibleLearners } from '../../domain/identity/scope';
+import { orgStore } from '../../app/organization/orgStore';
 import { trainingStore, useTraining, finalDecisionOf, useTrainingEvents } from '../../app/training/trainingStore';
-import { isProgramComplete, approvedModuleCount } from '../../domain/journey/programCompletion';
+import { isProgramComplete, approvedModuleCount, escalatedUnitsOf } from '../../domain/journey/programCompletion';
 import { readinessReport } from '../../domain/readiness/report';
 import { FormalStatus, FollowUpStatus, performanceText } from '../readiness/labels';
 import { tone, GAP } from '../../ui/statusSemantics';
@@ -10,15 +12,46 @@ import { moduleById } from '../../content/registry';
 import { UNIT_DECISION_LABEL } from '../../domain/evaluation';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, Eyebrow, StatusBadge, ArabicContent, tx, CloseButton, ConfirmDialog, Toast, InlineError, FormField, useModal, useExitFlow } from '../../ui/primitives';
+import { Button, Eyebrow, StatusBadge, ArabicContent, tx, CloseButton, ConfirmDialog, Toast, InlineError, FormField, EmptyState, useModal, useExitFlow } from '../../ui/primitives';
 import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
 import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
 import { unitCount } from '../../app/plural';
 import { leaveGuard } from '../../app/leaveGuard';
+import { Icon } from '../../ui/Icon';
 
 const moduleName = (id: string) => moduleById(id)?.title ?? id;
 
+/**
+ * The file opens from a link (#/manager?file=…), so it authorises the id
+ * itself with the same scopeOf + visibleLearners the roster is built from:
+ * someone outside the scope, unknown, or not a learner gets a closed file,
+ * never another branch's record or a decision on it.
+ */
 export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => void }> = ({ employeeId, onClose }) => {
+  const canDo = useCan();
+  const { users, roles } = useIdentity();
+  const inScope = React.useMemo(
+    () => visibleLearners(users, roles, scopeOf(identityStore.currentUser(), canDo, orgStore.get())).some(u => u.id === employeeId),
+    [users, roles, canDo, employeeId]);
+  return inScope ? <EmployeeFile employeeId={employeeId} onClose={onClose} /> : <ClosedFile onClose={onClose} />;
+};
+
+const ClosedFile: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const lang = useLang();
+  const dialogRef: React.RefObject<HTMLDivElement> = useModal<HTMLDivElement>(onClose, (): HTMLElement | null => dialogRef.current?.querySelector('button') ?? null, true);
+  return (
+    <div className="dialog-scrim" onClick={onClose}>
+      <div ref={dialogRef} className="dialog" role="dialog" aria-modal="true" aria-label={tr('tp.noaccess', lang)} onClick={e => e.stopPropagation()}>
+        <div className="row justify-end">
+          <CloseButton onClick={onClose} label={tr('mg.close', lang)} />
+        </div>
+        <EmptyState icon={<Icon as={Lock} size="lg" />} title={tr('tp.noaccess', lang)} body={tr('rr.noaccessbody', lang)} />
+      </div>
+    </div>
+  );
+};
+
+const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ employeeId, onClose }) => {
   const lang = useLang();
   const { users } = useIdentity();
   const t = useTraining();
@@ -61,6 +94,7 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
   const label = (e: OrgEvent): React.ReactNode =>
     e.type === 'UNIT_SUBMITTED_FOR_REVIEW' ? tx('mg.sentforreview', { m: <ArabicContent as="span">{moduleName(e.moduleId!)}</ArabicContent> }, lang)
       : e.type === 'EVALUATION_RECORDED' ? <>{tr('mg.evaluation', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)} — {UNIT_DECISION_LABEL[e.decision!] ?? e.decision}</ArabicContent></>
+      : e.type === 'UNIT_ESCALATION_ANSWERED' ? <>{tr('mg.esc.answered', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)}</ArabicContent> — {tr(e.decision === 'ready' ? 'mg.esc.lbl.ready' : 'mg.esc.lbl.return', lang)}</>
       : e.type === 'TRAINING_EXTENDED' ? <>{tr('mg.extended', lang)} <ArabicContent as="span">{e.reason ?? ''}</ArabicContent></>
       : e.type === 'LESSON_REOPENED' ? tr('mg.reopened', lang)
       : tr('mg.coachnote', lang);
@@ -136,12 +170,80 @@ export const EmployeeTimeline: React.FC<{ employeeId: string; onClose: () => voi
           </details>
         )}
 
+        {/* ── a unit the trainer escalated — the branch manager settles it ── */}
+        <EscalationPanel employeeId={employeeId} name={name} trainerName={trainer?.name ?? tr('mg.unassigned', lang)} canDecide={canDo('readiness.decide')} />
+
         {/* ── decision panel — the manager's action, unchanged ── */}
         <FinalDecisionPanel employeeId={employeeId} t={t} canDecide={canDo('readiness.decide')}
           canCertify={report.formal.canCertify}
           rationale={rationale} setRationale={setRationale} />
       </div>
       {dialog}
+    </div>
+  );
+};
+
+/**
+ * A unit the trainer escalated is beyond the trainer's authority. The
+ * trainer's assessment stands as the evidence; the branch manager approves the
+ * unit or sends it back to the trainer's queue to be decided there. Observers
+ * (area and general managers) see whose decision it is.
+ */
+const EscalationPanel: React.FC<{ employeeId: string; name: string; trainerName: string; canDecide: boolean }> = ({ employeeId, name, trainerName, canDecide }) => {
+  const lang = useLang();
+  const t = useTraining();
+  const log = useTrainingEvents();
+  const [pending, setPending] = React.useState<{ moduleId: string; decision: 'ready' | 'return' } | null>(null);
+  const [failed, setFailed] = React.useState<string | null>(null);
+  const [saved, setSaved] = React.useState<string | null>(null);
+  const units = escalatedUnitsOf(t, employeeId);
+  const noteOf = (moduleId: string) => {
+    let note: string | undefined;
+    for (const e of log) if (e.type === 'EVALUATION_RECORDED' && e.employeeId === employeeId && e.moduleId === moduleId) note = e.note;
+    return note;
+  };
+  const label = (d: 'ready' | 'return') => tr(d === 'ready' ? 'tn.ready' : 'mg.esc.return', lang);
+  const answer = () => {
+    const p = pending;
+    setPending(null);
+    if (!p) return;
+    try {
+      trainingStore.answerEscalation({ employeeId, moduleId: p.moduleId, decision: p.decision });
+    } catch { setFailed(tr('err.save', lang)); return; }
+    setFailed(null);
+    setSaved(tr(p.decision === 'ready' ? 'tn.approvedmsg' : 'mg.esc.returned', lang));
+    window.setTimeout(() => setSaved(null), 2600);
+  };
+  if (units.length === 0) return <Toast message={saved} />;
+  const pendingTitle = pending ? moduleName(pending.moduleId) : '';
+
+  return (
+    <div className="mt-5 section-rule">
+      <Eyebrow icon={<Icon as={Gavel} size="sm" />}>{tr('mg.esc.title', lang)}</Eyebrow>
+      {units.map(mod => {
+        const note = noteOf(mod.id);
+        return (
+          <div key={mod.id} className="stack mt-3 gap-2">
+            <p className="t-sm m-0">{tx('mg.esc.body', { trainer: <bdi>{trainerName}</bdi>, m: <ArabicContent as="span">{mod.title}</ArabicContent> }, lang)}</p>
+            {note && <p className="t-sm c-tx2 m-0"><span className="t-label c-tx3">{tr('mg.esc.note', lang)}</span> {note}</p>}
+            {canDecide ? (
+              <div className="row gap-2 wrap">
+                <Button onClick={() => setPending({ moduleId: mod.id, decision: 'ready' })}>{label('ready')}</Button>
+                <Button variant="ghost" onClick={() => setPending({ moduleId: mod.id, decision: 'return' })}>{label('return')}</Button>
+              </div>
+            ) : (
+              <p className="t-sm c-tx3 m-0">{tr('mg.esc.observe', lang)}</p>
+            )}
+          </div>
+        );
+      })}
+      <InlineError message={failed} />
+      <ConfirmDialog open={pending !== null}
+        title={pending ? tf('tn.confirmtitle', { d: label(pending.decision) }, lang) : ''}
+        body={pending ? tf(`mg.esc.confirm.${pending.decision}` as Key, { m: pendingTitle, name, trainer: trainerName }, lang) : ''}
+        confirmLabel={pending ? label(pending.decision) : ''}
+        onConfirm={answer} onCancel={() => setPending(null)} />
+      <Toast message={saved} />
     </div>
   );
 };
