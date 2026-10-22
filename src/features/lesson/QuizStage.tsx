@@ -39,7 +39,7 @@ export const QuizStage: React.FC<{
   return (
     <m.section {...fade} className="flow-stage">
       <FlowSplit prompt={<>
-        <Eyebrow>{round === 'first' ? 'اتأكد إنك فهمت' : 'الأسئلة اللي زغللت — جاوبها تاني'} · {qi + 1} من {pool.length}</Eyebrow>
+        <Eyebrow>{round === 'first' ? 'اتأكد إنك فهمت' : 'الأسئلة اللي غلطت فيها — جاوبها تاني'} · {qi + 1} من {pool.length}</Eyebrow>
         <h1 className="t-h2 flow-question mt-4">{q.prompt}</h1>
       </>}>
       <div className="stack gap-3">
@@ -62,7 +62,7 @@ export const QuizStage: React.FC<{
             <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'صح' : 'مش صح — اعرف ليه'}
               onAction={advance}
               actionLabel={<>
-                {!isLast ? 'السؤال الجاي' : round === 'first' && missed.length > 0 ? 'جاوب اللي زغلل تاني' : 'خلّصت الدرس'}
+                {!isLast ? 'السؤال الجاي' : round === 'first' && missed.length > 0 ? 'جاوب اللي غلطت فيه تاني' : 'التالي'}
                 <Icon as={ArrowRight} dir />
               </>}>
               {q.explanation}

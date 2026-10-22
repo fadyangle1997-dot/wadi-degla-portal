@@ -23,7 +23,7 @@ import { RETRIEVAL_BANK, retrievalQuestion } from '../../content/registry';
 import { trainingStore, currentTraineeId, traineeIdOrNull } from '../../app/training/trainingStore';
 import { Card, OptionButton, FeedbackBlock } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
-import { useLang, t } from '../../app/i18n';
+import { useLang, t, tf } from '../../app/i18n';
 
 /**
  * Is anything due right now?
@@ -91,7 +91,7 @@ export const TodayRetrieval: React.FC<{
     <m.div {...fade}>
      <Card pad={5}>
       <div className="t-label mb-2 c-tx3">
-        فكّرني · {idx + 1} من {set.length}
+        {tf('rt.title', { n: idx + 1, total: set.length }, lang)}
       </div>
       {/* The unit is named, but the SET is mixed on purpose — working out which
           rule applies is the skill; at the counter nobody announces it. */}
@@ -116,7 +116,7 @@ export const TodayRetrieval: React.FC<{
           {/* The same explanation block the lesson and the exam use — which also
               brings aria-live and the focus move to the continue button that
               this hand-rolled version never had. */}
-          <FeedbackBlock tone="summary" title="راجع السبب"
+          <FeedbackBlock tone="summary" title={t('rt.why', lang)}
             onAction={() => { setIdx(i => i + 1); setPicked(null); }}
             actionLabel={idx + 1 >= set.length ? t('rt.donetoday', lang) : <>{t('rt.next', lang)} <ArrowRight size={16} className="icon-dir" /></>}>
             {question.explanation}

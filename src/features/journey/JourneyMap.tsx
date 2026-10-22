@@ -11,7 +11,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { m } from 'motion/react';
 import { Check, Clock, Lock, Compass, ClipboardList, Building2, Route, Gavel, GraduationCap } from 'lucide-react';
 import type { JourneyPhase, PhaseStatus } from '../../domain/journey/program';
-import { useLang, t as tr } from '../../app/i18n';
+import { useLang, t as tr, tf, iso } from '../../app/i18n';
+import { lessonCount } from '../../app/plural';
 import { EASE } from '../../ui/motion';
 
 /** One icon per phase, in programme order: the station says what it is about. */
@@ -125,7 +126,7 @@ export const JourneyMap: React.FC<{
                         : <> · <span className={TONE[s.status]}>{s.statusLabel}</span></>}
                     </span>
                     {s.current && s.lessons && (
-                      <span className="jmap-meta">{s.lessons.done} {tr('jr.of', lang)} {s.lessons.total} {tr('jr.lessons', lang)}</span>
+                      <span className="jmap-meta">{tf('db.lessonsdone', { done: iso(s.lessons.done), total: lessonCount(s.lessons.total, lang) }, lang)}</span>
                     )}
                   </span>
                 </button>

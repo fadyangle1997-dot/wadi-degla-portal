@@ -54,6 +54,18 @@ export const lessonCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'درس واحد', two: 'درسين', few: '{n} دروس', many: '{n} درس' },
   { one: 'one lesson', other: '{n} lessons' });
 
+export const unitCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'وحدة واحدة', two: 'وحدتين', few: '{n} وحدات', many: '{n} وحدة' },
+  { one: 'one unit', other: '{n} units' });
+
+export const phaseCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'مرحلة واحدة', two: 'مرحلتين', few: '{n} مراحل', many: '{n} مرحلة' },
+  { one: 'one phase', other: '{n} phases' });
+
+export const attemptCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'محاولة واحدة', two: 'محاولتين', few: '{n} محاولات', many: '{n} محاولة' },
+  { one: 'one attempt', other: '{n} attempts' });
+
 export const eventCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'حدث واحد', two: 'حدثين', few: '{n} أحداث', many: '{n} حدث' },
   { one: 'one event', other: '{n} events' });

@@ -26,7 +26,7 @@ test('the door is Arabic first, says what is missing at the field, and announces
   await expect(usernameField(page)).toBeVisible();
 
   // The reveal keeps what was typed.
-  await page.getByRole('button', { name: 'اظهر كلمة السر' }).click();
+  await page.getByRole('button', { name: 'اعرض كلمة السر' }).click();
   await expect(passwordField(page)).toHaveAttribute('type', 'text');
   await expect(passwordField(page)).toHaveValue('nope');
 });

@@ -418,7 +418,7 @@ export const FlowRoom: React.FC<{
   /** Present while leaving would lose something; then Exit asks first. */
   leaveWarning?: { title: string; body: string };
   onExit: () => void;
-  /** Where Exit goes, read after its label: «خروج — ارجع للمسار». */
+  /** Where Exit goes, read after its label: «خروج — ارجع للأكاديمية». */
   exitTo?: string;
   /** For flows that move focus to their body on every step. */
   mainRef?: React.Ref<HTMLElement>;

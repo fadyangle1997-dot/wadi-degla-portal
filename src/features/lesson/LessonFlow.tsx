@@ -32,8 +32,8 @@ type Stage = 'challenge' | 'ask' | 'predict' | 'learn' | 'reflect' | 'office' | 
  *  segments is never the only answer to «where am I in this lesson». */
 const STAGE_LABEL: Record<Stage, string> = {
   challenge: 'الموقف', ask: 'السؤال', predict: 'توقّعك', learn: 'القاعدة', reflect: 'وقفة',
-  office: 'في المكتب', coach: 'طريقة المحترف', mistakes: 'أخطاء شائعة', dialogue: 'الحوار',
-  comms: 'إزاي تقولها', produce: 'قولها بنفسك', practice: 'تطبيق', quiz: 'اختبار سريع',
+  office: 'في المكتب', coach: 'تفكير المحترف', mistakes: 'أخطاء بتتكرر', dialogue: 'الحوار',
+  comms: 'إزاي تقولها', produce: 'قولها بنفسك', practice: 'تمرين', quiz: 'أسئلة سريعة',
   commit: 'التزام بكرة', done: 'الخلاصة',
 };
 
@@ -212,7 +212,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
               </>}>
                 <Callout tone="objective">{lesson.objective}</Callout>
                 <div className="mt-6">
-                  <Button onClick={next}>يلا نجاوب عليه <Icon as={ArrowRight} dir /></Button>
+                  <Button onClick={next}>قول توقّعك <Icon as={ArrowRight} dir /></Button>
                 </div>
               </FlowSplit>
             </m.section>
@@ -268,7 +268,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
 
                 <div className="mt-6">
                   <Button onClick={next}>
-                    {lesson.practice ? 'جرّب بنفسك' : 'فهمت — اختبرني'} <Icon as={ArrowRight} dir />
+                    {lesson.practice ? 'جرّب بنفسك' : 'فهمت — اسألني'} <Icon as={ArrowRight} dir />
                   </Button>
                 </div>
               </div>
@@ -353,7 +353,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
                 </div>
               )}
               <div className="mt-7">
-                <Button onClick={next}>كمّل <Icon as={ArrowRight} dir /></Button>
+                <Button onClick={next}>التالي <Icon as={ArrowRight} dir /></Button>
               </div>
             </m.section>
           )}
@@ -362,7 +362,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
               Contrast, and only after the right model exists to contrast with. */}
           {stage === 'mistakes' && lesson.pro?.commonMistakes?.length && (
             <m.section key="mistakes" {...fade} className="focus-col">
-              <Eyebrow as="h1">أخطاء بتحصل كتير</Eyebrow>
+              <Eyebrow as="h1">أخطاء بتتكرر</Eyebrow>
               <ul role="list" className="list-plain stack gap-3 mt-4">
                 {lesson.pro.commonMistakes.map((m, i) => (
                   <li key={i} className="t-body measure row gap-3 items-start">
@@ -372,7 +372,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
                 ))}
               </ul>
               <div className="mt-7">
-                <Button onClick={next}>كمّل <Icon as={ArrowRight} dir /></Button>
+                <Button onClick={next}>التالي <Icon as={ArrowRight} dir /></Button>
               </div>
             </m.section>
           )}
@@ -383,15 +383,15 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
           <h1 className="t-h2 mt-3 mb-2">الفرق في التوصيل</h1>
           <p className="t-body c-tx2 mb-5">{lesson.dialogue.setup}</p>
 
-          <DialogueBlock tone="wrong" label="❌ الحوار الغلط" lines={lesson.dialogue.wrong} why={lesson.dialogue.whyWrongFails} whyLabel="ليه بيفشل" />
+          <DialogueBlock tone="wrong" label="الحوار الغلط" lines={lesson.dialogue.wrong} why={lesson.dialogue.whyWrongFails} whyLabel="ليه بيفشل" />
           <div className="mt-5" />
-          <DialogueBlock tone="right" label="✅ الحوار الصح" lines={lesson.dialogue.right} why={lesson.dialogue.whyRightWorks} whyLabel="ليه بينجح" />
+          <DialogueBlock tone="right" label="الحوار الصح" lines={lesson.dialogue.right} why={lesson.dialogue.whyRightWorks} whyLabel="ليه بينجح" />
 
           <p className="t-sm c-tx3 mt-5">
             الحوارات دي أمثلة مش جمل تتحفظ — اللي بينتقل معاك هو المبدأ.
           </p>
           <div className="mt-5">
-            <Button onClick={next}>كمّل <Icon as={ArrowRight} dir /></Button>
+            <Button onClick={next}>التالي <Icon as={ArrowRight} dir /></Button>
           </div>
         </m.section>
       )}
@@ -411,7 +411,7 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
                 ② is PROSE. It used to be a third identical card, which made the
                    consequence read as an equal option rather than the reason the
                    trap matters at all. */}
-            <SpineWell spine="risk" label="⚠️ فخ احترافي">
+            <SpineWell spine="risk" label="الفخ">
               <p className="t-body measure m-0">{lesson.comms.risk}</p>
             </SpineWell>
 
@@ -420,12 +420,12 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
               <p className="t-body measure m-0 c-tx2">{lesson.comms.why}</p>
             </div>
 
-            <SpineWell label="⭐ الأفضل">
+            <SpineWell label="الأفضل">
               <p className="t-body measure m-0 c-tx0 fw-500">{lesson.comms.instead}</p>
             </SpineWell>
           </div>
           <div className="mt-6">
-            <Button onClick={next}>كمّل <Icon as={ArrowRight} dir /></Button>
+            <Button onClick={next}>التالي <Icon as={ArrowRight} dir /></Button>
           </div>
         </m.section>
       )}
@@ -492,11 +492,11 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
                   {lesson.pro && (
                     <>
                       {commitment && <DoneRow label="التزامك بكرة" body={commitment} />}
-                      {lesson.pro.dailyHabit && <DoneRow label="عادة النهاردة · أقل من دقيقة" body={lesson.pro.dailyHabit} />}
+                      {lesson.pro.dailyHabit && <DoneRow label="عادة النهارده · أقل من دقيقة" body={lesson.pro.dailyHabit} />}
                       {lesson.pro.officeTask && <DoneRow label="مهمتك مع مدربك" body={lesson.pro.officeTask} />}
                       {lesson.pro.trainerQuestions?.length ? (
                         <div>
-                          <span className="t-label c-tx3">اسأل مدربك — متخمّنش</span>
+                          <span className="t-label c-tx3">اسأل مدربك — ما تخمّنش</span>
                           <ul role="list" className="list-plain stack gap-2 mt-2">
                             {lesson.pro.trainerQuestions.map((q, i) => (
                               <li key={i} className="t-sm c-tx1">• {q}</li>
@@ -507,7 +507,9 @@ export const LessonFlow: React.FC<Props> = ({ lesson, unitLabel, moduleId, lesso
                       {lesson.pro.readinessCheck && (
                         <SpineWell>
                           <span className="t-label c-tx3">
-                            {lesson.pro.readinessCheck.level === 'YES' ? 'جاهز' : lesson.pro.readinessCheck.level === 'NO' ? 'لسه بدري' : 'قربت'}
+                            {/* «جاهز» belongs to certification alone; this says how ready the
+                                lesson is to use tomorrow (docs/voice-and-language.md). */}
+                            {lesson.pro.readinessCheck.level === 'YES' ? 'تقدر تطبّقها بكرة' : lesson.pro.readinessCheck.level === 'NO' ? 'لسه محتاج تتمرّن عليها' : 'قرّبت تطبّقها'}
                           </span>
                           <p className="t-body measure mb-0 mt-2">{lesson.pro.readinessCheck.why}</p>
                         </SpineWell>

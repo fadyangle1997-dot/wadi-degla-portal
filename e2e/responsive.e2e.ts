@@ -20,7 +20,7 @@ test('trainer and manager screens fit a phone screen', async ({ page }) => {
 test('the largest text size still fits a phone, and the choice survives a reload', async ({ page }) => {
   await signIn(page, 'ahmed.m');
   await toAcademy(page);
-  await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
+  await page.getByRole('button', { name: /قائمة حسابك/ }).first().click();
   await page.getByRole('menuitemradio', { name: 'أكبر' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-text', 'xl');
   await page.keyboard.press('Escape');

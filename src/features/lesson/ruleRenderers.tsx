@@ -46,7 +46,7 @@ const RenewalWithinExample: React.FC = () => (
     result={renewalPenaltyWithinYear({ renewalValuePerMember: 1000, memberCount: 3, currentMonth: 5 })} />
 );
 const RenewalAfterExample: React.FC = () => (
-  <ExampleCard title="مثال: سنة كاملة بلا تجديد · قيمة سنتها 2000"
+  <ExampleCard title="مثال: سنة كاملة من غير تجديد · قيمة سنتها 2000"
     result={renewalPenaltyAfterYear({ unrenewedYearRenewalValue: 2000, yearsUnrenewed: 1 })} />
 );
 const ChildJoiningExample: React.FC = () => (

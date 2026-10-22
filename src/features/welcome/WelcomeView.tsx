@@ -12,7 +12,8 @@ import { Icon } from '../../ui/Icon';
 import { identityStore } from '../../app/identity/identityStore';
 import { MODULES, curriculumStats, BOSS_BATTLES } from '../../content/registry';
 import { Button, Eyebrow, ArabicContent } from '../../ui/primitives';
-import { useLang, t } from '../../app/i18n';
+import { useLang, t, tf } from '../../app/i18n';
+import { lessonCount, unitCount, phaseCount } from '../../app/plural';
 import { fade } from '../../ui/motion';
 import { PROGRAM } from '../../domain/journey/program';
 
@@ -37,7 +38,7 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
       title: t('wc.learn', lang),
       // States how the nine units sit inside the six phases, so the welcome
       // screen and the roadmap describe the same programme. Both derived from content.
-      body: `${stats.lessons} ${t('wc.learnbody', lang)} ${stats.units} ${t('wc.learnunits', lang)} ${PROGRAM.length} ${t('wc.learnphases', lang)}`,
+      body: tf('wc.learnbody', { lessons: lessonCount(stats.lessons, lang), units: unitCount(stats.units, lang), phases: phaseCount(PROGRAM.length, lang) }, lang),
     },
     {
       icon: Clock3,
@@ -47,7 +48,7 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
     {
       icon: ShieldCheck,
       title: t('wc.ready', lang),
-      body: `${t('wc.readybody1', lang)} ${lastBossLevel} ${t('wc.readybody2', lang)}`,
+      body: tf('wc.readybody', { n: lastBossLevel }, lang),
     },
   ];
 
@@ -56,9 +57,9 @@ export const WelcomeView: React.FC<Props> = ({ onStartFirstLesson }) => {
        action above the fold, the programme in four facts for whoever reads on.
        It arrives once, as a whole — nothing here is staged in. */
     <div className="stack min-h-screen justify-center">
-      <m.main {...fade} aria-label="أهلاً بيك في أكاديمية عمليات العضويات" className="welcome-room">
+      <m.main {...fade} aria-labelledby="wel-title" className="welcome-room">
         <Eyebrow>{t('wel.eyebrow', lang)}</Eyebrow>
-        <h1 className="t-display mt-4">{t('wel.title', lang)}</h1>
+        <h1 id="wel-title" className="t-display mt-4">{t('wel.title', lang)}</h1>
         <p className="t-lead measure mt-4">
           {t('wc.intro', lang)}
         </p>

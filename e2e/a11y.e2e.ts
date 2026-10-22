@@ -32,7 +32,7 @@ test('readiness assessment and trainee file, with demo data', async ({ page }) =
   await page.getByRole('button', { name: 'حمّل بيانات العرض' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'حمّل بيانات العرض' }).click();
   await expectAccessible(page, 'admin with demo data');
-  await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
+  await page.getByRole('button', { name: /قائمة حسابك/ }).first().click();
   await page.getByRole('menuitem', { name: 'تسجيل الخروج' }).click();
 
   await signIn(page, 'trainer.samir');
@@ -40,7 +40,7 @@ test('readiness assessment and trainee file, with demo data', async ({ page }) =
   await block.getByRole('button', { name: 'افتح التقييم' }).click();
   await block.getByRole('button', { name: 'عدّل' }).first().click();
   await expectAccessible(page, 'trainer readiness stations');
-  await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
+  await page.getByRole('button', { name: /قائمة حسابك/ }).first().click();
   await page.getByRole('menuitem', { name: 'تسجيل الخروج' }).click();
 
   await signIn(page, 'manager.nabil');
@@ -78,9 +78,9 @@ test('the roadmap and a phase sheet', async ({ page }) => {
 test('profile overlay and the trainee readiness page', async ({ page }) => {
   await signIn(page, 'ahmed.m');
   await toAcademy(page);
-  await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
-  await expectAccessible(page, 'personal menu');
-  await page.getByRole('menuitem', { name: /مركز الهوية/ }).click();
+  await page.getByRole('button', { name: /قائمة حسابك/ }).first().click();
+  await expectAccessible(page, 'account menu');
+  await page.getByRole('menuitem', { name: 'حسابي' }).click();
   await expectAccessible(page, 'profile');
   await page.keyboard.press('Escape');
   await page.goto('/#/readiness');

@@ -135,7 +135,7 @@ export const BossView: React.FC<Props> = ({ battle, onExit, onFinish, exitLabel 
             <AnimatePresence>
               {answered && (
                 <m.div {...fade} className="mt-5">
-                  <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'قرار سليم' : 'قرار غلط — اعرف ليه'}
+                  <FeedbackBlock tone={correct ? 'summary' : 'warning'} title={correct ? 'قرار سليم' : 'قرار مش سليم — اعرف ليه'}
                     onAction={() => { if (si >= total - 1) { onFinish(); setPhase('done'); } else { setSi(si + 1); setPicked(null); } }}
                     actionLabel={<>{si >= total - 1 ? 'خلّص التحدّي' : 'القرار الجاي'} <Icon as={ArrowRight} dir /></>}>
                     {step.feedback}

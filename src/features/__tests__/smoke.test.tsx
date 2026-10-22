@@ -291,7 +291,7 @@ describe('show-password toggle', () => {
     // survive the toggle. That is the whole point of doing it this way.
     render(<App />);
     fireEvent.change(screen.getByLabelText('كلمة السر'), { target: { value: 'Welcome@123' } });
-    fireEvent.click(screen.getByLabelText('اظهر كلمة السر'));
+    fireEvent.click(screen.getByLabelText('اعرض كلمة السر'));
     expect(screen.getByLabelText('كلمة السر').getAttribute('type')).toBe('text');
     expect(screen.getByLabelText<HTMLInputElement>('كلمة السر').value).toBe('Welcome@123');
     fireEvent.click(screen.getByLabelText('اخفي كلمة السر'));
@@ -300,7 +300,7 @@ describe('show-password toggle', () => {
 
   it('announces its state to screen readers via aria-pressed', () => {
     render(<App />);
-    const btn = screen.getByLabelText('اظهر كلمة السر');
+    const btn = screen.getByLabelText('اعرض كلمة السر');
     expect(btn.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(btn);
     expect(screen.getByLabelText('اخفي كلمة السر').getAttribute('aria-pressed')).toBe('true');
@@ -308,7 +308,7 @@ describe('show-password toggle', () => {
 
   it('🚫 the toggle is a button, never a submit — it must not sign you in', () => {
     render(<App />);
-    expect(screen.getByLabelText('اظهر كلمة السر').getAttribute('type')).toBe('button');
+    expect(screen.getByLabelText('اعرض كلمة السر').getAttribute('type')).toBe('button');
   });
 });
 
@@ -349,7 +349,7 @@ describe('profile menu — sign out', () => {
   it('🔴 signing out returns to the login screen', async () => {
     signIn('ahmed.m', 'Welcome@123');
     // open the profile menu (its label carries the name)
-    fireEvent.click(screen.getByRole('button', { name: /القائمة الشخصية/ }));
+    fireEvent.click(screen.getByRole('button', { name: /قائمة حسابك/ }));
     fireEvent.click(screen.getByRole('menuitem', { name: /تسجيل الخروج/ }));
     // back at the door: the username field exists again
     await waitFor(() => expect(screen.getByLabelText('اسم المستخدم')).toBeTruthy());
@@ -357,7 +357,7 @@ describe('profile menu — sign out', () => {
 
   it('the menu opens and closes on Escape', () => {
     signIn('ahmed.m', 'Welcome@123');
-    const trigger = screen.getByRole('button', { name: /القائمة الشخصية/ });
+    const trigger = screen.getByRole('button', { name: /قائمة حسابك/ });
     fireEvent.click(trigger);
     expect(screen.getByRole('menu')).toBeTruthy();
     fireEvent.keyDown(document, { key: 'Escape' });
@@ -366,7 +366,7 @@ describe('profile menu — sign out', () => {
 
   it('sign-out works for a trainer too (every role)', async () => {
     signIn('trainer.adel', 'Welcome@123');
-    fireEvent.click(screen.getByRole('button', { name: /القائمة الشخصية/ }));
+    fireEvent.click(screen.getByRole('button', { name: /قائمة حسابك/ }));
     fireEvent.click(screen.getByRole('menuitem', { name: /تسجيل الخروج/ }));
     await waitFor(() => expect(screen.getByLabelText('اسم المستخدم')).toBeTruthy());
   });

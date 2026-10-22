@@ -1,4 +1,4 @@
-import { test, expect, signIn, signOut, finishLesson, openTodaysLesson, toAcademy } from './fixtures';
+import { test, expect, signIn, signOut, finishLesson, openTodaysLesson, toAcademy, lessonsDone } from './fixtures';
 
 /**
  * A front-desk PC is shared. Each person must see only their own record, and
@@ -8,13 +8,13 @@ test('two trainees on one browser keep separate progress, and the trainer sees e
   await signIn(page, 'ahmed.m');
   await openTodaysLesson(page);
   await finishLesson(page);
-  await expect(page.getByText('1 من 4 دروس')).toBeVisible();
+  await expect(page.getByText(lessonsDone(1, 4))).toBeVisible();
   await signOut(page);
 
   await signIn(page, 'mariam.a');
   // Mariam is new on this browser: welcomed, then a clean record.
   await toAcademy(page);
-  await expect(page.getByText('0 من 4 دروس')).toBeVisible();
+  await expect(page.getByText(lessonsDone(0, 4))).toBeVisible();
   await signOut(page);
 
   await signIn(page, 'trainer.adel');

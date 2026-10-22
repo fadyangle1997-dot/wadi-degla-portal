@@ -36,6 +36,14 @@ export async function settle(page: Page) {
   }));
 }
 
+/**
+ * «1 من 4 دروس» as a trainee reads it. Counts are bidi-isolated (app/plural),
+ * so the DOM carries invisible isolates around each number: match the words,
+ * not the control characters.
+ */
+export const lessonsDone = (done: number, total: number) =>
+  new RegExp(`^\\u2068?${done}\\u2069? من \\u2068?${total}\\u2069? دروس$`);
+
 /** The door's fields, in whichever product language is chosen (Arabic first). */
 export const usernameField = (page: Page) => page.getByLabel(/^(اسم المستخدم|Username)$/);
 export const passwordField = (page: Page) => page.getByLabel(/^(كلمة السر|Password)$/);
@@ -69,15 +77,15 @@ export async function toAcademy(page: Page) {
     await start.click();
     await expect(page).toHaveURL(/#\/lesson\//);
     // The lesson screen loads lazily: wait for its Exit (it names where it
-    // goes: «خروج — ارجع للمسار»), then use it.
-    await page.getByRole('button', { name: 'ارجع للمسار' }).first().click();
+    // goes: «خروج — ارجع للأكاديمية»), then use it.
+    await page.getByRole('button', { name: 'ارجع للأكاديمية' }).first().click();
     await expect(page).not.toHaveURL(/#\/lesson\//);
   }
   await expect(page.getByText('مهمة النهارده')).toBeVisible();
 }
 
 export async function signOut(page: Page) {
-  await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
+  await page.getByRole('button', { name: /قائمة حسابك/ }).first().click();
   await page.getByRole('menuitem', { name: 'تسجيل الخروج' }).click();
   await expect(usernameField(page)).toBeVisible();
 }
@@ -93,7 +101,7 @@ export async function finishLesson(page: Page) {
     if (!/#\/lesson\//.test(page.url())) return;
     await settle(page);
     // The closing screen's Done finishes the lesson and returns.
-    const done = main.getByRole('button', { name: /^(تمام|Done)$/ });
+    const done = main.getByRole('button', { name: /^(تم|Done)$/ });
     if (await done.isVisible()) { await done.click({ timeout: 2000 }).catch(() => {}); continue; }
 
     // Forward only: «السابق» steps back and would walk the lesson in circles.

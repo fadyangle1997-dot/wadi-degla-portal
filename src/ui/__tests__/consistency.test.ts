@@ -247,14 +247,14 @@ describe('🔴 the language is FROZEN — identity comes from repetition', () =>
     // it means the same thing everywhere after.
     // Match the LABEL on the element, not the words wherever they appear — a
     // heading may legitimately mention «الأفضل» in prose.
-    for (const label of ['⚠️ فخ احترافي', '⭐ الأفضل']) {
+    for (const label of ['الفخ', 'الأفضل']) {
       const at = lesson.indexOf(`label="${label}"`);
       expect(at, `${label} is not carried on the signature shape`).toBeGreaterThan(-1);
       const line = lesson.slice(lesson.lastIndexOf('<', at), at);
       expect(line, `«${label}» uses the wrong shape`).toContain('SpineWell');
     }
     // Dynamic labels — the same shape, built from data.
-    expect(lesson).toContain('<SpineWell label={`النجاح =');
+    expect(lesson).toContain('<SpineWell label={`الهدف: من');
     expect(lesson).toContain('<SpineWell spine="risk" label={`ناقص');
   });
 

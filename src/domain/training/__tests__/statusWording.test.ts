@@ -3,7 +3,8 @@ import { waitingForTrainer } from '../statusWording';
 
 describe('waiting-for-trainer wording — one unified phrase', () => {
   it('names the trainer by first name', () => {
-    expect(waitingForTrainer('Adel Ramadan')).toBe('في انتظار مدربك Adel');
+    // Isolated, so a Latin name never reorders the Arabic around it.
+    expect(waitingForTrainer('Adel Ramadan')).toBe('في انتظار مدربك \u2068Adel\u2069');
   });
   it('falls back gracefully when the trainer is unknown', () => {
     expect(waitingForTrainer(undefined)).toBe('في انتظار مدربك');

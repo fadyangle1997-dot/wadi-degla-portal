@@ -31,6 +31,7 @@ import { useTodaysMission } from '../../app/journeyContext';
 import { MissionBrief } from '../journey/MissionBrief';
 import { PROGRAM, PROGRAM_DAYS, unitPlace } from '../../domain/journey/program';
 import { useLang, t as tr, tf, iso } from '../../app/i18n';
+import { dayCount, lessonCount } from '../../app/plural';
 import { TodayRetrieval, dueToday } from '../journey/TodayRetrieval';
 
 interface Props {
@@ -105,7 +106,7 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
           lead={phase ? (
             <>
               {tf('home.phase', { n: iso(phase.order), total: iso(PROGRAM.length) }, lang)} · <ArabicContent as="span">{phase.title}</ArabicContent>
-              {trainerName && <> · {tr('home.trainer', lang)} {trainerName}</>}
+              {trainerName && <> · {tr('home.trainer', lang)} <bdi>{trainerName}</bdi></>}
             </>
           ) : tr('path.alldone', lang)} />
         <ContentLanguageNote />
@@ -127,7 +128,7 @@ export const PathView: React.FC<Props> = ({ onOpenLesson, onOpenExam, onOpenRevi
             {commitment && (
               <Card tone="quiet">
                 <Eyebrow icon={<Flag size={13} />}>
-                  {commitment.daysAgo === 0 ? tr('db.committoday', lang) : commitment.daysAgo === 1 ? tr('db.commitysdy', lang) : `${tr('db.commitdays', lang)} ${commitment.daysAgo} ${tr('db.daysago', lang)}`}
+                  {commitment.daysAgo === 0 ? tr('db.committoday', lang) : commitment.daysAgo === 1 ? tr('db.commitysdy', lang) : tf('db.commitago', { days: dayCount(commitment.daysAgo, lang) }, lang)}
                 </Eyebrow>
                 <p className="t-body c-tx0 mt-2 mb-0">{commitment.text}</p>
               </Card>
@@ -197,7 +198,7 @@ const CurrentModuleCard: React.FC<{
 
       <div className={showQuestion ? undefined : 'mt-3'}>
         <ProgressRail total={m.lessons.length} current={done} />
-        <span className="t-label block c-tx3 mt-1">{done} {tr('jr.of', lang)} {m.lessons.length} {tr('db.lessonsof', lang)}</span>
+        <span className="t-label block c-tx3 mt-1">{tf('db.lessonsdone', { done: iso(done), total: lessonCount(m.lessons.length, lang) }, lang)}</span>
       </div>
     </Card>
   );

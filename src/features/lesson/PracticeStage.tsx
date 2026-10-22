@@ -38,7 +38,10 @@ export const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }>
               </div>
               {showResult && (
                 <p className={`t-sm mt-3 ${isRight ? 'c-ready' : 'c-risk'}`} role="status">
-                  {isRight ? '✓ ' : '✕ '}{it.feedback}
+                  {/* The mark is for the eye; the word is for everyone. */}
+                  <span aria-hidden>{isRight ? '✓ ' : '✕ '}</span>
+                  <span className="sr-only">{isRight ? 'صح: ' : 'مش صح: '}</span>
+                  {it.feedback}
                 </p>
               )}
             </div>
@@ -49,9 +52,9 @@ export const PracticeStage: React.FC<{ practice: Practice; onNext: () => void }>
         {!checked
           ? <Button disabled={!allMarked} onClick={() => setChecked(true)}>راجع إجاباتي <ClipboardCheck size={16} /></Button>
           : (
-            <FeedbackBlock tone={allCorrect ? 'summary' : 'warning'} title={allCorrect ? 'قرار سليم' : 'شوف الفرق فوق'}
-              onAction={onNext} actionLabel={<>كمّل <ArrowRight size={16} className="icon-dir" /></>}>
-              {allCorrect ? 'راجعت الملف زي موظف محترف بالظبط.' : 'اقرا الملاحظات الحمرا — دي بالظبط الفروق اللي بتفرّق في الشغل الحقيقي.'}
+            <FeedbackBlock tone={allCorrect ? 'summary' : 'warning'} title={allCorrect ? 'قرار سليم' : 'فيه بنود محتاجة تتراجع'}
+              onAction={onNext} actionLabel={<>التالي <ArrowRight size={16} className="icon-dir" /></>}>
+              {allCorrect ? 'راجعت الملف صح، بند بند.' : 'اقرا الملاحظة تحت كل بند غلطت فيه — دي الفروق اللي بتفرق في الشغل الحقيقي.'}
             </FeedbackBlock>
           )}
       </div>

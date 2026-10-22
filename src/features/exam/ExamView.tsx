@@ -83,12 +83,12 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, o
                   <Status tone={tone(passed ? EXAM.passed : EXAM.failed)}>{passed ? t('as.passed', lang) : t('as.notyet', lang)}</Status>
                   {/* «Close» only when it is true: at 13% it would be a kindness that misleads. */}
                   <h1 id="ex-verdict" className="t-h2 m-0">
-                    {passed ? 'الوحدة دي بقت في جيبك.' : score >= TRAINING_POLICY.passThreshold - 0.2 ? 'قرّبت — راجع وارجع' : 'لسه — راجع الدروس دي الأول'}
+                    {passed ? 'عدّيت امتحان الوحدة' : score >= TRAINING_POLICY.passThreshold - 0.2 ? 'قرّبت — راجع الدروس دي وجرّب تاني' : 'محتاج تراجع الدروس دي الأول'}
                   </h1>
                 </div>
               </div>
               <p className="t-body measure mt-4 mb-0">
-                {passed ? 'ده مش حفظ — ده فهم بيشتغل على حالات مخلوطة زي الواقع.' : 'المراجعة تحت معمولة على اللي غلطت فيه بالظبط.'}
+                {passed ? 'ده فهم مش حفظ: الأسئلة كانت حالات مخلوطة زي الشغل الحقيقي.' : 'خطة المراجعة مبنية على الأسئلة اللي غلطت فيها بالظبط.'}
               </p>
               <dl className="paper-facts">
                 <div><dt>{t('as.correct', lang)}</dt><dd>{tf('as.of', { n: right, total: qs.length }, lang)}</dd></div>

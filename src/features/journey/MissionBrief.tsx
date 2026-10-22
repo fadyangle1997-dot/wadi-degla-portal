@@ -75,7 +75,7 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string; approval
     <div className="brief-achievement">
       <Achievement tier="unit" />
       <span className="brief-achievement-text">
-        <strong>{tx('mi.approved', { m: <Content>«{approval.title}»</Content> }, lang)}</strong>
+        <strong>{tx('mi.approved', { m: <Content>{approval.title}</Content> }, lang)}</strong>
         <span>{tr('mi.approvedbody', lang)}</span>
       </span>
     </div>
@@ -169,7 +169,7 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string; approval
   const isExam = action.kind === 'take_exam';
   return (
     <Brief prominent eyebrow={eyebrow(isExam ? <GraduationCap size={13} /> : <Play size={13} />)}
-      title={isExam ? tx('db.examof', { m: <Content>{m?.title}</Content> }, lang) : <>{tr('db.contunit', lang)} <Content>«{m?.title}»</Content></>}
+      title={isExam ? tx('db.examof', { m: <Content>{m?.title}</Content> }, lang) : tx('db.contunitof', { m: <Content>{m?.title}</Content> }, lang)}
       body={isExam ? tr('db.examintro', lang) : <p className="m-0"><ArabicContent as="span">{m?.bigQuestion}</ArabicContent></p>}
       action={
         <Button onClick={() => {

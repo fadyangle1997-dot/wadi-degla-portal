@@ -1,11 +1,11 @@
-import { test, expect, signIn, signOut, finishLesson, settle, openTodaysLesson, toAcademy, expectAccessible, usernameField } from './fixtures';
+import { test, expect, signIn, signOut, finishLesson, settle, openTodaysLesson, toAcademy, expectAccessible, usernameField, lessonsDone } from './fixtures';
 
 test.describe('trainee', () => {
   test('a new trainee is welcomed first, then has today\'s task on the academy', async ({ page }) => {
     await signIn(page, 'ahmed.m');
     await expect(page.getByRole('heading', { name: 'أهلاً بيك في فريق العضويات.' })).toBeVisible();
     await toAcademy(page);
-    await expect(page.getByText('0 من 4 دروس')).toBeVisible();
+    await expect(page.getByText(lessonsDone(0, 4))).toBeVisible();
   });
 
   test('completes the first lesson end to end, and it counts', async ({ page }) => {
@@ -13,7 +13,7 @@ test.describe('trainee', () => {
     await openTodaysLesson(page);
     await expect(page).toHaveURL(/#\/lesson\/m1\//);
     await finishLesson(page);
-    await expect(page.getByText('1 من 4 دروس')).toBeVisible();
+    await expect(page.getByText(lessonsDone(1, 4))).toBeVisible();
   });
 
   test('progress and session survive a reload', async ({ page }) => {
@@ -22,13 +22,13 @@ test.describe('trainee', () => {
     await finishLesson(page);
     await page.reload();
     await expect(usernameField(page)).toBeHidden();
-    await expect(page.getByText('1 من 4 دروس')).toBeVisible();
+    await expect(page.getByText(lessonsDone(1, 4))).toBeVisible();
   });
 
   test('the next unit stays locked until the trainer approves', async ({ page }) => {
     await signIn(page, 'ahmed.m');
     await toAcademy(page);
-    await expect(page.getByText('تُفتح بعد اعتماد الوحدة الحالية من المدرب')).toBeVisible();
+    await expect(page.getByText('بتتفتح لما مدربك يعتمد الوحدة الحالية')).toBeVisible();
   });
 });
 
@@ -39,7 +39,7 @@ test('finishes a whole unit, sits the exam, and sees the result', async ({ page 
     await openTodaysLesson(page);
     await finishLesson(page);
   }
-  await expect(page.getByText('4 من 4 دروس')).toBeVisible();
+  await expect(page.getByText(lessonsDone(4, 4))).toBeVisible();
 
   await page.goto('/#/exam/m1');
   await expect(page).toHaveURL(/#\/exam\/m1/);
@@ -66,7 +66,7 @@ test('finishes a whole unit, sits the exam, and sees the result', async ({ page 
   await expect(page).toHaveURL(/#\/exam\/m1/);
   for (let i = 0; i < 60; i++) {
     await settle(page);
-    if (await main.getByRole('button', { name: /^(تمام|Done)/ }).isVisible()) break;
+    if (await main.getByRole('button', { name: /^(تم|Done)$/ }).isVisible()) break;
     const option = main.locator('button.option-idle:enabled');
     if (await option.count()) { await option.first().click({ timeout: 2000 }).catch(() => {}); continue; }
     const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' });
@@ -100,18 +100,24 @@ test('leaving a lesson keeps its place, and leaving its closing screen keeps it 
   await expect(page.locator('.lesson-stage')).toHaveText(where);
 
   // Walk to the closing screen, then leave it with Escape instead of a button.
+  // The walk never presses a way out of the lesson («تم», «الدرس الجاي»): if
+  // the closing screen arrives between the check and the press, a «last
+  // button» walk would leave and carry on into the next lesson.
+  const done = main.getByRole('button', { name: /^(تم|Done)$/ });
   for (let step = 0; step < 80; step++) {
     await settle(page);
-    if (await main.getByRole('button', { name: /^(تمام|Done)$/ }).isVisible()) break;
-    const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' });
+    if (await done.isVisible()) break;
+    const forward = main.locator('button.btn:enabled').filter({ hasNotText: 'السابق' })
+      .filter({ hasNotText: /^(تم|Done)$/ }).filter({ hasNotText: /^الدرس الجاي/ });
     if (await forward.count()) { await forward.last().click({ timeout: 2000 }).catch(() => {}); continue; }
     const option = main.locator('button.option-idle:enabled');
     if (await option.count()) { await option.first().click({ timeout: 2000 }).catch(() => {}); continue; }
     const rows = main.getByRole('button', { name: 'مطلوب', exact: true });
     if (await rows.count()) { for (const r of await rows.all()) if (await r.isEnabled()) await r.click().catch(() => {}); continue; }
   }
+  await expect(done).toBeVisible(); // on the closing screen, still inside the lesson
   await page.keyboard.press('Escape');
-  await expect(page.getByText('1 من 4 دروس')).toBeVisible();
+  await expect(page.getByText(lessonsDone(1, 4))).toBeVisible();
 });
 
 /**

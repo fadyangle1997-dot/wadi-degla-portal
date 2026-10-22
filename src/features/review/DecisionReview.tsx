@@ -34,7 +34,7 @@ import { toHash } from '../../app/router';
 /** Why each link is being asked — shown once, at the moment it matters. */
 const RATIONALE: Record<ReviewField, string> = {
   situation: 'المواقف الصعبة هي اللي بتعلّم — والعادية بتتنسى.',
-  decision: 'القرار هو شغلك. التوصيل بيوصّله، مش بيحل محله.',
+  decision: 'القرار هو شغلك. التوصيل بيوصّله، مش بيحل مكانه.',
   policy: 'لو مش قادر تسمّي القاعدة، يمكن تكون صح بالصدفة — والصدفة مش بتتكرّر.',
   communication: 'نفس القرار بيوصل صح أو بيخلق شكوى — الفرق في الجملة.',
   improvement: 'التحسين اللي بتكتبه بنفسك بيثبت أكتر من أي ملاحظة بتتقالّك.',
@@ -90,8 +90,8 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
             their comment comes back to «مراجعاتي» and to the bell. */}
         <m.section {...achieve} className="flow-center" aria-labelledby="rv-filed">
           <Achievement tier="task" />
-          <h1 id="rv-filed" className="t-h2 m-0">اتسجّلت</h1>
-          <p className="t-body m-0">وصلت لقايمة المدرب. تعليقه هيوصلك في «مراجعاتي» وهتلاقيه في الجرس.</p>
+          <h1 id="rv-filed" className="t-h2 m-0">{t('rv.filedtitle', lang)}</h1>
+          <p className="t-body m-0">وصلت لمدربك. تعليقه هيظهر في «مراجعاتي»، والجرس هيقولك أول ما يكتبه.</p>
           <div className="done-actions mt-3">
             <Button onClick={() => { location.hash = toHash({ kind: 'reviews' }); }}>مراجعاتي</Button>
             <Button variant="ghost" onClick={onExit}>{t('flow.done', lang)}</Button>
@@ -106,8 +106,8 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
       progress={{ total: REVIEW_FIELDS.length, current: idx }}
       onExit={onExit} exitTo={exitLabel}
       leaveWarning={dirty ? {
-        title: 'تسيب المراجعة من غير ما تسجّلها؟',
-        body: 'اللي كتبته في المراجعة دي مش هيتحفظ. لو كمّلت، تقدر تسجّلها في دقيقتين.',
+        title: 'تخرج من غير ما تبعت المراجعة؟',
+        body: 'اللي كتبته مش هيتحفظ. لو كمّلت، هتبعتها في دقيقتين.',
       } : undefined}>
       {/* Each question replaces the last at once: an exit animation would keep
           the previous answer box on screen, and typing into it would land in
@@ -151,7 +151,7 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
               {idx > 0 && <Button variant="ghost" onClick={() => setIdx(i => i - 1)}><Icon as={ChevronLeft} dir /> السابق</Button>}
               <div className="grow" />
               <Button onClick={advance}>
-                {isLast ? 'سجّل المراجعة' : <>كمّل <Icon as={ArrowRight} dir /></>}
+                {isLast ? 'ابعت المراجعة' : <>التالي <Icon as={ArrowRight} dir /></>}
               </Button>
             </div>
           </FlowSplit>

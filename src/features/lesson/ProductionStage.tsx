@@ -5,6 +5,7 @@ import { archetypeById, STATE_LABEL, type MemberState } from '../../domain/simul
 import type { Production } from '../../domain/types/content';
 import { Button, Eyebrow, Card, SpineWell } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
+import { attemptCount } from '../../app/plural';
 
 /**
  * Attempt → feedback → retry → pass. Never attempt → answer → next.
@@ -32,7 +33,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
   if (!started) {
     return (
       <m.section {...fade} className="focus-col">
-        <Eyebrow>إنتاج · {MODE_LABEL[p.mode]}</Eyebrow>
+        <Eyebrow>{MODE_LABEL[p.mode]}</Eyebrow>
         <h1 className="t-h2 mt-3 mb-4">دورك دلوقتي</h1>
         <p className="t-body mb-5">{p.task}</p>
 
@@ -55,7 +56,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
             It takes the rule's shape because it is one. */}
         {p.arc && (
           <div className="mb-5">
-            <SpineWell label={`النجاح = ${STATE_LABEL[p.arc.opensAs as MemberState]} ← ${STATE_LABEL[p.arc.targetState as MemberState]}`}>
+            <SpineWell label={`الهدف: من «${STATE_LABEL[p.arc.opensAs as MemberState]}» لـ«${STATE_LABEL[p.arc.targetState as MemberState]}»`}>
               <p className="t-body measure m-0 c-tx0 fw-500">
                 مش إنك تقول الجملة الصح — إنه يتحرك.
               </p>
@@ -69,7 +70,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
         {/* The counter is never a quiet room. */}
         {p.distractors && p.distractors.length > 0 && (
           <Card tone="quiet" pad={4} layout={{ marginBottom: 'var(--sp-5)' }}>
-            <div className="t-label c-attn mb-3">هيحصل كمان أثناء الكلام</div>
+            <div className="t-label c-attn mb-3">هيحصل كمان وإنت بتتكلم</div>
             {p.distractors.map(d => (
               <div key={d.event} className="mb-3">
                 <p className="t-sm m-0 c-tx1">{d.event}</p>
@@ -85,14 +86,14 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
           محدش بيقيّمك هنا. ده تمرين — تقولها، تشوف نقصت إيه، وتقولها تاني.
           <strong className="c-tx2"> أول مرة تنطقها المفروض تكون هنا، مش قدّام عضو.</strong>
         </p>
-        <Button onClick={() => setStarted(true)}>بدأت <ArrowRight size={16} className="icon-dir" /></Button>
+        <Button onClick={() => setStarted(true)}>خلّصت — راجع نفسك <ArrowRight size={16} className="icon-dir" /></Button>
       </m.section>
     );
   }
 
   return (
     <m.section {...fade} className="focus-col">
-      <Eyebrow>إنتاج · محاولة {attempt}</Eyebrow>
+      <Eyebrow>محاولة {attempt}</Eyebrow>
       <h1 className="t-h2 mt-3 mb-2">راجع اللي قلته</h1>
       <p className="t-sm c-tx3 mb-5">
         علّم على اللي عملته فعلاً — مش على اللي كنت ناوي تعمله.
@@ -130,7 +131,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
           {/* The retry IS the method. Nothing here calls it a failure. */}
           <div className="mt-5">
             <Button onClick={() => { setAttempt(a => a + 1); setChecked({}); setReviewed(false); }}>
-              قولها تاني — والمرة دي ركّز على اللي فوق
+              قولها تاني، وركّز على النقط اللي فاتتك
             </Button>
           </div>
         </m.div>
@@ -139,7 +140,7 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
       {reviewed && passed && (
         <m.div {...fade} className="mt-5">
           <p className="t-body mt-0 mb-4">
-            الأربعة اتعملوا{attempt > 1 ? ` — بعد ${attempt} محاولات، وده الطبيعي` : ''}.
+            كل النقط اتعملت{attempt > 1 ? ` — بعد ${attemptCount(attempt, 'ar')}، وده الطبيعي` : ''}.
             {' '}دي الجملة اللي هتقولها بكرة على الكاونتر.
           </p>
           {/* ONE question, about the trainee's own conduct. Not a knowledge
@@ -149,11 +150,11 @@ export const ProductionStage: React.FC<{ p: Production; onPass: () => void }> = 
               <div className="t-label mb-2">سؤال واحد قبل ما تكمّل</div>
               <p className="t-body m-0">{p.reflection}</p>
               <p className="t-sm c-tx3 mb-0 mt-2">
-                مش محتاج تكتبه — بس متعديش من غير ما تجاوبه لنفسك.
+                مش محتاج تكتبه، بس ما تعدّيش من غير ما تجاوبه لنفسك.
               </p>
             </Card>
           )}
-          <Button onClick={onPass}>كمّل <ArrowRight size={16} className="icon-dir" /></Button>
+          <Button onClick={onPass}>التالي <ArrowRight size={16} className="icon-dir" /></Button>
         </m.div>
       )}
     </m.section>

@@ -153,7 +153,7 @@ const answersKey = [];
   // Menna certified: the manager records the interview and decides.
   await step('setup-certified', async () => {
     await p.goto(BASE + '#/'); await settle(p);
-    await p.getByRole('button', { name: /القائمة الشخصية|personal menu/i }).first().click();
+    await p.getByRole('button', { name: /قائمة حسابك|Account menu/i }).first().click();
     await p.getByRole('menuitem', { name: /تسجيل الخروج|Sign out/ }).click(); await user(p).waitFor();
     await signIn(p, 'manager.nabil');
     await p.locator('main').getByRole('button', { name: /Menna Kamal/ }).first().click();

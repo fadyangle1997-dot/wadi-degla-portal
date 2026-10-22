@@ -53,7 +53,7 @@ describe('passing the unit exam', () => {
     // It says only what is true: under per-unit gating the next unit waits for
     // the trainer's approval, so nothing is announced as opened yet.
     expect(screen.queryByText(/اتفتحلك/)).toBeNull();
-    expect(screen.getByText(/راحت لمدربك يراجعها/)).toBeTruthy();
+    expect(screen.getByText(/اتبعتت لمدربك للمراجعة/)).toBeTruthy();
 
     // Re-entering a passed exam (a refresh on the result) still goes to the path.
     unmount();

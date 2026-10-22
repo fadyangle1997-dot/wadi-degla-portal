@@ -121,12 +121,12 @@ test('Back dismisses a confirmation open inside the file, and the file stays', a
 test('Back closes the profile and leaves the page it opened over', async ({ page }) => {
   await signIn(page, 'trainer.adel');
   const before = page.url();
-  await page.getByRole('button', { name: /القائمة الشخصية/ }).first().click();
-  await page.getByRole('menuitem', { name: 'مركز الهوية' }).click();
-  await expect(page.getByRole('dialog', { name: 'مركز الهوية' })).toBeVisible();
+  await page.getByRole('button', { name: /قائمة حسابك/ }).first().click();
+  await page.getByRole('menuitem', { name: 'حسابي' }).click();
+  await expect(page.getByRole('dialog', { name: 'حسابي' })).toBeVisible();
   await expect(page).toHaveURL(/\?panel=profile/);
   await page.goBack();
-  await expect(page.getByRole('dialog', { name: 'مركز الهوية' })).toBeHidden();
+  await expect(page.getByRole('dialog', { name: 'حسابي' })).toBeHidden();
   expect(page.url()).toBe(before);
 });
 

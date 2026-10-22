@@ -25,6 +25,7 @@ import { Eyebrow, StatusBadge, Button, Card, DayRing, ArabicContent, Num, Crumbs
 import { phaseContextFor, useTodaysMission } from '../../app/journeyContext';
 import { useOverlayParam } from '../../app/overlayHistory';
 import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
+import { lessonCount } from '../../app/plural';
 import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 // DayRing now lives in shared primitives (see import below).
@@ -175,7 +176,7 @@ export const TrainingJourney: React.FC<{
             </div>
             {currentLessons && (
               <p className="t-sm c-tx2" style={{ margin: 'var(--sp-1) 0 0' }}>
-                {tr('jr.inphase', lang)} <strong className="c-g1">{currentLessons.done} {tr('jr.of', lang)} {currentLessons.total}</strong> {tr('jr.lessons', lang)}
+                {tr('jr.inphase', lang)} <strong className="c-g1">{tf('db.lessonsdone', { done: iso(currentLessons.done), total: lessonCount(currentLessons.total, lang) }, lang)}</strong>
               </p>
             )}
             {/* Six segments, one per phase — the same rail, read at a glance. */}

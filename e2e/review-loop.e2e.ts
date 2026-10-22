@@ -25,9 +25,9 @@ test('a filed review reaches the trainer, and the comment comes back to the trai
   await page.goto('/#/review');
   for (const [i, a] of ANSWERS.entries()) {
     await page.locator('#rv-answer').fill(a);
-    await page.getByRole('button', { name: i === ANSWERS.length - 1 ? 'سجّل المراجعة' : /كمّل/ }).click();
+    await page.getByRole('button', { name: i === ANSWERS.length - 1 ? 'ابعت المراجعة' : /التالي/ }).click();
   }
-  await expect(page.getByRole('heading', { name: 'اتسجّلت' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'اتبعتت' })).toBeVisible();
   await page.getByRole('button', { name: 'مراجعاتي' }).click();
   await expect(page.locator('main')).toContainText('مستنية تعليق المدرب');
   await expect(page.locator('main')).toContainText(ANSWERS[0]!);
@@ -51,9 +51,9 @@ test('a filed review reaches the trainer, and the comment comes back to the trai
   // Trainee: the bell says so now, and «مراجعاتي» carries the comment.
   await signIn(page, 'menna.k');
   await page.getByRole('button', { name: /محتاجة انتباهك|محتاجين انتباهك/ }).click();
-  await page.getByRole('menuitem', { name: /المدرب علّق على مراجعتك/ }).first().click();
+  await page.getByRole('menuitem', { name: /مدربك علّق على مراجعتك/ }).first().click();
   await expect(page).toHaveURL(/#\/reviews/);
-  await expect(page.locator('main')).toContainText('المدرب علّق');
+  await expect(page.locator('main')).toContainText('مدربك علّق');
   await expect(page.locator('main')).toContainText('القرار صح، والبديل كان ممكن ييجي أبدر.');
 });
 

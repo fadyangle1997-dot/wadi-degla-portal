@@ -16,9 +16,12 @@ const firstName = (fullName: string | undefined): string => (fullName ?? '').tri
 
 /**
  * "في انتظار مدربك عادل" when the trainer is known, gracefully "في انتظار مدربك"
- * when not. One phrase, used everywhere a module is waiting on trainer review.
+ * when not. One phrase, used everywhere a module is waiting on trainer review:
+ * neutral about who waits, so it fits the unit's badge and the trainee's
+ * mission alike (docs/voice-and-language.md). The name is bidi-isolated — a
+ * Latin name inside Arabic must not drag the punctuation after it.
  */
 export function waitingForTrainer(trainerName?: string): string {
   const name = firstName(trainerName);
-  return name ? `في انتظار مدربك ${name}` : 'في انتظار مدربك';
+  return name ? `في انتظار مدربك \u2068${name}\u2069` : 'في انتظار مدربك';
 }

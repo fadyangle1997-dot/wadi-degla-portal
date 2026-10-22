@@ -20,7 +20,7 @@ test('dashboard → lesson → Exit returns to the dashboard, and names where it
   await openTodaysLesson(page);
   // One labelled Exit, in the same place in every flow: its visible word is
   // «خروج», and its name goes on to say where it leads.
-  const exit = page.getByRole('navigation', { name: 'شريط المهمة' }).getByRole('button', { name: 'خروج — ارجع للمسار' });
+  const exit = page.getByRole('navigation', { name: 'شريط المهمة' }).getByRole('button', { name: 'خروج — ارجع للأكاديمية' });
   await expect(exit).toBeVisible();
   await expect(exit).toHaveText(/^خروج/);
   await exit.click();
@@ -31,25 +31,25 @@ test('dashboard → lesson → Exit returns to the dashboard, and names where it
 test('the profile opens over the page and closes with Escape or ×, back to its menu', async ({ page }) => {
   await signIn(page, 'ahmed.m');
   await toAcademy(page);
-  const menu = page.getByRole('button', { name: /القائمة الشخصية/ }).first();
+  const menu = page.getByRole('button', { name: /قائمة حسابك/ }).first();
   await menu.click();
-  await page.getByRole('menuitem', { name: /مركز الهوية|الملف/ }).click();
-  const profile = page.getByRole('dialog', { name: 'مركز الهوية' });
+  await page.getByRole('menuitem', { name: 'حسابي' }).click();
+  const profile = page.getByRole('dialog', { name: 'حسابي' });
   await expect(profile).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(profile).toBeHidden();
   await expect(menu).toBeFocused();
 
   await menu.click();
-  await page.getByRole('menuitem', { name: /مركز الهوية|الملف/ }).click();
+  await page.getByRole('menuitem', { name: 'حسابي' }).click();
   await profile.getByRole('button', { name: 'إغلاق' }).click();
   await expect(profile).toBeHidden();
 });
 
-test('Escape closes the personal menu and gives focus back to it', async ({ page }) => {
+test('Escape closes the account menu and gives focus back to it', async ({ page }) => {
   await signIn(page, 'ahmed.m');
   await toAcademy(page);
-  const menu = page.getByRole('button', { name: /القائمة الشخصية/ }).first();
+  const menu = page.getByRole('button', { name: /قائمة حسابك/ }).first();
   await menu.click();
   await expect(page.getByRole('menu')).toBeVisible();
   await page.keyboard.press('Escape');
@@ -110,8 +110,8 @@ test('unsaved work asks before it is lost — from Back and from the browser', a
   await page.goto('/#/review');
   await page.getByRole('textbox').fill('عضو جه بصورة بطاقة بس');
   // Opened from the academy, the debrief goes back there, and says so.
-  await page.getByRole('button', { name: 'ارجع للمسار' }).click();
-  const ask = page.getByRole('dialog', { name: /تسيب المراجعة/ });
+  await page.getByRole('button', { name: 'ارجع للأكاديمية' }).click();
+  const ask = page.getByRole('dialog', { name: /تبعت المراجعة/ });
   await expect(ask).toBeVisible();
   await expect(ask.getByRole('button', { name: 'كمّل' })).toBeFocused();
   await ask.getByRole('button', { name: 'كمّل' }).click();
@@ -136,7 +136,7 @@ test('the skip link moves focus to the content and leaves the address alone', as
   await settle(page);
   const url = page.url();
   await page.keyboard.press('Tab');
-  const skip = page.getByRole('link', { name: 'تخطَّ إلى المحتوى' });
+  const skip = page.getByRole('link', { name: 'روح للمحتوى الأساسي' });
   await expect(skip).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('#wda-main')).toBeFocused();
@@ -171,7 +171,7 @@ test('a roadmap station opens its phase in a sheet, and closing returns to the s
 test('a menu takes focus, moves with the arrow keys, and Tab leaves it', async ({ page }) => {
   await signIn(page, 'ahmed.m');
   await toAcademy(page);
-  const trigger = page.getByRole('button', { name: /القائمة الشخصية/ }).first();
+  const trigger = page.getByRole('button', { name: /قائمة حسابك/ }).first();
   await trigger.focus();
   await page.keyboard.press('Enter');
   const items = page.getByRole('menu').locator('[role^="menuitem"]:visible');

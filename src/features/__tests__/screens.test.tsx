@@ -260,10 +260,10 @@ describe('DecisionReview and ReadinessResult', () => {
 
   it('the debrief says an empty answer is empty, and steps back with «السابق»', () => {
     render(<DecisionReview onExit={() => {}} />);
-    fireEvent.click(screen.getByRole('button', { name: /كمّل/ }));
+    fireEvent.click(screen.getByRole('button', { name: /التالي/ }));
     expect(screen.getByText(/اكتب إجابتك الأول/)).toBeTruthy();
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'عضو جه بصورة البطاقة' } });
-    fireEvent.click(screen.getByRole('button', { name: /كمّل/ }));
+    fireEvent.click(screen.getByRole('button', { name: /التالي/ }));
     expect(screen.getByRole('button', { name: /السابق/ })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /السابق/ }));
     expect(screen.getByRole<HTMLTextAreaElement>('textbox').value).toBe('عضو جه بصورة البطاقة');
@@ -276,7 +276,7 @@ describe('DecisionReview and ReadinessResult', () => {
     expect(name1).toContain('rv-question');
     fireEvent.change(first, { target: { value: 'عضو جه بصورة البطاقة' } });
     const before = screen.getByText(/^إجابتك/).textContent;
-    fireEvent.click(screen.getByRole('button', { name: /كمّل/ }));
+    fireEvent.click(screen.getByRole('button', { name: /التالي/ }));
     expect(screen.getByText(/^إجابتك/).textContent).not.toBe(before);
   });
 
