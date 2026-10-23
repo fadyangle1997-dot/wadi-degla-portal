@@ -20,6 +20,7 @@ import { loadDemoScenario, clearDemoTraining } from '../../app/demo/demoScenario
 import { fade } from '../../ui/motion';
 import { AdminView } from './AdminView';
 import { OrganizationPanel } from './OrganizationPanel';
+import { PilotExport } from './PilotExport';
 import { WIDTH } from '../../ui/designSystem';
 import { useOrganization, orgStore } from '../../app/organization/orgStore';
 import { issueText } from './issueText';
@@ -73,6 +74,8 @@ export const AdminPlatform: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         : (
           <m.main key={tab} {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: '0 var(--sp-5) var(--sp-9)' }}>
             {tab === 'dashboard' && <OperationalDashboard onOpenInbox={() => setTab('inbox')} />}
+            {/* Named personal data: behind the same permission as the audit export. */}
+            {tab === 'dashboard' && canDo('audit.export') && <PilotExport />}
             {tab === 'inbox' && <OperationalInbox onGoToUser={id => { setFocusUser(id ?? null); setTab('users'); }} />}
             {tab === 'org' && <OrganizationPanel />}
             {tab === 'audit' && <AuditPanel canExport={canDo('audit.export')} />}

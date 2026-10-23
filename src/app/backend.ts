@@ -151,6 +151,9 @@ export class LocalStorageBackend implements ProgressBackend {
  * Another user's stored progress on this device, read-only. Trainers and
  * managers use it to see the trainees who trained on the same browser.
  */
+/** One user's progress log as stored on this device — for measures that need its timestamps. */
+export const storedProgressEventsOf = (userId: string): readonly ProgressEvent[] => readLog(progressKeysFor(userId).log);
+
 export function storedProgressOf(userId: string): Progress {
   return readProgress(progressKeysFor(userId).snapshot) ?? EMPTY_PROGRESS;
 }
