@@ -110,7 +110,7 @@ broken promise on the other), and practical performance is shown to the
 trainee as a percentage. Experienced employees have no route but the full
 sixty days.
 
-### 1.7 Scalability — see `docs/adr-008-engine-and-programme.md`.
+### 1.7 Scalability — see `docs/adr-006-engine-and-programme.md`.
 
 ## 2. Assumptions challenged
 

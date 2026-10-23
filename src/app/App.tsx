@@ -33,7 +33,7 @@ const BossView = lazy(() => import('../features/boss/BossView').then(m => ({ def
 import { readinessStanding } from '../domain/readiness/track';
 import { EmptyState, Button, ArabicContent, LoadingState, FlowRoom, Content } from '../ui/primitives';
 import { RouteBoundary } from './RouteBoundary';
-import { MODULES, moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
+import { MODULES, moduleById, BOSS_BATTLES, lessonRetrievalId, FIRST_MODULE_ID } from '../content/registry';
 import { unitPlace } from '../domain/journey/program';
 import { canChallenge } from '../domain/journey/proof';
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
@@ -241,7 +241,7 @@ export const App: React.FC = () => {
 
   // ── Immersive screens bypass the shell (full focus: no nav chrome) ────────
   if (view.kind === 'welcome') {
-    const first = moduleById('m1') ?? moduleById('m2_1');
+    const first = moduleById(FIRST_MODULE_ID);
     return (
       <Lazy>
         <WelcomeView
@@ -276,7 +276,7 @@ export const App: React.FC = () => {
   );
   if (view.kind === 'skills') return inShell(<Lazy><SkillsView onStartFirst={() => {
     // The empty state's action does what its label says: opens the first lesson.
-    const first = moduleById('m1') ?? moduleById('m2_1');
+    const first = moduleById(FIRST_MODULE_ID);
     const lesson = first?.lessons[0];
     if (first && lesson) openLesson(first.id, lesson.id); else toPath();
   }} onOpenLesson={openLesson} /></Lazy>);

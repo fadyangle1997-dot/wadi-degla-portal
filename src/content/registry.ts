@@ -37,6 +37,9 @@ export const MODULES: readonly Module[] = [
   moduleReadiness,
 ].sort((a, b) => a.order - b.order);
 
+/** Where a new trainee starts: the first unit in programme order. */
+export const FIRST_MODULE_ID = MODULES[0]!.id;
+
 /** All boss battles. */
 export const BOSS_BATTLES: readonly BossBattle[] = [bossBattle1, bossBattle2];
 
