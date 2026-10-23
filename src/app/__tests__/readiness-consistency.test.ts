@@ -93,7 +93,7 @@ describe('the word «جاهز» belongs to the readiness assessment', () => {
     // Readiness-assessment keys (rd.*, fr.*, the manager's decision, the
     // report, the attention queue's readiness decision) and «جاهزة تبدأ» (a
     // unit that is available to start).
-    const allowed = /^(rd\.|fr\.|mg\.dec|mg\.decision|mg\.rationale|mg\.leavebody|mg\.confirm\.|mg\.col\.readiness|mg\.nodatabody|rr\.title|perf\.note|pf\.nocertbody|pf\.certified|wc\.|jr\.ready|st\.available|ps\.available|tn\.conductnote|tn\.m\.finishedctx|ac\.h\.decision|mi\.certified|aq\.k\.readiness_decision|aq\.sub|aq\.emptybody)/;
+    const allowed = /^(rd\.|fr\.|mg\.dec|mg\.decision|mg\.rationale|mg\.leavebody|mg\.confirm\.|mg\.col\.readiness|mg\.nodatabody|rr\.title|perf\.note|pf\.nocertbody|pf\.certified|wc\.|jr\.ready|st\.available|ps\.available|tn\.conductnote|tn\.m\.finishedctx|ac\.h\.decision|mi\.certified|aq\.k\.readiness_decision|aq\.sub|aq\.emptybody|mg\.tl\.decision|pf\.passedbody)/;
     expect(saysReady.filter(k => !allowed.test(k))).toEqual([]);
   });
 

@@ -60,6 +60,8 @@ export function nextAction(p: Progress, t: TrainingState, traineeId: string): Ne
   if (rejected) return { kind: 'rejected_review', module: rejected };
 
   for (const m of open) {
+    // Proved on the proof path: approved without its lessons — keep walking.
+    if (reviewOf(t, traineeId, m.id).credited) continue;
     const nextLesson = m.lessons.find(l => !isLessonDone(p, l.id));
     if (nextLesson) return { kind: 'resume_lesson', module: m, lessonId: nextLesson.id };
     if (!examPassed(p, m.id)) return { kind: 'take_exam', module: m };

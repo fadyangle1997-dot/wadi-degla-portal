@@ -33,9 +33,16 @@ interface Props {
   opens?: readonly string[];
   /** A pass goes to the trainer before the next unit opens. */
   awaitsApproval?: boolean;
+  /** Proving the unit on the proof path: one attempt, before its lessons. A
+   *  pass credits the unit; a miss makes it an ordinary unit — no retry. */
+  challenge?: boolean;
+  /** Proof path only: the attempt was left after its first answer — by Exit,
+   *  Back or a link. It counts as the one attempt, so the questions cannot be
+   *  seen first and answered later. */
+  onAbandon?: (scoreSoFar: number) => void;
 }
 
-export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, onReviewLesson, exitLabel, opens = [], awaitsApproval = false }) => {
+export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, onReviewLesson, exitLabel, opens = [], awaitsApproval = false, challenge = false, onAbandon }) => {
   const lang = useLang();
   const qs = module.unitExam;
   const [qi, setQi] = useState(0);
@@ -53,13 +60,22 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, o
   const shuffledOptions = useMemo(() => shuffleOptions(q.options, q.id + q.prompt), [q]);
 
   const finished = finalScore !== null;
+  // Leaving a started proof attempt, however it happens, is the attempt.
+  const attempt = useRef({ started: false, finished: false, right: 0 });
+  attempt.current = { started: qi > 0 || picked !== null, finished, right: answers.filter(Boolean).length };
+  useEffect(() => () => {
+    const a = attempt.current;
+    if (challenge && a.started && !a.finished) onAbandon?.(a.right / qs.length);
+  // Unmount only: the ref carries the latest state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Focus follows the step: when a question has been replaced (or the result
   // has arrived), the room takes focus, so a keyboard or screen-reader user
   // starts on what is now on screen — not back at the top of the page.
   const mainRef = useRef<HTMLElement>(null);
   const focusRoom = () => mainRef.current?.focus({ preventScroll: true });
   useEffect(() => { if (finished) focusRoom(); }, [finished]);
-  const mode = t('sh.unitexam', lang);
+  const mode = t(challenge ? 'pf.mode' : 'sh.unitexam', lang);
   const title = <Content>{module.title}</Content>;
 
   if (finished) {
@@ -83,12 +99,14 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, o
                   <Status tone={tone(passed ? EXAM.passed : EXAM.failed)}>{passed ? t('as.passed', lang) : t('as.notyet', lang)}</Status>
                   {/* «Close» only when it is true: at 13% it would be a kindness that misleads. */}
                   <h1 id="ex-verdict" className="t-h2 m-0">
-                    {passed ? 'عدّيت امتحان الوحدة' : score >= TRAINING_POLICY.passThreshold - 0.2 ? 'قرّبت — راجع الدروس دي وجرّب تاني' : 'محتاج تراجع الدروس دي الأول'}
+                    {challenge ? t(passed ? 'pf.passed' : 'pf.missed', lang)
+                      : passed ? 'عدّيت امتحان الوحدة' : score >= TRAINING_POLICY.passThreshold - 0.2 ? 'قرّبت — راجع الدروس دي وجرّب تاني' : 'محتاج تراجع الدروس دي الأول'}
                   </h1>
                 </div>
               </div>
               <p className="t-body measure mt-4 mb-0">
-                {passed ? 'ده فهم مش حفظ: الأسئلة كانت حالات مخلوطة زي الشغل الحقيقي.' : 'خطة المراجعة مبنية على الأسئلة اللي غلطت فيها بالظبط.'}
+                {challenge ? t(passed ? 'pf.passedbody' : 'pf.missedbody', lang)
+                  : passed ? 'ده فهم مش حفظ: الأسئلة كانت حالات مخلوطة زي الشغل الحقيقي.' : 'خطة المراجعة مبنية على الأسئلة اللي غلطت فيها بالظبط.'}
               </p>
               <dl className="paper-facts">
                 <div><dt>{t('as.correct', lang)}</dt><dd>{tf('as.of', { n: right, total: qs.length }, lang)}</dd></div>
@@ -107,7 +125,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, o
               )}
               <div className="paper-actions">
                 <Button onClick={onExit}>{t('flow.done', lang)} <Icon as={ArrowRight} dir /></Button>
-                {!passed && <Button variant="ghost" onClick={onRetry}><Icon as={RotateCcw} /> {t('ex.retry', lang)}</Button>}
+                {!passed && !challenge && <Button variant="ghost" onClick={onRetry}><Icon as={RotateCcw} /> {t('ex.retry', lang)}</Button>}
               </div>
             </PaperSheet>
           </m.div>
@@ -141,7 +159,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, o
   return (
     <FlowRoom mode={mode} title={title} onExit={onExit} exitTo={exitLabel} mainRef={mainRef}
       progress={{ total: qs.length, current: qi }}
-      leaveWarning={started ? { title: t('as.examleave', lang), body: t('as.examleavebody', lang) } : undefined}>
+      leaveWarning={started ? { title: t('as.examleave', lang), body: t(challenge ? 'pf.leavebody' : 'as.examleavebody', lang) } : undefined}>
       <AnimatePresence mode="wait" onExitComplete={focusRoom}>
         <m.div key={qi} {...fade} className="flow-stage">
           <FlowSplit prompt={<>

@@ -62,7 +62,13 @@ export type TrainingEvent =
       readonly observation: string; readonly at: number;
     }
   // The four observable conduct behaviours, seen across the encounters.
-  | { readonly type: 'CONDUCT_OBSERVED'; readonly employeeId: string; readonly observerId: string; readonly conduct: ConductObservations; readonly at: number };
+  | { readonly type: 'CONDUCT_OBSERVED'; readonly employeeId: string; readonly observerId: string; readonly conduct: ConductObservations; readonly at: number }
+  // The proof path (domain/journey/proof, D7): the branch manager puts an
+  // experienced employee on it, with a reason, or back on the standard path.
+  | { readonly type: 'TRACK_ASSIGNED'; readonly employeeId: string; readonly managerId: string; readonly track: 'proof' | 'standard'; readonly reason: string; readonly at: number }
+  // One attempt to prove a unit by its exam, without its lessons. A pass
+  // credits the unit; a miss leaves it an ordinary unit.
+  | { readonly type: 'UNIT_CHALLENGED'; readonly employeeId: string; readonly moduleId: string; readonly score: number; readonly passed: boolean; readonly at: number };
 
 /* ---------------- snapshot (derived, fast reads) ---------------- */
 /** Mirrors the trainer's four decisions — no collapsing, no lost meaning. */
@@ -70,6 +76,8 @@ export type ReviewStatus = 'none' | 'waiting' | 'ready' | 'extend' | 'not_ready'
 
 export interface ModuleReview {
   readonly status: ReviewStatus;
+  /** Proved by its exam on the proof path, without lessons or a unit assessment. */
+  readonly credited?: boolean;
   readonly readiness?: number;
   readonly weakSkills?: readonly string[];
   readonly weakRules?: readonly string[];
@@ -149,7 +157,14 @@ export function reduceTraining(t: TrainingState, e: TrainingEvent): TrainingStat
     case 'COACHING_NOTE_ADDED':
     case 'STATION_ASSESSED':
     case 'CONDUCT_OBSERVED':
+    case 'TRACK_ASSIGNED':
       return t; // derived from the log where needed — the event itself is the value
+
+    case 'UNIT_CHALLENGED':
+      // A pass credits a unit nobody has submitted yet; a miss changes nothing
+      // here — the unit simply goes the ordinary way.
+      if (!e.passed || (t.reviews[e.employeeId]?.[e.moduleId]?.status ?? 'none') !== 'none') return t;
+      return setReview(t, e.employeeId, e.moduleId, { status: 'ready', credited: true, weakSkills: [], weakRules: [] });
 
     case 'UNIT_ESCALATION_ANSWERED': {
       // Only an escalated unit has a question to answer; anything else stays.

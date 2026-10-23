@@ -24,7 +24,7 @@ export const CapabilityGaps: React.FC<{ c: CapabilityPicture }> = ({ c }) => {
       {none ? <p className="t-sm c-tx2 m-0">{tr('cg.none', lang)}</p> : (
         <div className="stack gap-4">
           {c.kpis.length > 0 && (
-            <ul className="stack gap-2 m-0" style={{ paddingInlineStart: 'var(--sp-5)' }}>
+            <ul className="stack gap-2 m-0">
               {c.kpis.map(k => (
                 <li key={k.dimension} className="t-sm c-tx1">
                   <ArabicContent as="span">{EVALUATION_DIMENSIONS[k.dimension]}</ArabicContent>
@@ -37,7 +37,7 @@ export const CapabilityGaps: React.FC<{ c: CapabilityPicture }> = ({ c }) => {
           {c.rules.length > 0 && (
             <div className="stack gap-2">
               <p className="t-label c-tx3 m-0">{tr('cg.rules', lang)}</p>
-              <ul className="stack gap-1 m-0" style={{ paddingInlineStart: 'var(--sp-5)' }}>
+              <ul className="stack gap-1 m-0">
                 {c.rules.map(r => (
                   <li key={r.rule} className="t-sm c-tx1"><span className="t-num">{r.rule}</span> — {staffCount(r.people, lang)}</li>
                 ))}

@@ -10,6 +10,8 @@ import type { Mission, MissionKind, TodaysMission } from '../../domain/journey/m
 import { waitingForTrainer } from '../../domain/training/statusWording';
 import { trainingStore, traineeIdOrNull, useTrainingEvents } from '../../app/training/trainingStore';
 import { flaggedLessonsOf } from '../../domain/training/selectors';
+import { canChallenge } from '../../domain/journey/proof';
+import { toHash } from '../../app/router';
 import { useProgress, isModuleUnlocked } from '../../app/progress';
 import { MODULES } from '../../content/registry';
 import { Button, Eyebrow, ArabicContent, Brief, Content, Achievement, tx } from '../../ui/primitives';
@@ -72,6 +74,10 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string; approval
   const events = useTrainingEvents();
   const progress = useProgress();
   const m = action.module;
+  // On the proof path, an untouched unit can be proved by its exam once,
+  // instead of its lessons (domain/journey/proof, D7).
+  const me = traineeIdOrNull();
+  const provable = action.kind === 'resume_lesson' && !!m && !!me && canChallenge(progress, trainingStore.get(), events, me, m.id);
   // A unit approval is the third of the earned moments: it opens the mission
   // paper above a step the trainee can take, and leaves when that step is
   // taken. Never above a rework request or a wait, where it would contradict
@@ -214,12 +220,21 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string; approval
       title={isExam ? tx('db.examof', { m: <Content>{m?.title}</Content> }, lang) : tx('db.contunitof', { m: <Content>{m?.title}</Content> }, lang)}
       body={isExam ? tr('db.examintro', lang) : <p className="m-0"><ArabicContent as="span">{m?.bigQuestion}</ArabicContent></p>}
       action={
-        <Button onClick={() => {
-          if (isExam && m) onOpenExam(m.id);
-          else if (action.lessonId && m) onOpenLesson(m.id, action.lessonId);
-        }}>
-          {isExam ? tr('db.startexam', lang) : tr('db.contlesson', lang)} <ArrowRight size={16} className="icon-dir" />
-        </Button>
+        <div className="row wrap items-center gap-4">
+          <Button onClick={() => {
+            if (isExam && m) onOpenExam(m.id);
+            else if (action.lessonId && m) onOpenLesson(m.id, action.lessonId);
+          }}>
+            {isExam ? tr('db.startexam', lang) : tr('db.contlesson', lang)} <ArrowRight size={16} className="icon-dir" />
+          </Button>
+          {provable && m && (
+            <button type="button" className="quiet-act t-sm" aria-describedby="pf-offer-note"
+              onClick={() => { location.hash = toHash({ kind: 'challenge', moduleId: m.id }); }}>
+              {tr('pf.offer', lang)} <Icon as={ArrowRight} size="sm" dir />
+            </button>
+          )}
+          {provable && <p id="pf-offer-note" className="t-sm c-tx2 m-0 w-full">{tr('pf.offernote', lang)}</p>}
+        </div>
       } />
   );
 };

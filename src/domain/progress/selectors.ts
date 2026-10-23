@@ -29,7 +29,9 @@ export const isModuleComplete = (p: Progress, moduleId: string): boolean => {
 /**
  * Per-unit gating: passing the exam is NOT enough — the prerequisite unit must
  * also carry the trainer's practical approval. Learning without practical
- * approval never unlocks the next stage.
+ * approval never unlocks the next stage. A unit credited on the proof path
+ * (domain/journey/proof) was proved by its exam instead of its lessons, so its
+ * lessons are not asked for.
  */
 export const isModuleUnlocked = (
   p: Progress,
@@ -40,7 +42,8 @@ export const isModuleUnlocked = (
   const m = moduleById(moduleId);
   if (!m) return false;
   return m.unlock.requiresUnits.every(req => {
-    const knowledge = isModuleComplete(p, req) && (p.exams[req] ?? 0) >= m.unlock.minExamScore;
+    const credited = reviewOf(t, traineeId, req).credited === true;
+    const knowledge = credited || (isModuleComplete(p, req) && (p.exams[req] ?? 0) >= m.unlock.minExamScore);
     if (!knowledge) return false;
     if (TRAINING_POLICY.evaluationGating !== 'per-unit') return true;
     return reviewOf(t, traineeId, req).status === 'ready';

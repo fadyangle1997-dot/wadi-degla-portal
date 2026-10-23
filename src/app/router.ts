@@ -16,6 +16,8 @@ export type View =
   | { kind: 'manager' }
   | { kind: 'lesson'; moduleId: string; lessonId: string }
   | { kind: 'exam'; moduleId: string }
+  /** Proving a unit by its exam on the proof path (domain/journey/proof). */
+  | { kind: 'challenge'; moduleId: string }
   | { kind: 'boss'; bossId: string }
   | { kind: 'readiness_report'; employeeId: string }
   /** The trainee's own reviews, with the trainer's comments on them. */
@@ -39,6 +41,7 @@ export function toHash(v: View): string {
     case 'manager': return '#/manager';
     case 'lesson': return `#/lesson/${v.moduleId}/${v.lessonId}`;
     case 'exam': return `#/exam/${v.moduleId}`;
+    case 'challenge': return `#/challenge/${v.moduleId}`;
     case 'boss': return `#/boss/${v.bossId}`;
     case 'readiness_report': return `#/readiness-report/${v.employeeId}`;
     case 'reviews': return '#/reviews';
@@ -65,6 +68,8 @@ export function parseHash(hash: string): View {
       return parts[1] && parts[2] ? { kind: 'lesson', moduleId: parts[1], lessonId: parts[2] } : { kind: 'path' };
     case 'exam':
       return parts[1] ? { kind: 'exam', moduleId: parts[1] } : { kind: 'path' };
+    case 'challenge':
+      return parts[1] ? { kind: 'challenge', moduleId: parts[1] } : { kind: 'path' };
     case 'boss':
       return parts[1] ? { kind: 'boss', bossId: parts[1] } : { kind: 'path' };
     case 'readiness-report':

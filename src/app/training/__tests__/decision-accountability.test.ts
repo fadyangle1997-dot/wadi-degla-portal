@@ -39,3 +39,30 @@ describe('decision accountability', () => {
     expect(answered?.type === 'UNIT_ESCALATION_ANSWERED' && answered.reason).toBe('الموقف سليم.');
   });
 });
+
+describe('the proof path, in the store', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    identityStore.signIn('admin');
+    loadDemoScenario();
+  });
+
+  it('a track needs a reason', () => {
+    identityStore.signIn('manager.nabil');
+    expect(() => trainingStore.assignTrack({ employeeId: 'ahmed.m', track: 'proof', reason: ' ' })).toThrow();
+    trainingStore.assignTrack({ employeeId: 'ahmed.m', track: 'proof', reason: 'سنتين في عضويات نادي تاني.' });
+    const e = trainingStore.events().filter(x => x.type === 'TRACK_ASSIGNED').pop();
+    expect(e?.type === 'TRACK_ASSIGNED' && [e.track, e.managerId]).toEqual(['proof', 'manager.nabil']);
+  });
+
+  it('a unit is proved once, and only on the path', () => {
+    identityStore.signIn('ahmed.m');
+    expect(() => trainingStore.recordChallenge('m1', 0.95)).toThrow();          // not on the path
+    identityStore.signIn('manager.nabil');
+    trainingStore.assignTrack({ employeeId: 'ahmed.m', track: 'proof', reason: 'خبرة سابقة.' });
+    identityStore.signIn('ahmed.m');
+    trainingStore.recordChallenge('m1', 0.95);
+    expect(reviewOf(trainingStore.get(), 'ahmed.m', 'm1')).toMatchObject({ status: 'ready', credited: true });
+    expect(() => trainingStore.recordChallenge('m1', 0.95)).toThrow();          // once
+  });
+});

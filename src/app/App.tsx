@@ -35,6 +35,7 @@ import { EmptyState, Button, ArabicContent, LoadingState, FlowRoom, Content } fr
 import { RouteBoundary } from './RouteBoundary';
 import { MODULES, moduleById, BOSS_BATTLES, lessonRetrievalId } from '../content/registry';
 import { unitPlace } from '../domain/journey/program';
+import { canChallenge } from '../domain/journey/proof';
 import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
 import { leaveGuard } from './leaveGuard';
@@ -54,7 +55,7 @@ const initialView = (): View => {
 // Screens opened FROM the home screen or the roadmap, which return to wherever
 // they were opened from. Today's mission can open the debrief and the
 // readiness assessment from either screen, so they return the same way.
-const RETURNS_TO_ORIGIN = new Set<View['kind']>(['lesson', 'exam', 'boss', 'review', 'readiness']);
+const RETURNS_TO_ORIGIN = new Set<View['kind']>(['lesson', 'exam', 'challenge', 'boss', 'review', 'readiness']);
 
 const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <RouteBoundary onHome={() => { location.hash = '#/'; }}>
@@ -127,7 +128,11 @@ export const App: React.FC = () => {
   // would outlive the visit and let a blocked trainee back in.
   useEffect(() => {
     if (view.kind !== 'exam') gateCache.current.clear();
+    if (view.kind !== 'challenge') challengeEntry.current.clear();
   }, [view.kind]);
+  // Proving a unit is an entry condition too: decided once on the way in, so
+  // the attempt just recorded does not swap its result screen for the path.
+  const challengeEntry = useRef(new Map<string, boolean>());
   // A retry is a new entry: it goes back through the gate, so «try again»
   // can never take more attempts than the policy allows.
   const [examRun, setExamRun] = useState(0);
@@ -382,6 +387,18 @@ export const App: React.FC = () => {
         }
       }
     }} /></ArabicContent></Lazy>;
+  }
+
+  if (view.kind === 'challenge') {
+    const m = moduleById(view.moduleId);
+    const id = traineeIdOrNull();
+    if (m && id && !challengeEntry.current.has(m.id)) challengeEntry.current.set(m.id, canChallenge(p, trainingStore.get(), trainingStore.events(), id, m.id));
+    if (!m || !challengeEntry.current.get(m.id)) return <Redirect to="path" onGo={goTo} />;
+    const opens = MODULES.filter(x => x.unlock.requiresUnits.includes(m.id) && isModuleUnlocked(p, x.id)).map(x => x.title);
+    return <Lazy><ArabicContent><ExamView key={`challenge:${m.id}`} module={m} challenge onExit={toOrigin} exitLabel={originLabel()}
+      opens={opens} onReviewLesson={lessonId => openLesson(m.id, lessonId)} onRetry={toOrigin}
+      onFinish={score => { trainingStore.recordChallenge(m.id, score); }}
+      onAbandon={score => { try { trainingStore.recordChallenge(m.id, score, true); } catch { /* already recorded */ } }} /></ArabicContent></Lazy>;
   }
 
   if (view.kind === 'boss') {

@@ -101,8 +101,10 @@ const Profile: React.FC<{ employeeId: string; name: string; onExit: () => void }
     {
       id: 'review', header: tr('dt.status', lang),
       cell: m => {
-        const st = reviewOf(t, employeeId, m.id).status;
-        return st === 'none' ? <span className="c-tx3">—</span> : <Status tone={tone(UNIT_REVIEW[st])}>{tr(`tp.rv.${st}` as never, lang)}</Status>;
+        const r = reviewOf(t, employeeId, m.id);
+        // Proved on the proof path: approved by its exam, not by a unit assessment — said so.
+        if (r.credited) return <Status tone={tone(UNIT_REVIEW.ready)}>{tr('pf.credited', lang)}</Status>;
+        return r.status === 'none' ? <span className="c-tx3">—</span> : <Status tone={tone(UNIT_REVIEW[r.status])}>{tr(`tp.rv.${r.status}` as never, lang)}</Status>;
       },
     },
     {

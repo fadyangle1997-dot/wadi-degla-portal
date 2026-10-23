@@ -22,6 +22,7 @@ export const PLATFORM_ACCESS = {
   readiness: 'academy.learn',
   lesson: 'academy.learn',
   exam: 'academy.learn',
+  challenge: 'academy.learn',   // proving a unit on the proof path (domain/journey/proof)
   boss: 'academy.learn',
   reviews: 'academy.learn',
   // Staff platforms.

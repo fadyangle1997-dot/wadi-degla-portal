@@ -11,11 +11,14 @@ import { tone, GAP } from '../../ui/statusSemantics';
 import { moduleById } from '../../content/registry';
 import { UNIT_DECISION_LABEL } from '../../domain/evaluation';
 import { detectOperationalIssues } from '../../domain/operations/health';
-import type { OrgEvent } from '../../domain/analytics/organization';
+import type { TrainingEvent } from '../../app/training/trainingBackend';
+import { STATIONS } from '../../domain/readiness';
+import { trackOf } from '../../domain/journey/proof';
+import { displayNameOf } from '../../domain/identity';
 import { Button, Eyebrow, StatusBadge, ArabicContent, tx, CloseButton, ConfirmDialog, Toast, InlineError, FormField, EmptyState, useModal, useExitFlow } from '../../ui/primitives';
 import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
 import { DecisionEvidence, DecisionRecord } from '../readiness/DecisionEvidence';
-import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
+import { useLang, t as tr, tf, iso, dateLocale, type Key } from '../../app/i18n';
 import { unitCount } from '../../app/plural';
 import { leaveGuard } from '../../app/leaveGuard';
 import { Icon } from '../../ui/Icon';
@@ -80,7 +83,7 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
   // Focus in, Tab kept inside, Escape closes (asking first), focus back to the row.
   const dialogRef = useModal<HTMLDivElement>(close, undefined, true);
   const trainer = user?.trainerId ? users.find(u => u.id === user.trainerId) : undefined;
-  const events = (trainingStore.events() as readonly OrgEvent[]).filter(e => e.employeeId === employeeId);
+  const events = trainingStore.events().filter(e => 'employeeId' in e && e.employeeId === employeeId);
 
   // The same composition the full report reads: the readiness assessment is
   // the answer, practical performance is evidence, never the other way round.
@@ -91,14 +94,28 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
   const isOrphan = issues.some(i => i.kind === 'orphan_user');
 
   // Module names, decision labels and free-text reasons are Arabic content
-  // inside a translated sentence, so each is declared as Arabic.
-  const label = (e: OrgEvent): React.ReactNode =>
-    e.type === 'UNIT_SUBMITTED_FOR_REVIEW' ? tx('mg.sentforreview', { m: <ArabicContent as="span">{moduleName(e.moduleId!)}</ArabicContent> }, lang)
-      : e.type === 'EVALUATION_RECORDED' ? <>{tr('mg.evaluation', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)} — {UNIT_DECISION_LABEL[e.decision!] ?? e.decision}</ArabicContent></>
-      : e.type === 'UNIT_ESCALATION_ANSWERED' ? <>{tr('mg.esc.answered', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)}</ArabicContent> — {tr(e.decision === 'ready' ? 'mg.esc.lbl.ready' : 'mg.esc.lbl.return', lang)}{e.reason && <>: <bdi dir="auto">{e.reason}</bdi></>}</>
-      : e.type === 'TRAINING_EXTENDED' ? <>{tr('mg.extended', lang)} <ArabicContent as="span">{e.reason ?? ''}</ArabicContent></>
-      : e.type === 'LESSON_REOPENED' ? tr('mg.reopened', lang)
-      : tr('mg.coachnote', lang);
+  // inside a translated sentence, so each is declared as Arabic. Only what a
+  // manager reads as the training's history is listed — daily reviews and
+  // retrieval answers have their own screens — and every entry says what it
+  // is: an unlabelled event is never shown as something else.
+  const label = (e: TrainingEvent): React.ReactNode | null => {
+    const unit = (id?: string) => <ArabicContent as="span">{moduleName(id ?? '')}</ArabicContent>;
+    switch (e.type) {
+      case 'UNIT_SUBMITTED_FOR_REVIEW': return tx('mg.sentforreview', { m: unit(e.moduleId) }, lang);
+      case 'EVALUATION_RECORDED': return <>{tr('mg.evaluation', lang)} <ArabicContent as="span">{moduleName(e.moduleId)} — {UNIT_DECISION_LABEL[e.decision] ?? e.decision}</ArabicContent></>;
+      case 'UNIT_ESCALATION_ANSWERED': return <>{tr('mg.esc.answered', lang)} {unit(e.moduleId)} — {tr(e.decision === 'ready' ? 'mg.esc.lbl.ready' : 'mg.esc.lbl.return', lang)}{e.reason && <>: <bdi dir="auto">{e.reason}</bdi></>}</>;
+      case 'TRAINING_EXTENDED': return <>{tr('mg.extended', lang)} <ArabicContent as="span">{e.reason}</ArabicContent></>;
+      case 'LESSON_REOPENED': return tr('mg.reopened', lang);
+      case 'COACHING_NOTE_ADDED': return tr('mg.coachnote', lang);
+      case 'TRACK_ASSIGNED': return <>{tr(e.track === 'proof' ? 'pf.tl.proof' : 'pf.tl.standard', lang)}{e.reason && <>: <bdi dir="auto">{e.reason}</bdi></>}</>;
+      case 'UNIT_CHALLENGED': return tx(e.passed ? 'pf.tl.passed' : 'pf.tl.missed', { m: unit(e.moduleId) }, lang);
+      case 'STATION_ASSESSED': return tx('mg.tl.station', { s: <ArabicContent as="span">{STATIONS.find(st => st.id === e.stationId)?.title ?? e.stationId}</ArabicContent> }, lang);
+      case 'CONDUCT_OBSERVED': return tr('mg.tl.conduct', lang);
+      case 'FINAL_READINESS_DECIDED': return tr('mg.tl.decision', lang);
+      default: return null;
+    }
+  };
+  const history = events.flatMap(e => { const l = label(e); return l === null ? [] : [{ e, l }]; });
 
   const needsFollow = perf.followUp === 'needs_attention' || perf.followUp === 'needs_immediate_attention';
 
@@ -141,17 +158,18 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
             <span className="t-label c-tx3">{tr('mg.responsible', lang)}</span>
             <span className="t-sm">{trainer?.name ?? tr('mg.unassigned', lang)}</span>
           </div>
+          <TrackControl employeeId={employeeId} canDecide={canDo('readiness.decide')} />
         </div>
 
         {/* ── LAYER 3 · CONTEXT — the timeline, folded below the verdict ── */}
-        {events.length > 0 && (
+        {history.length > 0 && (
           <details className="mt-4">
             <summary className="t-sm c-tx2" style={{ cursor: 'pointer' }}>{tr('mg.timeline', lang)}</summary>
             <ol role="list" className="stack gap-3" style={{ listStyle: 'none', margin: 'var(--sp-3) 0 0', padding: 0 }}>
-              {events.map((e, i) => (
-                <li key={i} className="row gap-3 items-start">
+              {history.map(({ e, l }, i) => (
+                <li key={`${e.type}:${e.at}:${i}`} className="row gap-3 items-start">
                   <span className="timeline-dot mt-2 no-shrink" aria-hidden />
-                  <span className="t-sm">{label(e)}</span>
+                  <span className="t-sm">{l}</span>
                 </li>
               ))}
             </ol>
@@ -167,6 +185,57 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
           rationale={rationale} setRationale={setRationale} />
       </div>
       {dialog}
+    </div>
+  );
+};
+
+/**
+ * The employee's path through the units (domain/journey/proof, D7). The
+ * branch manager can put an experienced employee on the proof path — or back
+ * on the standard one — and must say why; the reason, who and when stay on
+ * the file. The stations and the readiness decision are the same either way.
+ */
+const TrackControl: React.FC<{ employeeId: string; canDecide: boolean }> = ({ employeeId, canDecide }) => {
+  const lang = useLang();
+  const { users } = useIdentity();
+  const log = useTrainingEvents();
+  const track = trackOf(log, employeeId);
+  const proof = track?.track === 'proof';
+  const [open, setOpen] = React.useState(false);
+  const [why, setWhy] = React.useState('');
+  const [needWhy, setNeedWhy] = React.useState(false);
+  const [failed, setFailed] = React.useState<string | null>(null);
+  const by = track ? users.find(u => u.id === track.managerId) : undefined;
+  const save = () => {
+    if (!why.trim()) { setNeedWhy(true); document.getElementById(`pf-why-${employeeId}`)?.focus(); return; }
+    try { trainingStore.assignTrack({ employeeId, track: proof ? 'standard' : 'proof', reason: why }); }
+    catch { setFailed(tr('err.save', lang)); return; }
+    setFailed(null); setWhy(''); setOpen(false);
+  };
+  return (
+    <div className="stack gap-2">
+      <div className="row items-center gap-2 wrap">
+        <span className="t-label c-tx3">{tr('pf.track', lang)}</span>
+        <span className="t-sm">{tr(proof ? 'pf.track.proof' : 'pf.track.standard', lang)}</span>
+        {canDecide && !open && <Button variant="ghost" onClick={() => setOpen(true)}>{tr(proof ? 'pf.unassign' : 'pf.assign', lang)}</Button>}
+      </div>
+      {track && (
+        <p className="t-sm c-tx2 m-0"><bdi>{by ? displayNameOf(by, lang) : tr('mg.unassigned', lang)}</bdi> · {new Date(track.at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long' })}: <bdi dir="auto">{track.reason}</bdi></p>
+      )}
+      {open && (
+        <div className="stack gap-2">
+          <FormField id={`pf-why-${employeeId}`} label={tr('pf.why', lang)} required hint={tr(proof ? 'pf.whyhint.back' : 'pf.whyhint', lang)}
+            error={needWhy ? tr('pf.err.why', lang) : null}>
+            {p => <textarea {...p} rows={2} dir="auto" className="field w-full" style={{ resize: 'vertical' }} value={why}
+              onChange={e => { setWhy(e.target.value); setNeedWhy(false); }} />}
+          </FormField>
+          <div className="row gap-2 wrap">
+            <Button onClick={save}>{tr(proof ? 'pf.unassign' : 'pf.assign', lang)}</Button>
+            <Button variant="ghost" onClick={() => { setOpen(false); setWhy(''); setNeedWhy(false); }}>{tr('dlg.cancel', lang)}</Button>
+          </div>
+          <InlineError message={failed} />
+        </div>
+      )}
     </div>
   );
 };

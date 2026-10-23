@@ -163,7 +163,7 @@ describe('fail-closed guarantees — RBAC must never be bypassable', () => {
       admin: ['admin'],
       manager: ['manager', 'readiness_report'],
       trainer: ['trainer', 'assess', 'trainee'],
-      employee: ['welcome', 'path', 'roadmap', 'skills', 'journey', 'lesson', 'exam', 'boss', 'review', 'readiness', 'reviews'],
+      employee: ['welcome', 'path', 'roadmap', 'skills', 'journey', 'lesson', 'exam', 'challenge', 'boss', 'review', 'readiness', 'reviews'],
     };
     for (const [roleId, allowed] of Object.entries(matrix)) {
       const c = canOf(roleId);
