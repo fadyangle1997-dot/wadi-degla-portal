@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useIdentity } from '../../app/identity/identityStore';
-import { performanceFromOwnEvents, groupByEmployee } from '../../app/analytics/dashboardStore';
+import { performanceFromOwnEvents, groupByEmployee } from '../../domain/performance';
 import { trainingStore, useTraining } from '../../app/training/trainingStore';
 import { progression } from '../../domain/journey/progression';
 import { progressOf } from '../../app/progress';

@@ -898,6 +898,12 @@ const DICT = {
   'de.basis': { ar: 'القرار اتاخد على: {s} من {t} · السلوك المهني: {c} · نتيجة المحطات: {v}', en: 'The decision rested on: {s} of {t} · Conduct: {c} · Stations result: {v}' },
   'de.by': { ar: 'قرّره {name} · {date}', en: 'Decided by {name} · {date}' },
   'de.after': { ar: '{n} اتسجّلت بعد القرار — شوف هل بتغيّره', en: '{n} recorded after the decision — check whether it changes it' },
+  'cg.title': { ar: 'فين الناس محتاجة شغل', en: 'Where people need work' },
+  'cg.sub': { ar: 'من آخر تقييم عملي لكل واحد — {n} اتقيّموا لحد دلوقتي. عدد ناس، مش متوسطات.', en: 'From each person’s latest practical assessment — {n} assessed so far. Counts of people, not averages.' },
+  'cg.people': { ar: '{n} من {t} تحت المطلوب', en: '{n} of {t} below the floor' },
+  'cg.critical': { ar: 'مؤشر حرج', en: 'Critical KPI' },
+  'cg.rules': { ar: 'قواعد المدربين علّموا عليها لأكتر من شخص', en: 'Rules trainers flagged for more than one person' },
+  'cg.none': { ar: 'مفيش مؤشر تحت المطلوب عند حد في آخر تقييم، ومفيش قاعدة اتكرّرت عند أكتر من شخص.', en: 'No one’s latest assessment has a KPI below its floor, and no rule was flagged for more than one person.' },
   'rr.dimof':       { ar: 'الدرجة {s} من 100، والحد {f}', en: 'score {s} of 100, floor {f}' },
   // ── Practical assessment (focused workflow) ──
   'pa.back':        { ar: 'ارجع للوحة المدرب',      en: 'Back to the trainer dashboard' },

@@ -27,6 +27,7 @@ import { tone, FORMAL_READINESS, FOLLOW_UP, UNIT_REVIEW } from '../../ui/statusS
 import { staffCount } from '../../app/plural';
 import { UnitsTable } from './UnitsTable';
 import { AttentionQueue } from './AttentionQueue';
+import { CapabilityGaps } from './CapabilityGaps';
 import { CollapsibleRoster, EmployeeGrid } from './EmployeeRoster';
 import { EmployeeTimeline } from './EmployeeTimeline';
 import { useOverlayParam } from '../../app/overlayHistory';
@@ -126,6 +127,9 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
 
             {/* What waits on the branch manager — decisions first — with its evidence. */}
             {canDo('readiness.decide') && <AttentionQueue ids={d.employeeIds} onInspect={setDrill} />}
+
+            {/* Capability problems across the scope — counts of people, not averages. */}
+            <CapabilityGaps c={d.capability} />
 
             {/* Area and general managers compare units, never employees; a
                 unit opens onto its staff. A branch manager sees the staff. */}

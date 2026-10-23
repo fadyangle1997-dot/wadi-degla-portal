@@ -10,7 +10,6 @@ import { useIdentity, useCan, identityStore } from '../identity/identityStore';
 import { scopeOf, visibleLearners } from '../../domain/identity/scope';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { orgSummary, capabilityGaps } from '../../domain/analytics/organization';
-import { practicalPerformance, performanceFromOwnEvents, groupByEmployee } from '../../domain/performance';
 import { orgStore } from '../organization/orgStore';
 
 export interface DashboardModel {
@@ -55,4 +54,3 @@ export const useDashboard = (): DashboardModel => {
   }, [events, employeeIds]);
 };
 
-export { practicalPerformance, performanceFromOwnEvents, groupByEmployee };
