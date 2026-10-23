@@ -161,6 +161,13 @@ const DICT = {
   'tr.gap.critical':{ ar: 'حرج — بيوقف الاعتماد',  en: 'critical — blocks certification' },
   'tr.gap.dev':     { ar: 'قابل للتطوير',          en: 'developmental' },
   // built-in role names (custom roles show the name the admin gave them)
+  // roleName() builds these keys from the role id (`role.${id}`).
+  'role.admin':           { ar: 'مسؤول النظام', en: 'System administrator' },
+  'role.manager':         { ar: 'مدير فرع',     en: 'Branch manager' },
+  'role.area_manager':    { ar: 'مدير منطقة',   en: 'Area manager' },
+  'role.general_manager': { ar: 'مدير عام',     en: 'General manager' },
+  'role.trainer':         { ar: 'مدرب',         en: 'Trainer' },
+  'role.employee':        { ar: 'موظف',         en: 'Employee' },
   // shell — action centre, menus, access
   'ac.rejected':    { ar: 'مدربك طلب تحسين في وحدة', en: 'Your trainer asked for improvements in a unit' },
   'ac.submit':      { ar: 'وحدة خلصت ومحتاجة تتبعت لمدربك', en: 'A finished unit needs sending to your trainer' },

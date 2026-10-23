@@ -107,3 +107,16 @@ describe('display names', () => {
     expect(displayNameOf({ name: 'Nabil', displayName: { en: '  ' } }, 'en')).toBe('Nabil');
   });
 });
+
+describe('built-in role names are translated', () => {
+  // roleName() looks the name up by id (`role.${id}`) and falls back to the
+  // stored Arabic name — a missing key reads Arabic in English mode, silently.
+  it('every default role has its dictionary entry in both languages', async () => {
+    const { DEFAULT_ROLES } = await import('../../domain/identity');
+    const { roleName } = await import('../i18n');
+    for (const r of DEFAULT_ROLES) {
+      expect(roleName(r, 'en')).not.toMatch(/[؀-ۿ]/);
+      expect(roleName(r, 'ar')).toMatch(/[؀-ۿ]/);
+    }
+  });
+});
