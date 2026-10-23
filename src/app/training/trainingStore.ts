@@ -9,8 +9,8 @@ import { identityStore } from '../identity/identityStore';
 import type { ObservedScores, EvaluationDecision, EvaluationDimension, ConductObservations } from '../../domain/evaluation';
 import { STATIONS } from '../../domain/readiness';
 import { stationAssessmentProblem } from '../../domain/readiness/evidence';
-import { formalReadiness } from '../../domain/readiness/status';
-import { onProofTrack, challengeOf, challengeStarted, challengeResultOf } from '../../domain/journey/proof';
+import { formalReadiness, basisOf } from '../../domain/readiness/status';
+import { onProofTrack, challengeOf, challengeOpen } from '../../domain/journey/proof';
 import { TRAINING_POLICY } from '../../domain/policy';
 import {
   LocalStorageTrainingBackend, EMPTY_TRAINING,
@@ -146,8 +146,7 @@ export const trainingStore = {
    *  attempt, or once the unit has gone the ordinary way. */
   startChallenge: (moduleId: string) => {
     const employeeId = currentTraineeId();
-    const log = backend.events();
-    if (!onProofTrack(log, employeeId) || challengeOf(log, employeeId, moduleId) || reviewOf(state, employeeId, moduleId).status !== 'none') {
+    if (!challengeOpen(state, backend.events(), employeeId, moduleId)) {
       throw new Error('challenge not started: not available for this unit');
     }
     apply(() => backend.record({ type: 'UNIT_CHALLENGE_STARTED', employeeId, moduleId, at: now() }));
@@ -158,7 +157,8 @@ export const trainingStore = {
   recordChallenge: (moduleId: string, score: number, abandoned = false) => {
     const employeeId = currentTraineeId();
     const log = backend.events();
-    if (!onProofTrack(log, employeeId) || !challengeStarted(log, employeeId, moduleId) || challengeResultOf(log, employeeId, moduleId)
+    // Open means started and not finished — exactly one result per attempt.
+    if (!onProofTrack(log, employeeId) || challengeOf(log, employeeId, moduleId)?.finished !== false
       || reviewOf(state, employeeId, moduleId).status !== 'none') {
       throw new Error('challenge not recorded: no attempt open for this unit');
     }
@@ -170,8 +170,7 @@ export const trainingStore = {
   decideReadiness: (input: { employeeId: string; decision: 'ready' | 'extend' | 'reject'; rationale: string }) => {
     // What the decision rests on is recorded with it, as it stood (D6): a
     // later station or conduct observation cannot rewrite what was known.
-    const f = formalReadiness(backend.events(), input.employeeId, true);
-    const basis = { stationsDone: f.stationsDone, conductRecorded: f.conductRecorded, engine: f.engine.decision };
+    const basis = basisOf(formalReadiness(backend.events(), input.employeeId, true));
     apply(() => backend.record({ type: 'FINAL_READINESS_DECIDED', managerId: trainerId(), at: now(), ...input, basis }));
   },
 };

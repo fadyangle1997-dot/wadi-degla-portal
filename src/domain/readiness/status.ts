@@ -32,6 +32,14 @@ export type FormalReadinessStatus =
 
 export type ManagerReadinessDecision = 'ready' | 'extend' | 'reject';
 
+/** What a readiness decision rested on, recorded with it (FINAL_READINESS_DECIDED.basis). */
+export interface DecisionBasis {
+  readonly stationsDone: number;
+  readonly conductRecorded: boolean;
+  /** The stations' verdict at the moment of the decision. */
+  readonly engine: ReadinessOutcome['decision'];
+}
+
 export interface FormalReadiness {
   readonly status: FormalReadinessStatus;
   /** Stations observed (any score) out of six. */
@@ -42,7 +50,10 @@ export interface FormalReadiness {
   /** The engine's verdict over the evidence so far (fail-closed). */
   readonly engine: ReadinessOutcome;
   /** The manager's latest decision, with who recorded it. */
-  readonly managerDecision: { readonly decision: ManagerReadinessDecision; readonly rationale: string; readonly at: number; readonly managerId?: string } | null;
+  readonly managerDecision: {
+    readonly decision: ManagerReadinessDecision; readonly rationale: string; readonly at: number;
+    readonly managerId?: string; readonly basis?: DecisionBasis;
+  } | null;
   readonly certified: boolean;
   /** The assessment has opened: every unit is approved. */
   readonly open: boolean;
@@ -51,7 +62,10 @@ export interface FormalReadiness {
 }
 
 type AnyEvent = { readonly type: string; readonly employeeId?: string; readonly at?: number };
-type DecisionEvent = AnyEvent & { readonly type: 'FINAL_READINESS_DECIDED'; readonly decision: ManagerReadinessDecision; readonly rationale: string; readonly at: number; readonly managerId?: string };
+type DecisionEvent = AnyEvent & {
+  readonly type: 'FINAL_READINESS_DECIDED'; readonly decision: ManagerReadinessDecision; readonly rationale: string;
+  readonly at: number; readonly managerId?: string; readonly basis?: DecisionBasis;
+};
 
 const isDecision = (e: AnyEvent): e is DecisionEvent => e.type === 'FINAL_READINESS_DECIDED';
 
@@ -59,8 +73,12 @@ const isDecision = (e: AnyEvent): e is DecisionEvent => e.type === 'FINAL_READIN
 export function latestManagerDecision(events: readonly AnyEvent[], employeeId: string): FormalReadiness['managerDecision'] {
   let latest: DecisionEvent | null = null;
   for (const e of events) if (isDecision(e) && e.employeeId === employeeId && (!latest || e.at >= latest.at)) latest = e;
-  return latest ? { decision: latest.decision, rationale: latest.rationale, at: latest.at, managerId: latest.managerId } : null;
+  return latest ? { decision: latest.decision, rationale: latest.rationale, at: latest.at, managerId: latest.managerId, basis: latest.basis } : null;
 }
+
+/** The basis a decision taken now would rest on. */
+export const basisOf = (f: FormalReadiness): DecisionBasis =>
+  ({ stationsDone: f.stationsDone, conductRecorded: f.conductRecorded, engine: f.engine.decision });
 
 /**
  * The formal readiness of one trainee. `programComplete` comes from the

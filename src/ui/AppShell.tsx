@@ -16,7 +16,7 @@ import { useCan, useIdentity, identityStore } from '../app/identity/identityStor
 import { useTraining, useTrainingEvents, reviewOf, traineeIdOrNull } from '../app/training/trainingStore';
 import { awaitsReadinessDecision, escalatedUnitsOf } from '../domain/journey/programCompletion';
 import { detectOperationalIssues, summarizeIssues } from '../domain/operations/health';
-import { filedReviews, unseenComments, reviewsForTrainer } from '../domain/review';
+import { filedReviews, unseenComments, awaitsTrainer } from '../domain/review';
 import { quietDays } from '../domain/journey/reviewPhase';
 import { groupByEmployee } from '../domain/performance';
 import { reviewSeen } from '../app/reviewSeen';
@@ -27,7 +27,7 @@ import { orgStore } from '../app/organization/orgStore';
 import { MODULES } from '../content/registry';
 import type { View } from '../app/router';
 import { navFor } from '../domain/identity/access';
-import { useLang, langStore, t, tf, roleName as roleDisplayName, type Key, dateLocale } from '../app/i18n';
+import { useLang, langStore, t, tf, roleName as roleDisplayName, type Key, dayMonth } from '../app/i18n';
 import { WIDTH } from './designSystem';
 import { LoadingState, useModal, Content, tx } from './primitives';
 import { displayNameOf } from '../domain/identity';
@@ -286,14 +286,15 @@ const useActionCenter = (): { now: readonly BellItem[]; before: readonly BellIte
         (n, e) => n + MODULES.filter(m => reviewOf(t, e.id, m.id).status === 'waiting').length, 0);
       if (waiting > 0) now.push({ key: 'queue', label: unitsAwaitingYou(waiting, lang), go: go('#/trainer') });
       // By exception (D1): the reviews that need them, and anyone gone quiet.
-      const needing = reviewsForTrainer(events, ids);
-      if (needing.length > 0) now.push({ key: 'reviews', label: reviewsAwaitingYou(needing.length, lang), go: go('#/trainer') });
       const at = Date.now();
       const grouped = groupByEmployee(events);
+      const filed = ids.flatMap(id => filedReviews(grouped.get(id) ?? [], id));
+      const needing = filed.filter(awaitsTrainer).length;
+      if (needing > 0) now.push({ key: 'reviews', label: reviewsAwaitingYou(needing, lang), go: go('#/trainer') });
       const quiet = ids.filter(id => quietDays(grouped.get(id) ?? [], id, at) !== null).length;
       if (quiet > 0) now.push({ key: 'quiet', label: quietTraineeCount(quiet, lang), go: go('#/trainer') });
       // History lists the reviews the trainer is asked to read — commented on or not.
-      const read = new Set(ids.flatMap(id => filedReviews(grouped.get(id) ?? [], id).filter(r => r.reason !== null).map(r => `${id}:${r.at}`)));
+      const read = new Set(filed.filter(r => r.reason !== null).map(r => `${r.employeeId}:${r.at}`));
 
       const name = (uid: string) => { const u = learners.find(x => x.id === uid); return u ? displayNameOf(u, lang) : uid; };
       for (const e of events) {
@@ -386,7 +387,7 @@ const ActionCenter: React.FC<{ now: readonly BellItem[]; before: readonly BellIt
       {urgent && <span aria-hidden className="no-shrink" style={{ width: 6, height: 6, borderRadius: 'var(--r-full)', background: 'var(--attn)' }} />}
       <span className="grow">
         <span className="t-sm">{it.label}</span>
-        {it.at && <span className="t-label c-tx3 block">{new Date(it.at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long' })}</span>}
+        {it.at && <span className="t-label c-tx3 block">{dayMonth(it.at, lang)}</span>}
       </span>
     </button>
   );

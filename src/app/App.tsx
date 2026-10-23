@@ -36,11 +36,12 @@ import { RouteBoundary } from './RouteBoundary';
 import { MODULES, moduleById, BOSS_BATTLES, lessonRetrievalId, FIRST_MODULE_ID } from '../content/registry';
 import { unitPlace } from '../domain/journey/program';
 import { canChallenge } from '../domain/journey/proof';
-import { progressStore, useProgress, isModuleUnlocked, isModuleComplete, isLessonDone, examGate, examAttemptsOf } from './progress';
+import { phaseContextOf } from '../domain/journey/progression';
+import { progressStore, useProgress, isModuleUnlocked, isLessonDone, examGate, examAttemptsOf } from './progress';
 import { parseHash, toHash, type View } from './router';
 import { leaveGuard } from './leaveGuard';
 import { consumed, pushUrl, replaceUrl, restore, settled } from './overlayHistory';
-import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents, useTraining, reviewOf } from './training/trainingStore';
+import { trainingStore, currentTraineeId, traineeIdOrNull, useTrainingEvents, useTraining } from './training/trainingStore';
 import { TRAINING_POLICY } from '../domain/policy';
 import { useLang, t, tf, dateLocale } from './i18n';
 
@@ -404,11 +405,11 @@ export const App: React.FC = () => {
 
   if (view.kind === 'boss') {
     const b = BOSS_BATTLES.find(x => x.id === view.bossId);
-    // Guard: a boss opens only when every unit it covers is complete — or was
-    // proved by its exam on the proof path (domain/journey/proof).
+    // Guard: the journey's own rule — a boss opens once every unit it covers
+    // is approved (a unit proved on the proof path is approved too).
     const me = traineeIdOrNull();
-    const covered = (u: string) => isModuleComplete(p, u) || (!!me && reviewOf(trainingStore.get(), me, u).credited === true);
-    if (!b || !b.afterUnits.every(covered)) return <Redirect to="path" onGo={goTo} />;
+    const ctx = me ? phaseContextOf(p, trainingStore.get(), me) : null;
+    if (!b || !ctx || !b.afterUnits.every(ctx.isModuleApproved)) return <Redirect to="path" onGo={goTo} />;
     return <Lazy><ArabicContent><BossView battle={b} onExit={toOrigin} exitLabel={originLabel()} onFinish={() => progressStore.passBoss(b.id)} /></ArabicContent></Lazy>;
   }
 

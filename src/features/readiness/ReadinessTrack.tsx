@@ -16,17 +16,13 @@ import { STATION_STAGES } from '../../domain/readiness/track';
 import type { StationKind } from '../../domain/readiness';
 import { EVALUATION_DIMENSIONS } from '../../domain/evaluation';
 import { ArabicContent } from '../../ui/primitives';
-import { useLang, t, tf, type Key, type Lang, dateLocale } from '../../app/i18n';
+import { useLang, t, type Key, dayMonth } from '../../app/i18n';
 import { levelOf, requiredLevel } from '../../domain/rubric';
-import { levelLabel } from './labels';
+import { levelBelowText } from './labels';
 
 const KIND: Record<StationKind, Key> = {
   case: 'tr.kind.case', file_review: 'tr.kind.file_review', live_encounter: 'tr.kind.live_encounter', interview: 'tr.kind.interview',
 };
-
-/** The day an observation was recorded: Arabic month names, Latin digits like the rest of the product. */
-const dateOf = (at: number, lang: Lang) =>
-  new Date(at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long' });
 
 /**
  * Where a station stands, as a word and four marks: one per stage after «not
@@ -77,7 +73,7 @@ export const ReadinessTrack: React.FC<{
               {s.assessment && (
                 <figure className="track-evidence">
                   <ArabicContent as="blockquote" className="m-0">{s.assessment.observation}</ArabicContent>
-                  <figcaption>{t('tr.observed', lang)} {dateOf(s.assessment.at, lang)}</figcaption>
+                  <figcaption>{t('tr.observed', lang)} {dayMonth(s.assessment.at, lang)}</figcaption>
                 </figure>
               )}
               {s.gaps.length > 0 && (
@@ -85,7 +81,7 @@ export const ReadinessTrack: React.FC<{
                   {s.gaps.map(g => (
                     <li key={g.dimension} data-critical={g.critical || undefined}>
                       <ArabicContent as="span">{EVALUATION_DIMENSIONS[g.dimension]}</ArabicContent>
-                      {' — '}{tf('perf.levelbelow', { l: levelLabel(levelOf(g.score), lang), need: levelLabel(requiredLevel(g.floor), lang) }, lang)}
+                      {' — '}{levelBelowText(levelOf(g.score), requiredLevel(g.floor), lang)}
                       {' · '}{t(g.critical ? 'tr.gap.critical' : 'tr.gap.dev', lang)}
                     </li>
                   ))}

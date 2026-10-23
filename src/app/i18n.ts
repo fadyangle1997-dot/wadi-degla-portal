@@ -1087,6 +1087,10 @@ export const iso = (v: string | number): string => `\u2068${v}\u2069`;
 /** The locale for dates: Egyptian Arabic month names with the product's Western digits. */
 export const dateLocale = (l: Lang = lang): string => (l === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB');
 
+/** «12 أكتوبر» / «12 October» — the day something was recorded, Latin digits in both languages. */
+export const dayMonth = (at: number, l: Lang = lang): string =>
+  new Date(at).toLocaleDateString(dateLocale(l), { day: 'numeric', month: 'long' });
+
 /** Translate and fill {placeholders}: tf('pf.dayof', { d: 12 }, lang). */
 export const tf = (key: Key, vars: Readonly<Record<string, string | number>>, l: Lang = lang): string =>
   t(key, l).replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ''));

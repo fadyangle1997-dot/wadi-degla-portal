@@ -38,41 +38,37 @@ export function trackOf(events: readonly LogEvent[], employeeId: string): TrackA
 export const onProofTrack = (events: readonly LogEvent[], employeeId: string): boolean =>
   trackOf(events, employeeId)?.track === 'proof';
 
-/** The recorded result of the one attempt at this unit, if it finished. */
-export function challengeResultOf(events: readonly LogEvent[], employeeId: string, moduleId: string): { score: number; passed: boolean; at: number } | null {
-  for (const e of events) {
-    if (e.type === 'UNIT_CHALLENGED' && e.employeeId === employeeId && (e as ChallengeEvent).moduleId === moduleId) {
-      const c = e as ChallengeEvent;
-      return { score: c.score, passed: c.passed, at: c.at };
-    }
-  }
-  return null;
-}
-
-/** Whether the one attempt at this unit was started (its first answer given). */
-export const challengeStarted = (events: readonly LogEvent[], employeeId: string, moduleId: string): boolean =>
-  events.some(e => e.type === 'UNIT_CHALLENGE_STARTED' && e.employeeId === employeeId && (e as { moduleId?: string }).moduleId === moduleId);
-
 /**
  * The one attempt at proving this unit: its result, or — started and never
  * finished (left, reloaded, the tab closed) — a miss. null when untried.
  */
 export function challengeOf(events: readonly LogEvent[], employeeId: string, moduleId: string): { score: number; passed: boolean; at: number; finished: boolean } | null {
-  const result = challengeResultOf(events, employeeId, moduleId);
-  if (result) return { ...result, finished: true };
-  const started = events.find(e => e.type === 'UNIT_CHALLENGE_STARTED' && e.employeeId === employeeId && (e as { moduleId?: string }).moduleId === moduleId);
+  let started: LogEvent | null = null;
+  for (const e of events) {
+    if (e.employeeId !== employeeId || (e as { moduleId?: string }).moduleId !== moduleId) continue;
+    if (e.type === 'UNIT_CHALLENGED') {
+      const c = e as ChallengeEvent;
+      return { score: c.score, passed: c.passed, at: c.at, finished: true };
+    }
+    if (e.type === 'UNIT_CHALLENGE_STARTED') started ??= e;
+  }
   return started ? { score: 0, passed: false, at: started.at, finished: false } : null;
 }
 
 /**
- * May this unit be proved now? On the proof path, the unit open, untouched
- * (no lesson done, no exam passed, nothing submitted) and not proved before.
+ * The training side of «may this unit be proved?» — what the store can check
+ * on its own: on the proof path, the unit never submitted, and never tried.
+ */
+export const challengeOpen = (t: TrainingState, events: readonly LogEvent[], employeeId: string, moduleId: string): boolean =>
+  onProofTrack(events, employeeId) && reviewOf(t, employeeId, moduleId).status === 'none' && challengeOf(events, employeeId, moduleId) === null;
+
+/**
+ * May this unit be proved now? The training side above, and the unit open
+ * and untouched in the trainee's progress (no lesson done, no exam passed).
  */
 export function canChallenge(p: Progress, t: TrainingState, events: readonly LogEvent[], employeeId: string, moduleId: string): boolean {
   const m = moduleById(moduleId);
-  if (!m || !onProofTrack(events, employeeId)) return false;
+  if (!m || !challengeOpen(t, events, employeeId, moduleId)) return false;
   if (!isModuleUnlocked(p, moduleId, t, employeeId)) return false;
-  if (reviewOf(t, employeeId, moduleId).status !== 'none') return false;
-  if (m.lessons.some(l => isLessonDone(p, l.id)) || examPassed(p, moduleId)) return false;
-  return challengeOf(events, employeeId, moduleId) === null;
+  return !m.lessons.some(l => isLessonDone(p, l.id)) && !examPassed(p, moduleId);
 }

@@ -24,15 +24,14 @@ import type { TrainingState } from '../../app/training/trainingStore';
 import type { User } from '../identity';
 import type { EvaluationDimension } from '../evaluation';
 import { awaitsReadinessDecision, escalatedUnitsOf } from '../journey/programCompletion';
-import { formalReadiness } from '../readiness/status';
+import { formalReadiness, basisOf, type DecisionBasis } from '../readiness/status';
 import { performanceFromOwnEvents, groupByEmployee } from '../performance';
 import { detectOperationalIssues, type OperationalIssue } from '../operations/health';
 import { HEALTH_POLICY } from '../policy';
 import { waitingUnits, type OrgEvent } from './organization';
 
 export type AttentionItem =
-  | { readonly kind: 'readiness_decision'; readonly employeeId: string; readonly since: number | null;
-      readonly stationsDone: number; readonly stationsTotal: number; readonly conductRecorded: boolean; readonly stationsSayReady: boolean }
+  | { readonly kind: 'readiness_decision'; readonly employeeId: string; readonly since: number | null; readonly basis: DecisionBasis }
   | { readonly kind: 'escalated_unit'; readonly employeeId: string; readonly since: number | null; readonly moduleIds: readonly string[] }
   | { readonly kind: 'immediate_follow_up'; readonly employeeId: string; readonly since: number | null;
       readonly criticalAtLowest: readonly EvaluationDimension[]; readonly sentBack: number }
@@ -60,13 +59,11 @@ export function attentionQueue(
     const own = grouped.get(id) ?? [];
 
     if (awaitsReadinessDecision(t, id)) {
-      const f = formalReadiness(own, id, true);
       items.push({
         kind: 'readiness_decision', employeeId: id,
         // Waiting since the last unit approval that completed the programme.
         since: lastAt(own, e => (e.type === 'EVALUATION_RECORDED' || e.type === 'UNIT_ESCALATION_ANSWERED') && e.decision === 'ready'),
-        stationsDone: f.stationsDone, stationsTotal: f.stationsTotal, conductRecorded: f.conductRecorded,
-        stationsSayReady: f.engine.decision === 'ready',
+        basis: basisOf(formalReadiness(own, id, true)),
       });
     }
 

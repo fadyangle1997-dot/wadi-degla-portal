@@ -14,11 +14,11 @@ import { EVALUATION_DIMENSIONS } from '../../domain/evaluation';
 import { displayNameOf } from '../../domain/identity';
 import { moduleById } from '../../content/registry';
 import { issueText } from '../admin/issueText';
-import { levelLabel } from '../readiness/labels';
+import { levelLabel, basisParams } from '../readiness/labels';
 import { DataTable, SectionHeader, Status, EmptyState, ArabicContent, tx, type Column } from '../../ui/primitives';
 import { tone, rowTone, type Semantic } from '../../ui/statusSemantics';
-import { useLang, t as tr, tf, iso, type Lang } from '../../app/i18n';
-import { stationCount, daysAgo, dayCount, timesCount } from '../../app/plural';
+import { useLang, t as tr, tf, type Lang } from '../../app/i18n';
+import { daysAgo, dayCount, timesCount } from '../../app/plural';
 import { CheckCircle2 } from 'lucide-react';
 
 const SEMANTIC: Record<AttentionItem['kind'], Semantic> = {
@@ -45,14 +45,8 @@ export const AttentionQueue: React.FC<{ ids: readonly string[]; onInspect: (id: 
 
   const why = (i: AttentionItem, l: Lang): React.ReactNode => {
     switch (i.kind) {
-      case 'readiness_decision': {
-        const complete = i.stationsDone === i.stationsTotal && i.conductRecorded;
-        return tf('aq.w.decision', {
-          s: iso(i.stationsDone), t: stationCount(i.stationsTotal, l),
-          c: tr(i.conductRecorded ? 'aq.conduct.yes' : 'aq.conduct.no', l),
-          v: tr(!complete ? 'rd.noverdict' : i.stationsSayReady ? 'rd.dec.ready' : 'rd.dec.not_ready', l),
-        }, l);
-      }
+      case 'readiness_decision':
+        return tf('aq.w.decision', basisParams(i.basis, l), l);
       case 'escalated_unit':
         return tx('aq.w.escalated', { m: <>{i.moduleIds.map((m, k) => <React.Fragment key={m}>{k > 0 && '، '}{unit(m)}</React.Fragment>)}</> }, l);
       case 'immediate_follow_up':
@@ -70,7 +64,7 @@ export const AttentionQueue: React.FC<{ ids: readonly string[]; onInspect: (id: 
     { id: 'who', header: tr('dt.employee', lang), cell: i => <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{nameOf(i.employeeId)}</span> },
     { id: 'what', header: tr('aq.col.what', lang), cell: i => <Status tone={tone(SEMANTIC[i.kind])}>{tr(`aq.k.${i.kind}`, lang)}</Status> },
     { id: 'why', header: tr('aq.col.why', lang), cell: i => <span className="t-sm c-tx1">{why(i, lang)}</span> },
-    { id: 'since', header: tr('tn.col.waiting', lang), cell: i => i.since ? <span className="t-sm c-tx2">{daysAgo(Math.floor((Date.now() - i.since) / DAY_MS), lang)}</span> : null },
+    { id: 'since', header: tr('tn.col.waiting', lang), cell: i => i.since ? <span className="t-sm c-tx2">{daysAgo(i.kind === 'trainer_bottleneck' ? i.days : Math.floor((Date.now() - i.since) / DAY_MS), lang)}</span> : null },
   ];
 
   return (

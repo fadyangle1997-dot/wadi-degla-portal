@@ -10,7 +10,9 @@ import { useOrganization } from '../../app/organization/orgStore';
 import { trainingStore, useTraining } from '../../app/training/trainingStore';
 import { storedProgressEventsOf } from '../../app/backend';
 import { isProgramComplete } from '../../domain/journey/programCompletion';
-import { pilotRow, pilotSummary, pilotCsv } from '../../domain/analytics/pilot';
+import { pilotRow, pilotSummary, pilotCsv, firstAt } from '../../domain/analytics/pilot';
+import { groupByEmployee } from '../../domain/performance';
+import { downloadCsv } from '../../lib/csv';
 import { branchNameOf } from '../../domain/organization';
 import { usersWhoCan } from '../../domain/identity/scope';
 import { Button, SectionHeader, Toast } from '../../ui/primitives';
@@ -25,13 +27,12 @@ export const PilotExport: React.FC = () => {
   const [toast, setToast] = useState<string | null>(null);
   // Learners by capability, not by role name (domain/identity/scope).
   const trainees = useMemo(() => usersWhoCan(users, roles, 'academy.learn').filter(u => u.status !== 'archived'), [users, roles]);
+  // Each trainee's progress log is read once, not on every training change.
+  const starts = useMemo(() => new Map(trainees.map(u => [u.id, firstAt(storedProgressEventsOf(u.id))])), [trainees]);
   const rows = useMemo(() => {
-    const events = trainingStore.events();
-    return trainees.map(u => {
-      const first = storedProgressEventsOf(u.id).reduce<number | null>((m, e) => (m === null || e.at < m ? e.at : m), null);
-      return pilotRow(events, u.id, first, isProgramComplete(tState, u.id));
-    });
-  }, [trainees, tState]);
+    const own = groupByEmployee(trainingStore.events());
+    return trainees.map(u => pilotRow(own.get(u.id) ?? [], u.id, starts.get(u.id) ?? null, isProgramComplete(tState, u.id)));
+  }, [trainees, starts, tState]);
   const s = pilotSummary(rows);
 
   const exportCsv = () => {
@@ -39,15 +40,7 @@ export const PilotExport: React.FC = () => {
       const u = users.find(x => x.id === id);
       return { name: u?.name ?? id, branch: branchNameOf(u?.branchId, org.branches), trainer: users.find(x => x.id === u?.trainerId)?.name ?? '' };
     };
-    const url = URL.createObjectURL(new Blob([pilotCsv(rows, who)], { type: 'text/csv;charset=utf-8' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pilot-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    // Revoked after the click has been handed to the browser.
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadCsv('pilot', pilotCsv(rows, who));
     setToast(t('ad.exported', lang));
     window.setTimeout(() => setToast(null), 2600);
   };

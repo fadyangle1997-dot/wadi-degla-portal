@@ -160,16 +160,20 @@ export function filedReviews(events: readonly LogEvent[], employeeId: string): r
     .sort((a, b) => b.at - a.at);
 }
 
+/** A review the trainer owes a comment on: it needs them and has none yet. */
+export const awaitsTrainer = (r: FiledReview): boolean => r.reason !== null && r.comments.length === 0;
+
 /**
  * The trainer's review queue: reviews that need them (asked, first, the week's
  * sample) and carry no comment yet, oldest first — the longest wait leads.
+ * One pass over the log, whatever the number of trainees.
  */
 export function reviewsForTrainer(
   events: readonly LogEvent[], employeeIds: readonly string[],
 ): readonly FiledReview[] {
-  return employeeIds
-    .flatMap(id => filedReviews(events, id).filter(r => r.reason !== null && r.comments.length === 0))
-    .sort((a, b) => a.at - b.at);
+  const own = new Map<string, LogEvent[]>(employeeIds.map(id => [id, []]));
+  for (const e of events) if (e.employeeId) own.get(e.employeeId)?.push(e);
+  return [...own].flatMap(([id, log]) => filedReviews(log, id).filter(awaitsTrainer)).sort((a, b) => a.at - b.at);
 }
 
 /** Comments the trainee has not opened yet — what the bell says is new. */

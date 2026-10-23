@@ -34,7 +34,7 @@ import {
   ScreenHeader, EmptyState, ArabicContent, Status, Button, FormField, Toast, DataTable, type Column,
 } from '../../ui/primitives';
 import { WIDTH } from '../../ui/designSystem';
-import { useLang, t as tr, tf, iso, dateLocale } from '../../app/i18n';
+import { useLang, t as tr, tf, iso, dayMonth } from '../../app/i18n';
 import { TRAINING_POLICY } from '../../domain/policy';
 
 type LogEvent = ReturnType<typeof trainingStore.events>[number];
@@ -169,7 +169,7 @@ const Profile: React.FC<{ employeeId: string; name: string; onExit: () => void }
                 {[...evaluations].reverse().map(e => (
                   <li key={`${e.moduleId}:${e.at}`}>
                     <ArabicContent as="span" className="t-sm c-tx0">{moduleById(e.moduleId)?.title ?? e.moduleId}</ArabicContent>
-                    <span className="t-sm c-tx2"> — <ArabicContent as="span">{UNIT_DECISION_LABEL[e.decision]}</ArabicContent> · {dateOf(e.at, lang)}</span>
+                    <span className="t-sm c-tx2"> — <ArabicContent as="span">{UNIT_DECISION_LABEL[e.decision]}</ArabicContent> · {dayMonth(e.at, lang)}</span>
                   </li>
                 ))}
               </ol>
@@ -198,7 +198,7 @@ const Profile: React.FC<{ employeeId: string; name: string; onExit: () => void }
             ? <p className="t-sm c-tx2 m-0">{tr('tp.nonotes', lang)}</p>
             : (
               <ul className="tp-list">
-                {[...notes].reverse().map(n => <li key={n.at}><ArabicContent as="span" className="t-sm c-tx1">{n.note}</ArabicContent> <span className="t-label c-tx3">· {dateOf(n.at, lang)}</span></li>)}
+                {[...notes].reverse().map(n => <li key={n.at}><ArabicContent as="span" className="t-sm c-tx1">{n.note}</ArabicContent> <span className="t-label c-tx3">· {dayMonth(n.at, lang)}</span></li>)}
               </ul>
             )}
           <NoteBox employeeId={employeeId} name={name} onSaved={() => say(tr('tn.notesaved', lang))} />
@@ -208,9 +208,6 @@ const Profile: React.FC<{ employeeId: string; name: string; onExit: () => void }
     </div>
   );
 };
-
-const dateOf = (at: number, lang: 'ar' | 'en') =>
-  new Date(at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long' });
 
 /**
  * One filed review: the five links, any comments, and a comment box — open
@@ -232,7 +229,7 @@ const ReviewCard: React.FC<{ review: FiledReview; employeeId: string; focus: boo
   }, [focus, id]);
   return (
     <article className="tp-review" data-open={owed || undefined} aria-labelledby={`${id}-h`}>
-      <h3 id={`${id}-h`} className="t-title m-0">{tf('tp.reviewof', { d: dateOf(review.at, lang) }, lang)}
+      <h3 id={`${id}-h`} className="t-title m-0">{tf('tp.reviewof', { d: dayMonth(review.at, lang) }, lang)}
         {owed && <> · <Status tone={tone(review.reason === 'asked' ? 'warning' : UNIT_REVIEW.waiting)}>{tr(`tn.why.${review.reason}`, lang)} — {tr('tp.awaitscomment', lang)}</Status></>}
       </h3>
       <dl className="tp-chain">
@@ -244,7 +241,7 @@ const ReviewCard: React.FC<{ review: FiledReview; employeeId: string; focus: boo
         ))}
       </dl>
       {review.comments.map(c => (
-        <p key={c.at} className="tp-comment t-sm m-0"><span className="t-label c-tx3">{tr('tp.yourcomment', lang)} · {dateOf(c.at, lang)}</span><br /><ArabicContent as="span">{c.comment}</ArabicContent></p>
+        <p key={c.at} className="tp-comment t-sm m-0"><span className="t-label c-tx3">{tr('tp.yourcomment', lang)} · {dayMonth(c.at, lang)}</span><br /><ArabicContent as="span">{c.comment}</ArabicContent></p>
       ))}
       {!writing ? <div><Button variant="ghost" onClick={() => setWriting(true)}>{tr('tp.addcomment', lang)}</Button></div> : (
       <form noValidate className="stack gap-2" onSubmit={e => {

@@ -34,7 +34,7 @@ describe('attention queue', () => {
   it('a finished programme is a readiness decision, with what the stations say', () => {
     const events = MODULES.map((m, i) => evaluate('e1', m.id, 'ready', NOW - DAY * (10 - i)));
     const [item] = queue(events, [user('e1')]);
-    expect(item).toMatchObject({ kind: 'readiness_decision', employeeId: 'e1', stationsDone: 0, stationsTotal: 6, conductRecorded: false, stationsSayReady: false });
+    expect(item).toMatchObject({ kind: 'readiness_decision', employeeId: 'e1', basis: { stationsDone: 0, conductRecorded: false, engine: 'not_ready' } });
   });
 
   it('an escalated unit names the unit', () => {

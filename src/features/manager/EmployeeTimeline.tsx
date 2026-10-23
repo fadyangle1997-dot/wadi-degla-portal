@@ -13,12 +13,13 @@ import { UNIT_DECISION_LABEL } from '../../domain/evaluation';
 import { detectOperationalIssues } from '../../domain/operations/health';
 import type { TrainingEvent } from '../../app/training/trainingBackend';
 import { STATIONS } from '../../domain/readiness';
-import { trackOf } from '../../domain/journey/proof';
+import { trackOf, challengeOf, type TrackAssignment } from '../../domain/journey/proof';
+import { decisionEvidence, type DecisionEvidence as DecisionEvidenceData } from '../../domain/readiness/decisionEvidence';
 import { displayNameOf } from '../../domain/identity';
 import { Button, Eyebrow, StatusBadge, ArabicContent, tx, CloseButton, ConfirmDialog, Toast, InlineError, FormField, EmptyState, useModal, useExitFlow } from '../../ui/primitives';
 import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
 import { DecisionEvidence, DecisionRecord } from '../readiness/DecisionEvidence';
-import { useLang, t as tr, tf, iso, dateLocale, type Key } from '../../app/i18n';
+import { useLang, t as tr, tf, iso, dayMonth, type Key } from '../../app/i18n';
 import { unitCount } from '../../app/plural';
 import { leaveGuard } from '../../app/leaveGuard';
 import { Icon } from '../../ui/Icon';
@@ -60,7 +61,7 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
   const { users } = useIdentity();
   const t = useTraining();
   // Readiness stations and coaching notes change the log but not the snapshot.
-  useTrainingEvents();
+  const log = useTrainingEvents();
   const canDo = useCan();
   const user = users.find(u => u.id === employeeId);
   const name = user?.name ?? employeeId;
@@ -83,15 +84,18 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
   // Focus in, Tab kept inside, Escape closes (asking first), focus back to the row.
   const dialogRef = useModal<HTMLDivElement>(close, undefined, true);
   const trainer = user?.trainerId ? users.find(u => u.id === user.trainerId) : undefined;
-  const events = trainingStore.events().filter(e => 'employeeId' in e && e.employeeId === employeeId);
+  // Read once per change to the log, not on every keystroke in the file's
+  // reason boxes: the file re-renders as the rationale is typed.
+  const events = React.useMemo(() => log.filter(e => 'employeeId' in e && e.employeeId === employeeId), [log, employeeId]);
 
   // The same composition the full report reads: the readiness assessment is
   // the answer, practical performance is evidence, never the other way round.
-  const report = readinessReport(t, trainingStore.events(), employeeId);
+  const report = React.useMemo(() => readinessReport(t, log, employeeId), [t, log, employeeId]);
   const perf = report.performance;
-  const issues = detectOperationalIssues(users, trainingStore.events())
-    .filter(i => i.targetUserId === employeeId);
-  const isOrphan = issues.some(i => i.kind === 'orphan_user');
+  const evidence = React.useMemo(() => decisionEvidence(events as unknown as Parameters<typeof decisionEvidence>[0], employeeId), [events, employeeId]);
+  const isOrphan = React.useMemo(
+    () => detectOperationalIssues(users, log).some(i => i.targetUserId === employeeId && i.kind === 'orphan_user'),
+    [users, log, employeeId]);
 
   // Module names, decision labels and free-text reasons are Arabic content
   // inside a translated sentence, so each is declared as Arabic. Only what a
@@ -110,7 +114,7 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
       case 'TRACK_ASSIGNED': return <>{tr(e.track === 'proof' ? 'pf.tl.proof' : 'pf.tl.standard', lang)}{e.reason && <>: <bdi dir="auto">{e.reason}</bdi></>}</>;
       case 'UNIT_CHALLENGED': return tx(e.passed ? 'pf.tl.passed' : 'pf.tl.missed', { m: unit(e.moduleId) }, lang);
       // Only an attempt that never finished needs its own line; a finished one has its result.
-      case 'UNIT_CHALLENGE_STARTED': return events.some(x => x.type === 'UNIT_CHALLENGED' && x.moduleId === e.moduleId) ? null : tx('pf.tl.unfinished', { m: unit(e.moduleId) }, lang);
+      case 'UNIT_CHALLENGE_STARTED': return challengeOf(events, employeeId, e.moduleId)?.finished ? null : tx('pf.tl.unfinished', { m: unit(e.moduleId) }, lang);
       case 'STATION_ASSESSED': return tx('mg.tl.station', { s: <ArabicContent as="span">{STATIONS.find(st => st.id === e.stationId)?.title ?? e.stationId}</ArabicContent> }, lang);
       case 'CONDUCT_OBSERVED': return tr('mg.tl.conduct', lang);
       case 'FINAL_READINESS_DECIDED': return tr('mg.tl.decision', lang);
@@ -160,7 +164,7 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
             <span className="t-label c-tx3">{tr('mg.responsible', lang)}</span>
             <span className="t-sm">{trainer?.name ?? tr('mg.unassigned', lang)}</span>
           </div>
-          <TrackControl employeeId={employeeId} canDecide={canDo('readiness.decide')} />
+          <TrackControl employeeId={employeeId} track={trackOf(events, employeeId)} canDecide={canDo('readiness.decide')} />
         </div>
 
         {/* ── LAYER 3 · CONTEXT — the timeline, folded below the verdict ── */}
@@ -183,7 +187,7 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
 
         {/* ── decision panel — the manager's action, unchanged ── */}
         <FinalDecisionPanel employeeId={employeeId} t={t} canDecide={canDo('readiness.decide')}
-          canCertify={report.formal.canCertify}
+          canCertify={report.formal.canCertify} evidence={evidence}
           rationale={rationale} setRationale={setRationale} />
       </div>
       {dialog}
@@ -197,11 +201,9 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
  * on the standard one — and must say why; the reason, who and when stay on
  * the file. The stations and the readiness decision are the same either way.
  */
-const TrackControl: React.FC<{ employeeId: string; canDecide: boolean }> = ({ employeeId, canDecide }) => {
+const TrackControl: React.FC<{ employeeId: string; track: TrackAssignment | null; canDecide: boolean }> = ({ employeeId, track, canDecide }) => {
   const lang = useLang();
   const { users } = useIdentity();
-  const log = useTrainingEvents();
-  const track = trackOf(log, employeeId);
   const proof = track?.track === 'proof';
   const [open, setOpen] = React.useState(false);
   const [why, setWhy] = React.useState('');
@@ -222,7 +224,7 @@ const TrackControl: React.FC<{ employeeId: string; canDecide: boolean }> = ({ em
         {canDecide && !open && <Button variant="ghost" onClick={() => setOpen(true)}>{tr(proof ? 'pf.unassign' : 'pf.assign', lang)}</Button>}
       </div>
       {track && (
-        <p className="t-sm c-tx2 m-0"><bdi>{by ? displayNameOf(by, lang) : tr('mg.unassigned', lang)}</bdi> · {new Date(track.at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long' })}: <bdi dir="auto">{track.reason}</bdi></p>
+        <p className="t-sm c-tx2 m-0"><bdi>{by ? displayNameOf(by, lang) : tr('mg.unassigned', lang)}</bdi> · {dayMonth(track.at, lang)}: <bdi dir="auto">{track.reason}</bdi></p>
       )}
       {open && (
         <div className="stack gap-2">
@@ -263,11 +265,12 @@ const EscalationPanel: React.FC<{ employeeId: string; name: string; trainerName:
     if (!(reasons[moduleId] ?? '').trim()) { setNeedWhy(moduleId); document.getElementById(`mg-esc-why-${moduleId}`)?.focus(); return; }
     setPending({ moduleId, decision });
   };
-  const noteOf = (moduleId: string) => {
-    let note: string | undefined;
-    for (const e of log) if (e.type === 'EVALUATION_RECORDED' && e.employeeId === employeeId && e.moduleId === moduleId) note = e.note;
-    return note;
-  };
+  // The trainer's latest note on each unit, read once per change to the log.
+  const notes = React.useMemo(() => {
+    const m = new Map<string, string | undefined>();
+    for (const e of log) if (e.type === 'EVALUATION_RECORDED' && e.employeeId === employeeId) m.set(e.moduleId, e.note);
+    return m;
+  }, [log, employeeId]);
   const label = (d: 'ready' | 'return') => tr(d === 'ready' ? 'tn.ready' : 'mg.esc.return', lang);
   const answer = () => {
     const p = pending;
@@ -288,7 +291,7 @@ const EscalationPanel: React.FC<{ employeeId: string; name: string; trainerName:
     <div className="mt-5 section-rule">
       <Eyebrow icon={<Icon as={Gavel} size="sm" />}>{tr('mg.esc.title', lang)}</Eyebrow>
       {units.map(mod => {
-        const note = noteOf(mod.id);
+        const note = notes.get(mod.id);
         return (
           <div key={mod.id} className="stack mt-3 gap-2">
             <p className="t-sm m-0">{tx('mg.esc.body', { trainer: <bdi>{trainerName}</bdi>, m: <ArabicContent as="span">{mod.title}</ArabicContent> }, lang)}</p>
@@ -332,8 +335,9 @@ const FinalDecisionPanel: React.FC<{
   employeeId: string; t: ReturnType<typeof useTraining>; canDecide: boolean;
   /** «جاهز للعمل» certifies only with the stations' verdict behind it. */
   canCertify: boolean;
+  evidence: DecisionEvidenceData;
   rationale: string; setRationale: (v: string) => void;
-}> = ({ employeeId, t, canDecide, canCertify, rationale, setRationale }) => {
+}> = ({ employeeId, t, canDecide, canCertify, evidence, rationale, setRationale }) => {
   const lang = useLang();
   const existing = finalDecisionOf(t, employeeId);
   const complete = isProgramComplete(t, employeeId);
@@ -387,12 +391,12 @@ const FinalDecisionPanel: React.FC<{
           {existing.rationale && <span className="t-sm c-tx2">{existing.rationale}</span>}
         </div>
       )}
-      {existing && <div className="mt-2"><DecisionRecord employeeId={employeeId} /></div>}
+      {existing && <div className="mt-2"><DecisionRecord ev={evidence} /></div>}
 
       {complete && (
         <div className="stack mt-3 gap-3">
           <ReadinessOutcomeSummary employeeId={employeeId} />
-          <DecisionEvidence employeeId={employeeId} />
+          <DecisionEvidence employeeId={employeeId} ev={evidence} />
           {/* Station 6 — the readiness interview — is the manager's own evidence. */}
           {canDecide && <StationAssessment employeeId={employeeId} assessor="manager" onSaved={flash} headingLevel={3} />}
         </div>

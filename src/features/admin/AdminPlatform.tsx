@@ -30,6 +30,7 @@ import { useLang, t, tf, roleName as roleDisplayName, type Key, dateLocale } fro
 import { overlayParams } from '../../app/overlayHistory';
 import { leaveGuard } from '../../app/leaveGuard';
 import { eventCount, issuesNeedAction } from '../../app/plural';
+import { downloadCsv, toCsv } from '../../lib/csv';
 
 type Tab = 'dashboard' | 'inbox' | 'org' | 'audit' | 'users';
 
@@ -292,19 +293,8 @@ const AuditPanel: React.FC<{ canExport: boolean }> = ({ canExport }) => {
   // as a CSV that opens in Excel with its Arabic intact (UTF-8 BOM).
   const exportCsv = () => {
     const rows = auditExportRows(matching, nameOf, lang, roleNameOf);
-    const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
-    const csv = ['\uFEFF' + ['at', 'actor', 'action', 'target', 'before', 'after', 'detail'].join(','),
-      ...rows.map(r => [new Date(r.at).toISOString(), r.actor, r.action, r.target, r.before, r.after, r.detail].map(cell).join(','))].join('\r\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `audit-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    // Revoked after the click has been handed to the browser: revoking at
-    // once cancels the download in Chromium.
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadCsv('audit', toCsv(['at', 'actor', 'action', 'target', 'before', 'after', 'detail'],
+      rows.map(r => [new Date(r.at).toISOString(), r.actor, r.action, r.target, r.before, r.after, r.detail])));
     setToast(t('ad.exported', lang));
     window.setTimeout(() => setToast(null), 2600);
   };

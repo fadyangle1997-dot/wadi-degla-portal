@@ -21,20 +21,14 @@
  * No score, no confidence: counts and levels a person can point at.
  * Pure: the log in, the evidence out.
  */
-import { ALL_CONDUCT_CHECKS, ALL_DIMENSIONS, EVALUATION_DIMENSIONS, type EvaluationDimension, type EvaluationDecision } from '../evaluation';
+import { ALL_CONDUCT_CHECKS, ALL_DIMENSIONS, EVALUATION_DIMENSIONS, conductPassed, type EvaluationDimension } from '../evaluation';
 import { levelOf, needsCalibration, requiredLevel, type RubricLevel } from '../rubric';
 import { performanceFromOwnEvents, unitHistory, type TrainingEventLike } from '../performance';
 import { CRITICAL_DIMENSIONS, READINESS_FLOORS, STATIONS } from './index';
 import { latestStationAssessments, latestConduct } from './evidence';
-import type { ManagerReadinessDecision } from './status';
+import { latestManagerDecision, type FormalReadiness } from './status';
 
-/** What the readiness decision rested on, recorded with it (FINAL_READINESS_DECIDED.basis). */
-export interface DecisionBasis {
-  readonly stationsDone: number;
-  readonly conductRecorded: boolean;
-  /** The stations' verdict at the moment of the decision. */
-  readonly engine: EvaluationDecision;
-}
+export type { DecisionBasis } from './status';
 
 export interface KpiEvidence {
   readonly dimension: EvaluationDimension;
@@ -58,20 +52,12 @@ export interface DecisionEvidence {
   readonly missingStations: readonly string[];
   readonly units: { readonly firstTime: number; readonly sentBack: number; readonly extended: number; readonly escalated: number };
   readonly repeatedRules: readonly { readonly rule: string; readonly times: number }[];
-  readonly decision: {
-    readonly decision: ManagerReadinessDecision; readonly at: number; readonly managerId?: string;
-    readonly rationale: string; readonly basis?: DecisionBasis;
-  } | null;
+  readonly decision: FormalReadiness['managerDecision'];
   /** Station or conduct observations recorded after the latest decision. */
   readonly afterDecision: number;
 }
 
-type AnyEvent = TrainingEventLike & {
-  readonly weakRules?: readonly string[];
-  readonly rationale?: string;
-  readonly managerId?: string;
-  readonly basis?: DecisionBasis;
-};
+type AnyEvent = TrainingEventLike & { readonly weakRules?: readonly string[] };
 
 export function decisionEvidence(events: readonly AnyEvent[], employeeId: string): DecisionEvidence {
   const own = events.filter(e => e.employeeId === employeeId);
@@ -101,7 +87,7 @@ export function decisionEvidence(events: readonly AnyEvent[], employeeId: string
 
   const conduct = latestConduct(own, employeeId);
   const conductState = ALL_CONDUCT_CHECKS.some(c => typeof conduct[c] !== 'boolean') ? 'missing'
-    : ALL_CONDUCT_CHECKS.every(c => conduct[c] === true) ? 'seen' : 'not_seen';
+    : conductPassed(conduct) ? 'seen' : 'not_seen';
 
   // Unit history — the one definition practical performance and the pilot read too.
   const h = unitHistory(own);
@@ -109,11 +95,7 @@ export function decisionEvidence(events: readonly AnyEvent[], employeeId: string
   const flagged = new Map<string, number>();
   for (const e of evals) for (const r of e.weakRules ?? []) flagged.set(r, (flagged.get(r) ?? 0) + 1);
 
-  let decision: DecisionEvidence['decision'] = null;
-  for (const e of own) {
-    if (e.type !== 'FINAL_READINESS_DECIDED' || (decision && e.at < decision.at)) continue;
-    decision = { decision: e.decision as ManagerReadinessDecision, at: e.at, managerId: e.managerId, rationale: e.rationale ?? '', basis: e.basis };
-  }
+  const decision = latestManagerDecision(own, employeeId);
   const decidedAt = decision?.at;
 
   return {

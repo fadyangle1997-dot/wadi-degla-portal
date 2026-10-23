@@ -11,11 +11,12 @@
 import React from 'react';
 import { Status, ArabicContent } from '../../ui/primitives';
 import { tone, FORMAL_READINESS, FOLLOW_UP } from '../../ui/statusSemantics';
-import type { FormalReadiness } from '../../domain/readiness/status';
+import type { FormalReadiness, DecisionBasis } from '../../domain/readiness/status';
+import { STATIONS } from '../../domain/readiness';
 import type { FollowUpState, PracticalPerformance } from '../../domain/performance';
 import { requiredLevel, type RubricLevel } from '../../domain/rubric';
-import { t as tr, tf, type Key, type Lang } from '../../app/i18n';
-import { timesSeen } from '../../app/plural';
+import { t as tr, tf, iso, type Key, type Lang } from '../../app/i18n';
+import { timesSeen, stationCount } from '../../app/plural';
 
 /** «جاري — 3 من 6 محطات», «مستني قرار المدير», «معتمد للعمل المستقل» … */
 export const formalLabel = (f: FormalReadiness, lang: Lang): string =>
@@ -42,6 +43,27 @@ export const FollowUpStatus: React.FC<{ s: FollowUpState; lang: Lang }> = ({ s, 
 
 /** A rubric level in the reader's language — «بثقة ويشرح», «Confidently, and explains». */
 export const levelLabel = (l: RubricLevel, lang: Lang): string => tr(`rb.level${l}` as Key, lang);
+
+/** «لوحده بتردّد — المطلوب بثقة ويشرح»: a level under what the KPI requires. */
+export const levelBelowText = (level: RubricLevel, required: RubricLevel, lang: Lang): string =>
+  tf('perf.levelbelow', { l: levelLabel(level, lang), need: levelLabel(required, lang) }, lang);
+
+/** A KPI's level in words; below what it requires, both levels in the gap's colour. */
+export const KpiLevel: React.FC<{ level: RubricLevel; required: RubricLevel; below: boolean; critical: boolean; lang: Lang }> = ({ level, required, below, critical, lang }) =>
+  below
+    ? <Status tone={tone(critical ? 'risk' : 'warning')}>{levelBelowText(level, required, lang)}</Status>
+    : <span className="c-tx0">{levelLabel(level, lang)}</span>;
+
+/**
+ * What a readiness decision rests on, as the sentence's values: stations
+ * observed, conduct, and the stations' result — «no result yet» until all
+ * six and the conduct are in. The queue and the decision record say it alike.
+ */
+export const basisParams = (b: DecisionBasis, lang: Lang): Record<string, string> => ({
+  s: iso(b.stationsDone), t: stationCount(STATIONS.length, lang),
+  c: tr(b.conductRecorded ? 'aq.conduct.yes' : 'aq.conduct.no', lang),
+  v: tr(b.stationsDone < STATIONS.length || !b.conductRecorded ? 'rd.noverdict' : b.engine === 'ready' ? 'rd.dec.ready' : 'rd.dec.not_ready', lang),
+});
 
 /**
  * Practical performance in one line, and never a percentage: nothing observed
@@ -71,9 +93,7 @@ export const PerformanceProfile: React.FC<{ p: PracticalPerformance; lang: Lang;
           <td className="t-sm">
             {d.level === null
               ? <span className="c-tx3">{tr('perf.notseen', lang)}</span>
-              : d.belowFloor
-                ? <Status tone={d.critical ? 'risk' : 'attn'}>{tf('perf.levelbelow', { l: levelLabel(d.level, lang), need: levelLabel(requiredLevel(d.floor), lang) }, lang)}</Status>
-                : <span className="c-tx0">{levelLabel(d.level, lang)}</span>}
+              : <KpiLevel level={d.level} required={requiredLevel(d.floor)} below={d.belowFloor} critical={d.critical} lang={lang} />}
           </td>
           <td className="t-label c-tx3">{d.observations > 0 ? timesSeen(d.observations, lang) : ''}</td>
         </tr>

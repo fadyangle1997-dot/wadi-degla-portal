@@ -13,6 +13,7 @@
 import { STATIONS } from '../readiness';
 import { formalReadiness, type FormalReadinessStatus } from '../readiness/status';
 import { unitHistory } from '../performance';
+import { toCsv } from '../../lib/csv';
 
 interface LogEvent {
   readonly type: string; readonly employeeId?: string; readonly at: number;
@@ -54,6 +55,10 @@ const TRAINER_TYPES = new Set(['EVALUATION_RECORDED', 'CONDUCT_OBSERVED', 'REVIE
 const MANAGER_TYPES = new Set(['FINAL_READINESS_DECIDED', 'UNIT_ESCALATION_ANSWERED', 'TRACK_ASSIGNED']);
 const managerStations = new Set(STATIONS.filter(s => s.assessor === 'manager').map(s => s.id));
 
+/** The earliest recorded time in a log; null when it is empty. */
+export const firstAt = (events: readonly { readonly at: number }[]): number | null =>
+  events.reduce<number | null>((m, e) => (m === null || e.at < m ? e.at : m), null);
+
 /**
  * One trainee's row. `startedAt` comes from their progress log (the first
  * lesson, exam or onboarding); `programComplete` from the training state.
@@ -62,8 +67,7 @@ export function pilotRow(events: readonly LogEvent[], employeeId: string, starte
   const own = events.filter(e => e.employeeId === employeeId);
   const formal = formalReadiness(own, employeeId, programComplete);
   const certifiedAt = formal.certified ? formal.managerDecision?.at ?? null : null;
-  const first = own.reduce<number | null>((m, e) => (m === null || e.at < m ? e.at : m), null);
-  const start = startedAt ?? first;
+  const start = startedAt ?? firstAt(own);
 
   // The one unit-history definition (domain/performance), so these counts
   // match the manager's file and practical performance.
@@ -139,13 +143,11 @@ export const PILOT_COLUMNS = [
  * are ISO; empty cells mean «not yet», never zero.
  */
 export function pilotCsv(rows: readonly PilotRow[], who: (id: string) => { name: string; branch: string; trainer: string }): string {
-  const cell = (v: string | number | null) => v === null ? '' : `"${String(v).replace(/"/g, '""')}"`;
   const iso = (t: number | null) => t === null ? null : new Date(t).toISOString();
-  const lines = rows.map(r => {
+  return toCsv(PILOT_COLUMNS, rows.map(r => {
     const p = who(r.employeeId);
     return [r.employeeId, p.name, p.branch, p.trainer, iso(r.startedAt), iso(r.certifiedAt), r.daysToCertification, r.status,
       r.unitAssessments, r.approvedFirstTime, r.sentBack, r.extended, r.escalated, r.proved,
-      r.trainerActions, r.managerActions, r.reviewsFiled, r.reviewComments].map(cell).join(',');
-  });
-  return ['﻿' + PILOT_COLUMNS.join(','), ...lines].join('\r\n');
+      r.trainerActions, r.managerActions, r.reviewsFiled, r.reviewComments];
+  }));
 }
