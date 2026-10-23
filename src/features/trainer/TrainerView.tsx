@@ -19,8 +19,9 @@ import { scopeOf, visibleLearners } from '../../domain/identity/scope';
 import { useTraining, useTrainingEvents, trainingStore, reviewOf } from '../../app/training/trainingStore';
 import { progressOf, learningProgress } from '../../app/progress';
 import { MODULES } from '../../content/registry';
-import { reviewsForTrainer, reviewSilence, type FiledReview } from '../../domain/review';
-import { reviewPhaseSince } from '../../domain/journey/reviewPhase';
+import { reviewsForTrainer, type FiledReview } from '../../domain/review';
+import { quietDays } from '../../domain/journey/reviewPhase';
+import { groupByEmployee } from '../../domain/performance';
 import { toHash } from '../../app/router';
 import { flash } from '../../app/flash';
 import { tone, UNIT_REVIEW } from '../../ui/statusSemantics';
@@ -80,9 +81,9 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   type ReviewRow = { kind: 'review'; employeeId: string; review: FiledReview } | { kind: 'silent'; employeeId: string; days: number };
   const reviewsWaiting = useMemo((): ReviewRow[] => {
     const now = Date.now();
+    const grouped = groupByEmployee(events);
     const silent = employees.flatMap(emp => {
-      const filed = events.flatMap(e => e.type === 'DECISION_REVIEW_FILED' && e.employeeId === emp.id ? [e.at] : []);
-      const days = reviewSilence(filed, reviewPhaseSince(events, emp.id), now);
+      const days = quietDays(grouped.get(emp.id) ?? [], emp.id, now);
       return days === null ? [] : [{ kind: 'silent' as const, employeeId: emp.id, days }];
     });
     const reviews = reviewsForTrainer(events, employees.map(e => e.id))

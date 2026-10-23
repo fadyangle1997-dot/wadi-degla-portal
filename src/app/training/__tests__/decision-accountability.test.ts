@@ -55,14 +55,27 @@ describe('the proof path, in the store', () => {
     expect(e?.type === 'TRACK_ASSIGNED' && [e.track, e.managerId]).toEqual(['proof', 'manager.nabil']);
   });
 
-  it('a unit is proved once, and only on the path', () => {
-    identityStore.signIn('ahmed.m');
-    expect(() => trainingStore.recordChallenge('m1', 0.95)).toThrow();          // not on the path
+  it('an attempt started and never finished — reloaded, closed — is a miss', () => {
     identityStore.signIn('manager.nabil');
     trainingStore.assignTrack({ employeeId: 'ahmed.m', track: 'proof', reason: 'خبرة سابقة.' });
     identityStore.signIn('ahmed.m');
+    trainingStore.startChallenge('m1');
+    // The page reloads here: nothing else is recorded.
+    expect(() => trainingStore.startChallenge('m1')).toThrow();
+    expect(reviewOf(trainingStore.get(), 'ahmed.m', 'm1').status).toBe('none');
+  });
+
+  it('a unit is proved once, and only on the path', () => {
+    identityStore.signIn('ahmed.m');
+    expect(() => trainingStore.startChallenge('m1')).toThrow();                 // not on the path
+    identityStore.signIn('manager.nabil');
+    trainingStore.assignTrack({ employeeId: 'ahmed.m', track: 'proof', reason: 'خبرة سابقة.' });
+    identityStore.signIn('ahmed.m');
+    expect(() => trainingStore.recordChallenge('m1', 0.95)).toThrow();          // no attempt started
+    trainingStore.startChallenge('m1');
+    expect(() => trainingStore.startChallenge('m1')).toThrow();                 // once
     trainingStore.recordChallenge('m1', 0.95);
     expect(reviewOf(trainingStore.get(), 'ahmed.m', 'm1')).toMatchObject({ status: 'ready', credited: true });
-    expect(() => trainingStore.recordChallenge('m1', 0.95)).toThrow();          // once
+    expect(() => trainingStore.recordChallenge('m1', 0.95)).toThrow();          // one result
   });
 });

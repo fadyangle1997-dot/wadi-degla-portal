@@ -55,7 +55,7 @@ export const PilotExport: React.FC = () => {
   return (
     <section className="region" aria-labelledby="ad-pilot">
       <SectionHeader id="ad-pilot" title={t('pm.title', lang)} description={t('pm.sub', lang)}
-        action={rows.length > 0 ? <Button variant="ghost" onClick={exportCsv}>{t('pm.export', lang)}</Button> : undefined} />
+        action={rows.length > 0 ? <Button variant="ghost" onClick={exportCsv}>{t('ad.exportcsv', lang)}</Button> : undefined} />
       <p className="t-sm c-tx1 m-0">
         {tf('pm.summary', {
           n: staffCount(s.people, lang), c: iso(s.certified),

@@ -66,6 +66,9 @@ export type TrainingEvent =
   // The proof path (domain/journey/proof, D7): the branch manager puts an
   // experienced employee on it, with a reason, or back on the standard path.
   | { readonly type: 'TRACK_ASSIGNED'; readonly employeeId: string; readonly managerId: string; readonly track: 'proof' | 'standard'; readonly reason: string; readonly at: number }
+  // The attempt begins at its first answer — recorded at once, so a reload or
+  // a closed tab cannot undo it: started and never finished is a miss.
+  | { readonly type: 'UNIT_CHALLENGE_STARTED'; readonly employeeId: string; readonly moduleId: string; readonly at: number }
   // One attempt to prove a unit by its exam, without its lessons. A pass
   // credits the unit; a miss leaves it an ordinary unit.
   | { readonly type: 'UNIT_CHALLENGED'; readonly employeeId: string; readonly moduleId: string; readonly score: number; readonly passed: boolean; readonly at: number };
@@ -158,6 +161,7 @@ export function reduceTraining(t: TrainingState, e: TrainingEvent): TrainingStat
     case 'STATION_ASSESSED':
     case 'CONDUCT_OBSERVED':
     case 'TRACK_ASSIGNED':
+    case 'UNIT_CHALLENGE_STARTED':
       return t; // derived from the log where needed — the event itself is the value
 
     case 'UNIT_CHALLENGED':

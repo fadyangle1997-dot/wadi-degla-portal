@@ -109,6 +109,8 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
       case 'COACHING_NOTE_ADDED': return tr('mg.coachnote', lang);
       case 'TRACK_ASSIGNED': return <>{tr(e.track === 'proof' ? 'pf.tl.proof' : 'pf.tl.standard', lang)}{e.reason && <>: <bdi dir="auto">{e.reason}</bdi></>}</>;
       case 'UNIT_CHALLENGED': return tx(e.passed ? 'pf.tl.passed' : 'pf.tl.missed', { m: unit(e.moduleId) }, lang);
+      // Only an attempt that never finished needs its own line; a finished one has its result.
+      case 'UNIT_CHALLENGE_STARTED': return events.some(x => x.type === 'UNIT_CHALLENGED' && x.moduleId === e.moduleId) ? null : tx('pf.tl.unfinished', { m: unit(e.moduleId) }, lang);
       case 'STATION_ASSESSED': return tx('mg.tl.station', { s: <ArabicContent as="span">{STATIONS.find(st => st.id === e.stationId)?.title ?? e.stationId}</ArabicContent> }, lang);
       case 'CONDUCT_OBSERVED': return tr('mg.tl.conduct', lang);
       case 'FINAL_READINESS_DECIDED': return tr('mg.tl.decision', lang);

@@ -10,7 +10,7 @@ import type { ObservedScores, EvaluationDecision, EvaluationDimension, ConductOb
 import { STATIONS } from '../../domain/readiness';
 import { stationAssessmentProblem } from '../../domain/readiness/evidence';
 import { formalReadiness } from '../../domain/readiness/status';
-import { onProofTrack, challengeOf } from '../../domain/journey/proof';
+import { onProofTrack, challengeOf, challengeStarted, challengeResultOf } from '../../domain/journey/proof';
 import { TRAINING_POLICY } from '../../domain/policy';
 import {
   LocalStorageTrainingBackend, EMPTY_TRAINING,
@@ -141,14 +141,26 @@ export const trainingStore = {
     apply(() => backend.record({ type: 'TRACK_ASSIGNED', managerId: trainerId(), at: now(), ...input, reason: input.reason.trim() }));
   },
 
-  /** The one attempt at proving a unit by its exam. Refused off the proof
-   *  path, after an attempt, or once the unit has gone the ordinary way. An
-   *  attempt left before its last answer is a miss, whatever its score. */
-  recordChallenge: (moduleId: string, score: number, abandoned = false) => {
+  /** The proof attempt begins at its first answer: recorded at once, so it
+   *  counts whatever happens next. Refused off the proof path, after an
+   *  attempt, or once the unit has gone the ordinary way. */
+  startChallenge: (moduleId: string) => {
     const employeeId = currentTraineeId();
     const log = backend.events();
     if (!onProofTrack(log, employeeId) || challengeOf(log, employeeId, moduleId) || reviewOf(state, employeeId, moduleId).status !== 'none') {
-      throw new Error('challenge not recorded: not available for this unit');
+      throw new Error('challenge not started: not available for this unit');
+    }
+    apply(() => backend.record({ type: 'UNIT_CHALLENGE_STARTED', employeeId, moduleId, at: now() }));
+  },
+
+  /** The result of a started attempt, once. An attempt left before its last
+   *  answer is a miss, whatever its score. */
+  recordChallenge: (moduleId: string, score: number, abandoned = false) => {
+    const employeeId = currentTraineeId();
+    const log = backend.events();
+    if (!onProofTrack(log, employeeId) || !challengeStarted(log, employeeId, moduleId) || challengeResultOf(log, employeeId, moduleId)
+      || reviewOf(state, employeeId, moduleId).status !== 'none') {
+      throw new Error('challenge not recorded: no attempt open for this unit');
     }
     apply(() => backend.record({ type: 'UNIT_CHALLENGED', employeeId, moduleId, score, passed: !abandoned && score >= TRAINING_POLICY.passThreshold, at: now() }));
   },

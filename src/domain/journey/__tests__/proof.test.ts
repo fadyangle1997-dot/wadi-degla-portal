@@ -36,7 +36,10 @@ describe('the proof path', () => {
     expect(canChallenge(started, run(events), events, E, M1.id)).toBe(false);                // a lesson done
     const tried = [...events, challenge(M1.id, false)];
     expect(canChallenge(EMPTY_PROGRESS, run(tried), tried, E, M1.id)).toBe(false);           // already tried
-    expect(challengeOf(tried, E, M1.id)).toMatchObject({ passed: false });
+    expect(challengeOf(tried, E, M1.id)).toMatchObject({ passed: false, finished: true });
+    const begun: TrainingEvent[] = [...events, { type: 'UNIT_CHALLENGE_STARTED', employeeId: E, moduleId: M1.id, at: 3 }];
+    expect(canChallenge(EMPTY_PROGRESS, run(begun), begun, E, M1.id)).toBe(false);           // started, never finished
+    expect(challengeOf(begun, E, M1.id)).toMatchObject({ passed: false, finished: false });
     expect(canChallenge(EMPTY_PROGRESS, run(events), events, E, M2.id)).toBe(false);         // not open yet
   });
 

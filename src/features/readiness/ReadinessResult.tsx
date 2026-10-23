@@ -33,7 +33,7 @@ import { ArrowRight } from 'lucide-react';
 import type { ReadinessStanding } from '../../domain/readiness/track';
 import { demonstratedCount, nextStation } from '../../domain/readiness/track';
 import { READINESS_FLOORS, CRITICAL_DIMENSIONS, STATIONS } from '../../domain/readiness';
-import { LEVEL_NAME, levelOf, requiredLevel } from '../../domain/rubric';
+import { LEVEL_NAME, levelOf } from '../../domain/rubric';
 import {
   EVALUATION_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS,
   type EvaluationDecision, type EvaluationDimension,
@@ -126,19 +126,23 @@ export const ReadinessResult: React.FC<{
   const dims: DimRow[] = (Object.keys(EVALUATION_DIMENSIONS) as EvaluationDimension[]).map(d => ({
     d, score: outcome.scores[d], floor: READINESS_FLOORS[d], critical: CRITICAL_DIMENSIONS.includes(d),
   }));
-  const observed = (d: EvaluationDimension) => track.some(s => s.assessment && s.station.measures.includes(d));
+  // What each station saw, in the rubric's words. The verdict reads every
+  // station that measured a KPI together, so a single level is never shown
+  // as «the» level — and no «required» level is claimed for a station mean
+  // (the floors predate the rubric: docs/adr-006-engine-and-programme.md §6).
+  const seenLevels = (d: EvaluationDimension) => track.flatMap(s => {
+    const score = s.assessment && s.station.measures.includes(d) ? s.assessment.scores[d] : undefined;
+    return typeof score === 'number' ? [levelOf(score)] : [];
+  });
   const columns: Column<DimRow>[] = [
     { id: 'dim', header: 'المحور', cell: r => <span className="c-tx0">{EVALUATION_DIMENSIONS[r.d]}</span> },
-    // The level in the rubric's words, against the level the floor asks for —
-    // a number here would claim a precision the observation never had.
     {
-      id: 'level', header: 'اللي اتشاف', sortValue: r => r.score,
-      cell: r => observed(r.d) ? <span className="c-tx0">{LEVEL_NAME[levelOf(r.score)]}</span> : <span className="c-tx2">—</span>,
+      id: 'level', header: 'اللي اتشاف في كل محطة',
+      cell: r => { const l = seenLevels(r.d); return l.length ? <span className="c-tx0">{l.map(x => LEVEL_NAME[x]).join(' · ')}</span> : <span className="c-tx2">—</span>; },
     },
-    { id: 'floor', header: 'المطلوب', cell: r => <span>{LEVEL_NAME[requiredLevel(r.floor)]}</span> },
     {
       id: 'state', header: 'الحالة',
-      cell: r => !observed(r.d) ? <Status tone="neutral">لسه ما اتقاسش</Status>
+      cell: r => seenLevels(r.d).length === 0 ? <Status tone="neutral">لسه ما اتقاسش</Status>
         : r.score >= r.floor ? <Status tone="ready">فوق الحد</Status>
         : <Status tone={r.critical ? 'risk' : 'attn'}>{r.critical ? 'تحت الحد · حرج' : 'تحت الحد'}</Status>,
     },
@@ -211,10 +215,10 @@ export const ReadinessResult: React.FC<{
 
           <section aria-labelledby="rd-dims">
             <SectionHeader id="rd-dims" title="المحاور الرسمية"
-              description="الحرجة: مراجعة المستندات، تطبيق اللائحة، الدقة. لو أكتر من محطة قاست نفس المحور، اللي بيتحسب هو متوسط مستوياتها." />
+              description="الحرجة: مراجعة المستندات، تطبيق اللائحة، الدقة — حدّها أعلى. الحالة بتتحسب من كل المحطات اللي شافت المحور مع بعض، فمستوى واحد أقل في محطة مش لوحده حكم." />
             <div className="mt-3">
               <DataTable caption="المحاور الرسمية" columns={columns} rows={dims} rowKey={r => r.d}
-                rowTone={r => observed(r.d) && r.score < r.floor ? (r.critical ? 'risk' : 'attn') : undefined} />
+                rowTone={r => seenLevels(r.d).length > 0 && r.score < r.floor ? (r.critical ? 'risk' : 'attn') : undefined} />
             </div>
           </section>
         </div>

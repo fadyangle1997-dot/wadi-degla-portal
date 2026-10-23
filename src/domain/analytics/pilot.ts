@@ -12,6 +12,7 @@
  */
 import { STATIONS } from '../readiness';
 import { formalReadiness, type FormalReadinessStatus } from '../readiness/status';
+import { unitHistory } from '../performance';
 
 interface LogEvent {
   readonly type: string; readonly employeeId?: string; readonly at: number;
@@ -64,12 +65,9 @@ export function pilotRow(events: readonly LogEvent[], employeeId: string, starte
   const first = own.reduce<number | null>((m, e) => (m === null || e.at < m ? e.at : m), null);
   const start = startedAt ?? first;
 
-  const evals = own.filter(e => e.type === 'EVALUATION_RECORDED');
-  const firstOf = new Map<string, LogEvent>();
-  for (const e of evals) {
-    const unit = (e as { moduleId?: string }).moduleId ?? '';
-    if (!firstOf.has(unit)) firstOf.set(unit, e);
-  }
+  // The one unit-history definition (domain/performance), so these counts
+  // match the manager's file and practical performance.
+  const h = unitHistory(own as Parameters<typeof unitHistory>[0]);
   const station = (e: LogEvent) => e.type === 'STATION_ASSESSED';
 
   return {
@@ -78,12 +76,12 @@ export function pilotRow(events: readonly LogEvent[], employeeId: string, starte
     certifiedAt,
     daysToCertification: start !== null && certifiedAt !== null ? Math.floor((certifiedAt - start) / DAY_MS) : null,
     status: formal.status,
-    unitAssessments: evals.length,
-    unitsAssessed: firstOf.size,
-    approvedFirstTime: [...firstOf.values()].filter(e => e.decision === 'ready').length,
-    sentBack: evals.filter(e => e.decision === 'not_ready').length,
-    extended: evals.filter(e => e.decision === 'extend').length,
-    escalated: evals.filter(e => e.decision === 'escalate').length,
+    unitAssessments: h.assessments,
+    unitsAssessed: h.unitsAssessed,
+    approvedFirstTime: h.approvedFirstTime,
+    sentBack: h.notReady,
+    extended: h.extended,
+    escalated: h.escalated,
     proved: own.filter(e => e.type === 'UNIT_CHALLENGED' && e.passed === true).length,
     trainerActions: own.filter(e => TRAINER_TYPES.has(e.type) || (station(e) && !managerStations.has(e.stationId ?? ''))).length,
     managerActions: own.filter(e => MANAGER_TYPES.has(e.type) || (station(e) && managerStations.has(e.stationId ?? ''))).length,

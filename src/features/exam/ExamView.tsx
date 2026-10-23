@@ -40,9 +40,11 @@ interface Props {
    *  Back or a link. It counts as the one attempt, so the questions cannot be
    *  seen first and answered later. */
   onAbandon?: (scoreSoFar: number) => void;
+  /** Proof path only: the first answer — the attempt is recorded from here. */
+  onStart?: () => void;
 }
 
-export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, onReviewLesson, exitLabel, opens = [], awaitsApproval = false, challenge = false, onAbandon }) => {
+export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, onReviewLesson, exitLabel, opens = [], awaitsApproval = false, challenge = false, onAbandon, onStart }) => {
   const lang = useLang();
   const qs = module.unitExam;
   const [qi, setQi] = useState(0);
@@ -171,7 +173,7 @@ export const ExamView: React.FC<Props> = ({ module, onExit, onFinish, onRetry, o
               {shuffledOptions.map((o, i) => (
                 <OptionButton key={i} text={o.text}
                   state={!answered ? 'idle' : o.correct ? 'correct' : picked === i ? 'wrong' : 'dim'}
-                  onPick={() => setPicked(i)} />
+                  onPick={() => { if (challenge && !started) onStart?.(); setPicked(i); }} />
               ))}
             </div>
             <AnimatePresence>

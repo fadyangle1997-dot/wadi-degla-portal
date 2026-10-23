@@ -23,7 +23,7 @@
  */
 import { ALL_CONDUCT_CHECKS, ALL_DIMENSIONS, EVALUATION_DIMENSIONS, type EvaluationDimension, type EvaluationDecision } from '../evaluation';
 import { levelOf, needsCalibration, requiredLevel, type RubricLevel } from '../rubric';
-import { performanceFromOwnEvents, type TrainingEventLike } from '../performance';
+import { performanceFromOwnEvents, unitHistory, type TrainingEventLike } from '../performance';
 import { CRITICAL_DIMENSIONS, READINESS_FLOORS, STATIONS } from './index';
 import { latestStationAssessments, latestConduct } from './evidence';
 import type { ManagerReadinessDecision } from './status';
@@ -103,10 +103,9 @@ export function decisionEvidence(events: readonly AnyEvent[], employeeId: string
   const conductState = ALL_CONDUCT_CHECKS.some(c => typeof conduct[c] !== 'boolean') ? 'missing'
     : ALL_CONDUCT_CHECKS.every(c => conduct[c] === true) ? 'seen' : 'not_seen';
 
-  // Unit history, from the trainer's decisions.
+  // Unit history — the one definition practical performance and the pilot read too.
+  const h = unitHistory(own);
   const evals = own.filter(e => e.type === 'EVALUATION_RECORDED');
-  const firstByUnit = new Map<string, AnyEvent>();
-  for (const e of evals) if (e.moduleId && !firstByUnit.has(e.moduleId)) firstByUnit.set(e.moduleId, e);
   const flagged = new Map<string, number>();
   for (const e of evals) for (const r of e.weakRules ?? []) flagged.set(r, (flagged.get(r) ?? 0) + 1);
 
@@ -121,12 +120,7 @@ export function decisionEvidence(events: readonly AnyEvent[], employeeId: string
     kpis,
     conduct: conductState,
     missingStations: STATIONS.filter(s => !latest.has(s.id)).map(s => s.title),
-    units: {
-      firstTime: [...firstByUnit.values()].filter(e => e.decision === 'ready').length,
-      sentBack: evals.filter(e => e.decision === 'not_ready').length,
-      extended: evals.filter(e => e.decision === 'extend').length,
-      escalated: evals.filter(e => e.decision === 'escalate').length,
-    },
+    units: { firstTime: h.approvedFirstTime, sentBack: h.notReady, extended: h.extended, escalated: h.escalated },
     repeatedRules: [...flagged.entries()].filter(([, n]) => n > 1).map(([rule, times]) => ({ rule, times })).sort((a, b) => b.times - a.times),
     decision,
     afterDecision: decidedAt === undefined ? 0

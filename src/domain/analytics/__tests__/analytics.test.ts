@@ -64,6 +64,22 @@ describe('practicalPerformance — levels as observed', () => {
     expect(r.gapLevel).toBe('critical');
     expect(r.followUp).toBe('needs_immediate_attention');
   });
+  it('approving a sibling unit does not hide one still sent back', () => {
+    // m2_2 and m2_3 are open together: m2_2 sent back twice, then m2_3 approved.
+    const r = practicalPerformance([
+      evalEvt('e1', 'm2_2', all(75), 'not_ready', 1),
+      evalEvt('e1', 'm2_2', all(75), 'not_ready', 2),
+      evalEvt('e1', 'm2_3', all(75), 'ready', 3),
+    ], 'e1');
+    expect(r.followUp).toBe('needs_immediate_attention');
+    // …and once m2_2 is approved, nothing is open any more.
+    const after = practicalPerformance([
+      evalEvt('e1', 'm2_2', all(75), 'not_ready', 1), evalEvt('e1', 'm2_2', all(75), 'not_ready', 2),
+      evalEvt('e1', 'm2_3', all(75), 'ready', 3), evalEvt('e1', 'm2_2', all(75), 'ready', 4),
+    ], 'e1');
+    expect(after.followUp).toBe('on_track');
+  });
+
   it('an unknown employee has no evidence', () => {
     const r = practicalPerformance([], 'ghost');
     expect(r.evaluations).toBe(0);

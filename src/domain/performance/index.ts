@@ -136,15 +136,9 @@ export function performanceFromOwnEvents(
   });
   const gaps = profile.filter(p => p.belowFloor);
 
-  // An escalated unit the branch manager approved is approved: the trainer's
-  // observations stand as its evidence, the manager's answer is its decision.
-  const managerApproved = own.filter(e => e.type === 'UNIT_ESCALATION_ANSWERED' && e.decision === 'ready');
-  const decisionOf = (e: TrainingEventLike): EvaluationDecision | undefined =>
-    e.decision === 'escalate' && managerApproved.some(a => a.moduleId === e.moduleId && a.at >= e.at) ? 'ready' : e.decision;
-  const approvedModules = new Set(evals.filter(e => decisionOf(e) === 'ready').map(e => e.moduleId)).size;
-  const sentBack = evals.filter(e => e.decision === 'not_ready' || e.decision === 'extend').length;
+  const h = unitHistory(own);
   const last = evals.length ? evals[evals.length - 1]! : null;
-  const lastDecision = last ? decisionOf(last) : undefined;
+  const lastDecision = last ? h.decisionOf(last) : undefined;
 
   return {
     employeeId, profile,
@@ -154,13 +148,71 @@ export function performanceFromOwnEvents(
       evaluations: evals.length,
       criticalAtLowest: profile.some(p => p.critical && p.level === 1),
       gaps: gaps.length,
-      // Any decision other than approval leaves work open — extension included.
-      openImprovement: lastDecision !== undefined && lastDecision !== 'ready',
-      sentBack,
+      // Any unit whose latest decision is not an approval is open work —
+      // extension and a pending escalation included — whatever was decided
+      // on a sibling unit since.
+      openImprovement: h.open > 0,
+      sentBack: h.rework,
     }),
-    evaluations: evals.length, approvedModules, sentBack,
+    evaluations: evals.length, approvedModules: h.approved, sentBack: h.rework,
     lastEvaluatedAt: last?.at ?? null,
     lastDecision: lastDecision ?? null,
+  };
+}
+
+/**
+ * A trainee's unit history — ONE definition, read by practical performance,
+ * the decision evidence and the pilot measures, so «sent back» is the same
+ * count on every screen.
+ *
+ * An escalated unit the branch manager approved is approved: the trainer's
+ * observations stand as its evidence, the manager's answer is its decision.
+ */
+export interface UnitHistory {
+  readonly assessments: number;
+  /** Distinct units assessed at least once. */
+  readonly unitsAssessed: number;
+  /** Units whose first assessment approved them (an approved escalation included). */
+  readonly approvedFirstTime: number;
+  /** Distinct units approved. */
+  readonly approved: number;
+  /** Decisions «يعيد الوحدة». */
+  readonly notReady: number;
+  /** Decisions «تمديد». */
+  readonly extended: number;
+  /** Decisions «تصعيد». */
+  readonly escalated: number;
+  /** Work sent back: «يعيد الوحدة» plus «تمديد». */
+  readonly rework: number;
+  /** Units whose latest decision is not an approval. */
+  readonly open: number;
+  readonly decisionOf: (e: TrainingEventLike) => EvaluationDecision | undefined;
+}
+
+export function unitHistory(own: readonly TrainingEventLike[]): UnitHistory {
+  const evals = own.filter(e => e.type === 'EVALUATION_RECORDED');
+  const managerApproved = own.filter(e => e.type === 'UNIT_ESCALATION_ANSWERED' && e.decision === 'ready');
+  const decisionOf = (e: TrainingEventLike): EvaluationDecision | undefined =>
+    e.decision === 'escalate' && managerApproved.some(a => a.moduleId === e.moduleId && a.at >= e.at) ? 'ready' : e.decision;
+  const first = new Map<string, TrainingEventLike>();
+  const latest = new Map<string, TrainingEventLike>();
+  for (const e of evals) {
+    const unit = e.moduleId ?? '';
+    if (!first.has(unit)) first.set(unit, e);
+    latest.set(unit, e);
+  }
+  const notReady = evals.filter(e => e.decision === 'not_ready').length;
+  const extended = evals.filter(e => e.decision === 'extend').length;
+  return {
+    assessments: evals.length,
+    unitsAssessed: first.size,
+    approvedFirstTime: [...first.values()].filter(e => decisionOf(e) === 'ready').length,
+    approved: new Set(evals.filter(e => decisionOf(e) === 'ready').map(e => e.moduleId)).size,
+    notReady, extended,
+    escalated: evals.filter(e => e.decision === 'escalate').length,
+    rework: notReady + extended,
+    open: [...latest.values()].filter(e => decisionOf(e) !== 'ready').length,
+    decisionOf,
   };
 }
 

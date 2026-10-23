@@ -38,8 +38,8 @@ export function trackOf(events: readonly LogEvent[], employeeId: string): TrackA
 export const onProofTrack = (events: readonly LogEvent[], employeeId: string): boolean =>
   trackOf(events, employeeId)?.track === 'proof';
 
-/** The one attempt at proving this unit, if it was made. */
-export function challengeOf(events: readonly LogEvent[], employeeId: string, moduleId: string): { score: number; passed: boolean; at: number } | null {
+/** The recorded result of the one attempt at this unit, if it finished. */
+export function challengeResultOf(events: readonly LogEvent[], employeeId: string, moduleId: string): { score: number; passed: boolean; at: number } | null {
   for (const e of events) {
     if (e.type === 'UNIT_CHALLENGED' && e.employeeId === employeeId && (e as ChallengeEvent).moduleId === moduleId) {
       const c = e as ChallengeEvent;
@@ -47,6 +47,21 @@ export function challengeOf(events: readonly LogEvent[], employeeId: string, mod
     }
   }
   return null;
+}
+
+/** Whether the one attempt at this unit was started (its first answer given). */
+export const challengeStarted = (events: readonly LogEvent[], employeeId: string, moduleId: string): boolean =>
+  events.some(e => e.type === 'UNIT_CHALLENGE_STARTED' && e.employeeId === employeeId && (e as { moduleId?: string }).moduleId === moduleId);
+
+/**
+ * The one attempt at proving this unit: its result, or — started and never
+ * finished (left, reloaded, the tab closed) — a miss. null when untried.
+ */
+export function challengeOf(events: readonly LogEvent[], employeeId: string, moduleId: string): { score: number; passed: boolean; at: number; finished: boolean } | null {
+  const result = challengeResultOf(events, employeeId, moduleId);
+  if (result) return { ...result, finished: true };
+  const started = events.find(e => e.type === 'UNIT_CHALLENGE_STARTED' && e.employeeId === employeeId && (e as { moduleId?: string }).moduleId === moduleId);
+  return started ? { score: 0, passed: false, at: started.at, finished: false } : null;
 }
 
 /**

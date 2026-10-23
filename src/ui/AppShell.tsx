@@ -16,8 +16,9 @@ import { useCan, useIdentity, identityStore } from '../app/identity/identityStor
 import { useTraining, useTrainingEvents, reviewOf, traineeIdOrNull } from '../app/training/trainingStore';
 import { awaitsReadinessDecision, escalatedUnitsOf } from '../domain/journey/programCompletion';
 import { detectOperationalIssues, summarizeIssues } from '../domain/operations/health';
-import { filedReviews, unseenComments, reviewsForTrainer, reviewSilence } from '../domain/review';
-import { reviewPhaseSince } from '../domain/journey/reviewPhase';
+import { filedReviews, unseenComments, reviewsForTrainer } from '../domain/review';
+import { quietDays } from '../domain/journey/reviewPhase';
+import { groupByEmployee } from '../domain/performance';
 import { reviewSeen } from '../app/reviewSeen';
 import { useProgress } from '../app/progress';
 import { nextAction } from '../domain/journey/nextAction';
@@ -288,11 +289,11 @@ const useActionCenter = (): { now: readonly BellItem[]; before: readonly BellIte
       const needing = reviewsForTrainer(events, ids);
       if (needing.length > 0) now.push({ key: 'reviews', label: reviewsAwaitingYou(needing.length, lang), go: go('#/trainer') });
       const at = Date.now();
-      const quiet = ids.filter(id => reviewSilence(
-        events.flatMap(e => e.type === 'DECISION_REVIEW_FILED' && e.employeeId === id ? [e.at] : []),
-        reviewPhaseSince(events, id), at) !== null).length;
+      const grouped = groupByEmployee(events);
+      const quiet = ids.filter(id => quietDays(grouped.get(id) ?? [], id, at) !== null).length;
       if (quiet > 0) now.push({ key: 'quiet', label: quietTraineeCount(quiet, lang), go: go('#/trainer') });
-      const read = new Set(needing.map(r => `${r.employeeId}:${r.at}`));
+      // History lists the reviews the trainer is asked to read — commented on or not.
+      const read = new Set(ids.flatMap(id => filedReviews(grouped.get(id) ?? [], id).filter(r => r.reason !== null).map(r => `${id}:${r.at}`)));
 
       const name = (uid: string) => { const u = learners.find(x => x.id === uid); return u ? displayNameOf(u, lang) : uid; };
       for (const e of events) {
