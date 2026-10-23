@@ -36,14 +36,14 @@ describe('the semantic roles', () => {
   });
 
   it('the same meaning gets the same role across concepts', () => {
-    // Approved, certified, passed, strong — goals met.
-    expect([UNIT_REVIEW.ready, FORMAL_READINESS.certified, EXAM.passed, FOLLOW_UP.strong, PHASE.completed]).toEqual(Array(5).fill('positive'));
+    // Approved, certified, passed — goals met.
+    expect([UNIT_REVIEW.ready, FORMAL_READINESS.certified, EXAM.passed, PHASE.completed]).toEqual(Array(4).fill('positive'));
     // Waiting on someone else.
     expect([UNIT_REVIEW.waiting, FORMAL_READINESS.awaiting_decision, FORMAL_READINESS.in_progress, PHASE.waiting_trainer]).toEqual(Array(4).fill('pending'));
     // Blocked or failing.
     expect([UNIT_REVIEW.not_ready, FORMAL_READINESS.not_ready, EXAM.failed, GAP.critical, FOLLOW_UP.needs_immediate_attention, SEVERITY.critical]).toEqual(Array(6).fill('risk'));
-    // An unopened assessment is not a judgement.
-    expect(FORMAL_READINESS.not_open).toBe('neutral');
+    // An unopened assessment, or a trainee nobody has assessed yet, is not a judgement.
+    expect([FORMAL_READINESS.not_open, FOLLOW_UP.no_evidence]).toEqual(['neutral', 'neutral']);
   });
 });
 

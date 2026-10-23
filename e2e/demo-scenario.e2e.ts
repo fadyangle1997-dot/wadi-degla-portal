@@ -13,7 +13,8 @@ test('admin loads the demo scenario; trainer and manager screens fill with real 
   await expect(page.getByText('مفيش حاجة مستنياك')).toHaveCount(0);
   await signOut(page);
 
-  // The branch manager now sees trainees with real readiness, not zeros.
+  // The branch manager now sees trainees the trainers have assessed — a
+  // follow-up state from the evidence, not «not assessed yet» for everyone.
   await signIn(page, 'manager.nabil');
-  await expect(page.locator('main').getByRole('cell', { name: /^[1-9]\d*%$/ }).first()).toBeVisible();
+  await expect(page.locator('main').getByText(/^(على المسار|محتاج متابعة|محتاج تدخّل)$/).first()).toBeVisible();
 });

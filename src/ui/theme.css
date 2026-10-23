@@ -649,6 +649,12 @@ p.t-lead, p.t-body, p.t-sm { margin-block: 0 var(--sp-3); }
    columns, the row's state as a dot and a word, a spine on rows that need
    something. Stacks into labelled rows when its own container is narrow.
    ============================================================ */
+/* Practical performance, one KPI a row: name · observed level · times seen. */
+.kpi-profile { width:100%; border-collapse:collapse; }
+.kpi-profile th, .kpi-profile td { text-align:start; vertical-align:middle; padding:var(--sp-2) var(--sp-2); border-bottom:1px solid var(--edge-hairline); }
+.kpi-profile tbody tr:last-child > * { border-bottom:0; }
+.kpi-profile th { font-weight:500; padding-inline-start:0; }
+.kpi-profile td:last-child { text-align:end; white-space:nowrap; padding-inline-end:0; }
 .dt { container-type:inline-size; }
 .dt-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-3); }
 .dt-search { display:flex; align-items:center; gap:var(--sp-2); flex:1 1 240px; min-width:0; min-height:44px;

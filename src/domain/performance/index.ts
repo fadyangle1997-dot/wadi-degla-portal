@@ -1,33 +1,35 @@
 /**
- * Practical performance — الأداء العملي. ONE calculation.
+ * Practical performance — الأداء العملي. ONE reading of the trainer's unit
+ * assessments.
  *
- * THREE THINGS, THREE NAMES. The platform used the word «الجاهزية» for three
- * different numbers, so one trainee read «غير جاهز · 0 من 6 محطات» on their
- * own page, «الجاهزية 88%» on their profile, «88% · جاهز للمكتب» in the
- * manager's list and «87% · مش جاهز · مخاطرة منخفضة» in the manager's file.
- * They are now kept apart:
+ * THREE THINGS, THREE NAMES — never collapsed into one score:
  *
  *   التقدم في البرنامج   lessons and exams done, units approved   (app/progress)
- *   الأداء العملي        this module: the trainer's unit evaluations
+ *   الأداء العملي        this module: what the trainer observed in unit work
  *   تقييم الجاهزية       the six stations, conduct, and the two signatures
  *                        (domain/readiness/status) — the only "ready".
  *
- * Practical performance is an INDICATOR, never a decision. It is the weighted
- * score of the trainer's most recent unit evaluation (each evaluation scores
- * all seven KPIs, so the latest one is the trainer's current judgement), with
- * the seven dimensions it is made of, the trend across evaluations, and a
- * follow-up state for the manager. Nothing here may say «جاهز»: a strong
- * score is «أداء قوي», and readiness for independent work is certified only by
- * the readiness assessment.
+ * NO PERCENTAGE. This module used to report the weighted mean of the latest
+ * assessment's rubric levels as «75%», compare it with three invented
+ * thresholds (80 / 65 / 50) and add a 0–100 confidence. 75% only ever meant
+ * «level 3 on average» — and a critical KPI at «بمساعدة» could hide behind
+ * strong ones. What a trainer records is a level, a sentence they can point at
+ * (domain/rubric); so practical performance is the latest observed level of
+ * each KPI, how often it was observed, and what sits under its floor. Follow-up
+ * is read from the same floors the readiness engine uses.
+ *
+ * Practical performance is an INDICATOR, never a decision: nothing here may
+ * say «جاهز».
  *
  * Pure domain: events in, picture out.
  */
 import {
-  ALL_DIMENSIONS, EVALUATION_DIMENSIONS, readinessScore as weightedScore,
-  type EvaluationDecision, type EvaluationDimension, type Scores,
+  ALL_DIMENSIONS, EVALUATION_DIMENSIONS,
+  type EvaluationDecision, type EvaluationDimension, type ObservedScores,
 } from '../evaluation';
 import { HEALTH_POLICY } from '../policy';
 import { CRITICAL_DIMENSIONS, READINESS_FLOORS } from '../readiness';
+import { levelOf, type RubricLevel } from '../rubric';
 
 /** The training events this layer consumes (structural subset — no import cycle). */
 export interface TrainingEventLike {
@@ -35,107 +37,53 @@ export interface TrainingEventLike {
   readonly employeeId?: string;
   readonly moduleId?: string;
   readonly decision?: EvaluationDecision;
-  readonly scores?: Scores;
+  readonly scores?: ObservedScores;
   readonly at: number;
 }
 
 /**
- * What the manager does about this person now. `strong` replaces the old
- * `ready`: a high practical score is not readiness for independent work.
+ * What the manager does about this person now.
+ *
+ *   no_evidence                no unit has been assessed yet — nothing to judge
+ *   on_track                   assessed; nothing under its floor; nothing sent back open
+ *   needs_attention            a KPI under its floor, or a unit sent back and still open
+ *   needs_immediate_attention  a critical KPI at «بمساعدة», or work sent back again while
+ *                              earlier work was sent back too
  */
-export type FollowUpState = 'strong' | 'on_track' | 'needs_attention' | 'needs_immediate_attention';
+export type FollowUpState = 'no_evidence' | 'on_track' | 'needs_attention' | 'needs_immediate_attention';
 
-export interface PerformanceDimension {
+/** One KPI as the trainer last observed it in unit work. */
+export interface ObservedDimension {
   readonly dimension: EvaluationDimension;
   readonly label: string;
-  readonly score: number;
+  /** The rubric level of the latest observation; null when never observed. */
+  readonly level: RubricLevel | null;
+  /** How many unit assessments observed it. */
+  readonly observations: number;
   readonly floor: number;
   readonly critical: boolean;
+  /** Observed, and the latest observation sits under the KPI's floor. */
   readonly belowFloor: boolean;
 }
 
-/** How far the latest evaluation sits from the floors the readiness engine uses. */
+/** How far the latest observations sit from the floors the readiness engine uses. */
 export type GapLevel = 'none' | 'developmental' | 'critical';
 
 export interface PracticalPerformance {
   readonly employeeId: string;
-  /** Weighted score (0–100) of the latest unit evaluation; null before the first. */
-  readonly score: number | null;
-  /** The seven KPIs of that evaluation — `score` is their weighted sum. */
-  readonly dimensions: readonly PerformanceDimension[];
-  readonly strengths: readonly PerformanceDimension[];
-  readonly gaps: readonly PerformanceDimension[];
+  /** All seven KPIs, observed or not, in the programme's order. */
+  readonly profile: readonly ObservedDimension[];
+  /** Observed under the floor at the latest observation. */
+  readonly gaps: readonly ObservedDimension[];
   readonly gapLevel: GapLevel | null;
-  /** The weighted score of every evaluation, oldest first. */
-  readonly series: readonly number[];
-  readonly trend: 'up' | 'down' | 'flat';
-  /** 0..100 — how much to TRUST the score (evidence strength). */
-  readonly confidence: number;
   readonly followUp: FollowUpState;
   readonly evaluations: number;
-  /** Distinct units the trainer approved in an evaluation (feeds confidence). */
+  /** Distinct units approved (by the trainer, or by the manager on an escalation). */
   readonly approvedModules: number;
-  readonly extensions: number;
+  /** Unit decisions that sent work back: «يعيد الوحدة» or «تمديد». */
+  readonly sentBack: number;
   readonly lastEvaluatedAt: number | null;
   readonly lastDecision: EvaluationDecision | null;
-}
-
-/** A dimension is a strength at or above this score. */
-export const STRENGTH_MIN = 85;
-
-/** The seven KPIs of one evaluation, against the floors. */
-export function dimensionsOf(scores: Scores): readonly PerformanceDimension[] {
-  return ALL_DIMENSIONS.map(d => ({
-    dimension: d,
-    label: EVALUATION_DIMENSIONS[d],
-    score: scores[d] ?? 0,
-    floor: READINESS_FLOORS[d],
-    critical: CRITICAL_DIMENSIONS.includes(d),
-    belowFloor: (scores[d] ?? 0) < READINESS_FLOORS[d],
-  }));
-}
-
-/**
- * Practical performance from a SINGLE employee's events (already grouped).
- * Callers processing many employees should group once and call this per head.
- */
-export function performanceFromOwnEvents(
-  employeeId: string,
-  own: readonly TrainingEventLike[],
-): PracticalPerformance {
-  const evals = own.filter(e => e.type === 'EVALUATION_RECORDED' && e.scores);
-  const series = evals.map(e => weightedScore(e.scores!));
-  const latest = evals.length ? evals[evals.length - 1]! : null;
-  const score = latest ? weightedScore(latest.scores!) : null;
-  const dimensions = latest ? dimensionsOf(latest.scores!) : [];
-  const gaps = dimensions.filter(l => l.belowFloor);
-  // An escalated unit the branch manager approved is approved: the trainer's
-  // scores stand as its evidence, the manager's answer is its decision.
-  const managerApproved = own.filter(e => e.type === 'UNIT_ESCALATION_ANSWERED' && e.decision === 'ready');
-  const decisionOf = (e: TrainingEventLike): EvaluationDecision | undefined =>
-    e.decision === 'escalate' && managerApproved.some(a => a.moduleId === e.moduleId && a.at >= e.at) ? 'ready' : e.decision;
-  const approvedModules = new Set(evals.filter(e => decisionOf(e) === 'ready').map(e => e.moduleId)).size;
-  const extensions = own.filter(e => e.type === 'TRAINING_EXTENDED').length;
-  const latestDecision = latest ? decisionOf(latest) : undefined;
-  // Any decision other than approval leaves work open — extension included.
-  const hasOpenImprovement = latestDecision !== undefined && latestDecision !== 'ready';
-  const confidence = performanceConfidence({
-    evaluations: evals.length, approvedModules, extensions, consistency: consistencyOf(series),
-  });
-  const followUp = classifyFollowUp({ score: score ?? 0, extensions, hasOpenImprovement, evaluations: evals.length });
-  const first = series[0], last = series[series.length - 1];
-  return {
-    employeeId, score, dimensions,
-    strengths: dimensions.filter(l => l.score >= STRENGTH_MIN),
-    gaps,
-    gapLevel: latest ? (gaps.some(l => l.critical) ? 'critical' : gaps.length ? 'developmental' : 'none') : null,
-    series,
-    trend: series.length < 2 || first === last ? 'flat' : last! > first! ? 'up' : 'down',
-    confidence, followUp,
-    evaluations: evals.length, approvedModules, extensions,
-    lastEvaluatedAt: latest?.at ?? null,
-    lastDecision: latestDecision ?? null,
-  };
 }
 
 /** Group training events by employee ONCE — O(n). */
@@ -155,40 +103,79 @@ export function practicalPerformance(events: readonly TrainingEventLike[], emplo
 }
 
 /**
- * Confidence — two employees with the same score are NOT equally trustworthy.
- * It rises with more evaluations, approved units and consistency; it falls
- * with extensions (repeated struggle). Pure, bounded 0..100 (docs/analytics.md).
+ * Practical performance from a SINGLE employee's events (already grouped).
+ * Callers processing many employees should group once and call this per head.
  */
-export function performanceConfidence(input: {
-  evaluations: number; approvedModules: number; extensions: number;
-  consistency: number; // 0..1, 1 = very consistent scores
-}): number {
-  const { evaluations, approvedModules, extensions, consistency } = input;
-  if (evaluations === 0) return 0;
-  const evidence = Math.min(1, evaluations / 3);        // 3+ evals = full evidence weight
-  const approval = Math.min(1, approvedModules / 3);    // breadth of demonstrated competence
-  const penalty = Math.min(0.4, extensions * 0.15);     // repeated struggle lowers trust
-  const raw = (evidence * 0.4 + approval * 0.3 + consistency * 0.3) - penalty;
-  return Math.round(Math.max(0, Math.min(1, raw)) * 100);
-}
+export function performanceFromOwnEvents(
+  employeeId: string,
+  own: readonly TrainingEventLike[],
+): PracticalPerformance {
+  const evals = own.filter(e => e.type === 'EVALUATION_RECORDED');
 
-/** Consistency 0..1 from the spread of scores across evaluations (low spread = high consistency). */
-function consistencyOf(scores: readonly number[]): number {
-  if (scores.length < 2) return scores.length === 1 ? 0.6 : 0; // one data point = moderate
-  const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-  const variance = scores.reduce((a, b) => a + (b - mean) ** 2, 0) / scores.length;
-  return Math.max(0, Math.min(1, 1 - Math.sqrt(variance) / 40)); // sd of 40pts → 0 consistency
-}
-
-/** What the manager should do about this person — thresholds are policy (HEALTH_POLICY). */
-export function classifyFollowUp(input: {
-  score: number; extensions: number; hasOpenImprovement: boolean; evaluations: number;
-}): FollowUpState {
-  const { score, extensions, hasOpenImprovement, evaluations } = input;
-  if (extensions >= HEALTH_POLICY.riskExtensions || (evaluations > 0 && score < HEALTH_POLICY.attentionMin)) {
-    return 'needs_immediate_attention';
+  // The latest observed level of each KPI, and how often it was observed.
+  const latest = new Map<EvaluationDimension, number>();
+  const seen = new Map<EvaluationDimension, number>();
+  for (const e of evals) {
+    for (const d of ALL_DIMENSIONS) {
+      const score = e.scores?.[d];
+      if (typeof score !== 'number') continue;
+      latest.set(d, score);
+      seen.set(d, (seen.get(d) ?? 0) + 1);
+    }
   }
-  if (hasOpenImprovement || (evaluations > 0 && score < HEALTH_POLICY.onTrackMin)) return 'needs_attention';
-  if (score >= HEALTH_POLICY.strongMin && evaluations > 0) return 'strong';
+  const profile: ObservedDimension[] = ALL_DIMENSIONS.map(d => {
+    const score = latest.get(d);
+    const floor = READINESS_FLOORS[d];
+    return {
+      dimension: d, label: EVALUATION_DIMENSIONS[d],
+      level: score === undefined ? null : levelOf(score),
+      observations: seen.get(d) ?? 0,
+      floor, critical: CRITICAL_DIMENSIONS.includes(d),
+      belowFloor: score !== undefined && score < floor,
+    };
+  });
+  const gaps = profile.filter(p => p.belowFloor);
+
+  // An escalated unit the branch manager approved is approved: the trainer's
+  // observations stand as its evidence, the manager's answer is its decision.
+  const managerApproved = own.filter(e => e.type === 'UNIT_ESCALATION_ANSWERED' && e.decision === 'ready');
+  const decisionOf = (e: TrainingEventLike): EvaluationDecision | undefined =>
+    e.decision === 'escalate' && managerApproved.some(a => a.moduleId === e.moduleId && a.at >= e.at) ? 'ready' : e.decision;
+  const approvedModules = new Set(evals.filter(e => decisionOf(e) === 'ready').map(e => e.moduleId)).size;
+  const sentBack = evals.filter(e => e.decision === 'not_ready' || e.decision === 'extend').length;
+  const last = evals.length ? evals[evals.length - 1]! : null;
+  const lastDecision = last ? decisionOf(last) : undefined;
+
+  return {
+    employeeId, profile,
+    gaps,
+    gapLevel: evals.length === 0 ? null : gaps.some(g => g.critical) ? 'critical' : gaps.length ? 'developmental' : 'none',
+    followUp: classifyFollowUp({
+      evaluations: evals.length,
+      criticalAtLowest: profile.some(p => p.critical && p.level === 1),
+      gaps: gaps.length,
+      // Any decision other than approval leaves work open — extension included.
+      openImprovement: lastDecision !== undefined && lastDecision !== 'ready',
+      sentBack,
+    }),
+    evaluations: evals.length, approvedModules, sentBack,
+    lastEvaluatedAt: last?.at ?? null,
+    lastDecision: lastDecision ?? null,
+  };
+}
+
+/**
+ * When the manager must act. Every rule is a floor or a count the trainer
+ * recorded — no threshold on an average.
+ */
+export function classifyFollowUp(input: {
+  evaluations: number; criticalAtLowest: boolean; gaps: number; openImprovement: boolean; sentBack: number;
+}): FollowUpState {
+  const { evaluations, criticalAtLowest, gaps, openImprovement, sentBack } = input;
+  if (evaluations === 0) return 'no_evidence';
+  // Repetition matters while work is open: units reworked and approved since
+  // do not keep someone flagged for good.
+  if (criticalAtLowest || (openImprovement && sentBack >= HEALTH_POLICY.riskSentBack)) return 'needs_immediate_attention';
+  if (openImprovement || gaps > 0) return 'needs_attention';
   return 'on_track';
 }

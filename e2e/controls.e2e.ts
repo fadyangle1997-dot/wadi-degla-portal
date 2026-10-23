@@ -74,13 +74,14 @@ test('a practical assessment starts unassessed, says a decision back, and asks b
   await expect(page).toHaveURL(/#\/assess\//);
   await expect(page.getByText('قيّمت 0 من 7')).toBeVisible();
 
-  // Nothing picked: a decision cannot be asked for, and every KPI says why.
+  // Nothing picked: a decision cannot be asked for, and each critical KPI
+  // says why — the other four may honestly stay «not seen in this unit».
   // aria-disabled, not disabled: it stays reachable and, pressed, says why.
   const extend = page.getByRole('button', { name: 'تمديد — أيام إضافية' });
   await expect(extend).toHaveAttribute('aria-disabled', 'true');
   await extend.click({ force: true });
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByText('اختار مستوى للمؤشر ده قبل القرار.')).toHaveCount(7);
+  await expect(page.getByText('اختار مستوى للمؤشر ده قبل القرار.')).toHaveCount(3);
 
   // Seven levels picked, the decision is said back before it is recorded.
   for (const group of await page.locator('fieldset.rubric').all()) await group.locator('label.rubric-option').nth(1).click();

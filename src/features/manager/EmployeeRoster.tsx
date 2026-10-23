@@ -8,9 +8,9 @@ import type { OrgEvent } from '../../domain/analytics/organization';
 import type { FollowUpState } from '../../domain/performance';
 import { formalReadiness, type FormalReadinessStatus } from '../../domain/readiness/status';
 import { isProgramComplete } from '../../domain/journey/programCompletion';
-import { FormalStatus, FollowUpStatus, formalLabel, performanceText } from '../readiness/labels';
+import { FormalStatus, FollowUpStatus, formalLabel } from '../readiness/labels';
 import { rowTone, FOLLOW_UP } from '../../ui/statusSemantics';
-import { ArabicContent, DataTable, Meter, Initials, type Column } from '../../ui/primitives';
+import { ArabicContent, DataTable, Initials, type Column } from '../../ui/primitives';
 import { useLang, t as tr, type Lang } from '../../app/i18n';
 import { daysAgo } from '../../app/plural';
 
@@ -61,8 +61,9 @@ export const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: st
         name: u?.name ?? id,
         trainer: u?.trainerId ? (userOf.get(u.trainerId)?.name ?? '—') : tr('mg.unassigned', lang),
         stage: currentStageLabel(t, id, lang),
-        // Two concepts, two columns: the trainer's practical evaluations, and
-        // the readiness assessment — never one number standing for both.
+        // Two concepts, two columns: what the trainer observed in unit work
+        // (as a follow-up state — the levels are one click away, in the file),
+        // and the readiness assessment. No percentage stands for either.
         r: performanceFromOwnEvents(id, own),
         fr: formalReadiness(own, id, isProgramComplete(t, id)),
         lastAt: last?.at,
@@ -82,17 +83,6 @@ export const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: st
             {/* The stage comes from the curriculum, so it stays Arabic. */}
             <ArabicContent as="span" className="t-label c-tx3">{r.stage}</ArabicContent>
           </span>
-        </span>
-      ),
-    },
-    {
-      id: 'performance', header: tr('perf.title', lang), align: 'end', sortValue: r => r.r.score ?? -1,
-      cell: r => (
-        <span className="row items-center gap-2 justify-end">
-          {/* A quantity, not a verdict: the meter is the progress accent; the
-              follow-up chip beside it carries the status. */}
-          {r.r.score !== null && <Meter value={r.r.score} />}
-          <span className="t-num c-tx0">{performanceText(r.r)}</span>
         </span>
       ),
     },
@@ -131,7 +121,7 @@ export const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: st
   );
 };
 
-const rank = (h: FollowUpState) => ({ needs_immediate_attention: 3, needs_attention: 2, on_track: 1, strong: 0 }[h]);
+const rank = (h: FollowUpState) => ({ needs_immediate_attention: 3, needs_attention: 2, on_track: 1, no_evidence: 0 }[h]);
 
 /** Whose move it is first: a decision waiting, then work under way, then done. */
 const formalRank = (s: FormalReadinessStatus) =>

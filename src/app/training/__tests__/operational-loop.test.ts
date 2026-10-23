@@ -21,7 +21,7 @@ describe('operational training loop — trainer → manager → verdict', () => 
     for (const m of MODULES) {
       t = reduceTraining(t, {
         type: 'EVALUATION_RECORDED', employeeId: T, moduleId: m.id,
-        trainerId: 'trainer.adel', scores: {} as any, decision: 'ready',
+        trainerId: 'trainer.adel', scores: {}, decision: 'ready',
         weakSkills: [], weakRules: [], at: 0,
       });
     }

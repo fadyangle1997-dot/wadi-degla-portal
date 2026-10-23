@@ -43,7 +43,7 @@ describe('🔴 complete learning workflow — traced end to end', () => {
     });
     t = reduceTraining(t, {
       type: 'EVALUATION_RECORDED', employeeId: trainee, moduleId: 'm2_1',
-      trainerId: trainer, scores: {} as any, decision: 'ready',
+      trainerId: trainer, scores: {}, decision: 'ready',
       weakSkills: [], weakRules: [], at: 1,
     });
     expect(reviewStatus(t, trainee, 'm2_1')).toBe('ready');
@@ -59,7 +59,7 @@ describe('🔴 complete learning workflow — traced end to end', () => {
     // The C1 regression in miniature: attribution must be per-trainee.
     const t = reduceTraining(EMPTY_TRAINING, {
       type: 'EVALUATION_RECORDED', employeeId: 'mariam.a', moduleId: 'm2_1',
-      trainerId: trainer, scores: {} as any, decision: 'ready',
+      trainerId: trainer, scores: {}, decision: 'ready',
       weakSkills: [], weakRules: [], at: 0,
     });
     expect(reviewStatus(t, 'mariam.a', 'm2_1')).toBe('ready');

@@ -33,12 +33,13 @@ import { ArrowRight } from 'lucide-react';
 import type { ReadinessStanding } from '../../domain/readiness/track';
 import { demonstratedCount, nextStation } from '../../domain/readiness/track';
 import { READINESS_FLOORS, CRITICAL_DIMENSIONS, STATIONS } from '../../domain/readiness';
+import { LEVEL_NAME, levelOf, requiredLevel } from '../../domain/rubric';
 import {
   EVALUATION_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS,
   type EvaluationDecision, type EvaluationDimension,
 } from '../../domain/evaluation';
 import {
-  Button, Num, PageHeader, Brief, SectionHeader, Status, Meter, DataTable, type Column,
+  Button, Num, PageHeader, Brief, SectionHeader, Status, DataTable, type Column,
 } from '../../ui/primitives';
 import { ReadinessTrack } from './ReadinessTrack';
 import { WIDTH } from '../../ui/designSystem';
@@ -128,13 +129,13 @@ export const ReadinessResult: React.FC<{
   const observed = (d: EvaluationDimension) => track.some(s => s.assessment && s.station.measures.includes(d));
   const columns: Column<DimRow>[] = [
     { id: 'dim', header: 'المحور', cell: r => <span className="c-tx0">{EVALUATION_DIMENSIONS[r.d]}</span> },
+    // The level in the rubric's words, against the level the floor asks for —
+    // a number here would claim a precision the observation never had.
     {
-      id: 'score', header: 'الدرجة', align: 'end', sortValue: r => r.score,
-      cell: r => observed(r.d)
-        ? <span className="row items-center gap-3 justify-end"><Meter value={r.score} tone={r.score < r.floor ? (r.critical ? 'risk' : 'attn') : 'ready'} /><Num>{r.score}%</Num></span>
-        : <span className="c-tx2">—</span>,
+      id: 'level', header: 'اللي اتشاف', sortValue: r => r.score,
+      cell: r => observed(r.d) ? <span className="c-tx0">{LEVEL_NAME[levelOf(r.score)]}</span> : <span className="c-tx2">—</span>,
     },
-    { id: 'floor', header: 'الحد الأدنى', align: 'end', cell: r => <Num>{r.floor}</Num> },
+    { id: 'floor', header: 'المطلوب', cell: r => <span>{LEVEL_NAME[requiredLevel(r.floor)]}</span> },
     {
       id: 'state', header: 'الحالة',
       cell: r => !observed(r.d) ? <Status tone="neutral">لسه ما اتقاسش</Status>
@@ -210,7 +211,7 @@ export const ReadinessResult: React.FC<{
 
           <section aria-labelledby="rd-dims">
             <SectionHeader id="rd-dims" title="المحاور الرسمية"
-              description={<>الحرجة: مراجعة المستندات، تطبيق اللائحة، الدقة.{judged && <> · الإجمالي الموزون <Num>{outcome.overall}%</Num></>}</>} />
+              description="الحرجة: مراجعة المستندات، تطبيق اللائحة، الدقة. لو أكتر من محطة قاست نفس المحور، اللي بيتحسب هو متوسط مستوياتها." />
             <div className="mt-3">
               <DataTable caption="المحاور الرسمية" columns={columns} rows={dims} rowKey={r => r.d}
                 rowTone={r => observed(r.d) && r.score < r.floor ? (r.critical ? 'risk' : 'attn') : undefined} />

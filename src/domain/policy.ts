@@ -29,11 +29,12 @@ export const TRAINING_POLICY = {
 } as const;
 
 /**
- * Readiness dimension weights (sum = 1.0) — the SINGLE source. Management can
- * retune these without touching any consumer; every readiness/analytics
- * calculation reads from here. Order mirrors EVALUATION_DIMENSIONS.
+ * The official guide's KPI weights, verbatim; they sum to exactly 1. Kept as
+ * the programme's record of the guide, not as a formula: no decision and no
+ * screen computes a weighted total any more — readiness is read against the
+ * floors and the critical KPIs (domain/readiness), where a weak critical KPI
+ * cannot hide behind strong ones. Order mirrors EVALUATION_DIMENSIONS.
  */
-/** The official guide's KPI weights, verbatim. They sum to exactly 1. */
 export const READINESS_WEIGHTS = {
   docReview: 0.25,        // مراجعة المستندات
   ruleCompliance: 0.20,   // تطبيق اللائحة
@@ -44,10 +45,10 @@ export const READINESS_WEIGHTS = {
   teamwork: 0.05,         // العمل الجماعي
 } as const;
 
-/** Health classification thresholds (0..100 readiness) — policy-driven. */
+/**
+ * Follow-up — when the manager must act. Everything else is read from the
+ * rubric floors (domain/readiness), not from thresholds on an average.
+ */
 export const HEALTH_POLICY = {
-  strongMin: 80,         // strong practical performance (never "ready": see domain/performance)
-  onTrackMin: 65,        // progressing healthily
-  attentionMin: 50,      // needs attention below this band
-  riskExtensions: 2,     // this many extensions → immediate attention
+  riskSentBack: 2,       // sent back this many times, with work still open → immediate attention
 } as const;

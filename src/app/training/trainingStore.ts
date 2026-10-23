@@ -6,7 +6,7 @@
 import { useSyncExternalStore } from 'react';
 import { reviewOf, assignedLessonsOf, finalDecisionOf } from '../../domain/training/selectors';
 import { identityStore } from '../identity/identityStore';
-import type { Scores, EvaluationDecision, EvaluationDimension, ConductObservations } from '../../domain/evaluation';
+import type { ObservedScores, EvaluationDecision, EvaluationDimension, ConductObservations } from '../../domain/evaluation';
 import { STATIONS } from '../../domain/readiness';
 import { stationAssessmentProblem } from '../../domain/readiness/evidence';
 import {
@@ -75,7 +75,7 @@ export const trainingStore = {
     apply(() => backend.record({ type: 'REVIEW_COACHED', employeeId, trainerId, reviewAt, comment, at: now() })),
 
   recordEvaluation: (input: {
-    employeeId: string; moduleId: string; scores: Scores; decision: EvaluationDecision;
+    employeeId: string; moduleId: string; scores: ObservedScores; decision: EvaluationDecision;
     weakSkills: readonly string[]; weakRules: readonly string[]; note?: string;
   }) =>
     apply(() => backend.record({ type: 'EVALUATION_RECORDED', trainerId: trainerId(), at: now(), ...input })),

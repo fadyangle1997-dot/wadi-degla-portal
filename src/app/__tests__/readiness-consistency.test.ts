@@ -32,7 +32,7 @@ describe('readiness reads the same on every surface (demo scenario)', () => {
     loadDemoScenario();
   });
 
-  it.each(trainees)('%s — one readiness status, one practical score', id => {
+  it.each(trainees)('%s — one readiness status, one practical picture', id => {
     const t = trainingStore.get();
     const events = trainingStore.events() as readonly OrgEvent[];
     const own = groupByEmployee(events).get(id) ?? [];
@@ -45,13 +45,13 @@ describe('readiness reads the same on every surface (demo scenario)', () => {
     expect(page.status).toBe(file.formal.status);
     expect(roster.stationsDone).toBe(file.formal.stationsDone);
 
-    // The practical score is one number wherever it is shown.
-    expect(performanceFromOwnEvents(id, own).score).toBe(file.performance.score);
+    // Practical performance is one reading wherever it is shown.
+    const perf = performanceFromOwnEvents(id, own);
+    expect(perf.profile).toEqual(file.performance.profile);
+    expect(perf.followUp).toBe(file.performance.followUp);
 
-    // Certified only by the assessment: a strong score alone never certifies.
-    if (file.performance.followUp === 'strong') {
-      expect(file.formal.certified).toBe(file.formal.engine.decision === 'ready' && file.formal.managerDecision?.decision === 'ready');
-    }
+    // Certified only by the assessment: on-track unit work alone never certifies.
+    expect(file.formal.certified).toBe(file.formal.engine.decision === 'ready' && file.formal.managerDecision?.decision === 'ready');
     // An unopened assessment is never shown as a judgement.
     if (!file.programme.complete) expect(file.formal.status).toBe('not_open');
   });
@@ -96,12 +96,12 @@ describe('the word «جاهز» belongs to the readiness assessment', () => {
     expect(saysReady.filter(k => !allowed.test(k))).toEqual([]);
   });
 
-  it('screens never compute a readiness percentage themselves', () => {
-    const offenders = walk(join(SRC, 'features')).filter(f => /\.tsx?$/.test(f))
-      .filter(f => /\breadinessScore\b|operationalReadinessReport|readinessIndex/.test(readFileSync(f, 'utf-8')))
+  it('nothing computes a readiness or performance percentage', () => {
+    // Levels and floors only (docs/product-model.md D3) — no screen, and no
+    // domain module, brings a weighted total back.
+    const offenders = walk(SRC).filter(f => /\.tsx?$/.test(f) && !f.includes('__tests__'))
+      .filter(f => /\breadinessScore\b|operationalReadinessReport|readinessIndex|avgPerformance/.test(readFileSync(f, 'utf-8')))
       .map(f => f.slice(SRC.length));
-    // The trainer's live preview of the evaluation they are filling is the one
-    // allowed use: it is the score of THAT evaluation, labelled «درجة التقييم ده».
-    expect(offenders.filter(f => !f.endsWith('trainer/TrainerView.tsx') && !f.includes('trainer/Practical'))).toEqual([]);
+    expect(offenders).toEqual([]);
   });
 });

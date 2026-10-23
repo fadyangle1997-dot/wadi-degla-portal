@@ -40,7 +40,7 @@ export const tone = (s: Semantic): SemanticTone => TONE[s];
 
 /** What the manager does about someone, from practical performance. */
 export const FOLLOW_UP: Readonly<Record<FollowUpState, Semantic>> = {
-  strong: 'positive',
+  no_evidence: 'neutral',
   on_track: 'neutral',
   needs_attention: 'warning',
   needs_immediate_attention: 'risk',

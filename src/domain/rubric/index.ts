@@ -92,6 +92,15 @@ export function scoreOf(level: RubricLevel): number {
   return LEVEL_SCORE[level];
 }
 
+/**
+ * The lowest level that meets a floor. The floors were set on the 0–100 scale
+ * the levels map onto, so a floor of 70 asks for «بثقة ويشرح» and 50 for
+ * «لوحده بتردّد» — the sentence a manager reads instead of the number.
+ */
+export function requiredLevel(floor: number): RubricLevel {
+  return RUBRIC_LEVELS.find(l => LEVEL_SCORE[l] >= floor) ?? 4;
+}
+
 /** The level a raw score corresponds to — for reading legacy or imported data. */
 export function levelOf(score: number): RubricLevel {
   if (score >= 88) return 4;
@@ -134,4 +143,18 @@ export function scoresFromLevels<D extends EvaluationDimension>(
 ): Readonly<Record<D, number>> | null {
   if (unassessed(picks, dims).length > 0) return null;
   return Object.fromEntries(dims.map(d => [d, scoreOf(picks[d]!)])) as Record<D, number>;
+}
+
+/**
+ * The scores of the KPIs the trainer actually picked, and only those. A unit
+ * assessment requires the critical KPIs; any other KPI the trainer did not see
+ * in that unit stays out of the record instead of becoming a judgement nobody
+ * made.
+ */
+export function observedScores(picks: LevelPicks): Readonly<Partial<Record<EvaluationDimension, number>>> {
+  return Object.fromEntries(
+    (Object.entries(picks) as [EvaluationDimension, RubricLevel | undefined][])
+      .filter(([, l]) => l !== undefined)
+      .map(([d, l]) => [d, scoreOf(l!)]),
+  );
 }

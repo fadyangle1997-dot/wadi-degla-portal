@@ -10,7 +10,7 @@ import { reviewOf } from '../trainingStore';
 import { nextAction } from '../../../domain/journey/nextAction';
 import { moduleStatusOf } from '../../../domain/training/moduleStatus';
 import { latestApproval } from '../../../features/journey/approval';
-import { orgSummary, unitApprovalTrend, type OrgEvent } from '../../../domain/analytics/organization';
+import { orgSummary, type OrgEvent } from '../../../domain/analytics/organization';
 import { performanceFromOwnEvents, type TrainingEventLike } from '../../../domain/performance';
 import { EMPTY_PROGRESS } from '../../backend';
 import { ALL_DIMENSIONS, type Scores } from '../../../domain/evaluation';
@@ -63,10 +63,9 @@ describe('an escalated unit', () => {
     expect(reviewOf(t, T, M.id).status).toBe('waiting');
   });
 
-  it('the manager\'s approval is announced as an approval, and counted as a sign-off', () => {
+  it('the manager\'s approval is announced as an approval', () => {
     const events = [submit, escalate, answer('ready', 5)] as unknown as OrgEvent[];
     expect(latestApproval(events, T, 0)).toEqual({ moduleId: M.id, at: 5 });
-    expect(unitApprovalTrend(events).reduce((n, w) => n + w.approvals, 0)).toBe(1);
   });
 
   it('approved by the manager, it is approved in practical performance too — no open improvement', () => {

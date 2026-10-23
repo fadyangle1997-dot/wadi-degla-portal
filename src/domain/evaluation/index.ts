@@ -1,8 +1,9 @@
 /**
  * Evaluation domain — Phase 4 (pure, zero UI/storage knowledge).
- * Six measurable dimensions replace "good employee"; readiness is ONE
- * weighted formula defined here and nowhere else. Weights are policy data —
- * management can retune them without touching any consumer.
+ * Seven measurable KPIs replace "good employee". A KPI is judged by a rubric
+ * level (domain/rubric); readiness is read against floors and criticality
+ * (domain/readiness), never as a weighted total — an average of behaviour
+ * levels hides a weak critical KPI behind strong ones (docs/product-model.md).
  */
 
 /**
@@ -27,6 +28,12 @@ export const ALL_DIMENSIONS = Object.keys(EVALUATION_DIMENSIONS) as readonly Eva
 
 /** 0..100 per dimension. */
 export type Scores = Readonly<Record<EvaluationDimension, number>>;
+
+/**
+ * What one unit assessment recorded: the KPIs the trainer observed. The
+ * critical ones are always there; the rest only when seen in that unit.
+ */
+export type ObservedScores = Readonly<Partial<Record<EvaluationDimension, number>>>;
 
 /**
  * The trainer's four decisions, from the official guide. Two were missing:
@@ -76,18 +83,4 @@ export type ConductObservations = Readonly<Partial<Record<ConductCheck, boolean>
 /** A trainee cannot represent the club well while failing an observable check. */
 export function conductPassed(o: ConductObservations): boolean {
   return ALL_CONDUCT_CHECKS.every(c => o[c] === true);
-}
-
-import { READINESS_WEIGHTS } from '../policy';
-export { READINESS_WEIGHTS };
-
-const clamp = (n: number) => Math.max(0, Math.min(100, n));
-
-/** Overall readiness 0..100 — the single source for "Overall Readiness".
- *  Weights live in domain/policy.ts so management can retune without code. */
-export function readinessScore(scores: Scores): number {
-  const total = ALL_DIMENSIONS.reduce(
-    (sum, d) => sum + clamp(scores[d] ?? 0) * READINESS_WEIGHTS[d], 0,
-  );
-  return Math.round(total);
 }

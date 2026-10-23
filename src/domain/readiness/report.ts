@@ -15,11 +15,12 @@
 import type { TrainingState } from '../../app/training/trainingStore';
 import type { EvaluationDimension } from '../evaluation';
 import { isProgramComplete, approvedModuleCount } from '../journey/programCompletion';
-import { practicalPerformance, type PracticalPerformance, type PerformanceDimension, type TrainingEventLike } from '../performance';
+import { practicalPerformance, type PracticalPerformance, type ObservedDimension, type TrainingEventLike } from '../performance';
+import { LEVEL_NAME, requiredLevel } from '../rubric';
 import { formalReadiness, type FormalReadiness } from './status';
 
-export interface DevelopmentArea extends PerformanceDimension {
-  /** Why it matters, with the evidence (how far below the floor). */
+export interface DevelopmentArea extends ObservedDimension {
+  /** Why it matters, with the evidence: the level seen, and the level asked for. */
   readonly why: string;
   readonly suggestion: string;
 }
@@ -29,7 +30,7 @@ export interface ReadinessReport {
   readonly programme: { readonly complete: boolean; readonly approved: number; readonly total: number };
   /** The answer. */
   readonly formal: FormalReadiness;
-  /** The evidence — the trainer's latest judgement of the seven KPIs. */
+  /** The evidence — the trainer's latest observation of each of the seven KPIs. */
   readonly performance: PracticalPerformance;
   /** Every KPI under its floor in that judgement, with what to do about it. */
   readonly developmentAreas: readonly DevelopmentArea[];
@@ -53,13 +54,16 @@ export function readinessReport(t: TrainingState, events: readonly LogEvent[], t
   const complete = isProgramComplete(t, traineeId);
   const { approved, total } = approvedModuleCount(t, traineeId);
   const performance = practicalPerformance(events.filter(feedsPerformance) as unknown as readonly TrainingEventLike[], traineeId);
-  const developmentAreas: DevelopmentArea[] = performance.gaps.map(l => ({
-    ...l,
-    why: l.critical
-      ? `بُعد حرج تحت الحد الآمن (${l.score} مقابل ${l.floor}) — خطر تشغيلي مباشر على الملف.`
-      : `تحت الحد المطلوب (${l.score} مقابل ${l.floor}) — فجوة قابلة للتطوير.`,
-    suggestion: SUGGESTION[l.dimension],
-  }));
+  // In the rubric's words — «اتشاف "لوحده بتردّد"، والمطلوب "بثقة ويشرح"» —
+  // never «50 مقابل 70»: the sentence is what the trainer actually saw.
+  const developmentAreas: DevelopmentArea[] = performance.gaps.map(l => {
+    const seen = `اتشاف «${LEVEL_NAME[l.level!]}»، والمطلوب «${LEVEL_NAME[requiredLevel(l.floor)]}» على الأقل`;
+    return {
+      ...l,
+      why: l.critical ? `بُعد حرج: ${seen} — خطر تشغيلي مباشر على الملف.` : `${seen} — فجوة قابلة للتطوير.`,
+      suggestion: SUGGESTION[l.dimension],
+    };
+  });
   return {
     traineeId,
     programme: { complete, approved, total },

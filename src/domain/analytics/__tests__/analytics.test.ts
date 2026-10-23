@@ -1,141 +1,113 @@
-import type { EvaluationDecision } from '../../evaluation';
+import type { EvaluationDecision, ObservedScores } from '../../evaluation';
 /**
- * Analytics tests (Phase 5A/5B) — freeze the decision-driving contracts:
- * readiness confidence rewards evidence and penalizes struggle; health
- * classification lives in domain; org selectors derive purely from events.
+ * Analytics tests — freeze the decision-driving contracts. Practical
+ * performance is the latest observed rubric level of each KPI, never a
+ * percentage; follow-up is read from the floors the readiness engine uses;
+ * organisation figures count people, and only the people asked about.
  */
 import { describe, it, expect } from 'vitest';
-import { ALL_DIMENSIONS, type Scores } from '../../evaluation';
-import {
-  practicalPerformance as employeeReadiness, performanceConfidence as readinessConfidence, classifyFollowUp, type TrainingEventLike,
-} from '../../performance';
-import {
-  orgSummary, trainerAnalytics, mostDifficultModules, mostDifficultRules,
-  mostReopenedLessons, trainingEffectiveness, unitApprovalTrend as certificationTrend,
-} from '../organization';
+import { ALL_DIMENSIONS } from '../../evaluation';
+import { practicalPerformance, classifyFollowUp, type TrainingEventLike } from '../../performance';
+import { orgSummary, capabilityGaps } from '../organization';
 
-const s = (n: number): Scores => Object.fromEntries(ALL_DIMENSIONS.map(d => [d, n])) as Scores;
-const evalEvt = (employeeId: string, moduleId: string, n: number, decision: EvaluationDecision, at = 1, extra: object = {}): TrainingEventLike =>
-  ({ type: 'EVALUATION_RECORDED', employeeId, moduleId, scores: s(n), decision, at, ...extra });
+/** Every KPI at one rubric level (25 · 50 · 75 · 100). */
+const all = (n: number): ObservedScores => Object.fromEntries(ALL_DIMENSIONS.map(d => [d, n]));
+const evalEvt = (employeeId: string, moduleId: string, scores: ObservedScores, decision: EvaluationDecision, at = 1, extra: object = {}): TrainingEventLike =>
+  ({ type: 'EVALUATION_RECORDED', employeeId, moduleId, scores, decision, at, ...extra });
 
-describe('readinessConfidence — same index, different trust', () => {
-  it('is 0 with no evaluations', () => {
-    expect(readinessConfidence({ evaluations: 0, approvedModules: 0, extensions: 0, consistency: 0 })).toBe(0);
+describe('classifyFollowUp — from floors and counts, never an average', () => {
+  const base = { evaluations: 2, criticalAtLowest: false, gaps: 0, openImprovement: false, sentBack: 0 };
+  it('nothing to judge before the first assessment — not «on track»', () => {
+    expect(classifyFollowUp({ ...base, evaluations: 0 })).toBe('no_evidence');
   });
-  it('rises with evidence + approvals + consistency', () => {
-    const thin = readinessConfidence({ evaluations: 1, approvedModules: 0, extensions: 0, consistency: 0.6 });
-    const solid = readinessConfidence({ evaluations: 3, approvedModules: 3, extensions: 0, consistency: 1 });
-    expect(solid).toBeGreaterThan(thin);
-    expect(solid).toBeGreaterThan(80);
+  it('on track: nothing under its floor, nothing sent back open', () => {
+    expect(classifyFollowUp(base)).toBe('on_track');
   });
-  it('falls with extensions (repeated struggle)', () => {
-    const clean = readinessConfidence({ evaluations: 3, approvedModules: 2, extensions: 0, consistency: 0.8 });
-    const struggled = readinessConfidence({ evaluations: 3, approvedModules: 2, extensions: 2, consistency: 0.8 });
-    expect(struggled).toBeLessThan(clean);
+  it('attention: a KPI under its floor, or work sent back and still open', () => {
+    expect(classifyFollowUp({ ...base, gaps: 1 })).toBe('needs_attention');
+    expect(classifyFollowUp({ ...base, openImprovement: true, sentBack: 1 })).toBe('needs_attention');
+  });
+  it('immediate: a critical KPI at «بمساعدة»', () => {
+    expect(classifyFollowUp({ ...base, criticalAtLowest: true, gaps: 1 })).toBe('needs_immediate_attention');
+  });
+  it('immediate: sent back again while earlier work was sent back too', () => {
+    expect(classifyFollowUp({ ...base, openImprovement: true, sentBack: 2 })).toBe('needs_immediate_attention');
+  });
+  it('units reworked and approved since do not keep someone flagged', () => {
+    expect(classifyFollowUp({ ...base, sentBack: 2 })).toBe('on_track');
   });
 });
 
-describe('classifyFollowUp — domain-owned, coaching not punishing', () => {
-  it('strong — never «ready» — when the score is high', () => {
-    expect(classifyFollowUp({ score: 88, extensions: 0, hasOpenImprovement: false, evaluations: 2 })).toBe('strong');
-  });
-  it('immediate attention on repeated extensions', () => {
-    expect(classifyFollowUp({ score: 70, extensions: 2, hasOpenImprovement: false, evaluations: 2 })).toBe('needs_immediate_attention');
-  });
-  it('attention on an open improvement', () => {
-    expect(classifyFollowUp({ score: 72, extensions: 0, hasOpenImprovement: true, evaluations: 1 })).toBe('needs_attention');
-  });
-  it('on_track before any evaluation', () => {
-    expect(classifyFollowUp({ score: 0, extensions: 0, hasOpenImprovement: false, evaluations: 0 })).toBe('on_track');
-  });
-});
-
-describe('employeeReadiness — derived from events', () => {
-  const events: TrainingEventLike[] = [
-    evalEvt('e1', 'm2_1', 90, 'ready', 10),
-    evalEvt('e1', 'm2_2', 85, 'ready', 20),
-  ];
-  it('uses the latest evaluation for the index and counts approvals', () => {
-    const r = employeeReadiness(events, 'e1');
-    expect(r.score).toBe(85);
+describe('practicalPerformance — levels as observed', () => {
+  it('each KPI carries its latest observed level and how often it was seen', () => {
+    const r = practicalPerformance([
+      evalEvt('e1', 'm2_1', all(50), 'ready', 10),
+      evalEvt('e1', 'm2_2', { docReview: 100, ruleCompliance: 75, accuracy: 75 }, 'ready', 20),
+    ], 'e1');
+    const by = Object.fromEntries(r.profile.map(p => [p.dimension, p]));
+    expect(by.docReview).toMatchObject({ level: 4, observations: 2, belowFloor: false });
+    // Not seen in the second unit: the first observation still stands.
+    expect(by.memberService).toMatchObject({ level: 2, observations: 1, belowFloor: true });
+    expect(by.teamwork).toMatchObject({ level: 2, belowFloor: false }); // teamwork's floor is «لوحده بتردّد»
+    expect(r.gaps.map(g => g.dimension).sort()).toEqual(['memberService', 'problemSolving', 'systemUsage']);
+    expect(r.gapLevel).toBe('developmental');
     expect(r.approvedModules).toBe(2);
-    expect(r.followUp).toBe('strong'); // a strong score is never «ready»
+    expect(r.followUp).toBe('needs_attention');
   });
-  it('unknown employee → zeroed, on_track', () => {
-    const r = employeeReadiness(events, 'ghost');
-    expect(r.score).toBeNull();
+  it('a KPI never observed is «not seen», never a number', () => {
+    const r = practicalPerformance([evalEvt('e1', 'm1', { docReview: 75, ruleCompliance: 75, accuracy: 75 }, 'ready')], 'e1');
+    expect(r.profile.find(p => p.dimension === 'teamwork')).toMatchObject({ level: null, observations: 0, belowFloor: false });
+    expect(r.followUp).toBe('on_track');
+  });
+  it('a critical KPI at «بمساعدة» is immediate attention', () => {
+    const r = practicalPerformance([evalEvt('e1', 'm1', { docReview: 25, ruleCompliance: 75, accuracy: 75 }, 'not_ready')], 'e1');
+    expect(r.gapLevel).toBe('critical');
+    expect(r.followUp).toBe('needs_immediate_attention');
+  });
+  it('an unknown employee has no evidence', () => {
+    const r = practicalPerformance([], 'ghost');
     expect(r.evaluations).toBe(0);
+    expect(r.followUp).toBe('no_evidence');
+    expect(r.gapLevel).toBeNull();
   });
 });
 
-describe('orgSummary — the executive overview', () => {
+describe('orgSummary — people, and only the people asked about', () => {
   const events: TrainingEventLike[] = [
-    evalEvt('e1', 'm2_1', 90, 'ready'),
-    evalEvt('e2', 'm2_1', 55, 'not_ready'),
-    { type: 'TRAINING_EXTENDED', employeeId: 'e2', at: 2 },
+    evalEvt('e1', 'm2_1', all(75), 'ready'),
+    evalEvt('e2', 'm2_1', all(50), 'not_ready'),
     { type: 'UNIT_SUBMITTED_FOR_REVIEW', employeeId: 'e3', moduleId: 'm2_1', at: 3 },
+    { type: 'UNIT_SUBMITTED_FOR_REVIEW', employeeId: 'x9', moduleId: 'm2_1', at: 4 },
   ];
-  it('counts health buckets, waiting, and rates', () => {
+  it('counts follow-up buckets and certified', () => {
     const sum = orgSummary(events, ['e1', 'e2', 'e3']);
-    expect(sum.activeTrainees).toBe(3);
-    expect(sum.strong).toBe(1);
-    expect(sum.certified).toBe(0); // no readiness assessment on the log
-    expect(sum.waitingForTrainer).toBe(1);
-    expect(sum.firstPassRate).toBe(0.5); // e1 approved first, e2 not
-    expect(sum.extensionRate).toBeCloseTo(1 / 3, 5);
+    expect(sum).toMatchObject({ activeTrainees: 3, onTrack: 1, needsAttention: 1, noEvidence: 1, certified: 0 });
+  });
+  it('a branch counts its own waiting units, not another branch\'s', () => {
+    expect(orgSummary(events, ['e1', 'e2', 'e3']).waitingForTrainer).toBe(1);
+    expect(orgSummary(events, ['x9']).waitingForTrainer).toBe(1);
+    expect(orgSummary(events, ['e1']).waitingForTrainer).toBe(0);
   });
 });
 
-describe('organizational insights — auto-discovered problems', () => {
+describe('capabilityGaps — where people are weak, in counts of people', () => {
   const events = [
-    evalEvt('e1', 'm2_3', 50, 'not_ready', 1, { weakRules: ['separation.penalty'], weakSkills: ['calc'] }),
-    evalEvt('e2', 'm2_3', 55, 'not_ready', 2, { weakRules: ['separation.penalty'] }),
-    evalEvt('e3', 'm2_1', 90, 'ready', 3),
-    { type: 'LESSON_REOPENED', employeeId: 'e1', lessonId: 'l2-vat-base', at: 4 },
-    { type: 'LESSON_REOPENED', employeeId: 'e2', lessonId: 'l2-vat-base', at: 5 },
-  ] as any[];
-  it('surfaces the most difficult module by fail rate', () => {
-    const hardest = mostDifficultModules(events)[0]!;
-    expect(hardest.key).toBe('m2_3');
-    expect(hardest.failRate).toBe(1);
+    evalEvt('e1', 'm2_3', { docReview: 50, ruleCompliance: 75, accuracy: 50 }, 'not_ready', 1, { weakRules: ['separation.penalty'] }),
+    evalEvt('e2', 'm2_3', { docReview: 75, ruleCompliance: 75, accuracy: 50 }, 'not_ready', 2, { weakRules: ['separation.penalty', 'joining.age'] }),
+    evalEvt('e3', 'm2_1', all(75), 'ready', 3),
+  ] as TrainingEventLike[];
+  it('counts the people under each floor, most first', () => {
+    const c = capabilityGaps(events, ['e1', 'e2', 'e3']);
+    expect(c.assessed).toBe(3);
+    expect(c.kpis).toEqual([
+      { dimension: 'accuracy', people: 2, critical: true },
+      { dimension: 'docReview', people: 1, critical: true },
+    ]);
   });
-  it('surfaces the most difficult rule and most reopened lesson', () => {
-    expect(mostDifficultRules(events)[0]?.key).toBe('separation.penalty');
-    expect(mostReopenedLessons(events)[0]?.key).toBe('l2-vat-base');
+  it('a rule is a pattern only when trainers flagged it for more than one person', () => {
+    expect(capabilityGaps(events, ['e1', 'e2', 'e3']).rules).toEqual([{ rule: 'separation.penalty', people: 2 }]);
   });
-});
-
-describe('trainerAnalytics — training quality, not people', () => {
-  const events = [
-    evalEvt('e1', 'm2_1', 90, 'ready', 1, { trainerId: 't1' }),
-    evalEvt('e2', 'm2_1', 50, 'not_ready', 2, { trainerId: 't1' }),
-    { type: 'COACHING_NOTE_ADDED', trainerId: 't1', employeeId: 'e2', note: 'x', at: 3 },
-  ] as any[];
-  it('aggregates per trainer', () => {
-    const t1 = trainerAnalytics(events).find(t => t.trainerId === 't1')!;
-    expect(t1.evaluationsGiven).toBe(2);
-    expect(t1.approvals).toBe(1);
-    expect(t1.approvalRate).toBe(0.5);
-    expect(t1.coachingSessions).toBe(1);
-  });
-});
-
-describe('trainingEffectiveness & trend — is the system improving?', () => {
-  it('effectiveness is a bounded explainable index', () => {
-    const events = [evalEvt('e1', 'm2_1', 90, 'ready')];
-    const sum = orgSummary(events, ['e1']);
-    const eff = trainingEffectiveness(sum, events);
-    expect(eff).toBeGreaterThanOrEqual(0);
-    expect(eff).toBeLessThanOrEqual(100);
-  });
-  it('certification trend buckets approvals by week', () => {
-    const WEEK = 7 * 86_400_000;
-    const events = [
-      evalEvt('e1', 'm2_1', 90, 'ready', 0),
-      evalEvt('e2', 'm2_1', 90, 'ready', WEEK + 1000),
-      evalEvt('e3', 'm2_1', 90, 'ready', WEEK + 2000),
-    ];
-    const trend = certificationTrend(events);
-    expect(trend).toEqual([{ week: 0, approvals: 1 }, { week: 1, approvals: 2 }]);
+  it('people outside the scope are not counted', () => {
+    expect(capabilityGaps(events, ['e3'])).toEqual({ assessed: 1, kpis: [], rules: [] });
   });
 });

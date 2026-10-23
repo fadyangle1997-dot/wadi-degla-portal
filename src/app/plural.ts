@@ -57,6 +57,14 @@ export const escalatedUnitCount = (n: number, lang: Lang) => count(n, lang,
     few: '{n} وحدات متصعّدة ليك ومستنية قرارك', many: '{n} وحدة متصعّدة ليك ومستنية قرارك' },
   { one: 'One unit was escalated to you and is waiting for your decision', other: '{n} units were escalated to you and are waiting for your decision' });
 
+export const kpisBelow = (n: number, lang: Lang) => count(n, lang,
+  { one: 'مؤشر واحد تحت المطلوب', two: 'مؤشرين تحت المطلوب', few: '{n} مؤشرات تحت المطلوب', many: '{n} مؤشر تحت المطلوب' },
+  { one: 'One KPI below standard', other: '{n} KPIs below standard' });
+
+export const timesSeen = (n: number, lang: Lang) => count(n, lang,
+  { one: 'اتشاف مرة واحدة', two: 'اتشاف مرتين', few: 'اتشاف {n} مرات', many: 'اتشاف {n} مرة' },
+  { one: 'Seen once', other: 'Seen {n} times' });
+
 export const changeCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'تغيير واحد', two: 'تغييرين', few: '{n} تغييرات', many: '{n} تغيير' },
   { one: 'one change', other: '{n} changes' });

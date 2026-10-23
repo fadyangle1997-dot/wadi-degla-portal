@@ -30,7 +30,7 @@ describe('unified progress — two metrics, one source each', () => {
   it('an approval raises ONLY approvalProgress', () => {
     const t = reduceTraining(EMPTY_TRAINING, {
       type: 'EVALUATION_RECORDED', employeeId: 'ahmed.m', moduleId: 'm1',
-      trainerId: 'trainer.adel', scores: {} as any, decision: 'ready',
+      trainerId: 'trainer.adel', scores: {}, decision: 'ready',
       weakSkills: [], weakRules: [], at: 0,
     });
     expect(approvalProgress(t, 'ahmed.m')).toBeGreaterThan(0);
@@ -45,7 +45,7 @@ describe('unified progress — two metrics, one source each', () => {
   it('per-trainee isolation: approving ahmed does not move mariam', () => {
     const t = reduceTraining(EMPTY_TRAINING, {
       type: 'EVALUATION_RECORDED', employeeId: 'ahmed.m', moduleId: 'm1',
-      trainerId: 'trainer.adel', scores: {} as any, decision: 'ready',
+      trainerId: 'trainer.adel', scores: {}, decision: 'ready',
       weakSkills: [], weakRules: [], at: 0,
     });
     expect(approvalProgress(t, 'ahmed.m')).toBeGreaterThan(0);

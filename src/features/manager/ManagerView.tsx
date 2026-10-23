@@ -8,7 +8,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { m } from 'motion/react';
-import { ShieldCheck, TrendingUp, AlertTriangle, Users2, Gavel, Clock } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Users2, Gavel, Clock } from 'lucide-react';
 import { useCan, useIdentity, identityStore } from '../../app/identity/identityStore';
 import { scopeOf } from '../../domain/identity/scope';
 import { useDashboard } from '../../app/analytics/dashboardStore';
@@ -118,21 +118,19 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
       <m.main {...fade} style={{ maxWidth: WIDTH.staff, margin: '0 auto', padding: 'var(--sp-6) var(--sp-5) var(--sp-9)' }}>
         <PageHeader crumbs={[tr('crumb.academy', lang), tr(managementLabel(canDo).nav as Key, lang)]}
           title={scopeTitle}
-          lead={noData ? tr('mg.sub', lang) : tf('mg.lead', { n: staffCount(s.activeTrainees, lang), r: iso(`${s.avgPerformance}%`), c: iso(s.certified), a: iso(attention) }, lang)} />
+          lead={noData ? tr('mg.sub', lang) : tf('mg.lead', { n: staffCount(s.activeTrainees, lang), c: iso(s.certified), a: iso(attention) }, lang)} />
 
         {noData ? (
           <EmptyState icon={<Users2 />} title={tr('mg.nodata', lang)}
             body={tr('mg.nodatabody', lang)} />
         ) : (
           <>
-            {/* The operation in five figures, before any detail. The heading
+            {/* The operation in four figures, before any detail. The heading
                 names the scope truthfully: an organisation roll-up is not a
                 «branch». */}
             <MetricStrip label={scope.kind === 'organization' ? tr('mg.orghealth', lang) : scope.kind === 'area' ? tr('mg.areahealth', lang) : tr('mg.branchhealth', lang)}>
-              {/* Practical performance is an indicator from unit evaluations;
-                  «اتعتمدوا» counts only the readiness assessment's certified. */}
-              <Metric icon={<TrendingUp size={13} />} label={tr('mg.k.perf', lang)} value={`${s.avgPerformance}%`}
-                context={tr(scope.kind === 'organization' ? 'mg.avgorg' : scope.kind === 'area' ? 'mg.avgarea' : 'mg.avgbranch', lang)} />
+              {/* No average of percentages: «اتعتمدوا» counts only the
+                  readiness assessment's certified, the rest are people. */}
               <Metric icon={<ShieldCheck size={13} />} label={tr('mg.k.certified', lang)} value={s.certified}
                 context={tf('mg.k.certifiedctx', { n: iso(s.certified), t: iso(s.activeTrainees) }, lang)}
                 tone={s.certified > 0 ? tone(FORMAL_READINESS.certified) : undefined} />

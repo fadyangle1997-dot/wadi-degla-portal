@@ -7,7 +7,7 @@ import { detectOperationalIssues } from '../../domain/operations/health';
 import { issueText } from '../admin/issueText';
 import { useOrganization } from '../../app/organization/orgStore';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { DataTable, SectionHeader, Status, Meter, type Column } from '../../ui/primitives';
+import { DataTable, SectionHeader, Status, type Column } from '../../ui/primitives';
 import { useLang, t as tr, tf, iso } from '../../app/i18n';
 import { needInterventionCount, unitCount } from '../../app/plural';
 import { tone, rowTone, FOLLOW_UP, UNIT_REVIEW, SEVERITY } from '../../ui/statusSemantics';
@@ -46,11 +46,6 @@ export const UnitsTable: React.FC<{ units: readonly UnitRow[]; onOpen: (id: stri
   const columns: Column<UnitRow>[] = [
     { id: 'name', header: tr('mg.col.branch', lang), sortValue: u => u.name, cell: u => <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{u.name}</span> },
     { id: 'state', header: tr('dt.status', lang), sortValue: u => attentionOf(u.s) * 100 + u.s.waitingForTrainer, cell: u => <Status tone={tone(semantic(u))}>{state(u)}</Status> },
-    {
-      // A quantity: the progress accent, whatever the unit's status.
-      id: 'performance', header: tr('perf.title', lang), align: 'end', sortValue: u => u.s.avgPerformance,
-      cell: u => <span className="row items-center gap-2 justify-end"><Meter value={u.s.avgPerformance} /><span className="t-num c-tx0">{u.s.avgPerformance}%</span></span>,
-    },
     { id: 'certified', header: tr('mg.k.certified', lang), align: 'end', sortValue: u => u.s.certified, cell: u => <span className="t-num">{u.s.certified}</span> },
     { id: 'people', header: tr('mg.staff', lang), align: 'end', sortValue: u => u.people, cell: u => <span className="t-num">{u.people}</span> },
   ];

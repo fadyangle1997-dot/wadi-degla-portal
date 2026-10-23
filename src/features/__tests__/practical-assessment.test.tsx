@@ -12,6 +12,7 @@ import { loadDemoScenario } from '../../app/demo/demoScenario';
 import { PracticalAssessment } from '../trainer/PracticalAssessment';
 import { MODULES } from '../../content/registry';
 import { ALL_DIMENSIONS, ALL_CONDUCT_CHECKS, CONDUCT_CHECKS } from '../../domain/evaluation';
+import { CRITICAL_DIMENSIONS } from '../../domain/readiness';
 import { LEVEL_SCORE } from '../../domain/rubric';
 import { leaveGuard } from '../../app/leaveGuard';
 
@@ -45,13 +46,14 @@ describe('practical assessment — nothing assessed until the trainer picks', ()
     expect(screen.getByText('قيّمت 0 من 7')).toBeTruthy();
   });
 
-  it('🔴 the decision cannot be recorded while any KPI is unassessed', () => {
+  it('🔴 the decision cannot be recorded while a critical KPI is unassessed', () => {
     const before = trainingStore.events().length;
     render(<PracticalAssessment employeeId={TRAINEE} moduleId={waitingUnit().id} onExit={() => undefined} />);
     fireEvent.click(screen.getByRole('button', { name: /اعتمد الوحدة/ }));
-    // No confirmation opened, nothing written, and every missing KPI says so.
+    // No confirmation opened, nothing written, and every missing critical KPI
+    // says so — the four others may honestly stay «not seen in this unit».
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getAllByText('اختار مستوى للمؤشر ده قبل القرار.')).toHaveLength(ALL_DIMENSIONS.length);
+    expect(screen.getAllByText('اختار مستوى للمؤشر ده قبل القرار.')).toHaveLength(CRITICAL_DIMENSIONS.length);
     expect(trainingStore.events().length).toBe(before);
   });
 
@@ -79,6 +81,18 @@ describe('practical assessment — nothing assessed until the trainer picks', ()
     if (ev?.type === 'EVALUATION_RECORDED') for (const d of ALL_DIMENSIONS) expect(ev.scores[d]).toBe(LEVEL_SCORE[3]);
     expect(reviewOf(trainingStore.get(), TRAINEE, unit.id).status).toBe('ready');
     expect(exited).toBe(true);
+  });
+
+  it('a KPI the trainer did not see is left out of the record, not scored', () => {
+    const unit = waitingUnit();
+    render(<PracticalAssessment employeeId={TRAINEE} moduleId={unit.id} onExit={() => undefined} />);
+    for (const d of CRITICAL_DIMENSIONS) fireEvent.click(within(document.getElementById(`pa-${d}`)!).getAllByRole('radio')[2]!);
+    expect(screen.getByText('قيّمت 3 من 7')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /يعيد الوحدة/ }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /يعيد الوحدة/ }));
+    const ev = trainingStore.events().filter(e => e.type === 'EVALUATION_RECORDED' && e.employeeId === TRAINEE && e.moduleId === unit.id).pop();
+    if (ev?.type !== 'EVALUATION_RECORDED') throw new Error('no evaluation recorded');
+    expect(Object.keys(ev.scores).sort()).toEqual([...CRITICAL_DIMENSIONS].sort());
   });
 
   it('a trainee who is not this trainer\'s cannot be assessed', () => {

@@ -4,7 +4,8 @@
  *
  * It starts with NO level picked: «لسه ما اتقيّمش». There is no default and no
  * slider — the old forms opened at 80 (stations at 70) and could be submitted
- * untouched. A fieldset and legend name the KPI; the four options are plain
+ * untouched. An optional KPI (one the trainer may not have seen in this unit)
+ * can be left, or cleared back, to «ما اتشافش». A fieldset and legend name the KPI; the four options are plain
  * radios, so arrow keys, Space and screen readers behave natively; a missing
  * pick is said under the group and tied to it.
  */
@@ -25,8 +26,12 @@ export const RubricPick: React.FC<{
   /** Show the «not assessed» error (after a submit attempt). */
   missing: boolean;
   critical?: boolean;
+  /** May be left unassessed: a KPI the trainer did not see is not recorded. */
+  optional?: boolean;
+  /** Clears an optional pick back to «not seen». */
+  onClear?: () => void;
   lang: Lang;
-}> = ({ idPrefix, dimension, value, onChange, missing, critical, lang }) => {
+}> = ({ idPrefix, dimension, value, onChange, missing, critical, optional, onClear, lang }) => {
   const errId = `${idPrefix}-${dimension}-err`;
   return (
     <fieldset className="rubric" id={`${idPrefix}-${dimension}`} aria-describedby={missing ? errId : undefined}
@@ -34,7 +39,7 @@ export const RubricPick: React.FC<{
       <legend className="rubric-legend">
         <ArabicContent as="span">{EVALUATION_DIMENSIONS[dimension]}</ArabicContent>
         {critical && <span className="rubric-critical">{tr('rr.critical', lang)}</span>}
-        <span className="rubric-state">{value ? tr(LEVEL_KEY[value], lang) : tr('pa.notassessed', lang)}</span>
+        <span className="rubric-state">{value ? tr(LEVEL_KEY[value], lang) : tr(optional ? 'pa.optional' : 'pa.notassessed', lang)}</span>
       </legend>
       <div className="rubric-options">
         {RUBRIC_LEVELS.map(level => {
@@ -42,7 +47,7 @@ export const RubricPick: React.FC<{
           return (
             <label key={level} htmlFor={id} className="rubric-option" data-checked={value === level || undefined}>
               <input type="radio" id={id} name={`${idPrefix}-${dimension}`} value={level}
-                checked={value === level} onChange={() => onChange(level)} required />
+                checked={value === level} onChange={() => onChange(level)} required={!optional} />
               <span className="rubric-level">
                 <span className="t-num">{level}</span> · {tr(LEVEL_KEY[level], lang)}
               </span>
@@ -51,6 +56,9 @@ export const RubricPick: React.FC<{
           );
         })}
       </div>
+      {optional && value !== undefined && onClear && (
+        <button type="button" className="quiet-act t-sm" onClick={onClear}>{tr('pa.clear', lang)}</button>
+      )}
       {missing && <p id={errId} className="form-error">{tr('pa.err.level', lang)}</p>}
     </fieldset>
   );

@@ -8,14 +8,14 @@
  * NOTE (honest limit): cross-device sync arrives with the real backend
  * (Phase 7). Until then the model is fully real; visibility is per-device.
  */
-import type { Scores, EvaluationDecision, EvaluationDimension, ConductObservations } from '../../domain/evaluation';
+import type { ObservedScores, EvaluationDecision, EvaluationDimension, ConductObservations } from '../../domain/evaluation';
 
 /* ---------------- events (the training truth) ---------------- */
 export type TrainingEvent =
   | { readonly type: 'UNIT_SUBMITTED_FOR_REVIEW'; readonly employeeId: string; readonly moduleId: string; readonly at: number }
   | {
       readonly type: 'EVALUATION_RECORDED'; readonly employeeId: string; readonly moduleId: string;
-      readonly trainerId: string; readonly scores: Scores; readonly decision: EvaluationDecision;
+      readonly trainerId: string; readonly scores: ObservedScores; readonly decision: EvaluationDecision;
       readonly weakSkills: readonly string[]; readonly weakRules: readonly string[];
       readonly note?: string; readonly at: number;
     }

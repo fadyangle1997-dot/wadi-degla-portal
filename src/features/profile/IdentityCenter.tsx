@@ -21,7 +21,7 @@ import { useTraining, trainingStore, traineeIdOrNull } from '../../app/training/
 import { useTodaysMission } from '../../app/journeyContext';
 import { progression } from '../../domain/journey/progression';
 import { readinessReport } from '../../domain/readiness/report';
-import { formalLabel, performanceText } from '../readiness/labels';
+import { formalLabel } from '../readiness/labels';
 import { PROGRAM } from '../../domain/journey/program';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { Icon } from '../../ui/Icon';
@@ -32,7 +32,7 @@ import { fade } from '../../ui/motion';
 import { WIDTH } from '../../ui/designSystem';
 import { branchNameOf } from '../../domain/organization';
 import { useOrganization } from '../../app/organization/orgStore';
-import { dayCount } from '../../app/plural';
+import { dayCount, kpisBelow } from '../../app/plural';
 
 export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { users } = useIdentity();
@@ -167,7 +167,11 @@ export const IdentityCenter: React.FC<{ onClose: () => void }> = ({ onClose }) =
                 answers «how much is left?». */}
             <StatCard label={tr('db.completion', lang)} value={`${learnPct}%`} sub={tr('pf.lessonsdone', lang)} />
             <StatCard label={tr('pf.unitsapp', lang)} value={`${programme.approved}/${programme.total}`} sub={tr('pf.fromtrainer', lang)} />
-            <StatCard label={tr('perf.title', lang)} value={performanceText(performance)} sub={performance.score !== null ? tr('perf.latest', lang) : tr('perf.none', lang)} />
+            {/* In words, never a percentage: what the trainer's observations
+                found under the standard, if anything. */}
+            <StatCard words label={tr('perf.title', lang)}
+              value={performance.evaluations === 0 ? tr('perf.none', lang) : performance.gaps.length === 0 ? tr('perf.nogapsshort', lang) : kpisBelow(performance.gaps.length, lang)}
+              sub={performance.evaluations > 0 ? tr('perf.latest', lang) : ''} />
             <StatCard words label={tr('fr.title', lang)} value={formalLabel(formal, lang)} sub={formal.status === 'not_open' ? tf('fr.not_open.body', { a: programme.approved, b: programme.total }, lang) : ''} />
           </div>
         </section>

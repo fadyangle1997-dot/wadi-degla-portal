@@ -34,17 +34,17 @@ const decide = (decision: 'ready' | 'extend' | 'reject'): TrainingEvent => ({
 const build = (events: TrainingEvent[]) => readinessReport(events.reduce(reduceTraining, EMPTY_TRAINING), events, T);
 
 describe('readiness report — the answer is the readiness assessment', () => {
-  it('no evidence at all: not open, no score, nothing called ready', () => {
+  it('no evidence at all: not open, not assessed, nothing called ready', () => {
     const r = build([]);
     expect(r.formal.status).toBe('not_open');
-    expect(r.performance.score).toBeNull();
+    expect(r.performance.followUp).toBe('no_evidence');
     expect(r.programme).toEqual({ complete: false, approved: 0, total: MODULES.length });
   });
 
   it('🔴 strong unit evaluations on every unit do NOT make the trainee ready', () => {
     const r = build(approvals(strong));
-    expect(r.performance.score).toBeGreaterThan(80);
-    expect(r.performance.followUp).toBe('strong');
+    expect(r.performance.gaps).toEqual([]);
+    expect(r.performance.followUp).toBe('on_track');
     // The programme is complete, so the assessment opens — and waits for stations.
     expect(r.formal.status).toBe('in_progress');
     expect(r.formal.certified).toBe(false);
@@ -64,17 +64,18 @@ describe('readiness report — the answer is the readiness assessment', () => {
     expect(build([...approvals(strong), decide('ready')]).formal.certified).toBe(false);
   });
 
-  it('the manager extending or rejecting is the status, whatever the score', () => {
+  it('the manager extending or rejecting is the status, whatever the unit work', () => {
     expect(build([...approvals(strong), decide('extend')]).formal.status).toBe('extended');
     expect(build([...approvals(strong), decide('reject')]).formal.status).toBe('not_ready');
   });
 });
 
 describe('readiness report — practical performance is evidence, labelled as such', () => {
-  it('the score is the weighted sum of the dimensions it shows', () => {
+  it('every KPI is shown as an observed level, how often seen — never a total', () => {
     const r = build(approvals(strong));
-    expect(r.performance.dimensions).toHaveLength(7);
-    expect(r.performance.score).toBe(r.performance.series[r.performance.series.length - 1]);
+    expect(r.performance.profile).toHaveLength(7);
+    expect(r.performance.profile.every(p => p.level !== null && p.observations === MODULES.length)).toBe(true);
+    expect('score' in r.performance).toBe(false);
   });
 
   it('a critical KPI under its floor is a critical gap with a suggestion — not a verdict', () => {
@@ -84,10 +85,10 @@ describe('readiness report — practical performance is evidence, labelled as su
     expect(r.formal.status).toBe('in_progress');
   });
 
-  it('a sparse record produces a safe report (no NaN)', () => {
+  it('a sparse record produces a safe report: every KPI «not seen», no areas invented', () => {
     const r = build([]);
-    expect(r.performance.dimensions).toHaveLength(0);
-    expect(r.performance.series).toEqual([]);
-    expect(r.performance.trend).toBe('flat');
+    expect(r.performance.profile.every(p => p.level === null && p.observations === 0)).toBe(true);
+    expect(r.performance.gapLevel).toBeNull();
+    expect(r.developmentAreas).toEqual([]);
   });
 });

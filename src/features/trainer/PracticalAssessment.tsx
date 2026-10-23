@@ -24,8 +24,8 @@ import { useIdentity, useCan, identityStore } from '../../app/identity/identityS
 import { scopeOf, visibleLearners } from '../../domain/identity/scope';
 import { useTraining, trainingStore, reviewOf } from '../../app/training/trainingStore';
 import { recommendFor } from '../../app/training/recommend';
-import { readinessScore, ALL_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS, conductPassed, type ConductObservations, type EvaluationDecision, type Scores } from '../../domain/evaluation';
-import { unassessed, scoresFromLevels, type LevelPicks, type RubricLevel } from '../../domain/rubric';
+import { ALL_DIMENSIONS, CONDUCT_CHECKS, ALL_CONDUCT_CHECKS, conductPassed, type ConductObservations, type EvaluationDecision, type ObservedScores } from '../../domain/evaluation';
+import { unassessed, observedScores, type LevelPicks, type RubricLevel } from '../../domain/rubric';
 import { CRITICAL_DIMENSIONS } from '../../domain/readiness';
 import { moduleById } from '../../content/registry';
 import type { Lesson } from '../../domain/types/content';
@@ -82,8 +82,11 @@ const AssessmentForm: React.FC<{ employeeName: string; employeeId: string; modul
   const [tried, setTried] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
-  const missing = unassessed(picks, ALL_DIMENSIONS);
-  const scores: Scores | null = scoresFromLevels(picks, ALL_DIMENSIONS);
+  // The three critical KPIs are required; the rest are recorded only when the
+  // trainer saw them in this unit — a pick on an unseen KPI would record a
+  // judgement nobody made.
+  const missing = unassessed(picks, CRITICAL_DIMENSIONS);
+  const scores: ObservedScores | null = missing.length > 0 ? null : observedScores(picks);
   const conductOk = conductPassed(conduct);
   // Weak skills are derived from per-lesson picks: marking a lesson «needs work»
   // attributes its declared skills. Same event shape and recommendFor() input.
@@ -104,7 +107,7 @@ const AssessmentForm: React.FC<{ employeeName: string; employeeId: string; modul
     stayLabel: tr('pa.leavestay', lang),
   });
 
-  /** A decision needs all seven KPIs; approving also needs the four behaviours. */
+  /** A decision needs the critical KPIs; approving also needs the four behaviours. */
   const ask = (d: EvaluationDecision) => {
     if (missing.length > 0) {
       setTried(true);
@@ -133,7 +136,7 @@ const AssessmentForm: React.FC<{ employeeName: string; employeeId: string; modul
   };
 
   const toggleRule = (id: string) => setWeakRules(l => l.includes(id) ? l.filter(x => x !== id) : [...l, id]);
-  const assessed = ALL_DIMENSIONS.length - missing.length;
+  const assessed = ALL_DIMENSIONS.filter(d => picks[d] !== undefined).length;
 
   return (
     <div className="min-h-screen">
@@ -180,8 +183,10 @@ const AssessmentForm: React.FC<{ employeeName: string; employeeId: string; modul
           <p className="t-sm c-tx2 m-0">{tr('pa.kpisub', lang)}</p>
           {ALL_DIMENSIONS.map(d => (
             <RubricPick key={d} idPrefix="pa" dimension={d} value={picks[d]} lang={lang}
-              critical={CRITICAL_DIMENSIONS.includes(d)} missing={tried && picks[d] === undefined}
-              onChange={(level: RubricLevel) => setPicks(p => ({ ...p, [d]: level }))} />
+              critical={CRITICAL_DIMENSIONS.includes(d)} optional={!CRITICAL_DIMENSIONS.includes(d)}
+              missing={tried && CRITICAL_DIMENSIONS.includes(d) && picks[d] === undefined}
+              onChange={(level: RubricLevel) => setPicks(p => ({ ...p, [d]: level }))}
+              onClear={() => setPicks(p => { const next = { ...p }; delete next[d]; return next; })} />
           ))}
         </section>
 
@@ -216,9 +221,7 @@ const AssessmentForm: React.FC<{ employeeName: string; employeeId: string; modul
         {/* 5 · The decision — closed until the assessment is complete */}
         <section aria-labelledby="pa-decide" className="pa-decide stack gap-3">
           <h2 id="pa-decide" className="t-h3 m-0">{tr('pa.decide', lang)}</h2>
-          {missing.length > 0
-            ? <p className="t-sm m-0" id="pa-why">{tf('pa.incomplete', { n: missing.length }, lang)}</p>
-            : <p className="t-sm m-0 t-num" id="pa-why">{tr('tn.overall', lang)}: {readinessScore(scores!)}%</p>}
+          {missing.length > 0 && <p className="t-sm m-0" id="pa-why">{tf('pa.incomplete', { n: missing.length }, lang)}</p>}
           <div className="row gap-2 wrap items-center">
             <Button onClick={() => ask('ready')} aria-disabled={missing.length > 0 || !conductOk || undefined}
               aria-describedby={missing.length > 0 ? 'pa-why' : !conductOk ? 'pa-conduct-note' : undefined}>

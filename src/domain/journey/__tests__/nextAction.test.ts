@@ -68,7 +68,7 @@ describe('nextAction — the single next step', () => {
     p = { ...p, exams: { [MODULES[0]!.id]: 1 } };
     const t = reduceTraining(EMPTY_TRAINING, {
       type: 'EVALUATION_RECORDED', employeeId: T, moduleId: MODULES[0]!.id,
-      trainerId: 'trainer.adel', scores: {} as any, decision: 'not_ready',
+      trainerId: 'trainer.adel', scores: {}, decision: 'not_ready',
       weakSkills: [], weakRules: [], at: 0,
     });
     const a = nextAction(p, t, T);

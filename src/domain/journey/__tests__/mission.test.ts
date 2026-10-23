@@ -87,7 +87,7 @@ const throughPhases = (phases: number): { p: Progress; t: TrainingState } => {
     p = { ...p, exams: { ...p.exams, [m.id]: 1 } };
     t = reduceTraining(t, {
       type: 'EVALUATION_RECORDED', employeeId: T, moduleId: m.id, trainerId: 'trainer.adel',
-      scores: {} as never, decision: 'ready', weakSkills: [], weakRules: [], at: 0,
+      scores: {}, decision: 'ready', weakSkills: [], weakRules: [], at: 0,
     });
   }
   return { p, t };

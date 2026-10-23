@@ -6,7 +6,7 @@ import { orgStore } from '../../app/organization/orgStore';
 import { trainingStore, useTraining, finalDecisionOf, useTrainingEvents } from '../../app/training/trainingStore';
 import { isProgramComplete, approvedModuleCount, escalatedUnitsOf } from '../../domain/journey/programCompletion';
 import { readinessReport } from '../../domain/readiness/report';
-import { FormalStatus, FollowUpStatus, performanceText } from '../readiness/labels';
+import { FormalStatus, FollowUpStatus, PerformanceLine, levelLabel } from '../readiness/labels';
 import { tone, GAP } from '../../ui/statusSemantics';
 import { moduleById } from '../../content/registry';
 import { UNIT_DECISION_LABEL } from '../../domain/evaluation';
@@ -99,7 +99,6 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
       : e.type === 'LESSON_REOPENED' ? tr('mg.reopened', lang)
       : tr('mg.coachnote', lang);
 
-  const hasEvidence = perf.evaluations > 0;
   const needsFollow = perf.followUp === 'needs_attention' || perf.followUp === 'needs_immediate_attention';
 
   return (
@@ -123,32 +122,20 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
 
         {/* ── LAYER 2 · THE EVIDENCE — practical performance, named as such ── */}
         <div className="stack mt-4 gap-3">
+          {/* What the trainer observed, in the rubric's words — no percentage. */}
           <div className="row items-center gap-2 wrap">
             <span className="t-label c-tx3">{tr('perf.title', lang)}</span>
-            <span className="t-num t-sm c-tx0">{performanceText(perf)}</span>
-            <span className="t-label c-tx3">{hasEvidence ? tr('perf.latest', lang) : tr('perf.none', lang)}</span>
+            {perf.gaps.length === 0
+              ? <span className="t-sm c-tx0"><PerformanceLine p={perf} lang={lang} /></span>
+              : <>
+                  <span className="t-sm c-tx0">{tr('perf.below', lang)}</span>
+                  {perf.gaps.map(a => (
+                    <StatusBadge key={a.dimension} tone={tone(GAP[a.critical ? 'critical' : 'developmental'])}>
+                      <ArabicContent as="span">{a.label}</ArabicContent> · {levelLabel(a.level!, lang)}
+                    </StatusBadge>
+                  ))}
+                </>}
           </div>
-          {hasEvidence && (
-            <>
-              <div className="row items-center gap-2">
-                <span className="t-label c-tx3">{tr('perf.trend', lang)}</span>
-                {/* A direction, not a verdict: neutral, with its word. */}
-                <StatusBadge tone="neutral">
-                  {perf.trend === 'up' ? tr('mg.improving', lang) : perf.trend === 'down' ? tr('mg.declining', lang) : tr('mg.stable', lang)}
-                </StatusBadge>
-              </div>
-              {perf.gaps.length > 0 && (
-                <div>
-                  <span className="t-label c-tx3">{tr('mg.needsimp', lang)}</span>
-                  <div className="row mt-2 wrap gap-2">
-                    {perf.gaps.map(a => (
-                      <StatusBadge key={a.dimension} tone={tone(GAP[a.critical ? 'critical' : 'developmental'])}>{a.label}</StatusBadge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
           <div className="row items-center gap-2">
             <span className="t-label c-tx3">{tr('mg.responsible', lang)}</span>
             <span className="t-sm">{trainer?.name ?? tr('mg.unassigned', lang)}</span>

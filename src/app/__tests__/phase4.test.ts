@@ -1,11 +1,12 @@
 /**
  * Phase 4 tests — freeze the training contracts:
- * readiness is ONE weighted formula; trainer events derive review state purely;
+ * readiness is never a weighted total; trainer events derive review state purely;
  * per-unit gating means exam-pass alone NEVER unlocks; recommendations come
  * from existing curriculum structure.
  */
 import { describe, it, expect } from 'vitest';
-import { readinessScore, ALL_DIMENSIONS, ALL_CONDUCT_CHECKS, conductPassed, type Scores } from '../../domain/evaluation';
+import * as evaluation from '../../domain/evaluation';
+import { ALL_DIMENSIONS, ALL_CONDUCT_CHECKS, conductPassed, type Scores } from '../../domain/evaluation';
 import { reduceTraining, EMPTY_TRAINING, type TrainingEvent } from '../training/trainingBackend';
 import { reviewOf } from '../training/trainingStore';
 import { recommendFor } from '../training/recommend';
@@ -17,28 +18,12 @@ const at = 1;
 const score = (n: number): Scores =>
   Object.fromEntries(ALL_DIMENSIONS.map(d => [d, n])) as Scores;
 
-describe('readinessScore — single weighted formula', () => {
-  it('all 100 → 100, all 0 → 0', () => {
-    expect(readinessScore(score(100))).toBe(100);
-    expect(readinessScore(score(0))).toBe(0);
-  });
-  // Weights are the official guide's, verbatim — these assertions are the
-  // contract that stops them drifting back to invented numbers.
-  it('docReview alone = 25% (the guide\'s heaviest KPI)', () => {
-    expect(readinessScore({ ...score(0), docReview: 100 })).toBe(25);
-  });
-  it('ruleCompliance alone = 20%', () => {
-    expect(readinessScore({ ...score(0), ruleCompliance: 100 })).toBe(20);
-  });
-  it('the two KPIs the platform never measured are now scored', () => {
-    expect(readinessScore({ ...score(0), systemUsage: 100 })).toBe(10);
-    expect(readinessScore({ ...score(0), problemSolving: 100 })).toBe(10);
-  });
-  it('memberService — where professional representation is scored — = 15%', () => {
-    expect(readinessScore({ ...score(0), memberService: 100 })).toBe(15);
-  });
-  it('clamps out-of-range inputs', () => {
-    expect(readinessScore({ ...score(100), systemUsage: 250 })).toBe(100);
+describe('no weighted total', () => {
+  // The guide's weights stay on record (content.test.ts), never as a formula:
+  // a weighted mean let a critical KPI at «بمساعدة» hide behind strong ones
+  // (docs/product-model.md §1.4). Readiness is floors and criticality.
+  it('the evaluation domain exports no readiness score', () => {
+    expect('readinessScore' in evaluation).toBe(false);
   });
 });
 

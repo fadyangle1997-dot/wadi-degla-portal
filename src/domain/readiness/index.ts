@@ -18,9 +18,9 @@
  *    scored across dimensions from one performance.
  *
  * 2. THE STATIONS MUST COVER THE SEVEN OFFICIAL KPIs.
- *    The proposed six measured neither `systemUsage` (10%) nor `teamwork` (5%)
- *    — 15% of the official score would have been computed from nothing. A
- *    contract test now fails the build if any KPI is unmeasured.
+ *    The proposed six measured neither `systemUsage` nor `teamwork` — two of
+ *    the guide's KPIs would have been judged from nothing. A contract test
+ *    now fails the build if any KPI is unmeasured.
  *
  * 3. CRITICALITY IS A TIER, NOT A FLAT RULE.
  *    "Failure in one dimension means NOT ready" cannot coexist with a decision
@@ -38,7 +38,7 @@
  * Pure domain: no UI, no storage. The API enforces the identical rules.
  */
 import type { EvaluationDimension, EvaluationDecision, ConductObservations, Scores } from '../evaluation';
-import { ALL_DIMENSIONS, conductPassed, readinessScore } from '../evaluation';
+import { ALL_DIMENSIONS, conductPassed } from '../evaluation';
 
 /** How the encounter is staged — the format, not the competency. */
 export type StationKind = 'case' | 'file_review' | 'live_encounter' | 'interview';
@@ -58,7 +58,7 @@ export interface Station {
 
 /**
  * Six encounters. Between them they exercise all seven KPIs — asserted by test,
- * because a weighted score over unmeasured dimensions is theatre.
+ * because a verdict over unmeasured dimensions is theatre.
  */
 export const STATIONS: readonly Station[] = [
   {
@@ -178,7 +178,6 @@ export interface ReadinessOutcome {
   /** Every reason is traceable to a rule — this is what makes it explainable. */
   readonly reasons: readonly string[];
   readonly scores: Scores;
-  readonly overall: number;
   readonly strengths: readonly EvaluationDimension[];
   readonly risks: readonly EvaluationDimension[];
   readonly stationsMissing: readonly string[];
@@ -212,7 +211,6 @@ export function missingStations(evidence: readonly Evidence[]): readonly string[
 export function assessReadiness(input: ReadinessInput): ReadinessOutcome {
   const reasons: string[] = [];
   const scores = scoresFrom(input.evidence);
-  const overall = readinessScore(scores);
   const stationsMissing = missingStations(input.evidence);
 
   const risks = ALL_DIMENSIONS.filter(d => scores[d] < READINESS_FLOORS[d]);
@@ -221,7 +219,7 @@ export function assessReadiness(input: ReadinessInput): ReadinessOutcome {
   const failedCritical = risks.filter(d => CRITICAL_DIMENSIONS.includes(d));
   const failedDevelopmental = risks.filter(d => !CRITICAL_DIMENSIONS.includes(d));
 
-  const base = { scores, overall, strengths, risks, stationsMissing };
+  const base = { scores, strengths, risks, stationsMissing };
 
   // 1 · Incomplete evidence is never a pass. You cannot certify what you did
   //     not observe.

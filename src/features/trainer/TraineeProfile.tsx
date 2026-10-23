@@ -29,7 +29,7 @@ import { orgStore } from '../../app/organization/orgStore';
 import { useOverlayParam } from '../../app/overlayHistory';
 import { toHash } from '../../app/router';
 import { tone, UNIT_REVIEW, EXAM } from '../../ui/statusSemantics';
-import { FormalStatus, FollowUpStatus, performanceText } from '../readiness/labels';
+import { FormalStatus, FollowUpStatus, PerformanceLine } from '../readiness/labels';
 import {
   ScreenHeader, EmptyState, ArabicContent, Status, Button, FormField, Toast, DataTable, type Column,
 } from '../../ui/primitives';
@@ -134,7 +134,7 @@ const Profile: React.FC<{ employeeId: string; name: string; onExit: () => void }
             <dd className="m-0"><FormalStatus f={report.formal} lang={lang} /></dd>
             <dt className="t-sm c-tx2">{tr('perf.title', lang)}</dt>
             <dd className="m-0 row items-center gap-2 wrap">
-              <span className="t-num t-sm">{performanceText(report.performance)}</span>
+              <span className="t-sm"><PerformanceLine p={report.performance} lang={lang} /></span>
               {report.performance.evaluations > 0 && <FollowUpStatus s={report.performance.followUp} lang={lang} />}
             </dd>
           </dl>
@@ -162,12 +162,12 @@ const Profile: React.FC<{ employeeId: string; name: string; onExit: () => void }
             ? <p className="t-sm c-tx2 m-0">{tr('perf.none', lang)}</p>
             : (
               <ol className="tp-list">
-                {/* Each evaluation's score is the practical-performance series —
-                    the one calculation (domain/performance), oldest first. */}
-                {evaluations.map((e, i) => ({ e, score: report.performance.series[i] })).reverse().map(({ e, score }) => (
+                {/* The decision and when — the levels behind it are the
+                    practical performance above, not a percentage per line. */}
+                {[...evaluations].reverse().map(e => (
                   <li key={`${e.moduleId}:${e.at}`}>
                     <ArabicContent as="span" className="t-sm c-tx0">{moduleById(e.moduleId)?.title ?? e.moduleId}</ArabicContent>
-                    <span className="t-sm c-tx2"> — <ArabicContent as="span">{UNIT_DECISION_LABEL[e.decision]}</ArabicContent>{score !== undefined && <> · <span className="t-num">{iso(`${score}%`)}</span></>} · {dateOf(e.at, lang)}</span>
+                    <span className="t-sm c-tx2"> — <ArabicContent as="span">{UNIT_DECISION_LABEL[e.decision]}</ArabicContent> · {dateOf(e.at, lang)}</span>
                   </li>
                 ))}
               </ol>

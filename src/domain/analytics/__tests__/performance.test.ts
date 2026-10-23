@@ -48,10 +48,10 @@ describe('P0-2 correctness — grouped derivation equals naive scan', () => {
   it('orgSummary output is stable and correct on the synthetic set', () => {
     const sum = orgSummary(events, ids);
     expect(sum.activeTrainees).toBe(50);
-    // every employee has exactly one evaluation → evaluated denominator = 50
-    expect(sum.avgPerformance).toBeGreaterThan(0);
-    expect(sum.certifiedRate).toBeGreaterThanOrEqual(0);
-    expect(sum.certifiedRate).toBeLessThanOrEqual(1);
+    // every employee has exactly one evaluation → nobody is «not assessed yet»
+    expect(sum.noEvidence).toBe(0);
+    expect(sum.onTrack + sum.needsAttention + sum.needsImmediate).toBe(50);
+    expect(sum.certified).toBe(0);
   });
 });
 

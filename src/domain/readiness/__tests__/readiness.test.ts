@@ -9,7 +9,6 @@ import {
   type Evidence, type ReadinessInput,
 } from '../index';
 import { ALL_DIMENSIONS, type ConductObservations, type EvaluationDimension } from '../../evaluation';
-import { READINESS_WEIGHTS } from '../../policy';
 
 const PASS: ConductObservations = {
   refusalTiedToRule: true, noOutOfPolicyPromise: true,
@@ -50,7 +49,7 @@ describe('CORRECTION 2 — the stations cover ALL seven official KPIs', () => {
     // 15% of the official score would have come from nothing.
     const measured = new Set(STATIONS.flatMap(s => s.measures));
     for (const d of ALL_DIMENSIONS) {
-      expect(measured.has(d), `${d} (${READINESS_WEIGHTS[d] * 100}% of the score) is unmeasured`).toBe(true);
+      expect(measured.has(d), `${d} is unmeasured`).toBe(true);
     }
   });
 
@@ -203,9 +202,9 @@ describe('scoring', () => {
     expect(scoresFrom(ev).accuracy).toBe(100);
   });
 
-  it('overall uses the official weighted formula', () => {
+  it('reports no weighted total — floors and criticality decide', () => {
     const r = assessReadiness(input({ evidence: fullEvidence(100) }));
-    expect(r.overall).toBe(100);
+    expect('overall' in r).toBe(false);
   });
 
   it('missingStations names exactly what was not observed', () => {

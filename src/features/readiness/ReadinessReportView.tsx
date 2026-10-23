@@ -12,17 +12,17 @@
  * from them; that number is now labelled as what it is, under the answer.
  */
 import React from 'react';
-import { ShieldCheck, TrendingUp, AlertTriangle, CheckCircle2, Lock, Info } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Lock, Info } from 'lucide-react';
 import { useTraining, trainingStore } from '../../app/training/trainingStore';
 import { useIdentity, identityStore, useCan } from '../../app/identity/identityStore';
 import { managementLabel } from '../../domain/identity/access';
 import { scopeOf, isInScope } from '../../domain/identity/scope';
 import { orgStore } from '../../app/organization/orgStore';
 import { readinessReport } from '../../domain/readiness/report';
-import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent, Num } from '../../ui/primitives';
+import { ScreenHeader, Card, Eyebrow, StatusBadge, EmptyState, ArabicContent } from '../../ui/primitives';
 import { WIDTH } from '../../ui/designSystem';
 import { tone, ENGINE_DECISION, GAP } from '../../ui/statusSemantics';
-import { formalLabel, FormalStatus, performanceText } from './labels';
+import { formalLabel, FormalStatus, PerformanceLine, PerformanceProfile } from './labels';
 import { useLang, t as tr, tf, type Key } from '../../app/i18n';
 
 export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => void }> = ({ employeeId, onExit }) => {
@@ -122,34 +122,9 @@ export const ReadinessReportView: React.FC<{ employeeId: string; onExit: () => v
         <section aria-labelledby="rr-perf" className="stack gap-3">
           <h2 id="rr-perf" className="t-h3 m-0">{tr('rr.evidence', lang)}: {tr('perf.title', lang)}</h2>
           <p className="t-sm c-tx2 m-0">
-            <Num>{performanceText(perf)}</Num> · {perf.evaluations > 0 ? tr('perf.latest', lang) : tr('perf.none', lang)}. {tr('perf.note', lang)}
+            <PerformanceLine p={perf} lang={lang} />. {tr('perf.note', lang)}
           </p>
-          {perf.dimensions.length > 0 && (
-            <div className="stack gap-2" role="list" aria-label={tr('perf.dims', lang)}>
-              {perf.dimensions.map(d => (
-                <div key={d.dimension} role="listitem" className="row items-center gap-3">
-                  <span className="t-sm grow" style={{ minWidth: 0 }}>
-                    {/* The dimension's name is assessment content — an island. */}
-                    <ArabicContent as="span">{d.label}</ArabicContent>
-                    {d.critical && <span className="t-label c-tx3" style={{ marginInlineStart: 'var(--sp-2)' }}>{tr('rr.critical', lang)}</span>}
-                  </span>
-                  <span className="report-meter" aria-hidden><span style={{ width: `${d.score}%` }} data-below={d.belowFloor || undefined} /></span>
-                  <span className="t-num t-label" style={{ minWidth: 34, textAlign: 'end' }}>{d.score}</span>
-                  <span className="sr-only">{tf('rr.dimof', { s: d.score, f: d.floor }, lang)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {perf.strengths.length > 0 && (
-            <div>
-              <Eyebrow icon={<TrendingUp size={13} />}>{tr('rr.strengths', lang)}</Eyebrow>
-              <div className="row mt-3 wrap gap-2">
-                {perf.strengths.map(x => (
-                  <StatusBadge key={x.dimension} tone="ready" icon={<CheckCircle2 size={13} />}>{x.label} · {x.score}</StatusBadge>
-                ))}
-              </div>
-            </div>
-          )}
+          {perf.evaluations > 0 && <PerformanceProfile p={perf} lang={lang} caption={tr('perf.dims', lang)} />}
           {r.developmentAreas.length > 0 && (
             <div>
               <Eyebrow icon={<AlertTriangle size={13} />}>{tr('rr.development', lang)}</Eyebrow>
