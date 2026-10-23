@@ -29,6 +29,7 @@ import { performanceFromOwnEvents, groupByEmployee } from '../performance';
 import { detectOperationalIssues, type OperationalIssue } from '../operations/health';
 import { HEALTH_POLICY } from '../policy';
 import { waitingUnits, type OrgEvent } from './organization';
+import { unitDecisions } from '../training/unitDecisions';
 
 export type AttentionItem =
   | { readonly kind: 'readiness_decision'; readonly employeeId: string; readonly since: number | null; readonly basis: DecisionBasis }
@@ -59,10 +60,11 @@ export function attentionQueue(
     const own = grouped.get(id) ?? [];
 
     if (awaitsReadinessDecision(t, id)) {
+      // Waiting since the last unit approval that completed the programme.
+      const approvedAt = [...unitDecisions(own, id).values()].flatMap(w => w.decision === 'ready' ? [w.at] : []);
       items.push({
         kind: 'readiness_decision', employeeId: id,
-        // Waiting since the last unit approval that completed the programme.
-        since: lastAt(own, e => (e.type === 'EVALUATION_RECORDED' || e.type === 'UNIT_ESCALATION_ANSWERED') && e.decision === 'ready'),
+        since: approvedAt.length ? Math.max(...approvedAt) : null,
         basis: basisOf(formalReadiness(own, id, true)),
       });
     }

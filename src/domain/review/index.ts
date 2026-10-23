@@ -161,7 +161,8 @@ export function filedReviews(events: readonly LogEvent[], employeeId: string): r
 }
 
 /** A review the trainer owes a comment on: it needs them and has none yet. */
-export const awaitsTrainer = (r: FiledReview): boolean => r.reason !== null && r.comments.length === 0;
+export const awaitsTrainer = (r: FiledReview): r is FiledReview & { readonly reason: TrainerReason } =>
+  r.reason !== null && r.comments.length === 0;
 
 /**
  * The trainer's review queue: reviews that need them (asked, first, the week's

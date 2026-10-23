@@ -22,7 +22,7 @@ import { progressOf, learningProgress } from '../../app/progress';
 import { moduleLessonsDone } from '../../domain/progress/selectors';
 import { progression } from '../../domain/journey/progression';
 import { readinessReport } from '../../domain/readiness/report';
-import { filedReviews, REVIEW_FIELDS, REVIEW_LABELS, type FiledReview } from '../../domain/review';
+import { filedReviews, awaitsTrainer, REVIEW_FIELDS, REVIEW_LABELS, type FiledReview } from '../../domain/review';
 import { MODULES, moduleById, retrievalQuestion } from '../../content/registry';
 import { UNIT_DECISION_LABEL } from '../../domain/evaluation';
 import { orgStore } from '../../app/organization/orgStore';
@@ -216,7 +216,7 @@ const Profile: React.FC<{ employeeId: string; name: string; onExit: () => void }
  */
 const ReviewCard: React.FC<{ review: FiledReview; employeeId: string; focus: boolean; onCommented: () => void }> = ({ review, employeeId, focus, onCommented }) => {
   const lang = useLang();
-  const owed = review.reason !== null && review.comments.length === 0;
+  const owed = awaitsTrainer(review);
   const [writing, setWriting] = useState(owed || focus);
   const [text, setText] = useState('');
   const [empty, setEmpty] = useState(false);

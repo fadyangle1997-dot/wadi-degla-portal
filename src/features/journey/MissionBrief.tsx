@@ -77,7 +77,9 @@ const PrimaryMission: React.FC<{ action: Mission; trainerName?: string; approval
   // On the proof path, an untouched unit can be proved by its exam once,
   // instead of its lessons (domain/journey/proof, D7).
   const me = traineeIdOrNull();
-  const provable = action.kind === 'resume_lesson' && !!m && !!me && canChallenge(progress, trainingStore.get(), events, me, m.id);
+  const provable = React.useMemo(
+    () => action.kind === 'resume_lesson' && !!m && !!me && canChallenge(progress, trainingStore.get(), events, me, m.id),
+    [action.kind, m, me, progress, events]);
   // A unit approval is the third of the earned moments: it opens the mission
   // paper above a step the trainee can take, and leaves when that step is
   // taken. Never above a rework request or a wait, where it would contradict

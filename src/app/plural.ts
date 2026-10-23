@@ -8,6 +8,7 @@
  * the spoken ones. Numbers are bidi-isolated (iso) like every other figure.
  */
 import { iso, t, tf, type Lang } from './i18n';
+import { REVIEW_SILENCE_DAYS } from '../domain/review';
 
 /**
  * The four Arabic forms; `{n}` is replaced with the isolated number. `zero`
@@ -73,6 +74,10 @@ export const changeCount = (n: number, lang: Lang) => count(n, lang,
 export const daysAgo = (days: number, lang: Lang): string =>
   days <= 0 ? t('mg.today', lang) : days === 1 ? t('mg.yesterday', lang) : tf('time.daysago', { days: dayCount(days, lang) }, lang);
 
+/** Whole days since a moment, in the same words: «النهارده», «امبارح», «من 3 أيام». */
+export const daysSince = (at: number, lang: Lang, now: number = Date.now()): string =>
+  daysAgo(Math.floor((now - at) / 86_400_000), lang);
+
 export const dayCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'يوم واحد', two: 'يومين', few: '{n} أيام', many: '{n} يوم' },
   { one: 'one day', other: '{n} days' });
@@ -126,9 +131,11 @@ export const reviewsAwaitingYou = (n: number, lang: Lang) => count(n, lang,
   { one: 'one review waiting for your comment', other: '{n} reviews waiting for your comment' });
 
 /** Trainees in the review phase with no review for REVIEW_SILENCE_DAYS (3) days. */
+/** The days come from the rule (REVIEW_SILENCE_DAYS), so the words follow it if it changes. */
 export const quietTraineeCount = (n: number, lang: Lang) => count(n, lang,
-  { one: 'متدرب واحد ما كتبش مراجعة من 3 أيام', two: 'متدربين اتنين ما كتبوش مراجعة من 3 أيام', few: '{n} متدربين ما كتبوش مراجعة من 3 أيام', many: '{n} متدرب ما كتبوش مراجعة من 3 أيام' },
-  { one: 'one trainee hasn’t written a review in 3 days', other: '{n} trainees haven’t written a review in 3 days' });
+  { one: 'متدرب واحد ما كتبش مراجعة من {d}', two: 'متدربين اتنين ما كتبوش مراجعة من {d}', few: '{n} متدربين ما كتبوش مراجعة من {d}', many: '{n} متدرب ما كتبوش مراجعة من {d}' },
+  { one: 'one trainee hasn’t written a review in {d}', other: '{n} trainees haven’t written a review in {d}' })
+  .replace('{d}', dayCount(REVIEW_SILENCE_DAYS, lang));
 
 export const improvingCount = (n: number, lang: Lang) => count(n, lang,
   { zero: 'مفيش حد في تمديد', one: 'واحد بيتحسّن', two: 'اتنين بيتحسّنوا', few: '{n} بيتحسّنوا', many: '{n} بيتحسّنوا' },

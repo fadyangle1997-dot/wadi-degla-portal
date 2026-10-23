@@ -20,6 +20,7 @@ import { useTraining, useTrainingEvents, trainingStore, reviewOf } from '../../a
 import { progressOf, learningProgress } from '../../app/progress';
 import { MODULES } from '../../content/registry';
 import { reviewsForTrainer, type FiledReview } from '../../domain/review';
+import { HEALTH_POLICY } from '../../domain/policy';
 import { quietDays } from '../../domain/journey/reviewPhase';
 import { groupByEmployee } from '../../domain/performance';
 import { toHash } from '../../app/router';
@@ -127,7 +128,7 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     {
       id: 'since', header: tr('tn.col.waiting', lang),
       cell: r => r.kind === 'waiting'
-        ? <Status tone={waitDays(r.at) >= 3 ? 'risk' : 'attn'}>{waitLabel(r.at, lang)}</Status>
+        ? <Status tone={waitDays(r.at) >= HEALTH_POLICY.trainerWaitDays ? 'risk' : 'attn'}>{waitLabel(r.at, lang)}</Status>
         : <Status tone="risk">{tr('tn.improving', lang)}</Status>,
     },
     {
@@ -217,7 +218,7 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
           ) : (
             <DataTable caption={tr('tn.queue', lang)} columns={queueColumns} rows={queueRows}
               rowKey={r => `${r.employee.id}:${r.module.id}`}
-              rowTone={r => r.kind === 'waiting' ? (waitDays(r.at) >= 3 ? 'risk' : 'attn') : undefined} />
+              rowTone={r => r.kind === 'waiting' ? (waitDays(r.at) >= HEALTH_POLICY.trainerWaitDays ? 'risk' : 'attn') : undefined} />
           )}
         </section>
 

@@ -18,7 +18,6 @@ import { toCsv } from '../../lib/csv';
 interface LogEvent {
   readonly type: string; readonly employeeId?: string; readonly at: number;
   readonly decision?: string; readonly stationId?: string; readonly passed?: boolean;
-  readonly reason?: string; readonly askTrainer?: boolean;
 }
 
 const DAY_MS = 86_400_000;

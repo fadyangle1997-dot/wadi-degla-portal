@@ -9,6 +9,7 @@
 import { PROGRAM } from './program';
 import { REVIEW_STARTS_ON_DAY, reviewSilence } from '../review';
 import { isCertifiedOnLog } from '../readiness/status';
+import { unitDecisions } from '../training/unitDecisions';
 
 interface DecisionLike { readonly type: string; readonly employeeId?: string; readonly moduleId?: string; readonly decision?: string; readonly passed?: boolean; readonly at: number }
 
@@ -20,20 +21,13 @@ const BEFORE_REVIEW = PROGRAM.filter(p => p.dayEnd < REVIEW_STARTS_ON_DAY).flatM
  * certified employee is never «quiet».
  */
 export function reviewPhaseSince(events: readonly DecisionLike[], employeeId: string): number | null {
-  // A unit's latest word decides it — the trainer's, the branch manager's on
-  // an escalation, or a pass on the proof path.
-  const latest = new Map<string, DecisionLike>();
-  for (const e of events) {
-    if (e.employeeId !== employeeId || !e.moduleId) continue;
-    if (e.type === 'EVALUATION_RECORDED' || e.type === 'UNIT_ESCALATION_ANSWERED') latest.set(e.moduleId, e);
-    else if (e.type === 'UNIT_CHALLENGED' && e.passed && !latest.has(e.moduleId)) latest.set(e.moduleId, { ...e, decision: 'ready' });
-  }
   if (isCertifiedOnLog(events, employeeId)) return null;
+  const words = unitDecisions(events, employeeId);
   let since = 0;
   for (const id of BEFORE_REVIEW) {
-    const e = latest.get(id);
-    if (e?.decision !== 'ready') return null;
-    since = Math.max(since, e.at);
+    const w = words.get(id);
+    if (w?.decision !== 'ready') return null;
+    since = Math.max(since, w.at);
   }
   return BEFORE_REVIEW.length ? since : null;
 }

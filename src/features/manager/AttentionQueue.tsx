@@ -18,7 +18,7 @@ import { levelLabel, basisParams } from '../readiness/labels';
 import { DataTable, SectionHeader, Status, EmptyState, ArabicContent, tx, type Column } from '../../ui/primitives';
 import { tone, rowTone, type Semantic } from '../../ui/statusSemantics';
 import { useLang, t as tr, tf, type Lang } from '../../app/i18n';
-import { daysAgo, dayCount, timesCount } from '../../app/plural';
+import { daysSince, dayCount, timesCount } from '../../app/plural';
 import { CheckCircle2 } from 'lucide-react';
 
 const SEMANTIC: Record<AttentionItem['kind'], Semantic> = {
@@ -28,8 +28,6 @@ const SEMANTIC: Record<AttentionItem['kind'], Semantic> = {
   trainer_bottleneck: 'warning',
   data_problem: 'warning',
 };
-
-const DAY_MS = 86_400_000;
 
 export const AttentionQueue: React.FC<{ ids: readonly string[]; onInspect: (id: string) => void }> = ({ ids, onInspect }) => {
   const lang = useLang();
@@ -64,7 +62,7 @@ export const AttentionQueue: React.FC<{ ids: readonly string[]; onInspect: (id: 
     { id: 'who', header: tr('dt.employee', lang), cell: i => <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{nameOf(i.employeeId)}</span> },
     { id: 'what', header: tr('aq.col.what', lang), cell: i => <Status tone={tone(SEMANTIC[i.kind])}>{tr(`aq.k.${i.kind}`, lang)}</Status> },
     { id: 'why', header: tr('aq.col.why', lang), cell: i => <span className="t-sm c-tx1">{why(i, lang)}</span> },
-    { id: 'since', header: tr('tn.col.waiting', lang), cell: i => i.since ? <span className="t-sm c-tx2">{daysAgo(i.kind === 'trainer_bottleneck' ? i.days : Math.floor((Date.now() - i.since) / DAY_MS), lang)}</span> : null },
+    { id: 'since', header: tr('tn.col.waiting', lang), cell: i => i.since ? <span className="t-sm c-tx2">{daysSince(i.since, lang)}</span> : null },
   ];
 
   return (

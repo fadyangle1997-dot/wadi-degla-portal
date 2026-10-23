@@ -12,7 +12,7 @@ import { FormalStatus, FollowUpStatus, formalLabel } from '../readiness/labels';
 import { rowTone, FOLLOW_UP } from '../../ui/statusSemantics';
 import { ArabicContent, DataTable, Initials, type Column } from '../../ui/primitives';
 import { useLang, t as tr, type Lang } from '../../app/i18n';
-import { daysAgo } from '../../app/plural';
+import { daysSince } from '../../app/plural';
 
 /* ---------------- employee card grid ----------------
    Each card carries only what the manager needs to triage one employee:
@@ -97,7 +97,7 @@ export const EmployeeGrid: React.FC<{ ids: readonly string[]; onInspect: (id: st
     { id: 'trainer', header: tr('mg.col.trainer', lang), sortValue: r => r.trainer, cell: r => <span className="t-sm person-name">{r.trainer}</span> },
     {
       id: 'last', header: tr('mg.col.last', lang), sortValue: r => r.lastAt ?? 0,
-      cell: r => <span className="t-sm c-tx2">{r.lastAt ? relativeDay(r.lastAt, lang) : tr('mg.notstarted', lang)}</span>,
+      cell: r => <span className="t-sm c-tx2">{r.lastAt ? daysSince(r.lastAt, lang) : tr('mg.notstarted', lang)}</span>,
     },
   ];
 
@@ -134,8 +134,3 @@ const currentStageLabel = (t: ReturnType<typeof useTraining>, id: string, lang: 
   return phase ? phase.title : tr('mg.programdone', lang);
 };
 
-/** Relative-day label for last activity — durable phrasing, no exact timestamps. */
-const relativeDay = (at: number, lang: Lang): string => {
-  const days = Math.floor((Date.now() - at) / 86_400_000);
-  return daysAgo(days, lang);
-};
