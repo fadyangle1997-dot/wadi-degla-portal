@@ -9,6 +9,7 @@
  * (Phase 7). Until then the model is fully real; visibility is per-device.
  */
 import type { ObservedScores, EvaluationDecision, EvaluationDimension, ConductObservations } from '../../domain/evaluation';
+import type { DecisionBasis } from '../../domain/readiness/decisionEvidence';
 
 /* ---------------- events (the training truth) ---------------- */
 export type TrainingEvent =
@@ -43,11 +44,15 @@ export type TrainingEvent =
   // The manager's final, evidence-based readiness call — closes the operational
   // loop after every unit is trainer-approved. One decision per trainee; a later
   // one supersedes (the reducer keeps the latest).
-  | { readonly type: 'FINAL_READINESS_DECIDED'; readonly employeeId: string; readonly managerId: string; readonly decision: 'ready' | 'extend' | 'reject'; readonly rationale: string; readonly at: number }
+  | { readonly type: 'FINAL_READINESS_DECIDED'; readonly employeeId: string; readonly managerId: string; readonly decision: 'ready' | 'extend' | 'reject'; readonly rationale: string;
+      /** What the decision rested on at the moment it was taken (D6); absent on older records. */
+      readonly basis?: DecisionBasis; readonly at: number }
   // A unit the trainer escalated is beyond the trainer's authority, so the
   // branch manager settles it: approve it, or send it back to the trainer's
   // queue to be decided there. Without this the unit stayed parked for good.
-  | { readonly type: 'UNIT_ESCALATION_ANSWERED'; readonly employeeId: string; readonly moduleId: string; readonly managerId: string; readonly decision: 'ready' | 'return'; readonly at: number }
+  | { readonly type: 'UNIT_ESCALATION_ANSWERED'; readonly employeeId: string; readonly moduleId: string; readonly managerId: string; readonly decision: 'ready' | 'return';
+      /** Why — the trainer escalated because it was beyond them; the answer says what settled it (D6). Absent on older records. */
+      readonly reason?: string; readonly at: number }
   // Readiness assessment (day 54–60): one observed encounter, scored only on
   // the KPIs that station measures, with the observation that justifies it.
   // A later assessment of the same station supersedes the earlier one.

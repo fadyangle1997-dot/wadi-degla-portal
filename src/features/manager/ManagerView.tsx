@@ -1,31 +1,32 @@
 /**
- * ManagerView — Phase 5C/5D, the Executive Decision System.
- * Overview fits without scrolling: health distribution + the three executive
- * indices, then auto-discovered problems, then trainer quality. Progressive
- * disclosure — drill into a trainer or the roster below the fold. Every tile
- * answers a management decision (see docs/analytics.md); nothing decorative.
+ * ManagerView — the management dashboard, one scope at a time.
+ * Four figures, then — for the branch manager — the attention queue: every
+ * decision and intervention waiting on them, with its evidence
+ * (domain/analytics/attention). Area and general managers compare branches,
+ * never employees; a branch opens onto its staff. Every element answers a
+ * management decision (docs/product-model.md §1.1); nothing decorative.
  * Uses only Design-System primitives; gated on reports.view.
  */
 import React, { useMemo, useState } from 'react';
 import { m } from 'motion/react';
-import { ShieldCheck, AlertTriangle, Users2, Gavel, Clock } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Users2, Clock } from 'lucide-react';
 import { useCan, useIdentity, identityStore } from '../../app/identity/identityStore';
 import { scopeOf } from '../../domain/identity/scope';
 import { useDashboard } from '../../app/analytics/dashboardStore';
 import { orgSummary } from '../../domain/analytics/organization';
 import { trainingStore, useTraining } from '../../app/training/trainingStore';
-import { Icon } from '../../ui/Icon';
 import { awaitsReadinessDecision, escalatedUnitsOf } from '../../domain/journey/programCompletion';
 import type { OrgEvent } from '../../domain/analytics/organization';
-import { Button, EmptyState, Eyebrow, PageHeader, MetricStrip, Metric, Brief, SectionHeader } from '../../ui/primitives';
+import { Button, EmptyState, PageHeader, MetricStrip, Metric, SectionHeader } from '../../ui/primitives';
 import { fade } from '../../ui/motion';
 import { orgStore } from '../../app/organization/orgStore';
 import { WIDTH } from '../../ui/designSystem';
 import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
 import { managementLabel } from '../../domain/identity/access';
 import { tone, FORMAL_READINESS, FOLLOW_UP, UNIT_REVIEW } from '../../ui/statusSemantics';
-import { staffCount, awaitingDecisionCount, escalatedUnitCount } from '../../app/plural';
-import { NeedsAttention, UnitsTable } from './NeedsAttention';
+import { staffCount } from '../../app/plural';
+import { UnitsTable } from './UnitsTable';
+import { AttentionQueue } from './AttentionQueue';
 import { CollapsibleRoster, EmployeeGrid } from './EmployeeRoster';
 import { EmployeeTimeline } from './EmployeeTimeline';
 import { useOverlayParam } from '../../app/overlayHistory';
@@ -70,30 +71,16 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         name: branches.find(b => b.id === id)?.name ?? id,
         people: ids.length,
         s: orgSummary(events, ids),
+        decisions: ids.reduce((n, e) => n + (awaitsReadinessDecision(t, e) ? 1 : 0) + escalatedUnitsOf(t, e).length, 0),
       }))
       .sort((a, b) =>
         (b.s.needsAttention + b.s.needsImmediate) - (a.s.needsAttention + a.s.needsImmediate)
         || b.s.waitingForTrainer - a.s.waitingForTrainer);
-    // `t` (the training snapshot) is the change signal for trainingStore.events().
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // `t` (the training snapshot) is also the change signal for trainingStore.events().
   }, [branchGroups, t]);
 
   const scopeTitle = scope.kind === 'organization' ? tr('mg.orgtoday', lang)
     : scope.kind === 'area' ? tr('mg.areatoday', lang) : tr('mg.branchtoday', lang);
-
-  // Pending decisions = employees who finished the program and are still waiting
-  // for the manager's final call. Reuses existing engine functions — no new logic.
-  const pendingDecisions = useMemo(
-    () => d.employeeIds.filter(id => awaitsReadinessDecision(t, id)),
-    [d.employeeIds, t],
-  );
-
-  // Units a trainer escalated: beyond the trainer's authority, so they wait
-  // here for the branch manager rather than in anyone's queue.
-  const escalated = useMemo(
-    () => d.employeeIds.map(id => ({ id, units: escalatedUnitsOf(t, id).length })).filter(e => e.units > 0),
-    [d.employeeIds, t],
-  );
 
   if (!canDo('reports.view')) {
     return (
@@ -107,11 +94,6 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const noData = s.activeTrainees === 0;
 
   const attention = s.needsAttention + s.needsImmediate;
-  const firstDecision = pendingDecisions[0];
-  const decisionName = firstDecision ? (users.find(u => u.id === firstDecision)?.name ?? '') : '';
-  const firstEscalated = escalated[0]?.id;
-  const escalatedName = firstEscalated ? (users.find(u => u.id === firstEscalated)?.name ?? '') : '';
-  const escalatedUnits = escalated.reduce((n, e) => n + e.units, 0);
 
   return (
     <div className="min-h-screen">
@@ -142,24 +124,8 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 context={tr('mg.attrainer', lang)} tone={s.waitingForTrainer > 0 ? tone(UNIT_REVIEW.waiting) : undefined} />
             </MetricStrip>
 
-            {/* The manager's single most urgent decision: staff who finished
-                the programme and are waiting for the final call. */}
-            {canDo('readiness.decide') && firstDecision && (
-              <div className="mt-6">
-                <Brief tone="attn" eyebrow={<Eyebrow icon={<Gavel size={13} />}>{tr('mg.decisions', lang)}</Eyebrow>}
-                  title={awaitingDecisionCount(pendingDecisions.length, lang)}
-                  action={<Button onClick={() => setDrill(firstDecision)}>{tf('mg.openfile', { name: decisionName }, lang)}</Button>} />
-              </div>
-            )}
-            {canDo('readiness.decide') && firstEscalated && (
-              <div className="mt-6">
-                <Brief tone="attn" eyebrow={<Eyebrow icon={<Icon as={Gavel} size="sm" />}>{tr('mg.decisions', lang)}</Eyebrow>}
-                  title={escalatedUnitCount(escalatedUnits, lang)}
-                  action={<Button onClick={() => setDrill(firstEscalated)}>{tf('mg.openfile', { name: escalatedName }, lang)}</Button>} />
-              </div>
-            )}
-
-            <NeedsAttention ids={d.employeeIds} onInspect={setDrill} />
+            {/* What waits on the branch manager — decisions first — with its evidence. */}
+            {canDo('readiness.decide') && <AttentionQueue ids={d.employeeIds} onInspect={setDrill} />}
 
             {/* Area and general managers compare units, never employees; a
                 unit opens onto its staff. A branch manager sees the staff. */}

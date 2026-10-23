@@ -51,4 +51,5 @@ export const READINESS_WEIGHTS = {
  */
 export const HEALTH_POLICY = {
   riskSentBack: 2,       // sent back this many times, with work still open → immediate attention
+  trainerWaitDays: 3,    // a unit waiting this many days at its trainer reaches the branch manager
 } as const;

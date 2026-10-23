@@ -71,17 +71,24 @@ test('a unit the trainer escalates waits on the branch manager, who approves it'
   await expect(page.getByText('خلّصت كل حاجة متاحة')).toHaveCount(0);
   await signOut(page);
 
-  // The branch manager has it among the decisions waiting, and settles it in the file.
+  // The branch manager has it in the attention queue, with its evidence, and
+  // settles it in the file — with a reason, or not at all.
   await signIn(page, 'manager.nabil');
-  await expect(page.getByText('وحدة واحدة متصعّدة ليك ومستنية قرارك')).toBeVisible();
-  await page.getByRole('button', { name: 'افتح ملف Youssef Amin' }).click();
+  const queue = page.getByRole('table', { name: 'مستني قرارك أو تدخّلك' });
+  const row = queue.getByRole('row', { name: /Youssef Amin/ }).filter({ hasText: 'وحدة متصعّدة' });
+  await expect(row).toContainText('المدرب صعّد');
+  await row.getByRole('button', { name: /Youssef Amin/ }).click();
   const file = page.getByRole('dialog', { name: /Youssef Amin/ });
   await expect(file.getByText('وحدة مستنية قرارك')).toBeVisible();
+  await file.getByRole('button', { name: 'اعتمد الوحدة — افتح اللي بعدها' }).click();
+  await expect(file.getByText('اكتب سبب قرارك على الوحدة دي الأول.')).toBeVisible();
+  await expect(page.getByRole('dialog', { name: /تأكيد القرار/ })).toHaveCount(0);
+  await file.getByLabel('سبب قرارك').fill('الموقف كان سليم، والمدرب كان محتاج رأي في السلوك بس.');
   await file.getByRole('button', { name: 'اعتمد الوحدة — افتح اللي بعدها' }).click();
   await page.getByRole('dialog', { name: /تأكيد القرار/ }).getByRole('button', { name: 'اعتمد الوحدة — افتح اللي بعدها' }).click();
   await expect(file.getByText('وحدة مستنية قرارك')).toHaveCount(0);
   await page.keyboard.press('Escape');
-  await expect(page.getByText('وحدة واحدة متصعّدة ليك ومستنية قرارك')).toHaveCount(0);
+  await expect(queue.getByRole('row', { name: /Youssef Amin/ }).filter({ hasText: 'وحدة متصعّدة' })).toHaveCount(0);
   await signOut(page);
 
   // The trainee reads the approval and moves on.
@@ -96,8 +103,9 @@ test('an escalated unit the manager sends back is in the trainer\'s queue again'
   await assessYoussef(page, 'تصعيد للمدير');
 
   await signIn(page, 'manager.nabil');
-  await page.getByRole('button', { name: 'افتح ملف Youssef Amin' }).click();
+  await page.getByRole('table', { name: 'مستني قرارك أو تدخّلك' }).getByRole('button', { name: /Youssef Amin/ }).first().click();
   const file = page.getByRole('dialog', { name: /Youssef Amin/ });
+  await file.getByLabel('سبب قرارك').fill('محتاج يتقيّم تاني بعد ما يعيد حالة الانفصال.');
   await file.getByRole('button', { name: 'رجّعها للمدرب يقيّمها' }).click();
   await page.getByRole('dialog', { name: /تأكيد القرار/ }).getByRole('button', { name: 'رجّعها للمدرب يقيّمها' }).click();
   await expect(file.getByText('وحدة مستنية قرارك')).toHaveCount(0);

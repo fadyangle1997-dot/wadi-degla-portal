@@ -61,7 +61,7 @@ describe('screens do not pick status colours themselves', () => {
   });
 
   it('performance meters are a quantity, not a status: no status tone on them', () => {
-    for (const f of ['features/manager/EmployeeRoster.tsx', 'features/manager/NeedsAttention.tsx']) {
+    for (const f of ['features/manager/EmployeeRoster.tsx', 'features/manager/UnitsTable.tsx', 'features/manager/AttentionQueue.tsx']) {
       expect(readFileSync(join(SRC, f), 'utf-8'), f).not.toMatch(/<Meter[^>]*tone=/);
     }
   });

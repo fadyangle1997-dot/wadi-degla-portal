@@ -77,6 +77,14 @@ export const dayCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'يوم واحد', two: 'يومين', few: '{n} أيام', many: '{n} يوم' },
   { one: 'one day', other: '{n} days' });
 
+export const timesCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'مرة واحدة', two: 'مرتين', few: '{n} مرات', many: '{n} مرة' },
+  { one: 'once', other: '{n} times' });
+
+export const observationCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'ملاحظة واحدة', two: 'ملاحظتين', few: '{n} ملاحظات', many: '{n} ملاحظة' },
+  { one: 'one observation', other: '{n} observations' });
+
 export const traineeCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'متدرب واحد', two: 'متدربين اتنين', few: '{n} متدربين', many: '{n} متدرب' },
   { one: 'one trainee', other: '{n} trainees' });

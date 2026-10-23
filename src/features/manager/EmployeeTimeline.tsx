@@ -14,6 +14,7 @@ import { detectOperationalIssues } from '../../domain/operations/health';
 import type { OrgEvent } from '../../domain/analytics/organization';
 import { Button, Eyebrow, StatusBadge, ArabicContent, tx, CloseButton, ConfirmDialog, Toast, InlineError, FormField, EmptyState, useModal, useExitFlow } from '../../ui/primitives';
 import { ReadinessOutcomeSummary, StationAssessment } from '../readiness/ReadinessStations';
+import { DecisionEvidence, DecisionRecord } from '../readiness/DecisionEvidence';
 import { useLang, t as tr, tf, iso, type Key } from '../../app/i18n';
 import { unitCount } from '../../app/plural';
 import { leaveGuard } from '../../app/leaveGuard';
@@ -94,7 +95,7 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
   const label = (e: OrgEvent): React.ReactNode =>
     e.type === 'UNIT_SUBMITTED_FOR_REVIEW' ? tx('mg.sentforreview', { m: <ArabicContent as="span">{moduleName(e.moduleId!)}</ArabicContent> }, lang)
       : e.type === 'EVALUATION_RECORDED' ? <>{tr('mg.evaluation', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)} — {UNIT_DECISION_LABEL[e.decision!] ?? e.decision}</ArabicContent></>
-      : e.type === 'UNIT_ESCALATION_ANSWERED' ? <>{tr('mg.esc.answered', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)}</ArabicContent> — {tr(e.decision === 'ready' ? 'mg.esc.lbl.ready' : 'mg.esc.lbl.return', lang)}</>
+      : e.type === 'UNIT_ESCALATION_ANSWERED' ? <>{tr('mg.esc.answered', lang)} <ArabicContent as="span">{moduleName(e.moduleId!)}</ArabicContent> — {tr(e.decision === 'ready' ? 'mg.esc.lbl.ready' : 'mg.esc.lbl.return', lang)}{e.reason && <>: <bdi dir="auto">{e.reason}</bdi></>}</>
       : e.type === 'TRAINING_EXTENDED' ? <>{tr('mg.extended', lang)} <ArabicContent as="span">{e.reason ?? ''}</ArabicContent></>
       : e.type === 'LESSON_REOPENED' ? tr('mg.reopened', lang)
       : tr('mg.coachnote', lang);
@@ -183,7 +184,14 @@ const EscalationPanel: React.FC<{ employeeId: string; name: string; trainerName:
   const [pending, setPending] = React.useState<{ moduleId: string; decision: 'ready' | 'return' } | null>(null);
   const [failed, setFailed] = React.useState<string | null>(null);
   const [saved, setSaved] = React.useState<string | null>(null);
+  // The answer settles what the trainer could not: it says why (D6).
+  const [reasons, setReasons] = React.useState<Record<string, string>>({});
+  const [needWhy, setNeedWhy] = React.useState<string | null>(null);
   const units = escalatedUnitsOf(t, employeeId);
+  const ask = (moduleId: string, decision: 'ready' | 'return') => {
+    if (!(reasons[moduleId] ?? '').trim()) { setNeedWhy(moduleId); document.getElementById(`mg-esc-why-${moduleId}`)?.focus(); return; }
+    setPending({ moduleId, decision });
+  };
   const noteOf = (moduleId: string) => {
     let note: string | undefined;
     for (const e of log) if (e.type === 'EVALUATION_RECORDED' && e.employeeId === employeeId && e.moduleId === moduleId) note = e.note;
@@ -195,9 +203,10 @@ const EscalationPanel: React.FC<{ employeeId: string; name: string; trainerName:
     setPending(null);
     if (!p) return;
     try {
-      trainingStore.answerEscalation({ employeeId, moduleId: p.moduleId, decision: p.decision });
+      trainingStore.answerEscalation({ employeeId, moduleId: p.moduleId, decision: p.decision, reason: reasons[p.moduleId] ?? '' });
     } catch { setFailed(tr('err.save', lang)); return; }
     setFailed(null);
+    setReasons(r => ({ ...r, [p.moduleId]: '' }));
     setSaved(tr(p.decision === 'ready' ? 'tn.approvedmsg' : 'mg.esc.returned', lang));
     window.setTimeout(() => setSaved(null), 2600);
   };
@@ -214,10 +223,17 @@ const EscalationPanel: React.FC<{ employeeId: string; name: string; trainerName:
             <p className="t-sm m-0">{tx('mg.esc.body', { trainer: <bdi>{trainerName}</bdi>, m: <ArabicContent as="span">{mod.title}</ArabicContent> }, lang)}</p>
             {note && <p className="t-sm c-tx2 m-0"><span className="t-label c-tx3">{tr('mg.esc.note', lang)}</span> {note}</p>}
             {canDecide ? (
-              <div className="row gap-2 wrap">
-                <Button onClick={() => setPending({ moduleId: mod.id, decision: 'ready' })}>{label('ready')}</Button>
-                <Button variant="ghost" onClick={() => setPending({ moduleId: mod.id, decision: 'return' })}>{label('return')}</Button>
-              </div>
+              <>
+                <FormField id={`mg-esc-why-${mod.id}`} label={tr('mg.esc.why', lang)} required hint={tr('mg.esc.whyhint', lang)}
+                  error={needWhy === mod.id ? tr('mg.esc.err.why', lang) : null}>
+                  {p => <textarea {...p} rows={2} dir="auto" className="field w-full" style={{ resize: 'vertical' }} value={reasons[mod.id] ?? ''}
+                    onChange={e => { const v = e.target.value; setReasons(r => ({ ...r, [mod.id]: v })); setNeedWhy(null); }} />}
+                </FormField>
+                <div className="row gap-2 wrap">
+                  <Button onClick={() => ask(mod.id, 'ready')}>{label('ready')}</Button>
+                  <Button variant="ghost" onClick={() => ask(mod.id, 'return')}>{label('return')}</Button>
+                </div>
+              </>
             ) : (
               <p className="t-sm c-tx3 m-0">{tr('mg.esc.observe', lang)}</p>
             )}
@@ -300,10 +316,12 @@ const FinalDecisionPanel: React.FC<{
           {existing.rationale && <span className="t-sm c-tx2">{existing.rationale}</span>}
         </div>
       )}
+      {existing && <div className="mt-2"><DecisionRecord employeeId={employeeId} /></div>}
 
       {complete && (
         <div className="stack mt-3 gap-3">
           <ReadinessOutcomeSummary employeeId={employeeId} />
+          <DecisionEvidence employeeId={employeeId} />
           {/* Station 6 — the readiness interview — is the manager's own evidence. */}
           {canDecide && <StationAssessment employeeId={employeeId} assessor="manager" onSaved={flash} headingLevel={3} />}
         </div>

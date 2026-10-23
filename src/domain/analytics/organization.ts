@@ -55,24 +55,24 @@ export function orgSummary(events: readonly OrgEvent[], knownEmployeeIds?: reado
     activeTrainees: ids.length,
     ...counts,
     // Only these people's units: a branch's row must not count another branch's queue.
-    waitingForTrainer: ids.reduce((n, id) => n + countWaiting(grouped.get(id) ?? []), 0),
+    waitingForTrainer: ids.reduce((n, id) => n + waitingUnits(grouped.get(id) ?? []).length, 0),
     // Certified means what the readiness assessment says, read off each
     // trainee's own slice of the log — never a strong practical score.
     certified: ids.filter(id => isCertifiedOnLog(grouped.get(id) ?? [], id)).length,
   };
 }
 
-/** Units submitted and not yet assessed, in one person's events. */
-function countWaiting(events: readonly OrgEvent[]): number {
-  const status = new Map<string, 'waiting' | 'done'>();
+/** Units submitted and not yet assessed in one person's events, with when each started waiting. */
+export function waitingUnits(events: readonly OrgEvent[]): readonly { moduleId: string; since: number }[] {
+  const status = new Map<string, number | null>();
   for (const e of events) {
     if (!e.moduleId) continue;
-    if (e.type === 'UNIT_SUBMITTED_FOR_REVIEW') status.set(e.moduleId, 'waiting');
-    else if (e.type === 'EVALUATION_RECORDED') status.set(e.moduleId, 'done');
+    if (e.type === 'UNIT_SUBMITTED_FOR_REVIEW') status.set(e.moduleId, status.get(e.moduleId) ?? e.at);
+    else if (e.type === 'EVALUATION_RECORDED') status.set(e.moduleId, null);
     // An escalated unit the branch manager sends back is the trainer's to assess again.
-    else if (e.type === 'UNIT_ESCALATION_ANSWERED') status.set(e.moduleId, e.decision === 'ready' ? 'done' : 'waiting');
+    else if (e.type === 'UNIT_ESCALATION_ANSWERED') status.set(e.moduleId, e.decision === 'ready' ? null : e.at);
   }
-  return [...status.values()].filter(v => v === 'waiting').length;
+  return [...status.entries()].flatMap(([moduleId, since]) => since === null ? [] : [{ moduleId, since }]);
 }
 
 /* ---------------- where people are weak ---------------- */

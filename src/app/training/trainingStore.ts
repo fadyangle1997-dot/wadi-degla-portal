@@ -9,6 +9,7 @@ import { identityStore } from '../identity/identityStore';
 import type { ObservedScores, EvaluationDecision, EvaluationDimension, ConductObservations } from '../../domain/evaluation';
 import { STATIONS } from '../../domain/readiness';
 import { stationAssessmentProblem } from '../../domain/readiness/evidence';
+import { formalReadiness } from '../../domain/readiness/status';
 import {
   LocalStorageTrainingBackend, EMPTY_TRAINING,
   type TrainingBackend, type TrainingState, type ModuleReview, type FinalDecision, type TrainingEvent,
@@ -123,15 +124,23 @@ export const trainingStore = {
 
   /** The branch manager settles a unit the trainer escalated: approve it, or
    *  send it back to the trainer's queue. Attributed to the current user. */
-  answerEscalation: (input: { employeeId: string; moduleId: string; decision: 'ready' | 'return' }) => {
+  answerEscalation: (input: { employeeId: string; moduleId: string; decision: 'ready' | 'return'; reason: string }) => {
     if (reviewOf(state, input.employeeId, input.moduleId).status !== 'escalated') return;
-    apply(() => backend.record({ type: 'UNIT_ESCALATION_ANSWERED', managerId: trainerId(), at: now(), ...input }));
+    // The answer to an escalation is a decision the trainer could not take:
+    // without its reason it cannot be checked later (D6).
+    if (!input.reason.trim()) throw new Error('escalation answer not recorded: a reason is required');
+    apply(() => backend.record({ type: 'UNIT_ESCALATION_ANSWERED', managerId: trainerId(), at: now(), ...input, reason: input.reason.trim() }));
   },
 
   /** The manager's final, evidence-based readiness decision for a trainee.
    *  Attributed to the current user (the manager); latest decision wins. */
-  decideReadiness: (input: { employeeId: string; decision: 'ready' | 'extend' | 'reject'; rationale: string }) =>
-    apply(() => backend.record({ type: 'FINAL_READINESS_DECIDED', managerId: trainerId(), at: now(), ...input })),
+  decideReadiness: (input: { employeeId: string; decision: 'ready' | 'extend' | 'reject'; rationale: string }) => {
+    // What the decision rests on is recorded with it, as it stood (D6): a
+    // later station or conduct observation cannot rewrite what was known.
+    const f = formalReadiness(backend.events(), input.employeeId, true);
+    const basis = { stationsDone: f.stationsDone, conductRecorded: f.conductRecorded, engine: f.engine.decision };
+    apply(() => backend.record({ type: 'FINAL_READINESS_DECIDED', managerId: trainerId(), at: now(), ...input, basis }));
+  },
 };
 
 export const useTraining = (): TrainingState =>
