@@ -186,7 +186,7 @@ design.
 4. **Borderline cases.** Each branch's trainers write one example per critical
    KPI of «level 2 or 3?» — owned by Membership, not invented here.
 
-## 6. After the changes — see §7 for the measured counts.
+## 6. After the changes — see §7 for the measured counts, §8 for the re-score, §9 for the adversarial reviews.
 
 ## 7. After — what changed, counted from the screens
 
@@ -251,3 +251,70 @@ redundant strengths chips, 96 unused dictionary strings.
 2. **Mean or weakest** for a critical KPI across stations (§3 «not changed»).
 3. **Per-unit trainer approval** (`evaluationGating`), with the counts above.
 4. **Pilot thresholds** (`pilot-measurement.md` §3), written before the pilot.
+
+## 8. Re-score
+
+Scored on the product model, not the visuals or the backend. A score moves
+only where something a person can check changed.
+
+| Dimension | Before | After | Why |
+|---|---|---|---|
+| Problem strength | 7 | 7 | The problem did not change; nothing here proves it is bigger or smaller. |
+| User value | 7 | 7 | Honest review promise, levels in words, a proof path for the experienced. The new employee's core path is the same. |
+| Manager value | 5 | **7** | One queue of decisions with evidence; the evidence before a decision; its basis recorded; anything after it flagged; escalations need a reason. Not yet used by a real manager. |
+| Business value | 5 | 5 | Now measurable (plan, definitions, export) — not shown. No pilot, no cost model. |
+| Differentiation | 5 | **6** | A defensible decision record (evidence → decision → basis → 30/60/90 check) and a test-out are rarer than completion tracking. Still unproven in use. |
+| Workflow coherence | 8 | 8 | Two new paths (queue, proof) fit the same Learn → Assess → Decide line; one rule each where there were two. |
+| Readiness model | 7 | **8** | No percentages; three concepts kept apart; evidence strength visible; calibration flag. Not 9: the floors (70 and 60 are one level) and mean-vs-weakest are open club decisions. |
+| Scalability | 4 | **5** | Boundary written, manifest and contract test. No second programme exists, couplings remain (ADR-006 §7), and the server has only a health route. |
+| Adoption | 5 | **6** | Trainer sessions −56% and writing −73% per trainee; a proof path; a copy that stops promising what the trainer cannot do. Not tested with users. |
+| Strategic potential | 6 | 6 | Unchanged until a pilot shows time to independence moves without errors rising. |
+| Simplicity | 6 | **7** | Seven analytics, every percentage, two briefs, a table and dead modules deleted; one rule each for the challenge, the basis, a unit's latest word. The proof path and the evidence panel are new surface. |
+| **Overall** | **6** | **6.5** | A stronger, more honest model with no business evidence yet. The half point is that gap. |
+
+## 9. Adversarial reviews
+
+Each role attacks the model. What holds, and what does not.
+
+**Branch manager.** *«Another screen I won't open.»* Holds: the queue is
+empty on a quiet day and every row is something only they can do. Does not
+hold: the evidence panel is dense (seven KPI rows, conduct, unit history,
+rules) — a manager deciding four people a quarter will read it; one deciding
+twenty a month may skim it. Recording the basis makes them accountable, which
+some will resist. The rationale is still free text.
+
+**Trainer.** *«You cut the comments, not my week.»* At 10 trainees: 190
+sessions and 1,120 picks over 60 days — about three sessions a working day,
+down from about seven. The biggest remaining cost is per-unit approval (81
+picks a trainee), a club policy the model can switch but did not. Silence
+alerts are a new thing to look at. «ما اتشافش» invites skipping the four
+non-critical KPIs; the critical three are still required.
+
+**New employee.** *«Nobody reads my reviews.»* True for most of them, and now
+said honestly; they can ask for a view on any one. Without a percentage they
+know less precisely how close they are; the levels say what to do next, which
+a percentage never did.
+
+**Experienced employee.** *«One attempt, and a dropped connection counts.»*
+Holds: one attempt stops retrying into a pass, and the six stations still
+prove the desk. Does not hold: an abandoned attempt (tab closed) is a miss,
+which is harsh on a bad connection; they cannot ask for the path, only be
+given it; a miss on one unit sends them through all its lessons.
+
+**Membership director.** *«Where are we weak, and is it getting better?»*
+Where: counts of people below the floor per KPI and repeated rules, per
+scope. Better: no trend, no calibration comparison across branches; the
+pilot export is a CSV to analyse by hand. «Below the floor» rests on floors
+the club has not decided.
+
+**Executive.** *«What does it return?»* Nothing yet that can be shown. No
+cost model; the baseline for time to independence may not exist in the
+club's records (the plan says what to do if not); one department.
+
+**Product strategist.** *«Is the thesis built, or described?»* Built:
+completion and readiness are separate in code and on every screen; a
+readiness decision carries its evidence and basis; the pilot can check the
+decision at 30/60/90 days. Risks: it depends on managers deciding and
+trainers rating honestly — calibration is human; and the pilot needs every
+person on their own device with a shared log, which the prototype (local
+storage, a server with a health route) cannot do today.
