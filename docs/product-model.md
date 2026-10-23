@@ -187,3 +187,67 @@ design.
    KPI of «level 2 or 3?» — owned by Membership, not invented here.
 
 ## 6. After the changes — see §7 for the measured counts.
+
+## 7. After — what changed, counted from the screens
+
+### 7.1 Trainer workload, one trainee, no rework
+
+Counts are the interactions the screens now require; still no time per action.
+
+| Action | Sessions before → after | Required picks before → after | Written before → after |
+|---|---|---|---|
+| Unit practical assessment ×9 | 9 → 9 | 117 → **81** (3 critical KPIs + 4 conduct + decision + confirm; the 4 others only when seen — up to 117) | — |
+| Readiness stations 1–5 | 5 → 5 | 22 → 22 | 5 → 5 |
+| Conduct at readiness | 1 → 1 | 5 → 5 | — |
+| Daily review comments (days 33–60) | 28 → **4** (first + one a week) + what the trainee asks | 28 → 4 + asked | 28 → 4 + asked |
+| **Total** | **43 → 19** + asked | **172 → 112** + asked | **33 → 9** + asked |
+
+| Trainees per trainer | Sessions | Picks | Written |
+|---|---|---|---|
+| 1 | 43 → 19 | 172 → 112 | 33 → 9 |
+| 5 | 215 → 95 | 860 → 560 | 165 → 45 |
+| 10 | 430 → 190 | 1,720 → 1,120 | 330 → 90 |
+| 20 | 860 → 380 | 3,440 → 2,240 | 660 → 180 |
+
+Reduction with no extra asks: sessions −56%, required picks −35%, writing −73%.
+If every trainee asks for a view once a week on top of the sample (≈4 more):
+23 sessions and 13 texts per trainee (−47%, −61%). If a trainee asks on every
+review, comments return to 28 — the trainee's choice, not the platform's
+promise. Each unit proved on the proof path removes one unit assessment.
+Silence (3 days without a review in the review phase) is the one new thing the
+trainer is shown; it is an exception, not a task.
+
+### 7.2 Manager
+
+| Before | After |
+|---|---|
+| Two briefs (one person each) + «للمتابعة» (data hygiene, «not evaluated yet» on day one) | One attention queue: decisions, escalations, interventions, units stuck at a trainer 3+ days, data problems — each with its evidence |
+| Decision panel: outcome, station 6, rationale | + the evidence before deciding (per KPI: stations, weakest level, unit level, calibration flag; conduct; missing; unit history; repeated rules) |
+| Decision recorded: who, when, why | + what it rested on (stations, conduct, stations' verdict), and anything recorded after it |
+| Escalation answered with no reason | Reason required, on the timeline |
+| Area / GM: units table with an average % | Units table with decisions waiting at each branch manager; where people are weak (counts of people) |
+| Timeline labelled station assessments, conduct and decisions «ملاحظة توجيه» | Every entry says what it is |
+
+### 7.3 Numbers on screen
+
+Every practical-performance percentage, the branch / area / organisation
+averages, the trainer's «الإجمالي X%», the station «الإجمالي الموزون» and the
+confidence score are gone. What remains as a number is a count (people,
+units, stations, days), an exam score (a real proportion of questions
+answered), or learning progress (lessons done of lessons there are).
+
+### 7.4 Deleted
+
+Trainer analytics, difficulty rankings, reopened lessons, extension reasons,
+approval trend, training effectiveness, performance confidence, weighted
+readiness score, the reports module, `reviewHealth` / `daysCovered` /
+`decisionUnanchored`, the two manager briefs and `NeedsAttention`, the
+redundant strengths chips, 96 unused dictionary strings.
+
+### 7.5 Open decisions for the club (not taken by the platform)
+
+1. **The floors** (ADR-006 §6): which rubric level each KPI needs; 70 and 60 are
+   the same level for one observation.
+2. **Mean or weakest** for a critical KPI across stations (§3 «not changed»).
+3. **Per-unit trainer approval** (`evaluationGating`), with the counts above.
+4. **Pilot thresholds** (`pilot-measurement.md` §3), written before the pilot.
