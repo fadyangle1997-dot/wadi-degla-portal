@@ -196,6 +196,19 @@ const EmployeeFile: React.FC<{ employeeId: string; onClose: () => void }> = ({ e
 };
 
 /**
+ * The reason a manager's decision is recorded with — the track, an
+ * escalation's answer, the readiness decision (D6). Required: the store
+ * refuses the decision without it, and the field says so first.
+ */
+const ReasonField: React.FC<{ id: string; label: string; hint: string; error: string | null; value: string; onChange: (v: string) => void }> =
+  ({ id, label, hint, error, value, onChange }) => (
+    <FormField id={id} label={label} required hint={hint} error={error}>
+      {p => <textarea {...p} rows={2} dir="auto" className="field w-full" style={{ resize: 'vertical' }} value={value}
+        onChange={e => onChange(e.target.value)} />}
+    </FormField>
+  );
+
+/**
  * The employee's path through the units (domain/journey/proof, D7). The
  * branch manager can put an experienced employee on the proof path — or back
  * on the standard one — and must say why; the reason, who and when stay on
@@ -228,11 +241,8 @@ const TrackControl: React.FC<{ employeeId: string; track: TrackAssignment | null
       )}
       {open && (
         <div className="stack gap-2">
-          <FormField id={`pf-why-${employeeId}`} label={tr('pf.why', lang)} required hint={tr(proof ? 'pf.whyhint.back' : 'pf.whyhint', lang)}
-            error={needWhy ? tr('pf.err.why', lang) : null}>
-            {p => <textarea {...p} rows={2} dir="auto" className="field w-full" style={{ resize: 'vertical' }} value={why}
-              onChange={e => { setWhy(e.target.value); setNeedWhy(false); }} />}
-          </FormField>
+          <ReasonField id={`pf-why-${employeeId}`} label={tr('pf.why', lang)} hint={tr(proof ? 'pf.whyhint.back' : 'pf.whyhint', lang)}
+            error={needWhy ? tr('pf.err.why', lang) : null} value={why} onChange={v => { setWhy(v); setNeedWhy(false); }} />
           <div className="row gap-2 wrap">
             <Button onClick={save}>{tr(proof ? 'pf.unassign' : 'pf.assign', lang)}</Button>
             <Button variant="ghost" onClick={() => { setOpen(false); setWhy(''); setNeedWhy(false); }}>{tr('dlg.cancel', lang)}</Button>
@@ -298,11 +308,9 @@ const EscalationPanel: React.FC<{ employeeId: string; name: string; trainerName:
             {note && <p className="t-sm c-tx2 m-0"><span className="t-label c-tx3">{tr('mg.esc.note', lang)}</span> {note}</p>}
             {canDecide ? (
               <>
-                <FormField id={`mg-esc-why-${mod.id}`} label={tr('mg.esc.why', lang)} required hint={tr('mg.esc.whyhint', lang)}
-                  error={needWhy === mod.id ? tr('mg.esc.err.why', lang) : null}>
-                  {p => <textarea {...p} rows={2} dir="auto" className="field w-full" style={{ resize: 'vertical' }} value={reasons[mod.id] ?? ''}
-                    onChange={e => { const v = e.target.value; setReasons(r => ({ ...r, [mod.id]: v })); setNeedWhy(null); }} />}
-                </FormField>
+                <ReasonField id={`mg-esc-why-${mod.id}`} label={tr('mg.esc.why', lang)} hint={tr('mg.esc.whyhint', lang)}
+                  error={needWhy === mod.id ? tr('mg.esc.err.why', lang) : null} value={reasons[mod.id] ?? ''}
+                  onChange={v => { setReasons(r => ({ ...r, [mod.id]: v })); setNeedWhy(null); }} />
                 <div className="row gap-2 wrap">
                   <Button onClick={() => ask(mod.id, 'ready')}>{label('ready')}</Button>
                   <Button variant="ghost" onClick={() => ask(mod.id, 'return')}>{label('return')}</Button>
@@ -412,11 +420,8 @@ const FinalDecisionPanel: React.FC<{
         </p>
       ) : (
         <div className="stack mt-3 gap-3">
-          <FormField id={`mg-why-${employeeId}`} label={tr('mg.rationale', lang)} required hint={tr('mg.rationaleph', lang)}
-            error={needWhy ? tr('mg.err.rationale', lang) : null}>
-            {p => <textarea {...p} value={rationale} rows={2} className="field w-full" style={{ resize: 'vertical' }}
-              onChange={e => { setRationale(e.target.value); setNeedWhy(false); }} />}
-          </FormField>
+          <ReasonField id={`mg-why-${employeeId}`} label={tr('mg.rationale', lang)} hint={tr('mg.rationaleph', lang)}
+            error={needWhy ? tr('mg.err.rationale', lang) : null} value={rationale} onChange={v => { setRationale(v); setNeedWhy(false); }} />
           {!canCertify && <p id={`mg-cert-${employeeId}`} className="t-sm c-tx2 m-0">{tr('fr.cantcertify', lang)}</p>}
           <div className="row gap-2 wrap">
             {/* aria-disabled, not disabled: it stays reachable, and the line
