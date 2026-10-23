@@ -85,10 +85,6 @@ export const observationCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'ملاحظة واحدة', two: 'ملاحظتين', few: '{n} ملاحظات', many: '{n} ملاحظة' },
   { one: 'one observation', other: '{n} observations' });
 
-export const traineeCount = (n: number, lang: Lang) => count(n, lang,
-  { one: 'متدرب واحد', two: 'متدربين اتنين', few: '{n} متدربين', many: '{n} متدرب' },
-  { one: 'one trainee', other: '{n} trainees' });
-
 export const stationCount = (n: number, lang: Lang) => count(n, lang,
   { one: 'محطة واحدة', two: 'محطتين', few: '{n} محطات', many: '{n} محطة' },
   { one: 'one station', other: '{n} stations' });

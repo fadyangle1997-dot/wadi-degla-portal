@@ -14,6 +14,7 @@ import { useCan, useIdentity, identityStore } from '../../app/identity/identityS
 import { scopeOf } from '../../domain/identity/scope';
 import { useDashboard } from '../../app/analytics/dashboardStore';
 import { orgSummary } from '../../domain/analytics/organization';
+import { groupByEmployee } from '../../domain/performance';
 import { trainingStore, useTraining } from '../../app/training/trainingStore';
 import { awaitsReadinessDecision, escalatedUnitsOf } from '../../domain/journey/programCompletion';
 import type { OrgEvent } from '../../domain/analytics/organization';
@@ -60,18 +61,18 @@ export const ManagerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     return [...byBranch.entries()].sort((a, b) => b[1].length - a[1].length);
   }, [scope, d.employeeIds, users, lang]);
 
-  // orgSummary() scans the whole event log, so it runs once per data change
-  // here rather than once per branch per render; sorted worst-first.
+  // The log is grouped once and each branch summarised over its own people's
+  // events — one pass in all, not one per branch; sorted worst-first.
   const unitRows = useMemo(() => {
     if (!branchGroups) return [];
-    const events = trainingStore.events() as readonly OrgEvent[];
+    const grouped = groupByEmployee(trainingStore.events() as readonly OrgEvent[]);
     const branches = orgStore.get().branches;
     return branchGroups
       .map(([id, ids]) => ({
         id,
         name: branches.find(b => b.id === id)?.name ?? id,
         people: ids.length,
-        s: orgSummary(events, ids),
+        s: orgSummary(ids.flatMap(e => grouped.get(e) ?? []), ids),
         decisions: ids.reduce((n, e) => n + (awaitsReadinessDecision(t, e) ? 1 : 0) + escalatedUnitsOf(t, e).length, 0),
       }))
       .sort((a, b) =>

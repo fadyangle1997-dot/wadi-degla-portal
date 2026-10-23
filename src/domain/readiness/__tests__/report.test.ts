@@ -80,7 +80,7 @@ describe('readiness report — practical performance is evidence, labelled as su
 
   it('a critical KPI under its floor is a critical gap with a suggestion — not a verdict', () => {
     const r = build(approvals(weakCritical));
-    expect(r.performance.gapLevel).toBe('critical');
+    expect(r.performance.gaps.some(g => g.critical)).toBe(true);
     expect(r.developmentAreas.some(d => d.dimension === 'accuracy' && d.critical && d.suggestion.length > 0)).toBe(true);
     expect(r.formal.status).toBe('in_progress');
   });
@@ -88,7 +88,7 @@ describe('readiness report — practical performance is evidence, labelled as su
   it('a sparse record produces a safe report: every KPI «not seen», no areas invented', () => {
     const r = build([]);
     expect(r.performance.profile.every(p => p.level === null && p.observations === 0)).toBe(true);
-    expect(r.performance.gapLevel).toBeNull();
+    expect(r.performance.gaps).toEqual([]);
     expect(r.developmentAreas).toEqual([]);
   });
 });

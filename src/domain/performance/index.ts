@@ -75,15 +75,11 @@ export interface PracticalPerformance {
   readonly profile: readonly ObservedDimension[];
   /** Observed under the floor at the latest observation. */
   readonly gaps: readonly ObservedDimension[];
-  readonly gapLevel: GapLevel | null;
   readonly followUp: FollowUpState;
   readonly evaluations: number;
-  /** Distinct units approved (by the trainer, or by the manager on an escalation). */
-  readonly approvedModules: number;
   /** Unit decisions that sent work back: «يعيد الوحدة» or «تمديد». */
   readonly sentBack: number;
   readonly lastEvaluatedAt: number | null;
-  readonly lastDecision: EvaluationDecision | null;
 }
 
 /** Group training events by employee ONCE — O(n). */
@@ -137,13 +133,10 @@ export function performanceFromOwnEvents(
   const gaps = profile.filter(p => p.belowFloor);
 
   const h = unitHistory(own);
-  const last = evals.length ? evals[evals.length - 1]! : null;
-  const lastDecision = last ? h.decisionOf(last) : undefined;
 
   return {
     employeeId, profile,
     gaps,
-    gapLevel: evals.length === 0 ? null : gaps.some(g => g.critical) ? 'critical' : gaps.length ? 'developmental' : 'none',
     followUp: classifyFollowUp({
       evaluations: evals.length,
       criticalAtLowest: profile.some(p => p.critical && p.level === 1),
@@ -154,9 +147,8 @@ export function performanceFromOwnEvents(
       openImprovement: h.open > 0,
       sentBack: h.rework,
     }),
-    evaluations: evals.length, approvedModules: h.approved, sentBack: h.rework,
-    lastEvaluatedAt: last?.at ?? null,
-    lastDecision: lastDecision ?? null,
+    evaluations: evals.length, sentBack: h.rework,
+    lastEvaluatedAt: evals.length ? evals[evals.length - 1]!.at : null,
   };
 }
 
@@ -174,8 +166,6 @@ export interface UnitHistory {
   readonly unitsAssessed: number;
   /** Units whose first assessment approved them (an approved escalation included). */
   readonly approvedFirstTime: number;
-  /** Distinct units approved. */
-  readonly approved: number;
   /** Decisions «يعيد الوحدة». */
   readonly notReady: number;
   /** Decisions «تمديد». */
@@ -186,7 +176,6 @@ export interface UnitHistory {
   readonly rework: number;
   /** Units whose latest decision is not an approval. */
   readonly open: number;
-  readonly decisionOf: (e: TrainingEventLike) => EvaluationDecision | undefined;
 }
 
 export function unitHistory(own: readonly TrainingEventLike[]): UnitHistory {
@@ -207,12 +196,10 @@ export function unitHistory(own: readonly TrainingEventLike[]): UnitHistory {
     assessments: evals.length,
     unitsAssessed: first.size,
     approvedFirstTime: [...first.values()].filter(e => decisionOf(e) === 'ready').length,
-    approved: new Set(evals.filter(e => decisionOf(e) === 'ready').map(e => e.moduleId)).size,
     notReady, extended,
     escalated: evals.filter(e => e.decision === 'escalate').length,
     rework: notReady + extended,
     open: [...latest.values()].filter(e => decisionOf(e) !== 'ready').length,
-    decisionOf,
   };
 }
 

@@ -13,23 +13,16 @@
  * employee once.
  */
 import type { EvaluationDimension } from '../evaluation';
-import { performanceFromOwnEvents, groupByEmployee, type FollowUpState, type TrainingEventLike } from '../performance';
+import { performanceFromOwnEvents, groupByEmployee, type TrainingEventLike } from '../performance';
 import { isCertifiedOnLog } from '../readiness/status';
 
 export interface OrgEvent extends TrainingEventLike {
-  readonly trainerId?: string;
   readonly weakRules?: readonly string[];
-  readonly weakSkills?: readonly string[];
-  readonly assignedLessons?: readonly string[];
-  readonly lessonId?: string;
-  readonly reason?: string;
 }
 
 export interface OrgSummary {
   readonly activeTrainees: number;
-  /** Follow-up buckets, from practical performance (domain/performance). */
-  readonly noEvidence: number;
-  readonly onTrack: number;
+  /** The two follow-up states that ask the manager to act (domain/performance). */
   readonly needsAttention: number;
   readonly needsImmediate: number;
   /** Units submitted by these people and not yet assessed. */
@@ -38,22 +31,14 @@ export interface OrgSummary {
   readonly certified: number;
 }
 
-const FOLLOW_KEYS: Record<FollowUpState, keyof Pick<OrgSummary, 'noEvidence' | 'onTrack' | 'needsAttention' | 'needsImmediate'>> = {
-  no_evidence: 'noEvidence', on_track: 'onTrack', needs_attention: 'needsAttention', needs_immediate_attention: 'needsImmediate',
-};
-
-/** All employee ids that appear in the training log. */
-export const employeeIdsIn = (events: readonly OrgEvent[]): readonly string[] =>
-  [...new Set(events.filter(e => e.employeeId).map(e => e.employeeId!))];
-
-export function orgSummary(events: readonly OrgEvent[], knownEmployeeIds?: readonly string[]): OrgSummary {
-  const ids = knownEmployeeIds && knownEmployeeIds.length ? knownEmployeeIds : employeeIdsIn(events);
+/** The people asked about (`ids`), and only them. */
+export function orgSummary(events: readonly OrgEvent[], ids: readonly string[]): OrgSummary {
   const grouped = groupByEmployee(events);
-  const counts = { noEvidence: 0, onTrack: 0, needsAttention: 0, needsImmediate: 0 };
-  for (const id of ids) counts[FOLLOW_KEYS[performanceFromOwnEvents(id, grouped.get(id) ?? []).followUp]]++;
+  const followUp = ids.map(id => performanceFromOwnEvents(id, grouped.get(id) ?? []).followUp);
   return {
     activeTrainees: ids.length,
-    ...counts,
+    needsAttention: followUp.filter(f => f === 'needs_attention').length,
+    needsImmediate: followUp.filter(f => f === 'needs_immediate_attention').length,
     // Only these people's units: a branch's row must not count another branch's queue.
     waitingForTrainer: ids.reduce((n, id) => n + waitingUnits(grouped.get(id) ?? []).length, 0),
     // Certified means what the readiness assessment says, read off each

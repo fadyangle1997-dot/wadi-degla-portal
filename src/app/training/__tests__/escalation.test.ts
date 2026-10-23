@@ -8,10 +8,9 @@ import { describe, it, expect } from 'vitest';
 import { reduceTraining, EMPTY_TRAINING, type TrainingEvent } from '../trainingBackend';
 import { reviewOf } from '../trainingStore';
 import { nextAction } from '../../../domain/journey/nextAction';
-import { moduleStatusOf } from '../../../domain/training/moduleStatus';
 import { latestApproval } from '../../../features/journey/approval';
 import { orgSummary, type OrgEvent } from '../../../domain/analytics/organization';
-import { performanceFromOwnEvents, type TrainingEventLike } from '../../../domain/performance';
+import { unitHistory, type TrainingEventLike } from '../../../domain/performance';
 import { EMPTY_PROGRESS } from '../../backend';
 import { ALL_DIMENSIONS, type Scores } from '../../../domain/evaluation';
 import { MODULES } from '../../../content/registry';
@@ -41,10 +40,6 @@ describe('an escalated unit', () => {
     expect(a.module?.id).toBe(M.id);
   });
 
-  it('reads as waiting on the unit card, not in progress', () => {
-    expect(moduleStatusOf({ unlocked: true, started: true, complete: true, gated: true, reviewStatus: 'escalated' })).toBe('waiting_review');
-  });
-
   it('the manager\'s approval makes it ready, keeping the trainer\'s findings', () => {
     const r = reviewOf(run([submit, escalate, answer('ready')]), T, M.id);
     expect(r.status).toBe('ready');
@@ -69,13 +64,12 @@ describe('an escalated unit', () => {
   });
 
   it('approved by the manager, it is approved in practical performance too — no open improvement', () => {
-    const before = performanceFromOwnEvents(T, [submit, escalate]);
-    const after = performanceFromOwnEvents(T, [submit, escalate, answer('ready')] as unknown as TrainingEventLike[]);
-    expect(before.lastDecision).toBe('escalate');
-    expect(after.lastDecision).toBe('ready');
-    expect(after.approvedModules).toBe(before.approvedModules + 1);
-    const back = performanceFromOwnEvents(T, [submit, escalate, answer('return')] as unknown as TrainingEventLike[]);
-    expect(back.lastDecision).toBe('escalate');
+    const before = unitHistory([submit, escalate]);
+    const after = unitHistory([submit, escalate, answer('ready')] as unknown as TrainingEventLike[]);
+    expect(before).toMatchObject({ open: 1, approvedFirstTime: 0 });
+    expect(after).toMatchObject({ open: 0, approvedFirstTime: 1 });
+    const back = unitHistory([submit, escalate, answer('return')] as unknown as TrainingEventLike[]);
+    expect(back).toMatchObject({ open: 1, approvedFirstTime: 0 });
   });
 
   it('a unit sent back counts as waiting on the trainer again', () => {

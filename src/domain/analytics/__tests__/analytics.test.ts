@@ -50,8 +50,7 @@ describe('practicalPerformance — levels as observed', () => {
     expect(by.memberService).toMatchObject({ level: 2, observations: 1, belowFloor: true });
     expect(by.teamwork).toMatchObject({ level: 2, belowFloor: false }); // teamwork's floor is «لوحده بتردّد»
     expect(r.gaps.map(g => g.dimension).sort()).toEqual(['memberService', 'problemSolving', 'systemUsage']);
-    expect(r.gapLevel).toBe('developmental');
-    expect(r.approvedModules).toBe(2);
+    expect(r.gaps.some(g => g.critical)).toBe(false);
     expect(r.followUp).toBe('needs_attention');
   });
   it('a KPI never observed is «not seen», never a number', () => {
@@ -61,7 +60,7 @@ describe('practicalPerformance — levels as observed', () => {
   });
   it('a critical KPI at «بمساعدة» is immediate attention', () => {
     const r = practicalPerformance([evalEvt('e1', 'm1', { docReview: 25, ruleCompliance: 75, accuracy: 75 }, 'not_ready')], 'e1');
-    expect(r.gapLevel).toBe('critical');
+    expect(r.gaps.some(g => g.critical)).toBe(true);
     expect(r.followUp).toBe('needs_immediate_attention');
   });
   it('approving a sibling unit does not hide one still sent back', () => {
@@ -84,7 +83,7 @@ describe('practicalPerformance — levels as observed', () => {
     const r = practicalPerformance([], 'ghost');
     expect(r.evaluations).toBe(0);
     expect(r.followUp).toBe('no_evidence');
-    expect(r.gapLevel).toBeNull();
+    expect(r.gaps).toEqual([]);
   });
 });
 
@@ -97,7 +96,7 @@ describe('orgSummary — people, and only the people asked about', () => {
   ];
   it('counts follow-up buckets and certified', () => {
     const sum = orgSummary(events, ['e1', 'e2', 'e3']);
-    expect(sum).toMatchObject({ activeTrainees: 3, onTrack: 1, needsAttention: 1, noEvidence: 1, certified: 0 });
+    expect(sum).toMatchObject({ activeTrainees: 3, needsAttention: 1, needsImmediate: 0, certified: 0 });
   });
   it('a branch counts its own waiting units, not another branch\'s', () => {
     expect(orgSummary(events, ['e1', 'e2', 'e3']).waitingForTrainer).toBe(1);
