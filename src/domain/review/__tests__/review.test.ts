@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   REVIEW_FIELDS, REVIEW_LABELS, REVIEW_PROMPTS, REVIEW_STARTS_ON_DAY,
-  isComplete, decisionUnanchored, daysCovered, reviewHealth, type DecisionReview,
+  isComplete, reviewSilence, REVIEW_SILENCE_DAYS, type DecisionReview,
 } from '../index';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -61,36 +61,23 @@ describe('completeness — a broken chain teaches nothing', () => {
   });
 });
 
-describe('🔴 the signal no communication question would ever surface', () => {
-  it('flags a decision the trainee cannot anchor to a rule', () => {
-    // Right by accident does not survive the next case.
-    expect(decisionUnanchored(mk({ policy: '' }))).toBe(true);
-    expect(decisionUnanchored(mk())).toBe(false);
+describe('silence — the exception that reaches the trainer', () => {
+  const since = DAY * 100;
+  it('says nothing before the review phase', () => {
+    expect(reviewSilence([], null, DAY * 200)).toBeNull();
   });
-});
-
-describe('engagement health — silence is a signal, never "nothing to report"', () => {
-  it('no reviews at all reads as silent', () => {
-    expect(reviewHealth([], 5)).toBe('silent');
+  it('counts from the start of the phase when nothing was filed in it', () => {
+    expect(reviewSilence([], since, since + DAY * 2)).toBeNull();
+    expect(reviewSilence([], since, since + DAY * REVIEW_SILENCE_DAYS)).toBe(REVIEW_SILENCE_DAYS);
   });
-
-  it('most days covered reads as healthy', () => {
-    const rs = [0, 1, 2, 3].map(d => mk({ at: DAY * (100 + d) }));
-    expect(reviewHealth(rs, 5)).toBe('healthy');
+  it('counts from the last review, and a review resets it', () => {
+    expect(reviewSilence([since + DAY], since, since + DAY * 5)).toBe(4);
+    expect(reviewSilence([since + DAY, since + DAY * 4], since, since + DAY * 5)).toBeNull();
   });
-
-  it('sparse coverage reads as a gap — not as healthy', () => {
-    expect(reviewHealth([mk({ at: DAY * 100 })], 5)).toBe('gap');
+  it('a review filed before the phase does not hide silence inside it', () => {
+    expect(reviewSilence([since - DAY * 10], since, since + DAY * 3)).toBe(3);
   });
-
-  it('several reviews on ONE day do not fake a week of engagement', () => {
-    // Counting rows instead of days would let a trainee catch up in one sitting.
-    const sameDay = [1, 2, 3, 4, 5].map(i => mk({ at: DAY * 100 + i * 1000 }));
-    expect(daysCovered(sameDay)).toBe(1);
-    expect(reviewHealth(sameDay, 5)).toBe('gap');
-  });
-
-  it('a zero-length window never divides by zero', () => {
-    expect(reviewHealth([], 0)).toBe('healthy');
+  it('the bell copy says three days, so the rule must stay three', () => {
+    expect(REVIEW_SILENCE_DAYS).toBe(3);
   });
 });

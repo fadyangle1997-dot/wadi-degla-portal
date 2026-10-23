@@ -22,7 +22,7 @@ import React, { useState } from 'react';
 import { m } from 'motion/react';
 import { ArrowRight, ChevronLeft, PenLine } from 'lucide-react';
 import {
-  REVIEW_FIELDS, REVIEW_LABELS, REVIEW_PROMPTS, isComplete, type ReviewField,
+  REVIEW_FIELDS, REVIEW_LABELS, REVIEW_PROMPTS, isComplete, filedReviews, type ReviewField,
 } from '../../domain/review';
 import { trainingStore, currentTraineeId } from '../../app/training/trainingStore';
 import { Button, Eyebrow, InlineError, FlowRoom, FlowSplit, Achievement } from '../../ui/primitives';
@@ -47,6 +47,9 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
   const [idx, setIdx] = useState(0);
   const [filed, setFiled] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
+  // The trainee decides when they want their trainer's view (D1): the trainer
+  // reads that one, the first, and one a week — not every review.
+  const [askTrainer, setAskTrainer] = useState(false);
 
   const field = REVIEW_FIELDS[idx]!;
   const value = answers[field] ?? '';
@@ -71,7 +74,7 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
         employeeId: currentTraineeId(),
         situation: answers.situation!, decision: answers.decision!,
         policy: answers.policy!, communication: answers.communication!,
-        improvement: answers.improvement!,
+        improvement: answers.improvement!, askTrainer,
       });
     } catch {
       // The answers stay on screen; the person can try again.
@@ -82,16 +85,18 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
   };
 
   if (filed) {
+    // Said as it is: a comment is promised only when the trainer will read it
+    // (asked, the first, the week's one); otherwise the review is the
+    // trainee's own record.
+    const read = filedReviews(trainingStore.events(), currentTraineeId())[0]?.reason != null;
     return (
       <FlowRoom mode={mode} title={t('rv.filedtitle', lang)} onExit={onExit} exitTo={exitLabel}>
         {/* A task done, said plainly: the smallest earned mark, no
-            congratulation. Filing a debrief is the job, not an achievement.
-            The promise is kept now: the review lands in the trainer's queue,
-            their comment comes back to «مراجعاتي» and to the bell. */}
+            congratulation. Filing a debrief is the job, not an achievement. */}
         <m.section {...achieve} className="flow-center" aria-labelledby="rv-filed">
           <Achievement tier="task" />
           <h1 id="rv-filed" className="t-h2 m-0">{t('rv.filedtitle', lang)}</h1>
-          <p className="t-body m-0">وصلت لمدربك. تعليقه هيظهر في «مراجعاتي»، والجرس هيقولك أول ما يكتبه.</p>
+          <p className="t-body m-0">{t(read ? 'rv.filed.read' : 'rv.filed.kept', lang)}</p>
           <div className="done-actions mt-3">
             <Button onClick={() => { location.hash = toHash({ kind: 'reviews' }); }}>مراجعاتي</Button>
             <Button variant="ghost" onClick={onExit}>{t('flow.done', lang)}</Button>
@@ -145,6 +150,15 @@ export const DecisionReview: React.FC<{ onExit: () => void; exitLabel?: string }
               autoFocus
             />
             {empty && <p id="rv-empty" className="form-error mt-2">اكتب إجابتك الأول — جملة واحدة كفاية.</p>}
+            {isLast && (
+              <div className="mt-4">
+                <label className="row gap-3 items-start check-row">
+                  <input type="checkbox" className="check-box" checked={askTrainer} onChange={e => setAskTrainer(e.target.checked)} aria-describedby="rv-askhint" />
+                  <span className="t-sm grow">{t('rv.ask', lang)}</span>
+                </label>
+                <p id="rv-askhint" className="t-sm c-tx2 mt-2 mb-0">{t('rv.askhint', lang)}</p>
+              </div>
+            )}
             <div className="mt-3"><InlineError message={failed} /></div>
             <div className="row gap-2 mt-5 items-center">
               {/* «السابق» steps inside the debrief; leaving it is Exit, in the bar. */}

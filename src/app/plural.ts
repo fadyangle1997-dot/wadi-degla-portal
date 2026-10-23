@@ -121,6 +121,11 @@ export const reviewsAwaitingYou = (n: number, lang: Lang) => count(n, lang,
   { one: 'مراجعة واحدة مستنية تعليقك', two: 'مراجعتين مستنيين تعليقك', few: '{n} مراجعات مستنية تعليقك', many: '{n} مراجعة مستنية تعليقك' },
   { one: 'one review waiting for your comment', other: '{n} reviews waiting for your comment' });
 
+/** Trainees in the review phase with no review for REVIEW_SILENCE_DAYS (3) days. */
+export const quietTraineeCount = (n: number, lang: Lang) => count(n, lang,
+  { one: 'متدرب واحد ما كتبش مراجعة من 3 أيام', two: 'متدربين اتنين ما كتبوش مراجعة من 3 أيام', few: '{n} متدربين ما كتبوش مراجعة من 3 أيام', many: '{n} متدرب ما كتبوش مراجعة من 3 أيام' },
+  { one: 'one trainee hasn’t written a review in 3 days', other: '{n} trainees haven’t written a review in 3 days' });
+
 export const improvingCount = (n: number, lang: Lang) => count(n, lang,
   { zero: 'مفيش حد في تمديد', one: 'واحد بيتحسّن', two: 'اتنين بيتحسّنوا', few: '{n} بيتحسّنوا', many: '{n} بيتحسّنوا' },
   { zero: 'nobody extended', one: 'one improving', other: '{n} improving' });

@@ -32,7 +32,9 @@ export type TrainingEvent =
   | {
       readonly type: 'DECISION_REVIEW_FILED'; readonly employeeId: string;
       readonly situation: string; readonly decision: string; readonly policy: string;
-      readonly communication: string; readonly improvement: string; readonly at: number;
+      readonly communication: string; readonly improvement: string;
+      /** The trainee asked for their trainer's view (docs/product-model.md D1). */
+      readonly askTrainer?: boolean; readonly at: number;
     }
   /** A trainer's coaching response to one review — closes the loop. */
   /** One spaced-retrieval attempt. The schedule is derived from these. */

@@ -1,8 +1,8 @@
 /**
  * «مراجعاتي» — where a trainee's daily reviews come back with the trainer's
- * comments. The debrief promised «المدرب هيشوفها ويعلّق»; this is the place
- * that promise is kept and can be checked: every review filed, newest first,
- * and what the trainer said about it, or that a comment is still coming.
+ * comments. Every review filed, newest first: what the trainer said, that a
+ * comment is coming (the ones the trainer reads — asked about, the first, the
+ * week's one), or that it is saved as the trainee's own record.
  *
  * Opening it marks the comments as seen, so the bell's «تعليق جديد» clears.
  * Structured training feedback, not chat: the trainee reads, the trainer
@@ -51,9 +51,11 @@ export const MyReviews: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             <article key={r.at} className="tp-review" aria-labelledby={`rv-${r.at}`}>
               <h2 id={`rv-${r.at}`} className="t-title m-0 row items-center gap-2 wrap">
                 {dateOf(r.at, lang)}
-                {r.comments.length === 0
-                  ? <Status tone={tone(UNIT_REVIEW.waiting)}>{t('mr.waiting', lang)}</Status>
-                  : <Status tone={tone(UNIT_REVIEW.ready)}>{t('mr.commented', lang)}</Status>}
+                {r.comments.length > 0
+                  ? <Status tone={tone(UNIT_REVIEW.ready)}>{t('mr.commented', lang)}</Status>
+                  : r.reason
+                    ? <Status tone={tone(UNIT_REVIEW.waiting)}>{t('mr.waiting', lang)}</Status>
+                    : <Status tone={tone('neutral')}>{t('mr.kept', lang)}</Status>}
               </h2>
               <dl className="tp-chain">
                 {REVIEW_FIELDS.map(f => (

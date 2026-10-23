@@ -38,6 +38,8 @@ export interface DecisionReview {
   readonly communication: string;
   /** What they would do differently. */
   readonly improvement: string;
+  /** The trainee asked for their trainer's view on this one. */
+  readonly askTrainer?: boolean;
   readonly at: number;
 }
 
@@ -68,15 +70,6 @@ export function isComplete(r: Partial<DecisionReview>): boolean {
   return REVIEW_FIELDS.every(f => (r[f] ?? '').trim().length > 0);
 }
 
-/**
- * The strongest signal in the whole system: a trainee who describes a decision
- * but cannot name the policy behind it. They may have been right by accident —
- * and "right by accident" does not survive the next case.
- */
-export function decisionUnanchored(r: DecisionReview): boolean {
-  return r.policy.trim().length === 0;
-}
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 const dayOf = (t: number) => Math.floor(t / DAY_MS);
 
@@ -87,25 +80,20 @@ export function filedOnDayOf(filedAt: readonly number[], now: number): boolean {
   return filedAt.some(at => new Date(at).toDateString() === today);
 }
 
-/** Distinct days covered by these reviews. */
-export function daysCovered(reviews: readonly DecisionReview[]): number {
-  return new Set(reviews.map(r => dayOf(r.at))).size;
-}
-
-export type ReviewHealth = 'healthy' | 'gap' | 'silent';
+/** Days without a filed review, in the review phase, before the trainer is told. */
+export const REVIEW_SILENCE_DAYS = 3;
 
 /**
- * Engagement over a window — fail-closed: no reviews at all reads as `silent`,
- * never as "nothing to report". Silence is the signal the trainer must see.
+ * Silence is the exception that surfaces: whole days since the last review —
+ * or since the review phase began, if none was filed in it — once that reaches
+ * REVIEW_SILENCE_DAYS. null while the trainee is not in the review phase
+ * (`phaseSince` null) or has written recently.
  */
-export function reviewHealth(
-  reviews: readonly DecisionReview[],
-  windowDays: number,
-): ReviewHealth {
-  if (windowDays <= 0) return 'healthy';
-  const covered = daysCovered(reviews);
-  if (covered === 0) return 'silent';
-  return covered / windowDays >= 0.6 ? 'healthy' : 'gap';
+export function reviewSilence(filedAt: readonly number[], phaseSince: number | null, now: number): number | null {
+  if (phaseSince === null) return null;
+  const since = Math.max(phaseSince, ...filedAt);
+  const days = Math.floor((now - since) / DAY_MS);
+  return days >= REVIEW_SILENCE_DAYS ? days : null;
 }
 
 /* ---------------- the feedback loop ---------------- */
@@ -117,9 +105,20 @@ export interface ReviewComment {
   readonly at: number;
 }
 
+/**
+ * Why a review needs the trainer:
+ *   asked   the trainee asked for their view
+ *   first   the trainee's first review — how they reason, seen once early
+ *   weekly  the earliest review of each week since the first — the sample
+ * Anything else is recorded for the trainee, with no comment promised.
+ */
+export type TrainerReason = 'asked' | 'first' | 'weekly';
+
 /** A filed review and the trainer's comments on it, oldest comment first. */
 export interface FiledReview extends DecisionReview {
   readonly comments: readonly ReviewComment[];
+  /** Why the trainer reads it; null when no comment is promised. */
+  readonly reason: TrainerReason | null;
 }
 
 type LogEvent = { readonly type: string; readonly employeeId?: string; readonly at: number };
@@ -130,8 +129,10 @@ const isFiled = (e: LogEvent): e is FiledEvent => e.type === 'DECISION_REVIEW_FI
 const isCoached = (e: LogEvent): e is CoachedEvent => e.type === 'REVIEW_COACHED';
 
 /**
- * One trainee's reviews with the trainer's comments, newest review first. A
- * comment belongs to the review whose filing time it names (`reviewAt`).
+ * One trainee's reviews with the trainer's comments and why the trainer reads
+ * each, newest review first. A comment belongs to the review whose filing time
+ * it names (`reviewAt`). The reason is stable: the log is append-only, so the
+ * first review and each week's earliest never change once filed.
  */
 export function filedReviews(events: readonly LogEvent[], employeeId: string): readonly FiledReview[] {
   const comments = new Map<number, ReviewComment[]>();
@@ -141,25 +142,33 @@ export function filedReviews(events: readonly LogEvent[], employeeId: string): r
     list.push({ trainerId: e.trainerId, comment: e.comment, at: e.at });
     comments.set(e.reviewAt, list);
   }
-  return events
-    .filter((e): e is FiledEvent => isFiled(e) && e.employeeId === employeeId)
-    .map(e => ({
-      employeeId, situation: e.situation, decision: e.decision, policy: e.policy,
-      communication: e.communication, improvement: e.improvement, at: e.at,
-      comments: comments.get(e.at) ?? [],
-    }))
+  const filed = events.filter((e): e is FiledEvent => isFiled(e) && e.employeeId === employeeId).sort((a, b) => a.at - b.at);
+  const firstDay = filed.length ? dayOf(filed[0]!.at) : 0;
+  const sampledWeeks = new Set<number>();
+  return filed
+    .map((e, i) => {
+      const week = Math.floor((dayOf(e.at) - firstDay) / 7);
+      const earliestOfWeek = !sampledWeeks.has(week);
+      sampledWeeks.add(week);
+      const reason: TrainerReason | null = e.askTrainer ? 'asked' : i === 0 ? 'first' : earliestOfWeek ? 'weekly' : null;
+      return {
+        employeeId, situation: e.situation, decision: e.decision, policy: e.policy,
+        communication: e.communication, improvement: e.improvement, askTrainer: e.askTrainer, at: e.at,
+        comments: comments.get(e.at) ?? [], reason,
+      };
+    })
     .sort((a, b) => b.at - a.at);
 }
 
 /**
- * The trainer's review queue: filed reviews no trainer has commented on yet,
- * oldest first — the trainee was promised a comment, so the longest wait leads.
+ * The trainer's review queue: reviews that need them (asked, first, the week's
+ * sample) and carry no comment yet, oldest first — the longest wait leads.
  */
-export function reviewsAwaitingComment(
+export function reviewsForTrainer(
   events: readonly LogEvent[], employeeIds: readonly string[],
 ): readonly FiledReview[] {
   return employeeIds
-    .flatMap(id => filedReviews(events, id).filter(r => r.comments.length === 0))
+    .flatMap(id => filedReviews(events, id).filter(r => r.reason !== null && r.comments.length === 0))
     .sort((a, b) => a.at - b.at);
 }
 

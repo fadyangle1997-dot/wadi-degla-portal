@@ -4,8 +4,9 @@
  *   who needs me → why → the evidence → the action → a recorded outcome
  *
  * Units waiting for a practical assessment come first (the assessment itself
- * is a focused screen, PracticalAssessment), then daily reviews waiting for
- * the comment the trainee was promised, then the roster — every name opens
+ * is a focused screen, PracticalAssessment), then the daily reviews that need
+ * the trainer — asked about, a first, the week's one — and anyone who has
+ * gone quiet (domain/review, D1), then the roster — every name opens
  * that trainee's evidence (TraineeProfile) — then the readiness stations.
  * Every action emits a training event; permissions via can() only.
  */
@@ -18,7 +19,8 @@ import { scopeOf, visibleLearners } from '../../domain/identity/scope';
 import { useTraining, useTrainingEvents, trainingStore, reviewOf } from '../../app/training/trainingStore';
 import { progressOf, learningProgress } from '../../app/progress';
 import { MODULES } from '../../content/registry';
-import { reviewsAwaitingComment } from '../../domain/review';
+import { reviewsForTrainer, reviewSilence, type FiledReview } from '../../domain/review';
+import { reviewPhaseSince } from '../../domain/journey/reviewPhase';
 import { toHash } from '../../app/router';
 import { flash } from '../../app/flash';
 import { tone, UNIT_REVIEW } from '../../ui/statusSemantics';
@@ -29,7 +31,7 @@ import { WIDTH } from '../../ui/designSystem';
 import { branchNameOf } from '../../domain/organization';
 import { useOrganization } from '../../app/organization/orgStore';
 import { useLang, t as tr, tf, type Lang } from '../../app/i18n';
-import { unitsAwaitingYou, improvingCount, staffCount, daysAgo } from '../../app/plural';
+import { unitsAwaitingYou, improvingCount, staffCount, daysAgo, dayCount } from '../../app/plural';
 import { isProgramComplete } from '../../domain/journey/programCompletion';
 import { TraineeReadinessBlock } from '../readiness/ReadinessStations';
 
@@ -73,11 +75,20 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     [t, employees],
   );
   const nameOf = (id: string) => employees.find(e => e.id === id)?.name ?? id;
-  // Daily reviews filed by the trainer's own trainees with no comment yet.
-  const reviewsWaiting = useMemo(
-    () => reviewsAwaitingComment(events, employees.map(e => e.id)),
-    [events, employees],
-  );
+  // Daily reviews that need the trainer (asked, first, the week's one) and
+  // trainees in the review phase who have stopped writing — by exception.
+  type ReviewRow = { kind: 'review'; employeeId: string; review: FiledReview } | { kind: 'silent'; employeeId: string; days: number };
+  const reviewsWaiting = useMemo((): ReviewRow[] => {
+    const now = Date.now();
+    const silent = employees.flatMap(emp => {
+      const filed = events.flatMap(e => e.type === 'DECISION_REVIEW_FILED' && e.employeeId === emp.id ? [e.at] : []);
+      const days = reviewSilence(filed, reviewPhaseSince(events, emp.id), now);
+      return days === null ? [] : [{ kind: 'silent' as const, employeeId: emp.id, days }];
+    });
+    const reviews = reviewsForTrainer(events, employees.map(e => e.id))
+      .map(review => ({ kind: 'review' as const, employeeId: review.employeeId, review }));
+    return [...reviews, ...silent];
+  }, [events, employees]);
   const needsWork = useMemo(
     () => employees.flatMap(emp =>
       MODULES
@@ -215,13 +226,17 @@ export const TrainerView: React.FC<{ onExit: () => void }> = ({ onExit }) => {
           {reviewsWaiting.length === 0 ? (
             <EmptyState icon={<MessageSquareText />} title={tr('tn.noreviews', lang)} body={tr('tn.noreviewsbody', lang)} headingLevel={3} />
           ) : (
-            <DataTable caption={tr('tn.reviews', lang)} rows={reviewsWaiting} rowKey={r => `${r.employeeId}:${r.at}`}
-              onOpen={r => { location.hash = `${toHash({ kind: 'trainee', employeeId: r.employeeId })}?review=${r.at}`; }}
-              rowLabel={() => tr('tn.readreview', lang)}
+            <DataTable caption={tr('tn.reviews', lang)} rows={reviewsWaiting}
+              rowKey={r => r.kind === 'review' ? `${r.employeeId}:${r.review.at}` : `${r.employeeId}:silent`}
+              onOpen={r => { location.hash = r.kind === 'review' ? `${toHash({ kind: 'trainee', employeeId: r.employeeId })}?review=${r.review.at}` : toHash({ kind: 'trainee', employeeId: r.employeeId }); }}
+              rowLabel={r => tr(r.kind === 'review' ? 'tn.readreview' : 'tp.open', lang)}
               columns={[
                 { id: 'who', header: tr('dt.employee', lang), cell: r => <span className="t-sm c-tx0" style={{ fontWeight: 500 }}>{nameOf(r.employeeId)}</span> },
-                { id: 'what', header: tr('tn.col.situation', lang), cell: r => <ArabicContent as="span" className="t-sm c-tx1 clamp-2">{r.situation}</ArabicContent> },
-                { id: 'when', header: tr('tn.col.filed', lang), cell: r => <Status tone={tone(UNIT_REVIEW.waiting)}>{waitLabel(r.at, lang)}</Status> },
+                { id: 'why', header: tr('tn.col.why', lang), cell: r => <Status tone={tone(r.kind === 'silent' || r.review.reason === 'asked' ? 'warning' : 'pending')}>{tr(r.kind === 'silent' ? 'tn.why.silent' : `tn.why.${r.review.reason!}`, lang)}</Status> },
+                { id: 'what', header: tr('tn.col.situation', lang), cell: r => r.kind === 'review'
+                  ? <ArabicContent as="span" className="t-sm c-tx1 clamp-2">{r.review.situation}</ArabicContent>
+                  : <span className="t-sm c-tx2">{tf('tn.silentfor', { d: dayCount(r.days, lang) }, lang)}</span> },
+                { id: 'when', header: tr('tn.col.filed', lang), cell: r => r.kind === 'review' ? <span className="t-sm c-tx2">{waitLabel(r.review.at, lang)}</span> : null },
               ]} />
           )}
         </section>

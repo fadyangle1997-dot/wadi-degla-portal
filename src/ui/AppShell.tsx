@@ -16,7 +16,8 @@ import { useCan, useIdentity, identityStore } from '../app/identity/identityStor
 import { useTraining, useTrainingEvents, reviewOf, traineeIdOrNull } from '../app/training/trainingStore';
 import { awaitsReadinessDecision, escalatedUnitsOf } from '../domain/journey/programCompletion';
 import { detectOperationalIssues, summarizeIssues } from '../domain/operations/health';
-import { filedReviews, unseenComments, reviewsAwaitingComment } from '../domain/review';
+import { filedReviews, unseenComments, reviewsForTrainer, reviewSilence } from '../domain/review';
+import { reviewPhaseSince } from '../domain/journey/reviewPhase';
 import { reviewSeen } from '../app/reviewSeen';
 import { useProgress } from '../app/progress';
 import { nextAction } from '../domain/journey/nextAction';
@@ -30,7 +31,7 @@ import { WIDTH } from './designSystem';
 import { LoadingState, useModal, Content, tx } from './primitives';
 import { displayNameOf } from '../domain/identity';
 import { useOverlayParam } from '../app/overlayHistory';
-import { unitsAwaitingYou, reviewsAwaitingYou, itemsNeedYou, awaitingDecisionCount, escalatedUnitCount, issuesNeedAction } from '../app/plural';
+import { unitsAwaitingYou, reviewsAwaitingYou, quietTraineeCount, itemsNeedYou, awaitingDecisionCount, escalatedUnitCount, issuesNeedAction } from '../app/plural';
 
 /** Icons are presentation only — the nav itself is built from permissions. */
 const ICONS: Record<string, React.ReactNode> = {
@@ -283,8 +284,15 @@ const useActionCenter = (): { now: readonly BellItem[]; before: readonly BellIte
       const waiting = learners.reduce(
         (n, e) => n + MODULES.filter(m => reviewOf(t, e.id, m.id).status === 'waiting').length, 0);
       if (waiting > 0) now.push({ key: 'queue', label: unitsAwaitingYou(waiting, lang), go: go('#/trainer') });
-      const reviews = reviewsAwaitingComment(events, ids).length;
-      if (reviews > 0) now.push({ key: 'reviews', label: reviewsAwaitingYou(reviews, lang), go: go('#/trainer') });
+      // By exception (D1): the reviews that need them, and anyone gone quiet.
+      const needing = reviewsForTrainer(events, ids);
+      if (needing.length > 0) now.push({ key: 'reviews', label: reviewsAwaitingYou(needing.length, lang), go: go('#/trainer') });
+      const at = Date.now();
+      const quiet = ids.filter(id => reviewSilence(
+        events.flatMap(e => e.type === 'DECISION_REVIEW_FILED' && e.employeeId === id ? [e.at] : []),
+        reviewPhaseSince(events, id), at) !== null).length;
+      if (quiet > 0) now.push({ key: 'quiet', label: quietTraineeCount(quiet, lang), go: go('#/trainer') });
+      const read = new Set(needing.map(r => `${r.employeeId}:${r.at}`));
 
       const name = (uid: string) => { const u = learners.find(x => x.id === uid); return u ? displayNameOf(u, lang) : uid; };
       for (const e of events) {
@@ -292,7 +300,7 @@ const useActionCenter = (): { now: readonly BellItem[]; before: readonly BellIte
         if (e.type === 'UNIT_SUBMITTED_FOR_REVIEW') {
           before.push({ key: `us:${e.employeeId}:${e.at}`, at: e.at, go: go(`#/trainee/${e.employeeId}`),
             label: tx('ac.h.submitted', { name: <bdi>{name(e.employeeId)}</bdi>, m: title(e.moduleId) }, lang) });
-        } else if (e.type === 'DECISION_REVIEW_FILED') {
+        } else if (e.type === 'DECISION_REVIEW_FILED' && read.has(`${e.employeeId}:${e.at}`)) {
           before.push({ key: `rf:${e.employeeId}:${e.at}`, at: e.at, go: go(`#/trainee/${e.employeeId}?review=${e.at}`),
             label: tx('ac.h.filed', { name: <bdi>{name(e.employeeId)}</bdi> }, lang) });
         }

@@ -63,7 +63,7 @@ export const trainingStore = {
   /** Files one Professional Decision Review — decision-first, five links. */
   fileDecisionReview: (r: {
     employeeId: string; situation: string; decision: string;
-    policy: string; communication: string; improvement: string;
+    policy: string; communication: string; improvement: string; askTrainer?: boolean;
   }) => apply(() => backend.record({ type: 'DECISION_REVIEW_FILED', ...r, at: now() })),
 
   /** Records one retrieval attempt. Scheduling is derived, never stored. */

@@ -210,9 +210,15 @@ const Profile: React.FC<{ employeeId: string; name: string; onExit: () => void }
 const dateOf = (at: number, lang: 'ar' | 'en') =>
   new Date(at).toLocaleDateString(dateLocale(lang), { day: 'numeric', month: 'long' });
 
-/** One filed review: the five links, any comments, and a comment box. */
+/**
+ * One filed review: the five links, any comments, and a comment box — open
+ * where a comment is owed (asked, the first, the week's one), a button on the
+ * rest: the trainer may still comment on any review, but is not asked to.
+ */
 const ReviewCard: React.FC<{ review: FiledReview; employeeId: string; focus: boolean; onCommented: () => void }> = ({ review, employeeId, focus, onCommented }) => {
   const lang = useLang();
+  const owed = review.reason !== null && review.comments.length === 0;
+  const [writing, setWriting] = useState(owed || focus);
   const [text, setText] = useState('');
   const [empty, setEmpty] = useState(false);
   const id = `tp-comment-${review.at}`;
@@ -223,9 +229,9 @@ const ReviewCard: React.FC<{ review: FiledReview; employeeId: string; focus: boo
     el?.focus({ preventScroll: true });
   }, [focus, id]);
   return (
-    <article className="tp-review" data-open={review.comments.length === 0 || undefined} aria-labelledby={`${id}-h`}>
+    <article className="tp-review" data-open={owed || undefined} aria-labelledby={`${id}-h`}>
       <h3 id={`${id}-h`} className="t-title m-0">{tf('tp.reviewof', { d: dateOf(review.at, lang) }, lang)}
-        {review.comments.length === 0 && <> · <Status tone={tone(UNIT_REVIEW.waiting)}>{tr('tp.awaitscomment', lang)}</Status></>}
+        {owed && <> · <Status tone={tone(review.reason === 'asked' ? 'warning' : UNIT_REVIEW.waiting)}>{tr(`tn.why.${review.reason}`, lang)} — {tr('tp.awaitscomment', lang)}</Status></>}
       </h3>
       <dl className="tp-chain">
         {REVIEW_FIELDS.map(f => (
@@ -238,6 +244,7 @@ const ReviewCard: React.FC<{ review: FiledReview; employeeId: string; focus: boo
       {review.comments.map(c => (
         <p key={c.at} className="tp-comment t-sm m-0"><span className="t-label c-tx3">{tr('tp.yourcomment', lang)} · {dateOf(c.at, lang)}</span><br /><ArabicContent as="span">{c.comment}</ArabicContent></p>
       ))}
+      {!writing ? <div><Button variant="ghost" onClick={() => setWriting(true)}>{tr('tp.addcomment', lang)}</Button></div> : (
       <form noValidate className="stack gap-2" onSubmit={e => {
         e.preventDefault();
         if (!text.trim()) { setEmpty(true); document.getElementById(id)?.focus(); return; }
@@ -245,6 +252,7 @@ const ReviewCard: React.FC<{ review: FiledReview; employeeId: string; focus: boo
         if (!me) return;
         trainingStore.coachReview(employeeId, me.id, review.at, text.trim());
         setText('');
+        setWriting(false);
         onCommented();
       }}>
         <FormField id={id} label={tr('tp.comment', lang)} required hint={tr('tp.commenthint', lang)} error={empty ? tr('tp.err.comment', lang) : null}>
@@ -253,6 +261,7 @@ const ReviewCard: React.FC<{ review: FiledReview; employeeId: string; focus: boo
         </FormField>
         <div><Button type="submit">{tr('tp.send', lang)}</Button></div>
       </form>
+      )}
     </article>
   );
 };
